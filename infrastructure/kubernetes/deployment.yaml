@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stackradar-backend
+  labels:
+    app: stackradar-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: stackradar-backend
+  template:
+    metadata:
+      labels:
+        app: stackradar-backend
+    spec:
+      containers:
+      - name: backend
+        image: stackradar/backend:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: stackradar-config
+        - secretRef:
+            name: stackradar-secrets
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stackradar-backend-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: stackradar-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stackradar-frontend
+  labels:
+    app: stackradar-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: stackradar-frontend
+  template:
+    metadata:
+      labels:
+        app: stackradar-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: stackradar/frontend:latest
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: stackradar-config
+        - secretRef:
+            name: stackradar-secrets
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stackradar-frontend-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: stackradar-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
