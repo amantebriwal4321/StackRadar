@@ -2,6 +2,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 import asyncio
+import logging
+
+# Configure root logger so ALL app loggers (scheduler, scraper, scoring) are visible
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+    datefmt="%H:%M:%S",
+)
+
 from app.services.scheduler import run_scraper_loop
 
 app = FastAPI(
@@ -11,6 +20,11 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup_event():
+    # Auto-create all tables (safe to call even if tables exist)
+    from app.db.base import Base
+    from app.db.session import engine
+    Base.metadata.create_all(bind=engine)
+    
     asyncio.create_task(run_scraper_loop())
 
 if settings.BACKEND_CORS_ORIGINS:

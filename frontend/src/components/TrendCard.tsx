@@ -12,11 +12,17 @@ interface TrendCardProps {
 }
 
 export default function TrendCard({ technology: tech, variant = "default", index = 0 }: TrendCardProps) {
-  if (variant === "compact") {
-    const latestScore = tech.growth[tech.growth.length - 1].score;
-    const previousScore = tech.growth[tech.growth.length - 2].score;
-    const difference = latestScore - previousScore;
+  
+  // Stage badge colors
+  const stageBadge = {
+    "Emerging": "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+    "Growing": "bg-primary/10 text-primary border-primary/20",
+    "Mature": "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+    "Declining": "bg-rose-500/10 text-rose-500 border-rose-500/20",
+    "Experimental": "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  };
 
+  if (variant === "compact") {
     return (
       <motion.div 
         whileHover={{ y: -5, scale: 1.02 }}
@@ -34,24 +40,22 @@ export default function TrendCard({ technology: tech, variant = "default", index
         </div>
         <div className="mt-4 flex items-end justify-between">
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Current Score</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Trend Score</p>
             <p className="text-3xl font-black text-foreground">{tech.score}</p>
           </div>
           <div className="text-right">
-            <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ${
-              difference >= 0 ? "text-emerald-500 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10"
-            }`}>
-              <TrendingUp className={`w-3 h-3 ${difference < 0 ? "rotate-180" : ""}`} />
-              {difference > 0 ? '+' : ''}{difference}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">vs last year</p>
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold border ${stageBadge[tech.stage] || stageBadge["Emerging"]}`}>
+              {tech.stage}
+            </span>
           </div>
         </div>
       </motion.div>
     );
   }
 
-  // Default variant (Homepage)
+  // Default variant (Homepage domain cards)
+  const totalSignals = tech.github_repos + tech.hn_mentions + tech.devto_articles + tech.reddit_mentions + tech.news_mentions;
+  
   return (
     <MotionLink
       href={`/technology/${tech.id}`}
@@ -70,21 +74,11 @@ export default function TrendCard({ technology: tech, variant = "default", index
           <div>
             <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{tech.name}</h3>
             <div className="flex gap-2 flex-wrap mt-1">
-              <span className="px-2 py-0.5 bg-muted/60 rounded-md text-xs font-semibold text-muted-foreground border border-border/40">
-                {tech.domain}
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded-md text-xs font-bold border ${
-                  tech.stage === "Experimental"
-                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                    : tech.stage === "Mature"
-                    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                    : tech.stage === "Emerging"
-                    ? "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
-                    : "bg-primary/10 text-primary border-primary/20"
-                }`}
-              >
+              <span className={`px-2 py-0.5 rounded-md text-xs font-bold border ${stageBadge[tech.stage] || stageBadge["Emerging"]}`}>
                 {tech.stage}
+              </span>
+              <span className="px-2 py-0.5 bg-muted/60 rounded-md text-xs font-semibold text-muted-foreground border border-border/40">
+                {totalSignals.toLocaleString()} signals
               </span>
             </div>
           </div>
@@ -99,18 +93,27 @@ export default function TrendCard({ technology: tech, variant = "default", index
         </div>
       </div>
 
-      <div className="bg-muted/20 rounded-xl p-3 mb-4 grid grid-cols-3 gap-2 text-center text-xs border border-border/30 relative z-10">
+      {/* 5-Source Signal Metrics */}
+      <div className="bg-muted/20 rounded-xl p-3 mb-4 grid grid-cols-5 gap-1 text-center text-xs border border-border/30 relative z-10">
         <div className="group/stat hover:bg-muted/40 rounded-lg py-1 transition-colors">
           <div className="font-bold text-foreground text-sm">{tech.github_repos.toLocaleString()}</div>
           <div className="text-muted-foreground text-[10px] uppercase font-semibold">GitHub</div>
         </div>
         <div className="group/stat hover:bg-muted/40 rounded-lg py-1 transition-colors">
           <div className="font-bold text-foreground text-sm">{tech.hn_mentions.toLocaleString()}</div>
-          <div className="text-muted-foreground text-[10px] uppercase font-semibold">HackerNews</div>
+          <div className="text-muted-foreground text-[10px] uppercase font-semibold">HN</div>
         </div>
         <div className="group/stat hover:bg-muted/40 rounded-lg py-1 transition-colors">
           <div className="font-bold text-foreground text-sm">{tech.devto_articles.toLocaleString()}</div>
           <div className="text-muted-foreground text-[10px] uppercase font-semibold">Dev.to</div>
+        </div>
+        <div className="group/stat hover:bg-muted/40 rounded-lg py-1 transition-colors">
+          <div className="font-bold text-foreground text-sm">{tech.reddit_mentions.toLocaleString()}</div>
+          <div className="text-muted-foreground text-[10px] uppercase font-semibold">Reddit</div>
+        </div>
+        <div className="group/stat hover:bg-muted/40 rounded-lg py-1 transition-colors">
+          <div className="font-bold text-foreground text-sm">{tech.news_mentions.toLocaleString()}</div>
+          <div className="text-muted-foreground text-[10px] uppercase font-semibold">News</div>
         </div>
       </div>
 
@@ -119,7 +122,7 @@ export default function TrendCard({ technology: tech, variant = "default", index
       </p>
       
       <div className="mt-4 flex items-center text-sm font-bold text-primary transition-all relative z-10">
-        View Details <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1.5" />
+        Explore Domain <ArrowRight className="w-4 h-4 ml-1.5 transition-transform duration-300 group-hover:translate-x-1.5" />
       </div>
     </MotionLink>
   );

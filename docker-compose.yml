@@ -18,6 +18,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: stackradar_redis
+    ports:
+      - "6379:6379"
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.3
+    container_name: stackradar_meili
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+
   backend:
     build:
       context: ./backend
@@ -32,9 +46,15 @@ services:
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
+      - MEILI_URL=http://meilisearch:7700
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
+      meilisearch:
+        condition: service_started
 
 volumes:
   postgres_data:

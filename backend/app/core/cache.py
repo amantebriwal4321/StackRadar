@@ -1,45 +1,35 @@
-import redis
 from functools import wraps
-from app.core.config import settings
+from cachetools import TTLCache
 import json
 
-# Setup basic sync redis client
-redis_client = redis.Redis(
-    host=settings.REDIS_HOST, 
-    port=settings.REDIS_PORT, 
-    db=1, # Use DB 1 for caching, leaving DB 0 for Celery
-    decode_responses=True
-)
+# In-memory TTL cache — no Redis required
+# Max 256 entries, 5-minute TTL
+_cache = TTLCache(maxsize=256, ttl=300)
 
 def cache_response(expiration: int = 300):
     """
-    Simple decorator to cache FastAPI endpoint responses in Redis.
+    Decorator to cache FastAPI endpoint responses in-memory.
+    Works without any external service (Redis, etc.)
     """
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Generate cache key based on function name and args for simplicity
-            cache_key = f"cache:{func.__name__}:{str(kwargs)}"
+            cache_key = f"{func.__name__}:{str(kwargs)}"
             
-            try:
-                cached_data = redis_client.get(cache_key)
-                if cached_data:
-                    return json.loads(cached_data)
-            except Exception as e:
-                print(f"Redis cache error: {e}")
-                
-            # Execute original function
+            # Check cache
+            cached = _cache.get(cache_key)
+            if cached is not None:
+                return cached
+            
+            # Execute and cache
             result = func(*args, **kwargs)
-            
-            # Cache the result if serializable
-            try:
-                # Handle basic dict/list serializable responses
-                # Note: In a real system, you'd serialize SQLAlchemy models properly before caching
-                if isinstance(result, (dict, list)):
-                    redis_client.setex(cache_key, expiration, json.dumps(result))
-            except Exception as e:
-                print(f"Redis cache write error: {e}")
+            if isinstance(result, (dict, list)):
+                _cache[cache_key] = result
                 
             return result
         return wrapper
     return decorator
+
+def clear_cache():
+    """Clear all cached entries."""
+    _cache.clear()

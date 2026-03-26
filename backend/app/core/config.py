@@ -1,5 +1,9 @@
 import os
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Force loading .env file variables directly into os.environ
+load_dotenv()
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "StackRadar API"
@@ -10,7 +14,11 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "stackradar")
-    SQLALCHEMY_DATABASE_URI: str = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}/{POSTGRES_DB}"
+    
+    # Check if we are outside Docker. If so, fallback to SQLite to prevent "cannot translate host name" error.
+    IS_DOCKER: bool = os.path.exists("/.dockerenv") or os.getenv("DOCKER_ENV", "0") == "1"
+    SQLALCHEMY_DATABASE_URI: str = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}/{POSTGRES_DB}" if IS_DOCKER else "sqlite:///./test.db"
+    
     
     # GITHUB
     GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")

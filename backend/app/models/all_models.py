@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Tex
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base_class import Base
+from datetime import datetime
 
 class Technology(Base):
     __tablename__ = "technologies"
@@ -14,7 +15,7 @@ class Technology(Base):
     github_count = Column(Integer, default=0)
     hn_count = Column(Integer, default=0)
     devto_count = Column(Integer, default=0)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
     
     repositories = relationship("Repository", back_populates="technology", cascade="all, delete-orphan")
     articles = relationship("Article", back_populates="technology", cascade="all, delete-orphan")
@@ -74,3 +75,20 @@ class Article(Base):
     url = Column(String, unique=True, index=True)
     
     technology = relationship("Technology", back_populates="articles")
+
+class Domain(Base):
+    """Domain-level aggregation (AI/ML, Web3, Cybersecurity, etc.)"""
+    __tablename__ = "domains"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)       # "AI / ML"
+    slug = Column(String, unique=True, index=True)         # "ai-ml"
+    score = Column(Float, default=0.0)
+    stage = Column(String, default="Emerging")             # Emerging / Growing / Mature / Declining
+    summary = Column(Text, nullable=True)
+    icon = Column(String, default="⚡")
+    github_count = Column(Integer, default=0)
+    hn_count = Column(Integer, default=0)
+    devto_count = Column(Integer, default=0)
+    reddit_count = Column(Integer, default=0)
+    news_count = Column(Integer, default=0)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)

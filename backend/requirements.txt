@@ -7,3 +7,6 @@ psycopg2-binary
 alembic
 requests
 httpx
+python-dotenv
+cachetools
+feedparser
