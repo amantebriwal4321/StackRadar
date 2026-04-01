@@ -1,94 +1,111 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Text, Date, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from datetime import datetime, timezone
 from app.db.base_class import Base
-from datetime import datetime
 
-class Technology(Base):
-    __tablename__ = "technologies"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    trend_score = Column(Float, default=0.0)
-    description = Column(Text, nullable=True)
-    category = Column(String)
-    stage = Column(String, default="Trending")  # Core, Trending, Experimental
-    github_count = Column(Integer, default=0)
-    hn_count = Column(Integer, default=0)
-    devto_count = Column(Integer, default=0)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    repositories = relationship("Repository", back_populates="technology", cascade="all, delete-orphan")
-    articles = relationship("Article", back_populates="technology", cascade="all, delete-orphan")
-    roadmap_steps = relationship("RoadmapStep", back_populates="technology", cascade="all, delete-orphan")
-
-class RoadmapStep(Base):
-    __tablename__ = "roadmap_steps"
-    id = Column(Integer, primary_key=True, index=True)
-    technology_id = Column(Integer, ForeignKey("technologies.id"))
-    step_number = Column(Integer)
-    title = Column(String)
-    resource_url = Column(String)
-    
-    technology = relationship("Technology", back_populates="roadmap_steps")
-
-class TechnologyDomain(Base):
-    __tablename__ = "technology_domains"
-    id = Column(Integer, primary_key=True, index=True)
-    technology_id = Column(Integer, ForeignKey("technologies.id"))
-    domain = Column(String, index=True)
-    
-class TechnologyPrerequisite(Base):
-    __tablename__ = "technology_prerequisites"
-    id = Column(Integer, primary_key=True, index=True)
-    technology_id = Column(Integer, ForeignKey("technologies.id"))
-    prerequisite = Column(String)
-
-class TechnologyDifficulty(Base):
-    __tablename__ = "technology_difficulty"
-    id = Column(Integer, primary_key=True, index=True)
-    technology_id = Column(Integer, ForeignKey("technologies.id"), unique=True)
-    difficulty = Column(String) # beginner, intermediate, advanced
-
-class TechnologyRole(Base):
-    __tablename__ = "technology_roles"
-    id = Column(Integer, primary_key=True, index=True)
-    technology_id = Column(Integer, ForeignKey("technologies.id"))
-    role = Column(String)
-
-class Repository(Base):
-    __tablename__ = "repositories"
-    id = Column(Integer, primary_key=True, index=True)
-    technology_id = Column(Integer, ForeignKey("technologies.id"))
-    name = Column(String, index=True)
-    stars = Column(Integer, default=0)
-    forks = Column(Integer, default=0)
-    url = Column(String, unique=True)
-    
-    technology = relationship("Technology", back_populates="repositories")
-
-class Article(Base):
-    __tablename__ = "articles"
-    id = Column(Integer, primary_key=True, index=True)
-    technology_id = Column(Integer, ForeignKey("technologies.id"))
-    title = Column(String)
-    source = Column(String, index=True) # "hackernews" or "devto"
-    url = Column(String, unique=True, index=True)
-    
-    technology = relationship("Technology", back_populates="articles")
 
 class Domain(Base):
-    """Domain-level aggregation (AI/ML, Web3, Cybersecurity, etc.)"""
+    """High-level technology domain (AI/ML, Web Dev, DevOps, etc.)."""
     __tablename__ = "domains"
+
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)       # "AI / ML"
-    slug = Column(String, unique=True, index=True)         # "ai-ml"
-    score = Column(Float, default=0.0)
-    stage = Column(String, default="Emerging")             # Emerging / Growing / Mature / Declining
-    summary = Column(Text, nullable=True)
+    name = Column(String, unique=True, index=True)          # "AI / ML"
+    slug = Column(String, unique=True, index=True)           # "ai-ml"
     icon = Column(String, default="⚡")
-    github_count = Column(Integer, default=0)
+    score = Column(Float, default=0.0)
+    stage = Column(String, default="Emerging")
+    summary = Column(Text, nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    tools = relationship("Tool", back_populates="domain_rel", cascade="all, delete-orphan")
+
+
+class Tool(Base):
+    """Individual technology/framework being tracked."""
+    __tablename__ = "tools"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)           # "React"
+    slug = Column(String, unique=True, index=True)           # "react"
+    description = Column(Text, nullable=True)
+    icon = Column(String, default="⚡")
+    category = Column(String, index=True)                    # "Web Development"
+    github_repo = Column(String, nullable=True)              # "facebook/react"
+
+    # Live metrics (updated each scrape cycle)
+    stars = Column(Integer, default=0)
+    forks = Column(Integer, default=0)
+    open_issues = Column(Integer, default=0)
+    watchers = Column(Integer, default=0)
+
+    # Mention counts from sources
     hn_count = Column(Integer, default=0)
     devto_count = Column(Integer, default=0)
     reddit_count = Column(Integer, default=0)
     news_count = Column(Integer, default=0)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Computed
+    score = Column(Float, default=0.0)
+    growth_pct = Column(Float, default=0.0)
+    stage = Column(String, default="Emerging")
+
+    # Decision Intelligence fields
+    trend_stage = Column(String, default="stable")           # rising, growing, stable, declining
+    recommendation = Column(Text, nullable=True)
+    learning_priority = Column(String, default="MEDIUM")     # HIGH, MEDIUM, LOW, AVOID
+
+    # Learning Hierarchy fields
+    level = Column(String, default="intermediate")           # beginner, intermediate, advanced
+    parent_tool_id = Column(Integer, ForeignKey("tools.id"), nullable=True)
+    is_entry_point = Column(Boolean, default=False)
+    learning_sequence_score = Column(Integer, default=50)    # 0-100, lower = learn first
+
+    # Foreign key
+    domain_id = Column(Integer, ForeignKey("domains.id"), nullable=True)
+    domain_rel = relationship("Domain", back_populates="tools")
+
+    # Self-referencing relationship for learning hierarchy
+    parent_tool = relationship("Tool", remote_side="Tool.id", backref="children", foreign_keys=[parent_tool_id])
+
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    snapshots = relationship("ToolSnapshot", back_populates="tool", cascade="all, delete-orphan")
+    roadmap = relationship("ToolRoadmap", back_populates="tool", uselist=False, cascade="all, delete-orphan")
+
+
+class ToolSnapshot(Base):
+    """Daily time-series data point for a tool."""
+    __tablename__ = "tool_snapshots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tool_id = Column(Integer, ForeignKey("tools.id"), nullable=False)
+    date = Column(Date, nullable=False)
+    score = Column(Float, default=0.0)
+    stars = Column(Integer, default=0)
+    forks = Column(Integer, default=0)
+    mentions = Column(Integer, default=0)
+    hn_count = Column(Integer, default=0)
+    devto_count = Column(Integer, default=0)
+    reddit_count = Column(Integer, default=0)
+
+    tool = relationship("Tool", back_populates="snapshots")
+
+    __table_args__ = (
+        UniqueConstraint("tool_id", "date", name="uq_tool_date"),
+    )
+
+
+class ToolRoadmap(Base):
+    """Learning roadmap for a tool or domain."""
+    __tablename__ = "tool_roadmaps"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tool_id = Column(Integer, ForeignKey("tools.id"), nullable=True)
+    slug = Column(String, unique=True, index=True)          # "ai-ml" or "react"
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    icon = Column(String, default="📘")
+    estimated_weeks = Column(Integer, default=8)
+    steps_json = Column(Text, nullable=False)               # JSON string of steps array
+
+    tool = relationship("Tool", back_populates="roadmap")

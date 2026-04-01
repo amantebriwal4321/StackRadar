@@ -1,38 +1,32 @@
 """
-Scheduler — Background scraper loop with domain aggregation pipeline.
+Scheduler — Background scraper loop with tool-level aggregation pipeline.
 
 Flow:
-  1. Fetch raw data from all sources (GitHub, HN, DevTo, Reddit, RSS News)
-  2. Classify each content item into technology domains using keyword matching
-  3. Aggregate signal counts per domain
-  4. Calculate weighted scores, growth stages, and summaries
-  5. Upsert Domain records in database
-  6. (Legacy) Also maintain tool-level Technology records for backward compat
+  1. Fetch raw data from all sources (GitHub repo stats, HN, DevTo, Reddit, RSS News)
+  2. Classify each content item into tool slugs using keyword matching
+  3. Aggregate signal counts per tool
+  4. Calculate weighted scores and growth stages
+  5. Run Decision Intelligence Layer (trend classification, recommendations)
+  6. Upsert Tool records in database
+  7. Insert daily ToolSnapshot for time-series tracking
+  8. Aggregate tool scores per domain
 """
 
 import asyncio
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.models.all_models import (
-    Technology, Repository, Article, RoadmapStep,
-    TechnologyDomain as TechnologyDomainModel, TechnologyDifficulty,
-    TechnologyPrerequisite, TechnologyRole, Domain,
-)
+from app.models.all_models import Tool, ToolSnapshot, Domain
 from app.services.scraper import (
-    fetch_github_repos, fetch_hackernews, fetch_devto,
+    fetch_github_repo_stats, fetch_hackernews, fetch_devto,
     fetch_reddit, fetch_tech_news,
 )
 from app.services.scoring import (
-    classify_text_to_domains, calculate_domain_score,
-    classify_growth_stage, generate_domain_summary,
-    DOMAIN_TAXONOMY,
-    # Legacy
-    calculate_trend_score, extract_technologies, get_category_for_tech,
-    get_emerging_tech_dict,
+    classify_text_to_tools, calculate_tool_score,
+    classify_growth_stage, generate_tool_summary,
+    classify_trend, generate_recommendation, classify_learning_priority,
 )
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +34,7 @@ scrape_status = {
     "last_scraped_time": None,
     "next_scraped_time": None,
     "sources": {},
+    "tools_updated": 0,
 }
 
 
@@ -56,262 +51,224 @@ async def run_scraper_loop():
             logger.info("Scraping completed. Sleeping for 30 minutes.")
         except Exception as e:
             logger.error(f"Error in scraper loop: {e}", exc_info=True)
-        
+
         await asyncio.sleep(1800)  # 30 minutes
 
 
 async def perform_full_scrape():
     """
     Full scraping pipeline:
-    1. Fetch all sources in parallel
-    2. Aggregate to domain-level signals
-    3. Calculate scores and upsert domains
-    4. (Legacy) Also update tool-level records
+    1. Fetch community sources in parallel (HN, DevTo, Reddit, News)
+    2. Classify content → tool mentions
+    3. Fetch GitHub stats per tool (targeted, 1 API call each)
+    4. Calculate scores, growth, decision intelligence
+    5. Save to DB + create daily snapshot
+    6. Aggregate domain scores
     """
     db: Session = SessionLocal()
-    
+
     try:
-        # ━━━ STEP 1: Fetch all sources ━━━
-        logger.info("Step 1: Fetching from all data sources...")
-        
-        hn_task = fetch_hackernews()
-        devto_task = fetch_devto()
-        reddit_task = fetch_reddit()
-        news_task = fetch_tech_news()
-        
+        # ━━━ STEP 1: Fetch all community sources ━━━
+        logger.info("Step 1: Fetching from community sources...")
+
         hn_stories, devto_articles, reddit_posts, news_articles = await asyncio.gather(
-            hn_task, devto_task, reddit_task, news_task
+            fetch_hackernews(),
+            fetch_devto(),
+            fetch_reddit(),
+            fetch_tech_news(),
         )
-        
+
         scrape_status["sources"] = {
             "hackernews": len(hn_stories),
             "devto": len(devto_articles),
             "reddit": len(reddit_posts),
             "news": len(news_articles),
         }
-        
-        logger.info(f"Fetched: HN={len(hn_stories)}, DevTo={len(devto_articles)}, "
-                     f"Reddit={len(reddit_posts)}, News={len(news_articles)}")
-        
-        # ━━━ STEP 2: Classify content → domains ━━━
-        logger.info("Step 2: Classifying content into technology domains...")
-        
-        # Track signals per domain
-        domain_signals: dict[str, dict[str, list]] = {
-            slug: {"github": [], "hn": [], "devto": [], "reddit": [], "news": []}
-            for slug in DOMAIN_TAXONOMY
+
+        logger.info(
+            f"Fetched: HN={len(hn_stories)}, DevTo={len(devto_articles)}, "
+            f"Reddit={len(reddit_posts)}, News={len(news_articles)}"
+        )
+
+        # ━━━ STEP 2: Classify content → tool mentions ━━━
+        logger.info("Step 2: Classifying content into tool mentions...")
+
+        # Initialize mention counters for all tools
+        all_tools = db.query(Tool).all()
+        tool_mentions: dict[str, dict[str, int]] = {
+            t.slug: {"hn": 0, "devto": 0, "reddit": 0, "news": 0}
+            for t in all_tools
         }
-        
+
         # Classify HN stories
         for story in hn_stories:
             title = story.get("title", "")
-            matched = classify_text_to_domains(title)
-            for slug in matched:
-                domain_signals[slug]["hn"].append(story)
-        
+            for slug in classify_text_to_tools(title):
+                if slug in tool_mentions:
+                    tool_mentions[slug]["hn"] += 1
+
         # Classify DevTo articles
         for article in devto_articles:
             title = article.get("title", "")
             tags = " ".join(article.get("tag_list", []) if isinstance(article.get("tag_list"), list) else [])
-            matched = classify_text_to_domains(f"{title} {tags}")
-            for slug in matched:
-                domain_signals[slug]["devto"].append(article)
-        
+            for slug in classify_text_to_tools(f"{title} {tags}"):
+                if slug in tool_mentions:
+                    tool_mentions[slug]["devto"] += 1
+
         # Classify Reddit posts
         for post in reddit_posts:
             title = post.get("title", "")
             subreddit = post.get("subreddit", "")
-            matched = classify_text_to_domains(f"{title} {subreddit}")
-            for slug in matched:
-                domain_signals[slug]["reddit"].append(post)
-        
+            for slug in classify_text_to_tools(f"{title} {subreddit}"):
+                if slug in tool_mentions:
+                    tool_mentions[slug]["reddit"] += 1
+
         # Classify News articles
         for article in news_articles:
             title = article.get("title", "")
-            matched = classify_text_to_domains(title)
-            for slug in matched:
-                domain_signals[slug]["news"].append(article)
-        
-        # Fetch GitHub for each domain (using 2 representative keywords per domain)
-        logger.info("Step 2b: Fetching GitHub repos per domain...")
-        github_search_topics = {
-            "ai-ml": ["machine-learning", "llm"],
-            "web3": ["blockchain", "web3"],
-            "cybersecurity": ["cybersecurity", "security"],
-            "cloud-native": ["kubernetes", "serverless"],
-            "edge-computing": ["iot", "edge-computing"],
-            "ar-vr": ["virtual-reality", "augmented-reality"],
-            "quantum": ["quantum-computing", "qiskit"],
-            "devops": ["devops", "cicd"],
-        }
-        
-        for slug, topics in github_search_topics.items():
-            for topic in topics:
-                repos = await fetch_github_repos(settings.GITHUB_TOKEN, topic)
-                domain_signals[slug]["github"].extend(repos)
-                await asyncio.sleep(2.0)  # 2s gap to avoid GitHub secondary rate limits
-        
-        total_github = sum(len(v["github"]) for v in domain_signals.values())
-        scrape_status["sources"]["github"] = total_github
-        logger.info(f"GitHub: Fetched {total_github} repos across all domains")
-        
-        # ━━━ STEP 3: Calculate scores and upsert domains ━━━
-        logger.info("Step 3: Calculating domain scores and saving to database...")
-        
-        for slug, taxonomy in DOMAIN_TAXONOMY.items():
-            signals = domain_signals[slug]
-            gh_count = len(signals["github"])
-            hn_count = len(signals["hn"])
-            devto_count = len(signals["devto"])
-            reddit_count = len(signals["reddit"])
-            news_count = len(signals["news"])
-            
-            score = calculate_domain_score(gh_count, hn_count, devto_count, reddit_count, news_count)
-            stage = classify_growth_stage(score)
-            summary = generate_domain_summary(
-                taxonomy["name"], score, stage,
-                gh_count, hn_count, devto_count, reddit_count, news_count
+            for slug in classify_text_to_tools(title):
+                if slug in tool_mentions:
+                    tool_mentions[slug]["news"] += 1
+
+        # ━━━ STEP 3: Fetch GitHub stats per tool ━━━
+        logger.info("Step 3: Fetching GitHub repo stats per tool...")
+
+        github_stats: dict[str, dict] = {}
+        for tool in all_tools:
+            if tool.github_repo:
+                stats = await fetch_github_repo_stats(tool.github_repo)
+                if stats:
+                    github_stats[tool.slug] = stats
+                await asyncio.sleep(0.5)  # 0.5s gap — 25 tools × 0.5s = ~12.5s total
+
+        scrape_status["sources"]["github_repos"] = len(github_stats)
+        logger.info(f"GitHub: Fetched stats for {len(github_stats)} / {len(all_tools)} repos")
+
+        # ━━━ STEP 4: Calculate scores + Decision Intelligence ━━━
+        logger.info("Step 4: Computing scores, growth, and decision intelligence...")
+
+        today = date.today()
+        tools_updated = 0
+
+        for tool in all_tools:
+            slug = tool.slug
+            mentions = tool_mentions.get(slug, {"hn": 0, "devto": 0, "reddit": 0, "news": 0})
+            gh = github_stats.get(slug, {})
+
+            new_stars = gh.get("stars", tool.stars)
+            new_forks = gh.get("forks", tool.forks)
+
+            # Calculate score
+            new_score = calculate_tool_score(
+                stars=new_stars,
+                forks=new_forks,
+                hn_count=mentions["hn"],
+                devto_count=mentions["devto"],
+                reddit_count=mentions["reddit"],
+                news_count=mentions["news"],
             )
-            
-            # Upsert domain
-            domain = db.query(Domain).filter(Domain.slug == slug).first()
-            if not domain:
-                domain = Domain(
-                    name=taxonomy["name"],
-                    slug=slug,
-                    icon=taxonomy["icon"],
+
+            # Calculate growth percentage (compare to previous score)
+            old_score = tool.score if tool.score else 0.0
+            if old_score > 0:
+                growth_pct = round(((new_score - old_score) / old_score) * 100, 1)
+            else:
+                growth_pct = 0.0
+
+            # Decision Intelligence
+            trend_stage = classify_trend(growth_pct)
+            recommendation = generate_recommendation(tool.name, trend_stage, new_score)
+            learning_priority = classify_learning_priority(trend_stage)
+            stage = classify_growth_stage(new_score)
+
+            # Update tool record
+            tool.stars = new_stars
+            tool.forks = new_forks
+            tool.open_issues = gh.get("open_issues", tool.open_issues)
+            tool.watchers = gh.get("watchers", tool.watchers)
+            tool.hn_count = mentions["hn"]
+            tool.devto_count = mentions["devto"]
+            tool.reddit_count = mentions["reddit"]
+            tool.news_count = mentions["news"]
+            tool.score = new_score
+            tool.growth_pct = growth_pct
+            tool.stage = stage
+            tool.trend_stage = trend_stage
+            tool.recommendation = recommendation
+            tool.learning_priority = learning_priority
+            tool.updated_at = datetime.now(timezone.utc)
+
+            # ━━━ STEP 5: Insert daily snapshot (upsert) ━━━
+            total_mentions = mentions["hn"] + mentions["devto"] + mentions["reddit"] + mentions["news"]
+
+            existing_snapshot = db.query(ToolSnapshot).filter(
+                ToolSnapshot.tool_id == tool.id,
+                ToolSnapshot.date == today,
+            ).first()
+
+            if existing_snapshot:
+                existing_snapshot.score = new_score
+                existing_snapshot.stars = new_stars
+                existing_snapshot.forks = new_forks
+                existing_snapshot.mentions = total_mentions
+                existing_snapshot.hn_count = mentions["hn"]
+                existing_snapshot.devto_count = mentions["devto"]
+                existing_snapshot.reddit_count = mentions["reddit"]
+            else:
+                snapshot = ToolSnapshot(
+                    tool_id=tool.id,
+                    date=today,
+                    score=new_score,
+                    stars=new_stars,
+                    forks=new_forks,
+                    mentions=total_mentions,
+                    hn_count=mentions["hn"],
+                    devto_count=mentions["devto"],
+                    reddit_count=mentions["reddit"],
                 )
-                db.add(domain)
-                db.flush()
-            
-            domain.score = score
-            domain.stage = stage
-            domain.summary = summary
-            domain.github_count = gh_count
-            domain.hn_count = hn_count
-            domain.devto_count = devto_count
-            domain.reddit_count = reddit_count
-            domain.news_count = news_count
-            domain.updated_at = datetime.now(timezone.utc)
-            
-            logger.info(f"  {taxonomy['name']}: score={score}, stage={stage}, "
-                        f"GH={gh_count} HN={hn_count} DT={devto_count} "
-                        f"RD={reddit_count} NW={news_count}")
-        
-        # ━━━ STEP 4: Legacy — tool-level pipeline ━━━
-        logger.info("Step 4: Updating legacy tool-level records...")
-        await _update_legacy_tools(db, hn_stories, devto_articles)
-        
+                db.add(snapshot)
+
+            tools_updated += 1
+
+            logger.info(
+                f"  {tool.name}: score={new_score} growth={growth_pct:+.1f}% "
+                f"trend={trend_stage} priority={learning_priority} "
+                f"⭐{new_stars:,} HN={mentions['hn']} DT={mentions['devto']} "
+                f"RD={mentions['reddit']} NW={mentions['news']}"
+            )
+
+        # ━━━ STEP 6: Aggregate domain scores ━━━
+        logger.info("Step 6: Aggregating domain-level scores...")
+
+        domains = db.query(Domain).all()
+        for domain in domains:
+            domain_tools = [t for t in all_tools if t.domain_id == domain.id]
+            if domain_tools:
+                domain.score = round(
+                    sum(t.score for t in domain_tools) / len(domain_tools), 1
+                )
+                top_stage_counts = {}
+                for t in domain_tools:
+                    stage = t.stage
+                    top_stage_counts[stage] = top_stage_counts.get(stage, 0) + 1
+                domain.stage = max(top_stage_counts, key=top_stage_counts.get) if top_stage_counts else "Emerging"
+
+                # Generate domain summary from constituent tools
+                tool_names = [t.name for t in sorted(domain_tools, key=lambda x: x.score, reverse=True)[:3]]
+                domain.summary = (
+                    f"{domain.name} domain (avg score: {domain.score}) "
+                    f"led by {', '.join(tool_names)}."
+                )
+                domain.updated_at = datetime.now(timezone.utc)
+
+                logger.info(f"  {domain.name}: avg_score={domain.score} stage={domain.stage}")
+
+        scrape_status["tools_updated"] = tools_updated
         db.commit()
-        logger.info("All domain and tool records saved successfully!")
-        
+        logger.info(f"All {tools_updated} tools updated and saved successfully!")
+
     except Exception as e:
         db.rollback()
         logger.error(f"Scraper pipeline error: {e}", exc_info=True)
     finally:
         db.close()
-
-
-async def _update_legacy_tools(db: Session, hn_stories: list, devto_articles: list):
-    """Maintain backward-compatible tool-level records."""
-    emerging_techs = list(get_emerging_tech_dict().values())
-    tech_mentions = {t: {"github": [], "hn": [], "devto": []} for t in emerging_techs}
-    
-    # Fetch GitHub for individual tools
-    for tech_name in emerging_techs:
-        try:
-            repos = await fetch_github_repos(settings.GITHUB_TOKEN, tech_name.lower())
-            tech_mentions[tech_name]["github"] = repos
-        except Exception as e:
-            logger.error(f"Error fetching github repos for {tech_name}: {e}")
-        await asyncio.sleep(0.5)
-    
-    # Match HN/DevTo to tools
-    for s in hn_stories:
-        title = s.get("title", "")
-        for t in extract_technologies(title):
-            if t in tech_mentions:
-                tech_mentions[t]["hn"].append(s)
-    
-    for a in devto_articles:
-        title = a.get("title", "")
-        for t in extract_technologies(title):
-            if t in tech_mentions:
-                tech_mentions[t]["devto"].append(a)
-    
-    # Upsert
-    for tech_name, data in tech_mentions.items():
-        gh_count = len(data["github"])
-        hn_count = len(data["hn"])
-        dev_count = len(data["devto"])
-        
-        momentum_score = calculate_trend_score(gh_count, hn_count, dev_count)
-        category = get_category_for_tech(tech_name)
-        
-        tech = db.query(Technology).filter(Technology.name == tech_name).first()
-        if not tech:
-            sorted_repos = sorted(data["github"], key=lambda x: x.get("stars", 0), reverse=True)
-            desc = sorted_repos[0].get("description", "") if sorted_repos else ""
-            if not desc:
-                desc = f"A trending {category} tool observed across GitHub, HackerNews, and Dev.to."
-            
-            tech = Technology(name=tech_name, description=desc[:300] if desc else "")
-            db.add(tech)
-            db.flush()
-        
-        tech.trend_score = momentum_score
-        tech.category = category
-        tech.github_count = gh_count
-        tech.hn_count = hn_count
-        tech.devto_count = dev_count
-        tech.updated_at = datetime.now(timezone.utc)
-        
-        # Upsert repositories (use savepoint so dupes don't kill the transaction)
-        for r_data in sorted(data["github"], key=lambda x: x.get("stargazers_count", x.get("stars", 0)), reverse=True)[:5]:
-            repo_url = r_data.get("html_url") or r_data.get("url")
-            if not repo_url:
-                continue
-            try:
-                repo = db.query(Repository).filter(Repository.url == repo_url).first()
-                if not repo:
-                    db.begin_nested()  # Savepoint
-                    repo = Repository(
-                        technology_id=tech.id,
-                        name=r_data.get("full_name", ""),
-                        stars=r_data.get("stargazers_count", r_data.get("stars", 0)),
-                        forks=r_data.get("forks_count", r_data.get("forks", 0)),
-                        url=repo_url,
-                    )
-                    db.add(repo)
-                    db.flush()
-                else:
-                    repo.stars = r_data.get("stargazers_count", r_data.get("stars", 0))
-                    repo.forks = r_data.get("forks_count", r_data.get("forks", 0))
-            except Exception:
-                db.rollback()  # Rolls back only the savepoint
-        
-        # Upsert articles (same savepoint pattern)
-        for s_data in data["hn"][:5]:
-            url = s_data.get("url")
-            if not url:
-                continue
-            try:
-                if not db.query(Article).filter(Article.url == url).first():
-                    db.begin_nested()
-                    db.add(Article(technology_id=tech.id, title=s_data.get("title", ""), source="hackernews", url=url))
-                    db.flush()
-            except Exception:
-                db.rollback()
-        
-        for a_data in data["devto"][:5]:
-            url = a_data.get("url")
-            if not url:
-                continue
-            try:
-                if not db.query(Article).filter(Article.url == url).first():
-                    db.begin_nested()
-                    db.add(Article(technology_id=tech.id, title=a_data.get("title", ""), source="devto", url=url))
-                    db.flush()
-            except Exception:
-                db.rollback()
-

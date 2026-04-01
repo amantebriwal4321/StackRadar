@@ -24,7 +24,16 @@ async def startup_event():
     from app.db.base import Base
     from app.db.session import engine
     Base.metadata.create_all(bind=engine)
-    
+
+    # Seed database with tools, domains, and roadmaps if empty
+    from app.db.session import SessionLocal
+    from app.services.seed import run_seed
+    db = SessionLocal()
+    try:
+        run_seed(db)
+    finally:
+        db.close()
+
     asyncio.create_task(run_scraper_loop())
 
 if settings.BACKEND_CORS_ORIGINS:

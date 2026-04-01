@@ -2,7 +2,7 @@
 Data Ingestion Layer — fetches raw data from multiple sources.
 
 Sources:
-  - GitHub API (trending repos by search)
+  - GitHub API (specific repo stats via GET /repos/{owner}/{repo})
   - HackerNews Firebase API (top stories)
   - Dev.to API (latest articles)
   - Reddit JSON API (posts from tech subreddits)
@@ -13,138 +13,109 @@ import httpx
 import logging
 import asyncio
 import feedparser
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# GITHUB
+# GITHUB — Targeted Repo Stats
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Validate token on module load
 _gh_token = settings.GITHUB_TOKEN
 if _gh_token:
-    logger.info(f"GitHub token loaded: {_gh_token[:12]}***{_gh_token[-4:]} (len={len(_gh_token)})")
+    logger.info(f"GitHub token loaded: {_gh_token[:8]}*** (len={len(_gh_token)})")
 else:
-    logger.warning("⚠️ GITHUB_TOKEN is empty — GitHub API will use unauthenticated rate limit (60 req/hr)")
+    logger.warning("⚠️  GITHUB_TOKEN is empty — GitHub API will use unauthenticated rate limit (60 req/hr)")
 
 MAX_RETRIES = 2
-RETRY_BACKOFF = [1.0, 3.0]  # seconds
+RETRY_BACKOFF = [1.0, 3.0]
 
 
-async def fetch_github_repos(token: str, tech_name: str) -> List[Dict[str, Any]]:
+async def fetch_github_repo_stats(owner_repo: str) -> Optional[Dict[str, Any]]:
     """
-    Fetch trending repos from GitHub search API for a given topic.
-    
-    - Uses `token` auth format (GitHub-recommended for PATs)
-    - Retries on transient errors (401, 403, 429, 5xx) with exponential backoff
-    - Logs rate limit headers for diagnostics
+    Fetch stats for a specific GitHub repo (e.g. 'facebook/react').
+
+    Uses GET /repos/{owner}/{repo} — single API call, returns:
+      stars, forks, watchers, open_issues, description
     """
-    active_token = token if token else settings.GITHUB_TOKEN
-    
+    token = settings.GITHUB_TOKEN
+
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
-    if active_token:
-        headers["Authorization"] = f"token {active_token}"
-        
-    url = "https://api.github.com/search/repositories"
-    params = {
-        "q": f"{tech_name} in:name,description,topics",
-        "sort": "stars",
-        "order": "desc",
-        "per_page": 5
-    }
-    
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    url = f"https://api.github.com/repos/{owner_repo}"
+
     for attempt in range(MAX_RETRIES + 1):
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.get(url, headers=headers, params=params, timeout=15.0)
-                
-                # Log rate limit info
+                response = await client.get(url, headers=headers, timeout=15.0)
+
                 remaining = response.headers.get("x-ratelimit-remaining", "?")
                 limit = response.headers.get("x-ratelimit-limit", "?")
-                
+
                 if response.status_code == 200:
                     data = response.json()
-                    items = data.get("items", [])
-                    logger.debug(f"GitHub '{tech_name}': {len(items)} repos found (rate: {remaining}/{limit})")
-                    return items
-                
-                elif response.status_code == 401:
-                    # Auth failure — log details and retry with no auth as fallback
-                    logger.error(
-                        f"GitHub 401 Unauthorized for '{tech_name}' "
-                        f"(token: {'set' if active_token else 'empty'}, "
-                        f"attempt {attempt+1}/{MAX_RETRIES+1})"
+                    logger.debug(
+                        f"GitHub '{owner_repo}': ⭐{data.get('stargazers_count', 0):,} "
+                        f"(rate: {remaining}/{limit})"
                     )
-                    if attempt == MAX_RETRIES:
-                        # Final retry without auth (unauthenticated fallback)
-                        logger.warning(f"GitHub: Falling back to unauthenticated request for '{tech_name}'")
-                        headers.pop("Authorization", None)
-                        continue
-                        
-                elif response.status_code == 403:
-                    # Rate limited or token scope issue
+                    return {
+                        "stars": data.get("stargazers_count", 0),
+                        "forks": data.get("forks_count", 0),
+                        "watchers": data.get("subscribers_count", 0),
+                        "open_issues": data.get("open_issues_count", 0),
+                        "description": data.get("description", ""),
+                    }
+
+                elif response.status_code == 404:
+                    logger.error(f"GitHub 404: repo '{owner_repo}' not found")
+                    return None
+
+                elif response.status_code in (401, 403):
                     logger.warning(
-                        f"GitHub 403 Forbidden for '{tech_name}' "
-                        f"(rate: {remaining}/{limit}, attempt {attempt+1})"
+                        f"GitHub {response.status_code} for '{owner_repo}' "
+                        f"(rate: {remaining}/{limit}, attempt {attempt + 1})"
                     )
                     if remaining == "0":
-                        reset_at = response.headers.get("x-ratelimit-reset", "unknown")
+                        reset_at = response.headers.get("x-ratelimit-reset", "?")
                         logger.warning(f"GitHub rate limit exhausted. Resets at epoch: {reset_at}")
-                        return []  # No point retrying if rate limited
-                
-                elif response.status_code == 422:
-                    # Invalid query — don't retry
-                    logger.error(f"GitHub 422 for '{tech_name}': invalid query. Response: {response.text[:200]}")
-                    return []
-                
+                        return None
+
                 elif response.status_code == 429:
-                    # Secondary rate limit
                     retry_after = int(response.headers.get("retry-after", "5"))
-                    logger.warning(f"GitHub 429 for '{tech_name}': retry-after {retry_after}s")
+                    logger.warning(f"GitHub 429 for '{owner_repo}': retry-after {retry_after}s")
                     await asyncio.sleep(retry_after)
                     continue
-                
+
                 elif response.status_code >= 500:
-                    logger.error(f"GitHub {response.status_code} server error for '{tech_name}'")
-                
+                    logger.error(f"GitHub {response.status_code} server error for '{owner_repo}'")
+
                 else:
-                    logger.error(
-                        f"GitHub unexpected {response.status_code} for '{tech_name}': "
-                        f"{response.text[:200]}"
-                    )
-                  
+                    logger.error(f"GitHub unexpected {response.status_code} for '{owner_repo}'")
+
             except httpx.TimeoutException:
-                logger.warning(f"GitHub timeout for '{tech_name}' (attempt {attempt+1})")
+                logger.warning(f"GitHub timeout for '{owner_repo}' (attempt {attempt + 1})")
             except httpx.ConnectError as e:
-                logger.error(f"GitHub connection error for '{tech_name}': {e}")
-                return []  # Network issue, don't retry
+                logger.error(f"GitHub connection error for '{owner_repo}': {e}")
+                return None
             except Exception as e:
-                logger.error(f"GitHub unexpected error for '{tech_name}': {type(e).__name__}: {e}")
-        
+                logger.error(f"GitHub unexpected error for '{owner_repo}': {type(e).__name__}: {e}")
+
         # Backoff before retry
         if attempt < MAX_RETRIES:
             delay = RETRY_BACKOFF[attempt]
-            logger.info(f"GitHub: retrying '{tech_name}' in {delay}s...")
+            logger.info(f"GitHub: retrying '{owner_repo}' in {delay}s...")
             await asyncio.sleep(delay)
-    
-    logger.error(f"GitHub: all {MAX_RETRIES+1} attempts failed for '{tech_name}'")
-    return []
 
-
-async def fetch_github_trending_topics(token: str, topics: List[str]) -> Dict[str, List[Dict]]:
-    """Fetch GitHub repos for multiple topics with rate-limit-safe delays."""
-    results = {}
-    for topic in topics:
-        repos = await fetch_github_repos(token, topic)
-        results[topic] = repos
-        await asyncio.sleep(1.0)  # 1s gap between queries to stay well within rate limits
-    return results
+    logger.error(f"GitHub: all {MAX_RETRIES + 1} attempts failed for '{owner_repo}'")
+    return None
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -154,14 +125,14 @@ async def fetch_github_trending_topics(token: str, topics: List[str]) -> Dict[st
 async def fetch_hackernews() -> List[Dict[str, Any]]:
     """Fetch top 50 stories from HackerNews Firebase API (concurrent batches)."""
     url_topstories = "https://hacker-news.firebaseio.com/v0/topstories.json"
-    
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url_topstories, timeout=10.0)
             response.raise_for_status()
             story_ids = response.json()[:50]
-            
-            async def fetch_story(story_id: int) -> Dict[str, Any] | None:
+
+            async def fetch_story(story_id: int) -> Optional[Dict[str, Any]]:
                 try:
                     story_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
                     story_res = await client.get(story_url, timeout=5.0)
@@ -172,14 +143,14 @@ async def fetch_hackernews() -> List[Dict[str, Any]]:
                 except Exception:
                     pass
                 return None
-            
+
             # Fetch in batches of 10
-            stories = []
+            stories: List[Dict[str, Any]] = []
             for i in range(0, len(story_ids), 10):
-                batch = story_ids[i:i+10]
+                batch = story_ids[i:i + 10]
                 results = await asyncio.gather(*[fetch_story(sid) for sid in batch])
                 stories.extend([s for s in results if s])
-                        
+
             return stories
         except Exception as e:
             logger.error(f"HackerNews API Error: {e}")
@@ -194,7 +165,7 @@ async def fetch_devto() -> List[Dict[str, Any]]:
     """Fetch latest articles from Dev.to API."""
     url = "https://dev.to/api/articles"
     params = {"per_page": 50, "top": 1}
-    
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url, params=params, timeout=10.0)
@@ -218,26 +189,29 @@ REDDIT_SUBREDDITS = [
     "cryptocurrency",
     "cloudcomputing",
     "artificial",
+    "reactjs",
+    "rust",
+    "golang",
 ]
 
 async def fetch_reddit() -> List[Dict[str, Any]]:
     """Fetch hot posts from tech subreddits using Reddit's public JSON API."""
-    posts = []
-    
+    posts: List[Dict[str, Any]] = []
+
     async with httpx.AsyncClient() as client:
         for subreddit in REDDIT_SUBREDDITS:
             try:
                 url = f"https://www.reddit.com/r/{subreddit}/hot.json"
-                headers = {"User-Agent": "StackRadar/1.0 (Tech Trend Analyzer)"}
+                headers = {"User-Agent": "StackRadar/2.0 (Tech Trend Analyzer)"}
                 response = await client.get(url, headers=headers, params={"limit": 15}, timeout=10.0)
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     children = data.get("data", {}).get("children", [])
                     for child in children:
                         post = child.get("data", {})
                         if post.get("stickied"):
-                            continue  # Skip pinned posts
+                            continue
                         posts.append({
                             "title": post.get("title", ""),
                             "url": f"https://reddit.com{post.get('permalink', '')}",
@@ -249,12 +223,12 @@ async def fetch_reddit() -> List[Dict[str, Any]]:
                 elif response.status_code == 429:
                     logger.warning(f"Reddit rate limited on r/{subreddit}, skipping remaining")
                     break
-                    
-                await asyncio.sleep(1.0)  # Reddit rate limit: 1 req/sec without auth
+
+                await asyncio.sleep(1.0)
             except Exception as e:
                 logger.error(f"Reddit r/{subreddit} Error: {e}")
                 continue
-    
+
     return posts
 
 
@@ -266,22 +240,22 @@ RSS_FEEDS = [
     "https://techcrunch.com/feed/",
     "https://feeds.arstechnica.com/arstechnica/technology-lab",
     "https://www.theverge.com/rss/index.xml",
-    "https://hnrss.org/newest?points=100",  # HN stories with 100+ points
+    "https://hnrss.org/newest?points=100",
 ]
 
 async def fetch_tech_news() -> List[Dict[str, Any]]:
     """Fetch latest tech articles from RSS feeds."""
-    articles = []
-    
+    articles: List[Dict[str, Any]] = []
+
     async with httpx.AsyncClient() as client:
         for feed_url in RSS_FEEDS:
             try:
                 response = await client.get(feed_url, timeout=10.0)
                 if response.status_code != 200:
                     continue
-                    
+
                 feed = feedparser.parse(response.text)
-                for entry in feed.entries[:15]:  # Max 15 per feed
+                for entry in feed.entries[:15]:
                     articles.append({
                         "title": entry.get("title", ""),
                         "url": entry.get("link", ""),
@@ -291,5 +265,5 @@ async def fetch_tech_news() -> List[Dict[str, Any]]:
             except Exception as e:
                 logger.error(f"RSS feed error ({feed_url}): {e}")
                 continue
-    
+
     return articles
