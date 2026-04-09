@@ -21,4 +21,7 @@ Kubernetes
 
 ## Run Locally
 
-docker-compose up --build
+docker-compose up --build 
+ .\venv\Scripts\Activate.ps1 ##to set the virtual enviornment
+ uvicorn app.main:app --reload ##to ru the backend in virtual enviornment
+ npm run dev ##to ru the frontend in virtual enviornment
