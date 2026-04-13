@@ -5,38 +5,24 @@ services:
     image: postgres:15-alpine
     container_name: stackradar_db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-stackradar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stackradar_pass}
       POSTGRES_DB: ${POSTGRES_DB:-stackradar}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stackradar}" ]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: stackradar_redis
-    ports:
-      - "6379:6379"
-
-  meilisearch:
-    image: getmeili/meilisearch:v1.3
-    container_name: stackradar_meili
-    ports:
-      - "7700:7700"
-    environment:
-      MEILI_NO_ANALYTICS: "true"
 
   backend:
     build:
       context: ./backend
     container_name: stackradar_backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     volumes:
       - ./backend:/app
     ports:
@@ -44,17 +30,30 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=redis://redis:6379
-      - MEILI_URL=http://meilisearch:7700
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-stackradar}:${POSTGRES_PASSWORD:-stackradar_pass}@db:5432/${POSTGRES_DB:-stackradar}
+      - RUN_SCRAPER_INLINE=0
+      - DOCKER_ENV=1
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_started
-      meilisearch:
-        condition: service_started
+    restart: unless-stopped
+
+  scraper:
+    build:
+      context: ./backend
+    container_name: stackradar_scraper
+    command: python run_scraper.py
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-stackradar}:${POSTGRES_PASSWORD:-stackradar_pass}@db:5432/${POSTGRES_DB:-stackradar}
+      - DOCKER_ENV=1
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
 
 volumes:
   postgres_data:

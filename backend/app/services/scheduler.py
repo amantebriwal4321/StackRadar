@@ -1,12 +1,12 @@
 """
-Scheduler — Background scraper loop with tool-level aggregation pipeline.
+Scheduler — Background scraper loop with sentiment-aware, tool-level aggregation pipeline.
 
 Flow:
   1. Fetch raw data from all sources (GitHub repo stats, HN, DevTo, Reddit, RSS News)
-  2. Classify each content item into tool slugs using keyword matching
-  3. Aggregate signal counts per tool
-  4. Calculate weighted scores and growth stages
-  5. Run Decision Intelligence Layer (trend classification, recommendations)
+  2. Run batch sentiment analysis on all content via Groq LLM
+  3. Count sentiment-weighted mentions per tool
+  4. Fetch GitHub stats per tool (targeted, 1 API call each)
+  5. Calculate weighted scores, growth stages, and decision intelligence
   6. Upsert Tool records in database
   7. Insert daily ToolSnapshot for time-series tracking
   8. Aggregate tool scores per domain
@@ -20,10 +20,10 @@ from app.db.session import SessionLocal
 from app.models.all_models import Tool, ToolSnapshot, Domain
 from app.services.scraper import (
     fetch_github_repo_stats, fetch_hackernews, fetch_devto,
-    fetch_reddit, fetch_tech_news,
+    fetch_reddit, fetch_tech_news, batch_sentiment_analysis,
 )
 from app.services.scoring import (
-    classify_text_to_tools, calculate_tool_score,
+    count_weighted_mentions, calculate_tool_score,
     classify_growth_stage, generate_tool_summary,
     classify_trend, generate_recommendation, classify_learning_priority,
 )
@@ -34,6 +34,7 @@ scrape_status = {
     "last_scraped_time": None,
     "next_scraped_time": None,
     "sources": {},
+    "sentiment": {},
     "tools_updated": 0,
 }
 
@@ -58,12 +59,13 @@ async def run_scraper_loop():
 async def perform_full_scrape():
     """
     Full scraping pipeline:
-    1. Fetch community sources in parallel (HN, DevTo, Reddit, News)
-    2. Classify content → tool mentions
-    3. Fetch GitHub stats per tool (targeted, 1 API call each)
-    4. Calculate scores, growth, decision intelligence
-    5. Save to DB + create daily snapshot
-    6. Aggregate domain scores
+    1. Fetch community sources in parallel
+    2. Sentiment analysis via Groq LLM
+    3. Count sentiment-weighted mentions per tool
+    4. Fetch GitHub stats per tool
+    5. Calculate scores, growth, decision intelligence
+    6. Save to DB + create daily snapshot
+    7. Aggregate domain scores
     """
     db: Session = SessionLocal()
 
@@ -90,48 +92,48 @@ async def perform_full_scrape():
             f"Reddit={len(reddit_posts)}, News={len(news_articles)}"
         )
 
-        # ━━━ STEP 2: Classify content → tool mentions ━━━
-        logger.info("Step 2: Classifying content into tool mentions...")
+        # ━━━ STEP 2: Sentiment Analysis ━━━
+        logger.info("Step 2: Running sentiment analysis via Groq LLM...")
 
-        # Initialize mention counters for all tools
-        all_tools = db.query(Tool).all()
-        tool_mentions: dict[str, dict[str, int]] = {
-            t.slug: {"hn": 0, "devto": 0, "reddit": 0, "news": 0}
-            for t in all_tools
+        all_content = hn_stories + devto_articles + reddit_posts + news_articles
+        all_content = await batch_sentiment_analysis(all_content)
+
+        # Split back into sources (they were concatenated in order)
+        hn_end = len(hn_stories)
+        devto_end = hn_end + len(devto_articles)
+        reddit_end = devto_end + len(reddit_posts)
+
+        hn_stories = all_content[:hn_end]
+        devto_articles = all_content[hn_end:devto_end]
+        reddit_posts = all_content[devto_end:reddit_end]
+        news_articles = all_content[reddit_end:]
+
+        # Log sentiment distribution
+        total_pos = sum(1 for item in all_content if item.get("sentiment") == "positive")
+        total_neg = sum(1 for item in all_content if item.get("sentiment") == "negative")
+        total_neu = sum(1 for item in all_content if item.get("sentiment") == "neutral")
+        logger.info(f"Sentiment totals: +{total_pos} positive, -{total_neg} negative, ~{total_neu} neutral")
+
+        scrape_status["sentiment"] = {
+            "positive": total_pos,
+            "negative": total_neg,
+            "neutral": total_neu,
+            "total": len(all_content),
         }
 
-        # Classify HN stories
-        for story in hn_stories:
-            title = story.get("title", "")
-            for slug in classify_text_to_tools(title):
-                if slug in tool_mentions:
-                    tool_mentions[slug]["hn"] += 1
+        # ━━━ STEP 3: Count sentiment-weighted mentions per tool ━━━
+        logger.info("Step 3: Counting sentiment-weighted mentions per tool...")
 
-        # Classify DevTo articles
-        for article in devto_articles:
-            title = article.get("title", "")
-            tags = " ".join(article.get("tag_list", []) if isinstance(article.get("tag_list"), list) else [])
-            for slug in classify_text_to_tools(f"{title} {tags}"):
-                if slug in tool_mentions:
-                    tool_mentions[slug]["devto"] += 1
+        all_tools = db.query(Tool).all()
+        all_slugs = {t.slug for t in all_tools}
 
-        # Classify Reddit posts
-        for post in reddit_posts:
-            title = post.get("title", "")
-            subreddit = post.get("subreddit", "")
-            for slug in classify_text_to_tools(f"{title} {subreddit}"):
-                if slug in tool_mentions:
-                    tool_mentions[slug]["reddit"] += 1
+        hn_weighted = count_weighted_mentions(hn_stories, "hn", all_slugs)
+        devto_weighted = count_weighted_mentions(devto_articles, "devto", all_slugs)
+        reddit_weighted = count_weighted_mentions(reddit_posts, "reddit", all_slugs)
+        news_weighted = count_weighted_mentions(news_articles, "news", all_slugs)
 
-        # Classify News articles
-        for article in news_articles:
-            title = article.get("title", "")
-            for slug in classify_text_to_tools(title):
-                if slug in tool_mentions:
-                    tool_mentions[slug]["news"] += 1
-
-        # ━━━ STEP 3: Fetch GitHub stats per tool ━━━
-        logger.info("Step 3: Fetching GitHub repo stats per tool...")
+        # ━━━ STEP 4: Fetch GitHub stats per tool ━━━
+        logger.info("Step 4: Fetching GitHub repo stats per tool...")
 
         github_stats: dict[str, dict] = {}
         for tool in all_tools:
@@ -139,36 +141,47 @@ async def perform_full_scrape():
                 stats = await fetch_github_repo_stats(tool.github_repo)
                 if stats:
                     github_stats[tool.slug] = stats
-                await asyncio.sleep(0.5)  # 0.5s gap — 25 tools × 0.5s = ~12.5s total
+                await asyncio.sleep(0.5)
 
         scrape_status["sources"]["github_repos"] = len(github_stats)
         logger.info(f"GitHub: Fetched stats for {len(github_stats)} / {len(all_tools)} repos")
 
-        # ━━━ STEP 4: Calculate scores + Decision Intelligence ━━━
-        logger.info("Step 4: Computing scores, growth, and decision intelligence...")
+        # ━━━ STEP 5: Calculate scores + Decision Intelligence ━━━
+        logger.info("Step 5: Computing scores, growth, and decision intelligence...")
 
         today = date.today()
         tools_updated = 0
 
         for tool in all_tools:
             slug = tool.slug
-            mentions = tool_mentions.get(slug, {"hn": 0, "devto": 0, "reddit": 0, "news": 0})
             gh = github_stats.get(slug, {})
 
             new_stars = gh.get("stars", tool.stars)
             new_forks = gh.get("forks", tool.forks)
 
-            # Calculate score
+            # Get sentiment-weighted mention counts (round for DB storage)
+            hn_val = hn_weighted.get(slug, 0.0)
+            devto_val = devto_weighted.get(slug, 0.0)
+            reddit_val = reddit_weighted.get(slug, 0.0)
+            news_val = news_weighted.get(slug, 0.0)
+
+            # Use max(0, ...) so a net-negative count doesn't go below zero
+            hn_count = max(0, round(hn_val))
+            devto_count = max(0, round(devto_val))
+            reddit_count = max(0, round(reddit_val))
+            news_count = max(0, round(news_val))
+
+            # Calculate score using the sentiment-adjusted counts
             new_score = calculate_tool_score(
                 stars=new_stars,
                 forks=new_forks,
-                hn_count=mentions["hn"],
-                devto_count=mentions["devto"],
-                reddit_count=mentions["reddit"],
-                news_count=mentions["news"],
+                hn_count=hn_count,
+                devto_count=devto_count,
+                reddit_count=reddit_count,
+                news_count=news_count,
             )
 
-            # Calculate growth percentage (compare to previous score)
+            # Calculate growth percentage
             old_score = tool.score if tool.score else 0.0
             if old_score > 0:
                 growth_pct = round(((new_score - old_score) / old_score) * 100, 1)
@@ -186,10 +199,10 @@ async def perform_full_scrape():
             tool.forks = new_forks
             tool.open_issues = gh.get("open_issues", tool.open_issues)
             tool.watchers = gh.get("watchers", tool.watchers)
-            tool.hn_count = mentions["hn"]
-            tool.devto_count = mentions["devto"]
-            tool.reddit_count = mentions["reddit"]
-            tool.news_count = mentions["news"]
+            tool.hn_count = hn_count
+            tool.devto_count = devto_count
+            tool.reddit_count = reddit_count
+            tool.news_count = news_count
             tool.score = new_score
             tool.growth_pct = growth_pct
             tool.stage = stage
@@ -198,8 +211,8 @@ async def perform_full_scrape():
             tool.learning_priority = learning_priority
             tool.updated_at = datetime.now(timezone.utc)
 
-            # ━━━ STEP 5: Insert daily snapshot (upsert) ━━━
-            total_mentions = mentions["hn"] + mentions["devto"] + mentions["reddit"] + mentions["news"]
+            # ━━━ STEP 6: Insert daily snapshot (upsert) ━━━
+            total_mentions = hn_count + devto_count + reddit_count + news_count
 
             existing_snapshot = db.query(ToolSnapshot).filter(
                 ToolSnapshot.tool_id == tool.id,
@@ -211,9 +224,9 @@ async def perform_full_scrape():
                 existing_snapshot.stars = new_stars
                 existing_snapshot.forks = new_forks
                 existing_snapshot.mentions = total_mentions
-                existing_snapshot.hn_count = mentions["hn"]
-                existing_snapshot.devto_count = mentions["devto"]
-                existing_snapshot.reddit_count = mentions["reddit"]
+                existing_snapshot.hn_count = hn_count
+                existing_snapshot.devto_count = devto_count
+                existing_snapshot.reddit_count = reddit_count
             else:
                 snapshot = ToolSnapshot(
                     tool_id=tool.id,
@@ -222,23 +235,31 @@ async def perform_full_scrape():
                     stars=new_stars,
                     forks=new_forks,
                     mentions=total_mentions,
-                    hn_count=mentions["hn"],
-                    devto_count=mentions["devto"],
-                    reddit_count=mentions["reddit"],
+                    hn_count=hn_count,
+                    devto_count=devto_count,
+                    reddit_count=reddit_count,
                 )
                 db.add(snapshot)
 
             tools_updated += 1
 
+            # Log with sentiment indicator
+            sentiment_indicator = ""
+            raw_weighted = hn_val + devto_val + reddit_val + news_val
+            if raw_weighted < 0:
+                sentiment_indicator = " 🔴(net negative buzz)"
+            elif raw_weighted > 2:
+                sentiment_indicator = " 🟢(strong positive buzz)"
+
             logger.info(
                 f"  {tool.name}: score={new_score} growth={growth_pct:+.1f}% "
                 f"trend={trend_stage} priority={learning_priority} "
-                f"⭐{new_stars:,} HN={mentions['hn']} DT={mentions['devto']} "
-                f"RD={mentions['reddit']} NW={mentions['news']}"
+                f"⭐{new_stars:,} HN={hn_count} DT={devto_count} "
+                f"RD={reddit_count} NW={news_count}{sentiment_indicator}"
             )
 
-        # ━━━ STEP 6: Aggregate domain scores ━━━
-        logger.info("Step 6: Aggregating domain-level scores...")
+        # ━━━ STEP 7: Aggregate domain scores ━━━
+        logger.info("Step 7: Aggregating domain-level scores...")
 
         domains = db.query(Domain).all()
         for domain in domains:
@@ -253,7 +274,6 @@ async def perform_full_scrape():
                     top_stage_counts[stage] = top_stage_counts.get(stage, 0) + 1
                 domain.stage = max(top_stage_counts, key=top_stage_counts.get) if top_stage_counts else "Emerging"
 
-                # Generate domain summary from constituent tools
                 tool_names = [t.name for t in sorted(domain_tools, key=lambda x: x.score, reverse=True)[:3]]
                 domain.summary = (
                     f"{domain.name} domain (avg score: {domain.score}) "

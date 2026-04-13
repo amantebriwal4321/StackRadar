@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 import asyncio
 import logging
+import os
 
 # Configure root logger so ALL app loggers (scheduler, scraper, scoring) are visible
 logging.basicConfig(
@@ -34,7 +35,9 @@ async def startup_event():
     finally:
         db.close()
 
-    asyncio.create_task(run_scraper_loop())
+    # Run scraper inline only if not using a separate worker container
+    if os.getenv("RUN_SCRAPER_INLINE", "1") == "1":
+        asyncio.create_task(run_scraper_loop())
 
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(

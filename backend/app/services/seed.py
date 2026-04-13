@@ -12,7 +12,7 @@ Called once on startup if the tools table is empty.
 import json
 import logging
 from sqlalchemy.orm import Session
-from app.models.all_models import Domain, Tool, ToolRoadmap
+from app.models.all_models import Domain, Tool, ToolRoadmap, ToolSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +74,16 @@ SEED_TOOLS = [
     # Systems Programming — Rust and Go are entry points
     {"name": "Rust",         "slug": "rust",         "icon": "🦀",  "category": "Systems Programming", "github_repo": "rust-lang/rust",           "description": "Memory-safe systems language for performance-critical software.",           "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
     {"name": "Go",           "slug": "go",           "icon": "🐹",  "category": "Systems Programming", "github_repo": "golang/go",                "description": "Statically typed, compiled language designed for cloud infrastructure.",    "level": "beginner",      "is_entry_point": True,  "seq": 15, "parent_slug": None},
+
+    # Cybersecurity
+    {"name": "Wireshark",    "slug": "wireshark",    "icon": "🦈",  "category": "Cybersecurity",       "github_repo": "wireshark/wireshark",      "description": "The world's most popular network protocol analyzer for traffic inspection.",  "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
+    {"name": "Metasploit",   "slug": "metasploit",   "icon": "🗡️",  "category": "Cybersecurity",       "github_repo": "rapid7/metasploit-framework", "description": "Penetration testing framework for finding vulnerabilities in systems.",    "level": "intermediate",  "is_entry_point": False, "seq": 40, "parent_slug": "wireshark"},
+    {"name": "OWASP ZAP",    "slug": "owasp-zap",    "icon": "🛡️",  "category": "Cybersecurity",       "github_repo": "zaproxy/zaproxy",          "description": "Free security tool for finding vulnerabilities in web applications.",        "level": "intermediate",  "is_entry_point": False, "seq": 45, "parent_slug": "wireshark"},
+
+    # Web3 / Blockchain
+    {"name": "Hardhat",      "slug": "hardhat",      "icon": "👷",  "category": "Web3 / Blockchain",   "github_repo": "NomicFoundation/hardhat",  "description": "Ethereum development environment for compiling, testing, and deploying smart contracts.", "level": "beginner", "is_entry_point": True,  "seq": 10, "parent_slug": None},
+    {"name": "Foundry",      "slug": "foundry",      "icon": "🔨",  "category": "Web3 / Blockchain",   "github_repo": "foundry-rs/foundry",       "description": "Blazing-fast Solidity development toolkit written in Rust.",                 "level": "intermediate",  "is_entry_point": False, "seq": 40, "parent_slug": "hardhat"},
+    {"name": "Ethers.js",    "slug": "ethersjs",     "icon": "⟠",   "category": "Web3 / Blockchain",   "github_repo": "ethers-io/ethers.js",      "description": "Complete Ethereum library for interacting with the blockchain in JavaScript.", "level": "beginner",  "is_entry_point": False, "seq": 15, "parent_slug": None},
 ]
 
 
@@ -209,6 +219,10 @@ TOOL_ROADMAP_MAP = {
     "rust": "systems", "go": "systems",
     # Data → data-databases roadmap
     "prisma": "data-databases",
+    # Cybersecurity → cybersecurity roadmap
+    "wireshark": "cybersecurity", "metasploit": "cybersecurity", "owasp-zap": "cybersecurity",
+    # Web3 → web3 roadmap
+    "hardhat": "web3", "foundry": "web3", "ethersjs": "web3",
 }
 
 
@@ -284,6 +298,56 @@ def run_seed(db: Session) -> None:
         )
         db.add(roadmap)
     logger.info(f"Seed: Created {len(SEED_ROADMAPS)} roadmaps.")
+
+    # 4. Seed 30 days of synthetic history (for chart demo)
+    from datetime import date, timedelta
+    import random
+
+    snapshot_count = db.query(ToolSnapshot).count()
+    if snapshot_count == 0:
+        logger.info("Seed: Generating 30 days of synthetic history for charts...")
+        today = date.today()
+
+        # Base scores per tool (approximate real-world GitHub popularity)
+        base_scores = {
+            "react": 65, "nextjs": 34, "vuejs": 32, "svelte": 32,
+            "astro": 36, "vite": 37, "tailwindcss": 32, "fastapi": 33,
+            "trpc": 30, "bun": 31, "deno": 30, "prisma": 33,
+            "pytorch": 34, "tensorflow": 35, "langchain": 33,
+            "transformers": 34, "ollama": 34,
+            "kubernetes": 35, "terraform": 33, "supabase": 34,
+            "docker": 36, "grafana": 33, "prometheus": 33,
+            "rust": 36, "go": 35,
+        }
+
+        for tool in tool_map.values():
+            base = base_scores.get(tool.slug, 30)
+            for day_offset in range(30, 0, -1):
+                snap_date = today - timedelta(days=day_offset)
+                # Gradual upward trend with daily noise
+                progress = (30 - day_offset) / 30  # 0.0 → 1.0
+                noise = random.uniform(-2.0, 2.0)
+                score = round(base * (0.85 + 0.15 * progress) + noise, 1)
+                score = max(5.0, min(95.0, score))
+
+                # Stars grow slightly over time
+                star_base = tool.stars if tool.stars else 10000
+                star_value = int(star_base * (0.98 + 0.02 * progress))
+
+                snapshot = ToolSnapshot(
+                    tool_id=tool.id,
+                    date=snap_date,
+                    score=score,
+                    stars=star_value,
+                    forks=tool.forks if tool.forks else 0,
+                    mentions=random.randint(0, 5),
+                    hn_count=random.randint(0, 2),
+                    devto_count=random.randint(0, 2),
+                    reddit_count=random.randint(0, 2),
+                )
+                db.add(snapshot)
+
+        logger.info(f"Seed: Created {len(tool_map) * 30} synthetic history snapshots.")
 
     db.commit()
     logger.info("Seed: Database seeded successfully!")

@@ -210,7 +210,7 @@ export default function ToolDetailPage() {
         )}
 
         {/* ── History Chart ── */}
-        {history.length > 1 && (
+        {history.length > 1 ? (
           <div className="bg-card p-5 rounded-2xl border border-border/60 shadow-sm">
             <h2 className="text-base font-bold mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
@@ -250,6 +250,25 @@ export default function ToolDetailPage() {
                 />
               </LineChart>
             </ChartContainer>
+          </div>
+        ) : (
+          <div className="bg-card p-5 rounded-2xl border border-border/60 shadow-sm text-center space-y-3">
+            <h2 className="text-base font-bold flex items-center justify-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              Score History
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              📊 Collecting data points... Chart will appear after 2+ days of tracking.
+            </p>
+            <div className="max-w-xs mx-auto h-2 bg-muted/40 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary/60 rounded-full animate-pulse transition-all"
+                style={{ width: `${Math.min(history.length * 50, 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {history.length}/2 data points collected
+            </p>
           </div>
         )}
 

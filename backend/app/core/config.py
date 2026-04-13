@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # GITHUB
     GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
 
+    # GROQ (for sentiment analysis)
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+
     # REDIS / CELERY
     REDIS_HOST: str = os.getenv("REDIS_HOST", "stackradar_redis")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
@@ -34,7 +37,10 @@ class Settings(BaseSettings):
     MEILISEARCH_KEY: str = os.getenv("MEILI_MASTER_KEY", "masterKey")
     
     # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    BACKEND_CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        os.getenv("FRONTEND_URL", ""),
+    ]
     
     # CLERK AUTH
     CLERK_SECRET_KEY: str = os.getenv("CLERK_SECRET_KEY", "")

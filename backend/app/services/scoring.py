@@ -56,6 +56,16 @@ TOOL_KEYWORDS: Dict[str, List[str]] = {
     # Systems
     "rust": ["rust", "rustlang", "rust-lang", "cargo", "crate", "rustc"],
     "go": ["golang", "go lang", "goroutine", "go module"],
+
+    # Cybersecurity
+    "wireshark": ["wireshark", "packet capture", "pcap", "network analyzer"],
+    "metasploit": ["metasploit", "msfconsole", "metasploit framework", "pentest"],
+    "owasp-zap": ["owasp zap", "zap proxy", "zaproxy", "owasp"],
+
+    # Web3 / Blockchain
+    "hardhat": ["hardhat", "hardhat deploy", "hardhat test"],
+    "foundry": ["foundry", "forge test", "foundry-rs", "cast send"],
+    "ethersjs": ["ethers.js", "ethersjs", "ethers js", "ethers provider"],
 }
 
 
@@ -77,6 +87,47 @@ def classify_text_to_tools(text: str) -> Set[str]:
                 break  # One match per tool is enough
 
     return matched_tools
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SENTIMENT WEIGHTING
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SENTIMENT_WEIGHTS: Dict[str, float] = {
+    "positive": 1.0,    # Full credit — praise, adoption, excitement
+    "neutral": 0.5,     # Half credit — informational, tutorial
+    "negative": -0.3,   # Slight penalty — criticism, decline
+}
+
+
+def count_weighted_mentions(
+    items: List[Dict],
+    source_key: str,
+    all_tool_slugs: set,
+) -> Dict[str, float]:
+    """
+    Count sentiment-weighted mentions per tool from a list of content items.
+
+    Each item must have "title" (str) and "sentiment" (str) keys.
+    Returns {tool_slug: weighted_count} where weighted_count can be fractional.
+    """
+    counts: Dict[str, float] = {slug: 0.0 for slug in all_tool_slugs}
+
+    for item in items:
+        title = item.get("title", "")
+        tags = " ".join(item.get("tag_list", [])) if isinstance(item.get("tag_list"), list) else ""
+        subreddit = item.get("subreddit", "")
+        text = f"{title} {tags} {subreddit}".strip()
+
+        sentiment = item.get("sentiment", "neutral")
+        weight = SENTIMENT_WEIGHTS.get(sentiment, 0.5)
+
+        matched = classify_text_to_tools(text)
+        for slug in matched:
+            if slug in counts:
+                counts[slug] += weight
+
+    return counts
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

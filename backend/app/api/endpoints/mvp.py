@@ -84,9 +84,11 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{slug}' not found")
 
-    # Check if a roadmap exists for this tool
-    roadmap = db.query(ToolRoadmap).filter(ToolRoadmap.tool_id == tool.id).first()
-    # Also check for domain-level roadmap
+    # Check if a roadmap exists for this tool (tool-specific first, then domain-level)
+    # Priority: slug-match (e.g., "react") > tool_id match > domain-level fallback
+    roadmap = db.query(ToolRoadmap).filter(ToolRoadmap.slug == tool.slug).first()
+    if not roadmap:
+        roadmap = db.query(ToolRoadmap).filter(ToolRoadmap.tool_id == tool.id).first()
     if not roadmap and tool.domain_rel:
         roadmap = db.query(ToolRoadmap).filter(ToolRoadmap.slug == tool.domain_rel.slug).first()
 
@@ -303,5 +305,18 @@ def get_learning_path(domain_slug: str, db: Session = Depends(get_db)):
 
 @router.get("/status")
 def get_scraper_status():
-    """Get the current scraper pipeline status."""
+    """Get the current scraper pipeline status (includes sentiment stats)."""
     return scrape_status
+
+
+@router.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    """Production health check — verifies DB connectivity and data state."""
+    tool_count = db.query(Tool).count()
+    return {
+        "status": "ok",
+        "tools_tracked": tool_count,
+        "last_scrape": scrape_status.get("last_scraped_time"),
+        "sentiment_enabled": bool(scrape_status.get("sentiment")),
+    }
+

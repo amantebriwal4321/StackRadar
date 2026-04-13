@@ -267,3 +267,103 @@ async def fetch_tech_news() -> List[Dict[str, Any]]:
                 continue
 
     return articles
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SENTIMENT ANALYSIS (Groq LLM)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int = 20) -> List[Dict[str, Any]]:
+    """
+    Analyze sentiment of content items using Groq LLM (llama-3.1-8b-instant).
+
+    Each item should have a "title" key. Returns the same items enriched with
+    a "sentiment" key: "positive", "negative", or "neutral".
+
+    Processes in batches of `batch_size` to stay within rate limits.
+    Falls back to "neutral" on any failure — the pipeline never breaks.
+    """
+    from groq import Groq
+    from app.core.config import settings
+    import json as _json
+
+    api_key = settings.GROQ_API_KEY
+    if not api_key:
+        logger.warning("GROQ_API_KEY not set — skipping sentiment analysis, defaulting all to 'neutral'")
+        for item in items:
+            item["sentiment"] = "neutral"
+        return items
+
+    client = Groq(api_key=api_key)
+
+    for batch_start in range(0, len(items), batch_size):
+        batch = items[batch_start:batch_start + batch_size]
+
+        # Build the prompt with numbered titles
+        numbered_titles = "\n".join(
+            f"{i}: {item.get('title', '(no title)')}"
+            for i, item in enumerate(batch)
+        )
+
+        prompt = (
+            "You are a tech sentiment classifier. For each numbered headline below, "
+            "classify the sentiment TOWARD the technology/tool mentioned as: "
+            "positive, negative, or neutral.\n\n"
+            "Rules:\n"
+            "- 'positive' = praise, excitement, adoption, growth\n"
+            "- 'negative' = criticism, migration away, bugs, decline, 'why I stopped using X'\n"
+            "- 'neutral' = informational, tutorial, announcement without strong opinion\n\n"
+            "Reply ONLY with a JSON array, no other text:\n"
+            '[{"i": 0, "s": "positive"}, {"i": 1, "s": "neutral"}, ...]\n\n'
+            f"Headlines:\n{numbered_titles}"
+        )
+
+        try:
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                max_tokens=1024,
+            )
+
+            raw = response.choices[0].message.content.strip()
+
+            # Extract JSON from response (handle markdown code blocks)
+            if "```" in raw:
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+                raw = raw.strip()
+
+            results = _json.loads(raw)
+
+            # Apply sentiments to batch items
+            sentiment_map = {}
+            for r in results:
+                idx = r.get("i", r.get("index", -1))
+                sent = r.get("s", r.get("sentiment", "neutral"))
+                if sent not in ("positive", "negative", "neutral"):
+                    sent = "neutral"
+                sentiment_map[idx] = sent
+
+            for i, item in enumerate(batch):
+                item["sentiment"] = sentiment_map.get(i, "neutral")
+
+            pos_count = sum(1 for item in batch if item.get("sentiment") == "positive")
+            neg_count = sum(1 for item in batch if item.get("sentiment") == "negative")
+            neu_count = sum(1 for item in batch if item.get("sentiment") == "neutral")
+            logger.info(
+                f"Sentiment batch {batch_start // batch_size + 1}: "
+                f"+{pos_count} -{neg_count} ~{neu_count} (of {len(batch)})"
+            )
+
+        except Exception as e:
+            logger.warning(f"Sentiment analysis failed for batch {batch_start // batch_size + 1}: {e}")
+            for item in batch:
+                if "sentiment" not in item:
+                    item["sentiment"] = "neutral"
+
+        # Small delay between batches to respect rate limits
+        await asyncio.sleep(0.5)
+
+    return items
