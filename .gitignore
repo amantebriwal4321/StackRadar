@@ -102,3 +102,7 @@ Thumbs.db
 # --- Project Specific (TechTrends.AI) ---
 worker_logs.txt
 db_error.log
+celerybeat-schedule.db
+backend/logs/
+files.txt
+PROJECT_STATUS.md

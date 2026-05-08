@@ -25,6 +25,13 @@ export interface Tool {
   is_entry_point: boolean;
   learning_sequence_score: number;
   parent_slug: string | null;
+  sentiment_label: string;
+  sentiment_positive: number;
+  sentiment_negative: number;
+  rank: number;
+  rank_in_category: number;
+  category_size: number;
+  percentile: number;
   updated_at: string | null;
 }
 
@@ -77,19 +84,11 @@ export interface DomainSummary {
   updated_at: string | null;
 }
 
-// Categories for filtering
-export const categories = [
-  "AI / ML",
-  "Web Development",
-  "Cloud Native",
-  "DevOps",
-  "Systems Programming",
-  "Cybersecurity",
-  "Web3 / Blockchain",
-  "Data & Databases",
-] as const;
-
-export type Category = (typeof categories)[number];
+// Categories — fetched dynamically from /domains API
+export async function fetchCategories(): Promise<string[]> {
+  const domains = await fetchDomains();
+  return domains.map(d => d.name);
+}
 
 // API base URL
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -100,9 +99,13 @@ export async function fetchTools(category?: string): Promise<Tool[]> {
   if (category && category !== "All") {
     url.searchParams.set("category", category);
   }
+  // Request all tools (per_page=100 covers our current dataset)
+  url.searchParams.set("per_page", "100");
   const res = await fetch(url.toString(), { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch tools");
-  return res.json();
+  const data = await res.json();
+  // Backend returns {tools: [...], total, page, per_page, total_pages}
+  return data.tools || data;
 }
 
 export async function fetchToolDetail(slug: string): Promise<ToolDetail> {
@@ -168,3 +171,39 @@ export async function fetchLearningPath(domainSlug: string): Promise<LearningPat
   if (!res.ok) throw new Error("Failed to fetch learning path");
   return res.json();
 }
+
+// Compare tools types
+export interface CompareToolHistoryPoint {
+  date: string;
+  score: number;
+  stars: number;
+}
+
+export interface CompareTool {
+  slug: string;
+  name: string;
+  icon: string;
+  category: string;
+  score: number;
+  stage: string;
+  stars: number;
+  forks: number;
+  growth_pct: number;
+  hn_count: number;
+  devto_count: number;
+  reddit_count: number;
+  news_count: number;
+  sentiment_label: string;
+  sentiment_positive: number;
+  sentiment_negative: number;
+  learning_priority: string;
+  recommendation: string;
+  history: CompareToolHistoryPoint[];
+}
+
+export async function fetchCompareTools(slugs: string[]): Promise<{ tools: CompareTool[] }> {
+  const res = await fetch(`${API_BASE}/api/v1/tools/compare?slugs=${slugs.join(",")}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to compare tools");
+  return res.json();
+}
+

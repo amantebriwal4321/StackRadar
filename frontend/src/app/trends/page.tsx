@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { TrendingUp, BarChart3, Filter, Loader2, Star } from "lucide-react";
-import { type Tool, categories, fetchTools } from "@/data/trends";
+import { type Tool, fetchTools, fetchCategories } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
 import FilterBar from "@/components/FilterBar";
 import TrendCard from "@/components/TrendCard";
@@ -14,7 +14,15 @@ import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLa
 export default function TrendsPage() {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [allTools, setAllTools] = useState<Tool[]>([]);
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Load categories dynamically from the API
+  useEffect(() => {
+    fetchCategories()
+      .then(cats => setDynamicCategories(cats))
+      .catch(() => setDynamicCategories([]));
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -66,7 +74,7 @@ export default function TrendsPage() {
         <FilterBar
           activeDomain={activeCategory}
           onDomainChange={setActiveCategory}
-          domains={categories as unknown as readonly string[]}
+          domains={dynamicCategories}
           allLabel="All Categories"
           showIcon={false}
           className="bg-card p-4 rounded-xl border border-border/60 flex items-center gap-3 overflow-x-auto shadow-sm"
@@ -96,49 +104,55 @@ export default function TrendsPage() {
                     Comparing {displayedTools.length} tools — higher score = stronger momentum
                   </p>
                 </div>
+                <p className="text-[10px] text-muted-foreground md:hidden">← Scroll to see all tools →</p>
               </div>
 
-              <ChartContainer height={400}>
-                <BarChart data={chartData} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
-                  <XAxis
-                    dataKey="name"
-                    stroke="var(--muted-foreground)"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                    dy={10}
-                    interval={0}
-                    angle={-20}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis
-                    stroke="var(--muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    dx={-10}
-                    domain={[0, 100]}
-                  />
-                  <Tooltip
-                    contentStyle={chartTooltipStyle}
-                    itemStyle={chartItemStyle}
-                    labelStyle={chartLabelStyle}
-                    formatter={(value: any, name: any) => [value, name === "score" ? "Trend Score" : name]}
-                    labelFormatter={(label) => {
-                      const item = chartData.find(d => d.name === label);
-                      return item?.fullName || label;
-                    }}
-                  />
-                  <Bar
-                    dataKey="score"
-                    fill={chartColors[0]}
-                    radius={[8, 8, 0, 0]}
-                    animationDuration={1500}
-                  />
-                </BarChart>
-              </ChartContainer>
+              {/* Scrollable wrapper for mobile */}
+              <div className="overflow-x-auto -mx-2 px-2 pb-2">
+                <div style={{ minWidth: `${Math.max(displayedTools.length * 55, 400)}px` }}>
+                  <ChartContainer height={400}>
+                    <BarChart data={chartData} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+                      <XAxis
+                        dataKey="name"
+                        stroke="var(--muted-foreground)"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        dy={10}
+                        interval={0}
+                        angle={-20}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis
+                        stroke="var(--muted-foreground)"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        dx={-10}
+                        domain={[0, 100]}
+                      />
+                      <Tooltip
+                        contentStyle={chartTooltipStyle}
+                        itemStyle={chartItemStyle}
+                        labelStyle={chartLabelStyle}
+                        formatter={(value: any, name: any) => [value, name === "score" ? "Trend Score" : name]}
+                        labelFormatter={(label) => {
+                          const item = chartData.find(d => d.name === label);
+                          return item?.fullName || label;
+                        }}
+                      />
+                      <Bar
+                        dataKey="score"
+                        fill={chartColors[0]}
+                        radius={[8, 8, 0, 0]}
+                        animationDuration={1500}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              </div>
             </div>
 
             {/* Top 4 Compact Cards */}

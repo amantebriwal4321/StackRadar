@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   TrendingUp,
+  GitCompare,
   Compass,
   GraduationCap,
   ChevronLeft,
@@ -15,6 +16,7 @@ import { useState } from "react";
 const sidebarItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/trends", label: "Trends", icon: TrendingUp },
+  { href: "/compare", label: "Compare", icon: GitCompare },
   { href: "/explore", label: "Explore", icon: Compass },
   { href: "/roadmaps", label: "Roadmaps", icon: GraduationCap },
 ];

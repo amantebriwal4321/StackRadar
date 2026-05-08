@@ -131,8 +131,101 @@ def count_weighted_mentions(
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# SCORING
+# SCORING — Percentile-based normalization
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def _percentile_rank(values: List[float]) -> List[float]:
+    """
+    Rank a list of values into 0–100 percentile scores.
+    Ties get the same percentile. Higher raw value = higher percentile.
+
+    Example: [10, 50, 50, 100] → [0.0, 33.3, 33.3, 100.0]
+    """
+    if not values or len(values) == 1:
+        return [50.0] * len(values)
+
+    n = len(values)
+    sorted_vals = sorted(set(values))
+
+    if len(sorted_vals) == 1:
+        return [50.0] * n
+
+    rank_map = {}
+    for i, v in enumerate(sorted_vals):
+        rank_map[v] = (i / (len(sorted_vals) - 1)) * 100.0
+
+    return [round(rank_map[v], 1) for v in values]
+
+
+def calculate_all_tool_scores(
+    tool_data: List[Dict[str, Any]],
+) -> List[float]:
+    """
+    Calculate scores for ALL tools at once using percentile-based normalization.
+
+    Each tool is ranked against every other tool on each signal.
+    This guarantees a natural spread: top tool ≈ 85-95, bottom tool ≈ 10-20.
+
+    Input: list of dicts, each with keys:
+        stars, forks, hn_count, devto_count, reddit_count, news_count
+
+    Weights:
+        GitHub stars:       20%  (popularity proxy)
+        GitHub forks:        5%  (usage proxy)
+        HackerNews:         20%  (developer buzz)
+        Dev.to:             10%  (tutorial ecosystem)
+        Reddit:             15%  (community discussion)
+        Tech News:          10%  (mainstream coverage)
+        Momentum:           15%  (weighted mention sum — rewards multi-source buzz)
+        Base:                5%  (tracked tool bonus)
+
+    Returns: list of scores (same order as input), each 0-100.
+    """
+    if not tool_data:
+        return []
+
+    # Extract raw signal arrays
+    stars_raw = [d.get("stars", 0) for d in tool_data]
+    forks_raw = [d.get("forks", 0) for d in tool_data]
+    hn_raw = [d.get("hn_count", 0) for d in tool_data]
+    devto_raw = [d.get("devto_count", 0) for d in tool_data]
+    reddit_raw = [d.get("reddit_count", 0) for d in tool_data]
+    news_raw = [d.get("news_count", 0) for d in tool_data]
+
+    # Momentum = total weighted mentions (rewards tools with multi-source buzz)
+    momentum_raw = [
+        d.get("hn_count", 0) * 2.0 +
+        d.get("devto_count", 0) * 1.5 +
+        d.get("reddit_count", 0) * 1.5 +
+        d.get("news_count", 0) * 2.0
+        for d in tool_data
+    ]
+
+    # Convert each signal to percentile ranks
+    stars_pct = _percentile_rank(stars_raw)
+    forks_pct = _percentile_rank(forks_raw)
+    hn_pct = _percentile_rank(hn_raw)
+    devto_pct = _percentile_rank(devto_raw)
+    reddit_pct = _percentile_rank(reddit_raw)
+    news_pct = _percentile_rank(news_raw)
+    momentum_pct = _percentile_rank(momentum_raw)
+
+    scores = []
+    for i in range(len(tool_data)):
+        score = (
+            stars_pct[i] * 0.20 +
+            forks_pct[i] * 0.05 +
+            hn_pct[i] * 0.20 +
+            devto_pct[i] * 0.10 +
+            reddit_pct[i] * 0.15 +
+            news_pct[i] * 0.10 +
+            momentum_pct[i] * 0.15 +
+            5.0  # Base score for being a tracked tool
+        )
+        scores.append(round(min(score, 100.0), 1))
+
+    return scores
+
 
 def calculate_tool_score(
     stars: int,
@@ -143,29 +236,21 @@ def calculate_tool_score(
     news_count: int = 0,
 ) -> float:
     """
-    Calculate a 0-100 trend score using weighted, normalized, multi-source signals.
-
-    Weights:
-        GitHub stars:       25%  (popularity proxy)
-        GitHub forks:        5%  (usage proxy)
-        HackerNews:         25%  (developer buzz)
-        Dev.to:             10%  (tutorial ecosystem)
-        Reddit:             20%  (community discussion)
-        Tech News:          10%  (mainstream coverage)
-        Base:                5%  (tracked tool bonus)
+    Fallback: single-tool score using log normalization.
+    Used only when percentile ranking is not possible (e.g., single tool insert).
+    Prefer calculate_all_tool_scores() for batch scoring.
     """
     def normalize(count: int, saturation: int) -> float:
-        """Convert a raw count to 0-100 using diminishing returns (log scale)."""
         if count <= 0:
             return 0.0
         return min(100.0, (math.log(count + 1) / math.log(saturation + 1)) * 100)
 
-    stars_norm = normalize(stars, 200000)     # 200k stars = 100%
-    forks_norm = normalize(forks, 50000)      # 50k forks = 100%
-    hn_norm = normalize(hn_count, 10)         # 10 mentions = 100%
-    devto_norm = normalize(devto_count, 8)    # 8 articles = 100%
-    reddit_norm = normalize(reddit_count, 15) # 15 posts = 100%
-    news_norm = normalize(news_count, 5)      # 5 articles = 100%
+    stars_norm = normalize(stars, 200000)
+    forks_norm = normalize(forks, 50000)
+    hn_norm = normalize(hn_count, 10)
+    devto_norm = normalize(devto_count, 8)
+    reddit_norm = normalize(reddit_count, 15)
+    news_norm = normalize(news_count, 5)
 
     score = (
         stars_norm * 0.25 +
@@ -174,7 +259,7 @@ def calculate_tool_score(
         devto_norm * 0.10 +
         reddit_norm * 0.20 +
         news_norm * 0.10 +
-        5.0  # Base score for being a tracked tool
+        5.0
     )
 
     return round(min(score, 100.0), 1)

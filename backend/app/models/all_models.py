@@ -44,6 +44,11 @@ class Tool(Base):
     reddit_count = Column(Integer, default=0)
     news_count = Column(Integer, default=0)
 
+    # Sentiment tracking (from Groq analysis)
+    sentiment_positive = Column(Integer, default=0)
+    sentiment_negative = Column(Integer, default=0)
+    sentiment_label = Column(String, default="neutral")  # positive / negative / mixed / neutral
+
     # Computed
     score = Column(Float, default=0.0)
     growth_pct = Column(Float, default=0.0)

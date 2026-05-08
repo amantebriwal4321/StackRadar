@@ -1,6 +1,9 @@
-version: '3.8'
+# StackRadar — Full Stack Deployment
+# Usage: docker-compose up --build
+# Env:   Copy backend/.env.example → backend/.env and fill in keys
 
 services:
+  # ── PostgreSQL Database ──
   db:
     image: postgres:15-alpine
     container_name: stackradar_db
@@ -13,47 +16,46 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stackradar}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stackradar}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ── FastAPI Backend ──
   backend:
     build:
       context: ./backend
     container_name: stackradar_backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     volumes:
-      - ./backend:/app
+      - ./backend/logs:/app/logs
     ports:
       - "8000:8000"
     env_file:
       - ./backend/.env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-stackradar}:${POSTGRES_PASSWORD:-stackradar_pass}@db:5432/${POSTGRES_DB:-stackradar}
-      - RUN_SCRAPER_INLINE=0
+      - RUN_SCRAPER_INLINE=1
       - DOCKER_ENV=1
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
 
-  scraper:
+  # ── Next.js Frontend ──
+  frontend:
     build:
-      context: ./backend
-    container_name: stackradar_scraper
-    command: python run_scraper.py
-    volumes:
-      - ./backend:/app
-    env_file:
-      - ./backend/.env
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    container_name: stackradar_frontend
+    ports:
+      - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-stackradar}:${POSTGRES_PASSWORD:-stackradar_pass}@db:5432/${POSTGRES_DB:-stackradar}
-      - DOCKER_ENV=1
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
-      db:
-        condition: service_healthy
-    restart: always
+      - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:

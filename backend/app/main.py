@@ -3,14 +3,31 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 import asyncio
 import logging
+import logging.handlers
 import os
 
-# Configure root logger so ALL app loggers (scheduler, scraper, scoring) are visible
+# ━━━ Logging Setup ━━━
+# Ensure logs directory exists
+os.makedirs("logs", exist_ok=True)
+
+# Configure root logger — stdout + rotating file
+log_format = "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+    format=log_format,
     datefmt="%H:%M:%S",
 )
+
+# Add file handler — persists logs across restarts (max 5MB, 3 backups)
+file_handler = logging.handlers.RotatingFileHandler(
+    "logs/stackradar.log",
+    maxBytes=5_000_000,   # 5MB per file
+    backupCount=3,        # Keep 3 old files
+    encoding="utf-8",
+)
+file_handler.setFormatter(logging.Formatter(log_format, datefmt="%Y-%m-%d %H:%M:%S"))
+file_handler.setLevel(logging.INFO)
+logging.getLogger().addHandler(file_handler)
 
 from app.services.scheduler import run_scraper_loop
 
@@ -59,3 +76,4 @@ def health_check():
 from app.api.endpoints import mvp
 
 app.include_router(mvp.router, prefix=settings.API_V1_STR, tags=["mvp"])
+

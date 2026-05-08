@@ -177,7 +177,7 @@ async def fetch_devto() -> List[Dict[str, Any]]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# REDDIT
+# REDDIT — RSS feeds (no OAuth required)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 REDDIT_SUBREDDITS = [
@@ -195,34 +195,31 @@ REDDIT_SUBREDDITS = [
 ]
 
 async def fetch_reddit() -> List[Dict[str, Any]]:
-    """Fetch hot posts from tech subreddits using Reddit's public JSON API."""
+    """Fetch hot posts from tech subreddits using RSS feeds (no auth needed)."""
     posts: List[Dict[str, Any]] = []
 
     async with httpx.AsyncClient() as client:
         for subreddit in REDDIT_SUBREDDITS:
             try:
-                url = f"https://www.reddit.com/r/{subreddit}/hot.json"
+                url = f"https://www.reddit.com/r/{subreddit}/hot.rss"
                 headers = {"User-Agent": "StackRadar/2.0 (Tech Trend Analyzer)"}
-                response = await client.get(url, headers=headers, params={"limit": 15}, timeout=10.0)
+                response = await client.get(url, headers=headers, timeout=10.0)
 
                 if response.status_code == 200:
-                    data = response.json()
-                    children = data.get("data", {}).get("children", [])
-                    for child in children:
-                        post = child.get("data", {})
-                        if post.get("stickied"):
-                            continue
+                    feed = feedparser.parse(response.text)
+                    for entry in feed.entries[:15]:
                         posts.append({
-                            "title": post.get("title", ""),
-                            "url": f"https://reddit.com{post.get('permalink', '')}",
+                            "title": entry.get("title", ""),
+                            "url": entry.get("link", ""),
                             "subreddit": subreddit,
-                            "score": post.get("score", 0),
-                            "num_comments": post.get("num_comments", 0),
                             "source": "reddit",
                         })
+                    logger.info(f"Reddit r/{subreddit}: {len(feed.entries[:15])} posts via RSS")
                 elif response.status_code == 429:
                     logger.warning(f"Reddit rate limited on r/{subreddit}, skipping remaining")
                     break
+                else:
+                    logger.warning(f"Reddit r/{subreddit} returned {response.status_code}")
 
                 await asyncio.sleep(1.0)
             except Exception as e:

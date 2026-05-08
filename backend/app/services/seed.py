@@ -227,7 +227,7 @@ TOOL_ROADMAP_MAP = {
 
 
 def run_seed(db: Session) -> None:
-    """Seed the database with domains, tools, and roadmaps if empty."""
+    """Seed the database with domains, tools, roadmaps, and initial history snapshots."""
 
     existing_tools = db.query(Tool).count()
     if existing_tools > 0:
@@ -299,55 +299,41 @@ def run_seed(db: Session) -> None:
         db.add(roadmap)
     logger.info(f"Seed: Created {len(SEED_ROADMAPS)} roadmaps.")
 
-    # 4. Seed 30 days of synthetic history (for chart demo)
-    from datetime import date, timedelta
+    # 4. Pre-seed 7 days of history snapshots so charts aren't empty on first visit
     import random
+    from datetime import date, timedelta
 
-    snapshot_count = db.query(ToolSnapshot).count()
-    if snapshot_count == 0:
-        logger.info("Seed: Generating 30 days of synthetic history for charts...")
-        today = date.today()
+    today = date.today()
+    snapshot_count = 0
+    for tool in tool_map.values():
+        # Generate a base score range for this tool (randomized but deterministic per slug)
+        random.seed(hash(tool.slug))
+        base_score = random.uniform(15, 60)
 
-        # Base scores per tool (approximate real-world GitHub popularity)
-        base_scores = {
-            "react": 65, "nextjs": 34, "vuejs": 32, "svelte": 32,
-            "astro": 36, "vite": 37, "tailwindcss": 32, "fastapi": 33,
-            "trpc": 30, "bun": 31, "deno": 30, "prisma": 33,
-            "pytorch": 34, "tensorflow": 35, "langchain": 33,
-            "transformers": 34, "ollama": 34,
-            "kubernetes": 35, "terraform": 33, "supabase": 34,
-            "docker": 36, "grafana": 33, "prometheus": 33,
-            "rust": 36, "go": 35,
-        }
+        for day_offset in range(7, 0, -1):
+            snapshot_date = today - timedelta(days=day_offset)
+            # Score gradually increases toward present day (simulates natural growth)
+            progress = (7 - day_offset) / 6  # 0.0 → 1.0
+            day_score = round(base_score + (base_score * 0.3 * progress) + random.uniform(-2, 2), 1)
+            day_score = max(5.0, min(95.0, day_score))
 
-        for tool in tool_map.values():
-            base = base_scores.get(tool.slug, 30)
-            for day_offset in range(30, 0, -1):
-                snap_date = today - timedelta(days=day_offset)
-                # Gradual upward trend with daily noise
-                progress = (30 - day_offset) / 30  # 0.0 → 1.0
-                noise = random.uniform(-2.0, 2.0)
-                score = round(base * (0.85 + 0.15 * progress) + noise, 1)
-                score = max(5.0, min(95.0, score))
+            snapshot = ToolSnapshot(
+                tool_id=tool.id,
+                date=snapshot_date,
+                score=day_score,
+                stars=max(0, int(random.uniform(100, 50000) * (0.8 + 0.2 * progress))),
+                forks=max(0, int(random.uniform(10, 5000) * (0.8 + 0.2 * progress))),
+                mentions=max(0, int(random.uniform(0, 15))),
+                hn_count=max(0, int(random.uniform(0, 5))),
+                devto_count=max(0, int(random.uniform(0, 4))),
+                reddit_count=max(0, int(random.uniform(0, 6))),
+            )
+            db.add(snapshot)
+            snapshot_count += 1
 
-                # Stars grow slightly over time
-                star_base = tool.stars if tool.stars else 10000
-                star_value = int(star_base * (0.98 + 0.02 * progress))
-
-                snapshot = ToolSnapshot(
-                    tool_id=tool.id,
-                    date=snap_date,
-                    score=score,
-                    stars=star_value,
-                    forks=tool.forks if tool.forks else 0,
-                    mentions=random.randint(0, 5),
-                    hn_count=random.randint(0, 2),
-                    devto_count=random.randint(0, 2),
-                    reddit_count=random.randint(0, 2),
-                )
-                db.add(snapshot)
-
-        logger.info(f"Seed: Created {len(tool_map) * 30} synthetic history snapshots.")
+    logger.info(f"Seed: Created {snapshot_count} history snapshots ({len(tool_map)} tools × 7 days).")
 
     db.commit()
     logger.info("Seed: Database seeded successfully!")
+
+

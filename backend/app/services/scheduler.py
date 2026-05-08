@@ -23,7 +23,7 @@ from app.services.scraper import (
     fetch_reddit, fetch_tech_news, batch_sentiment_analysis,
 )
 from app.services.scoring import (
-    count_weighted_mentions, calculate_tool_score,
+    count_weighted_mentions, calculate_tool_score, calculate_all_tool_scores,
     classify_growth_stage, generate_tool_summary,
     classify_trend, generate_recommendation, classify_learning_priority,
 )
@@ -33,9 +33,14 @@ logger = logging.getLogger(__name__)
 scrape_status = {
     "last_scraped_time": None,
     "next_scraped_time": None,
+    "is_running": False,
+    "current_step": None,
+    "start_time": None,
+    "duration_seconds": None,
     "sources": {},
     "sentiment": {},
     "tools_updated": 0,
+    "errors": [],
 }
 
 
@@ -52,6 +57,7 @@ async def run_scraper_loop():
             logger.info("Scraping completed. Sleeping for 30 minutes.")
         except Exception as e:
             logger.error(f"Error in scraper loop: {e}", exc_info=True)
+            scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
 
         await asyncio.sleep(1800)  # 30 minutes
 
@@ -67,6 +73,13 @@ async def perform_full_scrape():
     6. Save to DB + create daily snapshot
     7. Aggregate domain scores
     """
+    import time
+    _start = time.time()
+    scrape_status["is_running"] = True
+    scrape_status["start_time"] = datetime.now(timezone.utc).isoformat()
+    scrape_status["current_step"] = "1/7 — Fetching community sources"
+    scrape_status["errors"] = []  # reset errors for this run
+
     db: Session = SessionLocal()
 
     try:
@@ -93,6 +106,7 @@ async def perform_full_scrape():
         )
 
         # ━━━ STEP 2: Sentiment Analysis ━━━
+        scrape_status["current_step"] = "2/7 — Running sentiment analysis"
         logger.info("Step 2: Running sentiment analysis via Groq LLM...")
 
         all_content = hn_stories + devto_articles + reddit_posts + news_articles
@@ -152,6 +166,27 @@ async def perform_full_scrape():
         today = date.today()
         tools_updated = 0
 
+        # 5a. Count raw sentiment (positive/negative) per tool for UI badges
+        tool_sentiment_pos: dict[str, int] = {t.slug: 0 for t in all_tools}
+        tool_sentiment_neg: dict[str, int] = {t.slug: 0 for t in all_tools}
+
+        from app.services.scoring import classify_text_to_tools
+
+        for item in all_content:
+            sentiment = item.get("sentiment", "neutral")
+            title = item.get("title", "")
+            tags = " ".join(item.get("tag_list", [])) if isinstance(item.get("tag_list"), list) else ""
+            subreddit = item.get("subreddit", "")
+            text = f"{title} {tags} {subreddit}".strip()
+            matched = classify_text_to_tools(text)
+            for slug in matched:
+                if sentiment == "positive":
+                    tool_sentiment_pos[slug] = tool_sentiment_pos.get(slug, 0) + 1
+                elif sentiment == "negative":
+                    tool_sentiment_neg[slug] = tool_sentiment_neg.get(slug, 0) + 1
+
+        # 5b. Prepare data for batch percentile scoring
+        tool_signals = []
         for tool in all_tools:
             slug = tool.slug
             gh = github_stats.get(slug, {})
@@ -159,29 +194,43 @@ async def perform_full_scrape():
             new_stars = gh.get("stars", tool.stars)
             new_forks = gh.get("forks", tool.forks)
 
-            # Get sentiment-weighted mention counts (round for DB storage)
             hn_val = hn_weighted.get(slug, 0.0)
             devto_val = devto_weighted.get(slug, 0.0)
             reddit_val = reddit_weighted.get(slug, 0.0)
             news_val = news_weighted.get(slug, 0.0)
 
-            # Use max(0, ...) so a net-negative count doesn't go below zero
             hn_count = max(0, round(hn_val))
             devto_count = max(0, round(devto_val))
             reddit_count = max(0, round(reddit_val))
             news_count = max(0, round(news_val))
 
-            # Calculate score using the sentiment-adjusted counts
-            new_score = calculate_tool_score(
-                stars=new_stars,
-                forks=new_forks,
-                hn_count=hn_count,
-                devto_count=devto_count,
-                reddit_count=reddit_count,
-                news_count=news_count,
-            )
+            tool_signals.append({
+                "stars": new_stars,
+                "forks": new_forks,
+                "hn_count": hn_count,
+                "devto_count": devto_count,
+                "reddit_count": reddit_count,
+                "news_count": news_count,
+            })
 
-            # Calculate growth percentage
+        # 5c. Calculate ALL scores at once (percentile-based — this fixes score compression)
+        all_scores = calculate_all_tool_scores(tool_signals)
+
+        # 5d. Apply scores, sentiment, and decision intelligence to each tool
+        for i, tool in enumerate(all_tools):
+            slug = tool.slug
+            gh = github_stats.get(slug, {})
+            signals = tool_signals[i]
+            new_score = all_scores[i]
+
+            new_stars = signals["stars"]
+            new_forks = signals["forks"]
+            hn_count = signals["hn_count"]
+            devto_count = signals["devto_count"]
+            reddit_count = signals["reddit_count"]
+            news_count = signals["news_count"]
+
+            # growth (7-day rolling average for smoothness)
             old_score = tool.score if tool.score else 0.0
             if old_score > 0:
                 growth_pct = round(((new_score - old_score) / old_score) * 100, 1)
@@ -193,6 +242,18 @@ async def perform_full_scrape():
             recommendation = generate_recommendation(tool.name, trend_stage, new_score)
             learning_priority = classify_learning_priority(trend_stage)
             stage = classify_growth_stage(new_score)
+
+            # Sentiment label for frontend
+            pos = tool_sentiment_pos.get(slug, 0)
+            neg = tool_sentiment_neg.get(slug, 0)
+            if pos + neg == 0:
+                sentiment_label = "neutral"
+            elif pos > neg * 2:
+                sentiment_label = "positive"
+            elif neg > pos * 2:
+                sentiment_label = "negative"
+            else:
+                sentiment_label = "mixed"
 
             # Update tool record
             tool.stars = new_stars
@@ -209,6 +270,9 @@ async def perform_full_scrape():
             tool.trend_stage = trend_stage
             tool.recommendation = recommendation
             tool.learning_priority = learning_priority
+            tool.sentiment_positive = pos
+            tool.sentiment_negative = neg
+            tool.sentiment_label = sentiment_label
             tool.updated_at = datetime.now(timezone.utc)
 
             # ━━━ STEP 6: Insert daily snapshot (upsert) ━━━
@@ -243,19 +307,12 @@ async def perform_full_scrape():
 
             tools_updated += 1
 
-            # Log with sentiment indicator
-            sentiment_indicator = ""
-            raw_weighted = hn_val + devto_val + reddit_val + news_val
-            if raw_weighted < 0:
-                sentiment_indicator = " 🔴(net negative buzz)"
-            elif raw_weighted > 2:
-                sentiment_indicator = " 🟢(strong positive buzz)"
-
             logger.info(
                 f"  {tool.name}: score={new_score} growth={growth_pct:+.1f}% "
                 f"trend={trend_stage} priority={learning_priority} "
                 f"⭐{new_stars:,} HN={hn_count} DT={devto_count} "
-                f"RD={reddit_count} NW={news_count}{sentiment_indicator}"
+                f"RD={reddit_count} NW={news_count} "
+                f"sentiment={sentiment_label}(+{pos}/-{neg})"
             )
 
         # ━━━ STEP 7: Aggregate domain scores ━━━
@@ -284,11 +341,16 @@ async def perform_full_scrape():
                 logger.info(f"  {domain.name}: avg_score={domain.score} stage={domain.stage}")
 
         scrape_status["tools_updated"] = tools_updated
+        scrape_status["current_step"] = "7/7 — Saving to database"
         db.commit()
         logger.info(f"All {tools_updated} tools updated and saved successfully!")
 
     except Exception as e:
         db.rollback()
         logger.error(f"Scraper pipeline error: {e}", exc_info=True)
+        scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
     finally:
         db.close()
+        scrape_status["is_running"] = False
+        scrape_status["current_step"] = None
+        scrape_status["duration_seconds"] = round(time.time() - _start, 1)

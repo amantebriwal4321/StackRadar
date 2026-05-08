@@ -27,6 +27,14 @@ const priorityBadge: Record<string, string> = {
   "AVOID": "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 
+// Sentiment badge
+const sentimentBadge: Record<string, { class: string; label: string }> = {
+  "positive": { class: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", label: "🟢 Positive Buzz" },
+  "negative": { class: "bg-rose-500/10 text-rose-400 border-rose-500/20", label: "🔴 Negative Buzz" },
+  "mixed":    { class: "bg-amber-500/10 text-amber-400 border-amber-500/20", label: "🟡 Mixed Signals" },
+  "neutral":  { class: "", label: "" },
+};
+
 function GrowthIndicator({ growth }: { growth: number }) {
   if (growth > 5) {
     return (
@@ -91,6 +99,7 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
 
   // Default variant
   const totalMentions = tool.hn_count + tool.devto_count + tool.reddit_count + tool.news_count;
+  const sentiment = sentimentBadge[tool.sentiment_label] || sentimentBadge["neutral"];
 
   return (
     <MotionLink
@@ -118,6 +127,11 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
                  tool.learning_priority === "AVOID" ? "⚠️ CAUTION" :
                  tool.learning_priority}
               </span>
+              {sentiment.label && (
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${sentiment.class}`}>
+                  {sentiment.label}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -134,27 +148,40 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="bg-muted/20 rounded-xl p-3 mb-4 grid grid-cols-5 gap-1 text-center text-xs border border-border/30 relative z-10">
-        <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-          <div className="font-bold text-foreground text-sm">{tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}</div>
-          <div className="text-muted-foreground text-[10px] uppercase font-semibold">Stars</div>
-        </div>
-        <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-          <div className="font-bold text-foreground text-sm">{tool.hn_count}</div>
-          <div className="text-muted-foreground text-[10px] uppercase font-semibold">HN</div>
-        </div>
-        <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-          <div className="font-bold text-foreground text-sm">{tool.devto_count}</div>
-          <div className="text-muted-foreground text-[10px] uppercase font-semibold">Dev.to</div>
-        </div>
-        <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-          <div className="font-bold text-foreground text-sm">{tool.reddit_count}</div>
-          <div className="text-muted-foreground text-[10px] uppercase font-semibold">Reddit</div>
-        </div>
-        <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-          <div className="font-bold text-foreground text-sm">{tool.news_count}</div>
-          <div className="text-muted-foreground text-[10px] uppercase font-semibold">News</div>
+      {/* Rank + Metrics Grid */}
+      <div className="bg-muted/20 rounded-xl p-3 mb-4 relative z-10 border border-border/30">
+        {/* Rank context row */}
+        {tool.rank_in_category > 0 && (
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-border/20 text-xs">
+            <span className="text-muted-foreground">
+              <span className="font-bold text-foreground">#{tool.rank_in_category}</span> in {tool.category}
+            </span>
+            <span className="text-muted-foreground">
+              Top <span className="font-bold text-foreground">{tool.percentile}%</span> overall
+            </span>
+          </div>
+        )}
+        <div className="grid grid-cols-5 gap-1 text-center text-xs">
+          <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
+            <div className="font-bold text-foreground text-sm">{tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}</div>
+            <div className="text-muted-foreground text-[10px] uppercase font-semibold">Stars</div>
+          </div>
+          <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
+            <div className="font-bold text-foreground text-sm">{tool.hn_count}</div>
+            <div className="text-muted-foreground text-[10px] uppercase font-semibold">HN</div>
+          </div>
+          <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
+            <div className="font-bold text-foreground text-sm">{tool.devto_count}</div>
+            <div className="text-muted-foreground text-[10px] uppercase font-semibold">Dev.to</div>
+          </div>
+          <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
+            <div className="font-bold text-foreground text-sm">{tool.reddit_count}</div>
+            <div className="text-muted-foreground text-[10px] uppercase font-semibold">Reddit</div>
+          </div>
+          <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
+            <div className="font-bold text-foreground text-sm">{tool.news_count}</div>
+            <div className="text-muted-foreground text-[10px] uppercase font-semibold">News</div>
+          </div>
         </div>
       </div>
 
@@ -168,3 +195,4 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
     </MotionLink>
   );
 }
+
