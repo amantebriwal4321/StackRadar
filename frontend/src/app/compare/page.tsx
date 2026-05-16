@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   GitCompare, Loader2, Star, GitFork, TrendingUp, TrendingDown,
   Minus, X, Search, ArrowRight,
@@ -205,29 +205,29 @@ export default function ComparePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { label: "Score", key: "score", format: (v: number) => <span className="text-lg font-black">{v}</span> },
-                    { label: "Stage", key: "stage", format: (v: string) => <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary">{v}</span> },
-                    { label: "Growth", key: "growth_pct", format: (v: number) => {
+                  {([
+                    { label: "Score", key: "score", format: (v: any) => <span className="text-lg font-black">{v}</span> },
+                    { label: "Stage", key: "stage", format: (v: any) => <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary">{v}</span> },
+                    { label: "Growth", key: "growth_pct", format: (v: any) => {
                       const Icon = v > 5 ? TrendingUp : v < -5 ? TrendingDown : Minus;
                       const color = v > 5 ? "text-emerald-500" : v < -5 ? "text-rose-500" : "text-muted-foreground";
-                      return <span className={`inline-flex items-center gap-0.5 font-bold ${color}`}><Icon className="w-3.5 h-3.5" />{v >= 0 ? "+" : ""}{v.toFixed(1)}%</span>;
+                      return <span className={`inline-flex items-center gap-0.5 font-bold ${color}`}><Icon className="w-3.5 h-3.5" />{v >= 0 ? "+" : ""}{Number(v).toFixed(1)}%</span>;
                     }},
-                    { label: "Stars", key: "stars", format: (v: number) => <span className="inline-flex items-center gap-1"><Star className="w-3 h-3 text-amber-500 fill-amber-500" />{v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}</span> },
-                    { label: "Forks", key: "forks", format: (v: number) => <span className="inline-flex items-center gap-1"><GitFork className="w-3 h-3" />{v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}</span> },
-                    { label: "HN Mentions", key: "hn_count" },
-                    { label: "Dev.to", key: "devto_count" },
-                    { label: "Reddit", key: "reddit_count" },
-                    { label: "News", key: "news_count" },
-                    { label: "Sentiment", key: "sentiment_label", format: (v: string) => {
+                    { label: "Stars", key: "stars", format: (v: any) => <span className="inline-flex items-center gap-1"><Star className="w-3 h-3 text-amber-500 fill-amber-500" />{v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}</span> },
+                    { label: "Forks", key: "forks", format: (v: any) => <span className="inline-flex items-center gap-1"><GitFork className="w-3 h-3" />{v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}</span> },
+                    { label: "HN Mentions", key: "hn_count", format: undefined },
+                    { label: "Dev.to", key: "devto_count", format: undefined },
+                    { label: "Reddit", key: "reddit_count", format: undefined },
+                    { label: "News", key: "news_count", format: undefined },
+                    { label: "Sentiment", key: "sentiment_label", format: (v: any) => {
                       const emoji = v === "positive" ? "🟢" : v === "negative" ? "🔴" : v === "mixed" ? "🟡" : "⚪";
                       return <span className="text-xs font-semibold">{emoji} {v}</span>;
                     }},
-                    { label: "Priority", key: "learning_priority", format: (v: string) => {
+                    { label: "Priority", key: "learning_priority", format: (v: any) => {
                       const colors: Record<string, string> = { HIGH: "text-emerald-500", MEDIUM: "text-amber-500", LOW: "text-slate-400", AVOID: "text-rose-500" };
                       return <span className={`font-bold text-xs ${colors[v] || ""}`}>{v}</span>;
                     }},
-                  ].map((row) => (
+                  ] as { label: string; key: string; format: ((v: any) => React.ReactNode) | undefined }[]).map((row) => (
                     <tr key={row.label} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
                       <td className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">{row.label}</td>
                       {compareData.map((t) => {

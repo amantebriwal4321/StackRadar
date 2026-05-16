@@ -43,16 +43,21 @@ class Tool(Base):
     devto_count = Column(Integer, default=0)
     reddit_count = Column(Integer, default=0)
     news_count = Column(Integer, default=0)
+    mention_count = Column(Integer, default=0) # New field
 
     # Sentiment tracking (from Groq analysis)
     sentiment_positive = Column(Integer, default=0)
     sentiment_negative = Column(Integer, default=0)
     sentiment_label = Column(String, default="neutral")  # positive / negative / mixed / neutral
+    sentiment_score = Column(Float, default=0.0) # New field
 
     # Computed
     score = Column(Float, default=0.0)
     growth_pct = Column(Float, default=0.0)
     stage = Column(String, default="Emerging")
+    domain = Column(String, nullable=True) # New field
+    github_stars = Column(Integer, default=0) # New field
+    last_updated = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Decision Intelligence fields
     trend_stage = Column(String, default="stable")           # rising, growing, stable, declining
@@ -79,25 +84,16 @@ class Tool(Base):
 
 
 class ToolSnapshot(Base):
-    """Daily time-series data point for a tool."""
     __tablename__ = "tool_snapshots"
-
-    id = Column(Integer, primary_key=True, index=True)
-    tool_id = Column(Integer, ForeignKey("tools.id"), nullable=False)
-    date = Column(Date, nullable=False)
-    score = Column(Float, default=0.0)
-    stars = Column(Integer, default=0)
-    forks = Column(Integer, default=0)
-    mentions = Column(Integer, default=0)
-    hn_count = Column(Integer, default=0)
-    devto_count = Column(Integer, default=0)
-    reddit_count = Column(Integer, default=0)
+    id              = Column(Integer, primary_key=True)
+    tool_id         = Column(Integer, ForeignKey("tools.id"), nullable=False, index=True)
+    recorded_at     = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    score           = Column(Float)
+    github_stars_delta = Column(Integer, default=0)
+    mention_count   = Column(Integer, default=0)
+    sentiment_score = Column(Float, default=0.0)
 
     tool = relationship("Tool", back_populates="snapshots")
-
-    __table_args__ = (
-        UniqueConstraint("tool_id", "date", name="uq_tool_date"),
-    )
 
 
 class ToolRoadmap(Base):

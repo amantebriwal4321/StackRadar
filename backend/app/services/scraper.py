@@ -57,8 +57,13 @@ async def fetch_github_repo_stats(owner_repo: str) -> Optional[Dict[str, Any]]:
             try:
                 response = await client.get(url, headers=headers, timeout=15.0)
 
-                remaining = response.headers.get("x-ratelimit-remaining", "?")
+                remaining_str = response.headers.get("x-ratelimit-remaining", "-1")
+                remaining = int(remaining_str) if remaining_str.isdigit() else -1
                 limit = response.headers.get("x-ratelimit-limit", "?")
+
+                if remaining != -1 and remaining < 10:
+                    logger.warning(f"GitHub rate limit almost exhausted (remaining: {remaining}). Sleeping 60s.")
+                    await asyncio.sleep(60)
 
                 if response.status_code == 200:
                     data = response.json()
@@ -78,20 +83,12 @@ async def fetch_github_repo_stats(owner_repo: str) -> Optional[Dict[str, Any]]:
                     logger.error(f"GitHub 404: repo '{owner_repo}' not found")
                     return None
 
-                elif response.status_code in (401, 403):
+                elif response.status_code in (401, 403, 429):
                     logger.warning(
-                        f"GitHub {response.status_code} for '{owner_repo}' "
-                        f"(rate: {remaining}/{limit}, attempt {attempt + 1})"
+                        f"WARNING: GitHub rate limit hit, sleeping 60s (status {response.status_code} for '{owner_repo}', "
+                        f"rate: {remaining_str}/{limit}, attempt {attempt + 1})"
                     )
-                    if remaining == "0":
-                        reset_at = response.headers.get("x-ratelimit-reset", "?")
-                        logger.warning(f"GitHub rate limit exhausted. Resets at epoch: {reset_at}")
-                        return None
-
-                elif response.status_code == 429:
-                    retry_after = int(response.headers.get("retry-after", "5"))
-                    logger.warning(f"GitHub 429 for '{owner_repo}': retry-after {retry_after}s")
-                    await asyncio.sleep(retry_after)
+                    await asyncio.sleep(60)
                     continue
 
                 elif response.status_code >= 500:

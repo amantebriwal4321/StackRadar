@@ -24,7 +24,7 @@ from app.services.scraper import (
 )
 from app.services.scoring import (
     count_weighted_mentions, calculate_tool_score, calculate_all_tool_scores,
-    classify_growth_stage, generate_tool_summary,
+    classify_growth_stage, generate_tool_summary, TOOL_REGISTRY,
     classify_trend, generate_recommendation, classify_learning_priority,
 )
 
@@ -83,6 +83,15 @@ async def perform_full_scrape():
     db: Session = SessionLocal()
 
     try:
+        # ━━━ STEP 0: Sync TOOL_REGISTRY with DB ━━━
+        logger.info("Step 0: Syncing TOOL_REGISTRY with database...")
+        for slug, data in TOOL_REGISTRY.items():
+            tool = db.query(Tool).filter_by(slug=slug).first()
+            if not tool:
+                tool = Tool(slug=slug, name=slug.capitalize(), domain=data["domain"], github_repo=data["repo"])
+                db.add(tool)
+        db.commit()
+
         # ━━━ STEP 1: Fetch all community sources ━━━
         logger.info("Step 1: Fetching from community sources...")
 
@@ -138,7 +147,7 @@ async def perform_full_scrape():
         # ━━━ STEP 3: Count sentiment-weighted mentions per tool ━━━
         logger.info("Step 3: Counting sentiment-weighted mentions per tool...")
 
-        all_tools = db.query(Tool).all()
+        all_tools = db.query(Tool).filter(Tool.slug.in_(TOOL_REGISTRY.keys())).all()
         all_slugs = {t.slug for t in all_tools}
 
         hn_weighted = count_weighted_mentions(hn_stories, "hn", all_slugs)
@@ -211,6 +220,7 @@ async def perform_full_scrape():
                 "devto_count": devto_count,
                 "reddit_count": reddit_count,
                 "news_count": news_count,
+                "mention_count": hn_count + devto_count + reddit_count + news_count,
             })
 
         # 5c. Calculate ALL scores at once (percentile-based — this fixes score compression)
@@ -255,7 +265,14 @@ async def perform_full_scrape():
             else:
                 sentiment_label = "mixed"
 
+            # Sentiment score logic (from Groq)
+            # We calculate a score from -1.0 to 1.0 based on pos/neg counts.
+            sentiment_score = 0.0
+            if pos + neg > 0:
+                sentiment_score = float((pos - neg) / (pos + neg))
+
             # Update tool record
+            tool.github_stars = new_stars # Updated column
             tool.stars = new_stars
             tool.forks = new_forks
             tool.open_issues = gh.get("open_issues", tool.open_issues)
@@ -264,6 +281,7 @@ async def perform_full_scrape():
             tool.devto_count = devto_count
             tool.reddit_count = reddit_count
             tool.news_count = news_count
+            tool.mention_count = hn_count + devto_count + reddit_count + news_count
             tool.score = new_score
             tool.growth_pct = growth_pct
             tool.stage = stage
@@ -273,35 +291,30 @@ async def perform_full_scrape():
             tool.sentiment_positive = pos
             tool.sentiment_negative = neg
             tool.sentiment_label = sentiment_label
-            tool.updated_at = datetime.now(timezone.utc)
+            tool.sentiment_score = sentiment_score
+            tool.last_updated = datetime.now(timezone.utc)
 
             # ━━━ STEP 6: Insert daily snapshot (upsert) ━━━
             total_mentions = hn_count + devto_count + reddit_count + news_count
 
             existing_snapshot = db.query(ToolSnapshot).filter(
                 ToolSnapshot.tool_id == tool.id,
-                ToolSnapshot.date == today,
+                ToolSnapshot.recorded_at >= datetime(today.year, today.month, today.day, tzinfo=timezone.utc),
             ).first()
 
             if existing_snapshot:
                 existing_snapshot.score = new_score
-                existing_snapshot.stars = new_stars
-                existing_snapshot.forks = new_forks
-                existing_snapshot.mentions = total_mentions
-                existing_snapshot.hn_count = hn_count
-                existing_snapshot.devto_count = devto_count
-                existing_snapshot.reddit_count = reddit_count
+                existing_snapshot.github_stars_delta = new_stars - existing_snapshot.github_stars_delta # Simplified tracking
+                existing_snapshot.mention_count = total_mentions
+                existing_snapshot.sentiment_score = sentiment_score
             else:
                 snapshot = ToolSnapshot(
                     tool_id=tool.id,
-                    date=today,
+                    recorded_at=datetime.now(timezone.utc),
                     score=new_score,
-                    stars=new_stars,
-                    forks=new_forks,
-                    mentions=total_mentions,
-                    hn_count=hn_count,
-                    devto_count=devto_count,
-                    reddit_count=reddit_count,
+                    github_stars_delta=0,
+                    mention_count=total_mentions,
+                    sentiment_score=sentiment_score
                 )
                 db.add(snapshot)
 

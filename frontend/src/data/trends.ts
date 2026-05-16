@@ -47,12 +47,9 @@ export interface ToolDetail extends Tool {
 export interface ToolHistoryPoint {
   date: string;
   score: number;
-  stars: number;
-  forks: number;
-  mentions: number;
-  hn_count: number;
-  devto_count: number;
-  reddit_count: number;
+  github_stars_delta: number;
+  mention_count: number;
+  sentiment_score: number;
 }
 
 export interface Roadmap {
@@ -93,6 +90,9 @@ export async function fetchCategories(): Promise<string[]> {
 // API base URL
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// ISR revalidation interval (seconds) — matches the backend scraper loop (30 min)
+const REVALIDATE_SECONDS = 1800;
+
 // API helpers
 export async function fetchTools(category?: string): Promise<Tool[]> {
   const url = new URL(`${API_BASE}/api/v1/tools`);
@@ -101,7 +101,7 @@ export async function fetchTools(category?: string): Promise<Tool[]> {
   }
   // Request all tools (per_page=100 covers our current dataset)
   url.searchParams.set("per_page", "100");
-  const res = await fetch(url.toString(), { cache: "no-store" });
+  const res = await fetch(url.toString(), { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch tools");
   const data = await res.json();
   // Backend returns {tools: [...], total, page, per_page, total_pages}
@@ -109,31 +109,31 @@ export async function fetchTools(category?: string): Promise<Tool[]> {
 }
 
 export async function fetchToolDetail(slug: string): Promise<ToolDetail> {
-  const res = await fetch(`${API_BASE}/api/v1/tools/${slug}`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/api/v1/tools/${slug}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error(`Tool '${slug}' not found`);
   return res.json();
 }
 
 export async function fetchToolHistory(slug: string, days = 30): Promise<{ data: ToolHistoryPoint[] }> {
-  const res = await fetch(`${API_BASE}/api/v1/tools/${slug}/history?days=${days}`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/api/v1/tools/${slug}/history?days=${days}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch history");
   return res.json();
 }
 
 export async function fetchRoadmaps(): Promise<Roadmap[]> {
-  const res = await fetch(`${API_BASE}/api/v1/roadmaps`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/api/v1/roadmaps`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch roadmaps");
   return res.json();
 }
 
 export async function fetchRoadmap(slug: string): Promise<Roadmap> {
-  const res = await fetch(`${API_BASE}/api/v1/roadmaps/${slug}`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/api/v1/roadmaps/${slug}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error(`Roadmap '${slug}' not found`);
   return res.json();
 }
 
 export async function fetchDomains(): Promise<DomainSummary[]> {
-  const res = await fetch(`${API_BASE}/api/v1/domains`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/api/v1/domains`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch domains");
   return res.json();
 }
@@ -167,7 +167,7 @@ export interface LearningPath {
 }
 
 export async function fetchLearningPath(domainSlug: string): Promise<LearningPath> {
-  const res = await fetch(`${API_BASE}/api/v1/domains/${domainSlug}/learning-path`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/api/v1/domains/${domainSlug}/learning-path`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch learning path");
   return res.json();
 }
@@ -176,7 +176,9 @@ export async function fetchLearningPath(domainSlug: string): Promise<LearningPat
 export interface CompareToolHistoryPoint {
   date: string;
   score: number;
-  stars: number;
+  github_stars_delta: number;
+  mention_count: number;
+  sentiment_score: number;
 }
 
 export interface CompareTool {
@@ -202,7 +204,7 @@ export interface CompareTool {
 }
 
 export async function fetchCompareTools(slugs: string[]): Promise<{ tools: CompareTool[] }> {
-  const res = await fetch(`${API_BASE}/api/v1/tools/compare?slugs=${slugs.join(",")}`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/api/v1/tools/compare?slugs=${slugs.join(",")}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to compare tools");
   return res.json();
 }

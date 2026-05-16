@@ -19,9 +19,9 @@ import json
 import re
 import os
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from sqlalchemy.orm import Session
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from app.db.session import get_db
 from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain
 from app.services.scheduler import scrape_status
@@ -47,6 +47,7 @@ def validate_slug(slug: str) -> str:
 
 @router.get("/tools")
 def get_tools(
+    request: Request,
     category: str = Query(None, description="Filter by category (e.g. 'AI / ML')"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     per_page: int = Query(50, ge=1, le=100, description="Items per page (max 100)"),
@@ -157,8 +158,8 @@ def compare_tools(
     for tool in tools:
         snapshots = (
             db.query(ToolSnapshot)
-            .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.date >= cutoff)
-            .order_by(ToolSnapshot.date.asc())
+            .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.recorded_at >= datetime(cutoff.year, cutoff.month, cutoff.day))
+            .order_by(ToolSnapshot.recorded_at.asc())
             .all()
         )
         result.append({
@@ -181,7 +182,7 @@ def compare_tools(
             "learning_priority": tool.learning_priority,
             "recommendation": tool.recommendation,
             "history": [
-                {"date": s.date.isoformat(), "score": s.score, "stars": s.stars}
+                {"date": s.recorded_at.isoformat(), "score": s.score, "github_stars_delta": s.github_stars_delta, "mention_count": s.mention_count, "sentiment_score": s.sentiment_score}
                 for s in snapshots
             ],
         })
@@ -274,8 +275,8 @@ def get_tool_history(slug: str, days: int = Query(30, ge=1, le=90), db: Session 
     cutoff = date.today() - timedelta(days=days)
     snapshots = (
         db.query(ToolSnapshot)
-        .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.date >= cutoff)
-        .order_by(ToolSnapshot.date.asc())
+        .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.recorded_at >= datetime(cutoff.year, cutoff.month, cutoff.day))
+        .order_by(ToolSnapshot.recorded_at.asc())
         .all()
     )
 
@@ -285,14 +286,11 @@ def get_tool_history(slug: str, days: int = Query(30, ge=1, le=90), db: Session 
         "days": days,
         "data": [
             {
-                "date": s.date.isoformat(),
+                "date": s.recorded_at.isoformat(),
                 "score": s.score,
-                "stars": s.stars,
-                "forks": s.forks,
-                "mentions": s.mentions,
-                "hn_count": s.hn_count,
-                "devto_count": s.devto_count,
-                "reddit_count": s.reddit_count,
+                "github_stars_delta": s.github_stars_delta,
+                "mention_count": s.mention_count,
+                "sentiment_score": s.sentiment_score,
             }
             for s in snapshots
         ],
@@ -444,15 +442,37 @@ def get_scraper_status():
 
 @router.get("/health")
 def health_check(db: Session = Depends(get_db)):
-    """Production health check — verifies DB connectivity and data state."""
+    """Production health check — verifies DB connectivity and data freshness."""
+    from sqlalchemy import text
+    try:
+        db.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception:
+        db_status = "error"
+
+    last_snapshot = db.query(ToolSnapshot)\
+        .order_by(ToolSnapshot.recorded_at.desc())\
+        .first()
+
     tool_count = db.query(Tool).count()
+
     return {
         "status": "ok",
+        "db": db_status,
         "tools_tracked": tool_count,
-        "last_scrape": scrape_status.get("last_scraped_time"),
+        "last_scrape": last_snapshot.recorded_at.isoformat() if last_snapshot else None,
         "is_scraping": scrape_status.get("is_running", False),
-        "sentiment_enabled": bool(scrape_status.get("sentiment")),
+        "version": "1.0.0",
     }
+
+
+@router.get("/ready")
+def readiness_check(db: Session = Depends(get_db)):
+    """Kubernetes readiness probe — returns 503 until enough tools are seeded."""
+    tool_count = db.query(Tool).count()
+    if tool_count < 10:
+        raise HTTPException(status_code=503, detail=f"Not enough tools seeded yet ({tool_count}/10)")
+    return {"ready": True, "tools": tool_count}
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

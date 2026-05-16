@@ -301,7 +301,7 @@ def run_seed(db: Session) -> None:
 
     # 4. Pre-seed 7 days of history snapshots so charts aren't empty on first visit
     import random
-    from datetime import date, timedelta
+    from datetime import date, timedelta, datetime, timezone
 
     today = date.today()
     snapshot_count = 0
@@ -319,14 +319,11 @@ def run_seed(db: Session) -> None:
 
             snapshot = ToolSnapshot(
                 tool_id=tool.id,
-                date=snapshot_date,
+                recorded_at=datetime(snapshot_date.year, snapshot_date.month, snapshot_date.day, tzinfo=timezone.utc),
                 score=day_score,
-                stars=max(0, int(random.uniform(100, 50000) * (0.8 + 0.2 * progress))),
-                forks=max(0, int(random.uniform(10, 5000) * (0.8 + 0.2 * progress))),
-                mentions=max(0, int(random.uniform(0, 15))),
-                hn_count=max(0, int(random.uniform(0, 5))),
-                devto_count=max(0, int(random.uniform(0, 4))),
-                reddit_count=max(0, int(random.uniform(0, 6))),
+                github_stars_delta=max(0, int(random.uniform(10, 500))),
+                mention_count=max(0, int(random.uniform(0, 15))),
+                sentiment_score=random.uniform(-0.5, 0.5),
             )
             db.add(snapshot)
             snapshot_count += 1

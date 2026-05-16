@@ -21,51 +21,58 @@ logger = logging.getLogger(__name__)
 # TOOL KEYWORDS — maps aliases/keywords to tool slugs
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-TOOL_KEYWORDS: Dict[str, List[str]] = {
-    # Web Development
-    "react": ["react", "reactjs", "react.js", "react hooks", "jsx", "react server component", "react native"],
-    "nextjs": ["next.js", "nextjs", "next js", "vercel next"],
-    "vuejs": ["vue", "vuejs", "vue.js", "vue 3", "nuxt", "nuxtjs"],
-    "svelte": ["svelte", "sveltekit", "svelte kit"],
-    "astro": ["astro", "astro.build", "astro framework"],
-    "vite": ["vite", "vitejs", "vite.js"],
-    "tailwindcss": ["tailwind", "tailwindcss", "tailwind css"],
-    "fastapi": ["fastapi", "fast api", "fast-api"],
-    "trpc": ["trpc", "t3 stack"],
-    "bun": ["bun", "bunjs", "bun runtime"],
-    "deno": ["deno", "denoland", "deno deploy"],
-    "prisma": ["prisma", "prisma orm", "prisma client"],
-
-    # AI / ML
-    "pytorch": ["pytorch", "torch", "torchvision", "torch.nn", "libtorch"],
-    "tensorflow": ["tensorflow", "tf.", "keras", "tf2", "tensorboard"],
-    "langchain": ["langchain", "langgraph", "langsmith"],
-    "transformers": ["hugging face", "huggingface", "transformers", "diffusers", "tokenizers"],
-    "ollama": ["ollama", "llama.cpp", "local llm"],
-
-    # Cloud Native
-    "kubernetes": ["kubernetes", "k8s", "kubectl", "helm chart", "eks", "aks", "gke"],
-    "terraform": ["terraform", "hashicorp terraform", "hcl", "opentofu"],
-    "supabase": ["supabase", "supabase auth", "supabase edge"],
-
-    # DevOps
-    "docker": ["docker", "dockerfile", "docker compose", "docker-compose", "container", "moby"],
-    "grafana": ["grafana", "grafana dashboard", "grafana cloud"],
-    "prometheus": ["prometheus", "promql", "prometheus metrics"],
-
-    # Systems
-    "rust": ["rust", "rustlang", "rust-lang", "cargo", "crate", "rustc"],
-    "go": ["golang", "go lang", "goroutine", "go module"],
-
-    # Cybersecurity
-    "wireshark": ["wireshark", "packet capture", "pcap", "network analyzer"],
-    "metasploit": ["metasploit", "msfconsole", "metasploit framework", "pentest"],
-    "owasp-zap": ["owasp zap", "zap proxy", "zaproxy", "owasp"],
-
-    # Web3 / Blockchain
-    "hardhat": ["hardhat", "hardhat deploy", "hardhat test"],
-    "foundry": ["foundry", "forge test", "foundry-rs", "cast send"],
-    "ethersjs": ["ethers.js", "ethersjs", "ethers js", "ethers provider"],
+TOOL_REGISTRY = {
+    # Frontend
+    "react":      {"repo": "facebook/react",           "keywords": ["react", "reactjs", "react.js"], "domain": "frontend"},
+    "vue":        {"repo": "vuejs/vue",                 "keywords": ["vue", "vuejs", "vue.js"],       "domain": "frontend"},
+    "angular":    {"repo": "angular/angular",           "keywords": ["angular", "angularjs"],         "domain": "frontend"},
+    "svelte":     {"repo": "sveltejs/svelte",           "keywords": ["svelte", "sveltekit"],          "domain": "frontend"},
+    "nextjs":     {"repo": "vercel/next.js",            "keywords": ["next.js", "nextjs"],            "domain": "frontend"},
+    # Backend
+    "fastapi":    {"repo": "tiangolo/fastapi",          "keywords": ["fastapi", "fast api"],          "domain": "backend"},
+    "django":     {"repo": "django/django",             "keywords": ["django"],                       "domain": "backend"},
+    "express":    {"repo": "expressjs/express",         "keywords": ["express", "expressjs"],         "domain": "backend"},
+    "nestjs":     {"repo": "nestjs/nest",               "keywords": ["nestjs", "nest.js"],            "domain": "backend"},
+    "laravel":    {"repo": "laravel/laravel",           "keywords": ["laravel"],                      "domain": "backend"},
+    # Languages
+    "rust":       {"repo": "rust-lang/rust",            "keywords": ["rust", "rustlang"],             "domain": "languages"},
+    "go":         {"repo": "golang/go",                 "keywords": ["golang", "go lang"],            "domain": "languages"},
+    "typescript": {"repo": "microsoft/TypeScript",      "keywords": ["typescript", "ts"],             "domain": "languages"},
+    "python":     {"repo": "python/cpython",            "keywords": ["python", "py"],                 "domain": "languages"},
+    "kotlin":     {"repo": "JetBrains/kotlin",          "keywords": ["kotlin"],                       "domain": "languages"},
+    # AI/ML
+    "pytorch":    {"repo": "pytorch/pytorch",           "keywords": ["pytorch", "torch"],             "domain": "ai_ml"},
+    "tensorflow": {"repo": "tensorflow/tensorflow",     "keywords": ["tensorflow", "tf"],             "domain": "ai_ml"},
+    "langchain":  {"repo": "langchain-ai/langchain",    "keywords": ["langchain"],                    "domain": "ai_ml"},
+    "huggingface":{"repo": "huggingface/transformers",  "keywords": ["huggingface", "transformers"],  "domain": "ai_ml"},
+    "openai":     {"repo": "openai/openai-python",      "keywords": ["openai", "chatgpt", "gpt-4"],   "domain": "ai_ml"},
+    # DevOps / Cloud
+    "docker":     {"repo": "docker/compose",            "keywords": ["docker", "dockerfile"],         "domain": "devops"},
+    "kubernetes": {"repo": "kubernetes/kubernetes",     "keywords": ["kubernetes", "k8s"],            "domain": "devops"},
+    "terraform":  {"repo": "hashicorp/terraform",       "keywords": ["terraform"],                    "domain": "devops"},
+    "github_actions": {"repo": "actions/runner",        "keywords": ["github actions", "gh actions"], "domain": "devops"},
+    "prometheus": {"repo": "prometheus/prometheus",     "keywords": ["prometheus"],                   "domain": "devops"},
+    # Databases
+    "postgresql": {"repo": "postgres/postgres",         "keywords": ["postgresql", "postgres"],       "domain": "databases"},
+    "redis":      {"repo": "redis/redis",               "keywords": ["redis"],                        "domain": "databases"},
+    "mongodb":    {"repo": "mongodb/mongo",             "keywords": ["mongodb", "mongo"],             "domain": "databases"},
+    "supabase":   {"repo": "supabase/supabase",         "keywords": ["supabase"],                     "domain": "databases"},
+    "prisma":     {"repo": "prisma/prisma",             "keywords": ["prisma"],                       "domain": "databases"},
+    # Mobile
+    "react_native":{"repo": "facebook/react-native",   "keywords": ["react native"],                 "domain": "mobile"},
+    "flutter":    {"repo": "flutter/flutter",           "keywords": ["flutter", "dart"],              "domain": "mobile"},
+    "swift":      {"repo": "apple/swift",               "keywords": ["swift", "swiftui"],             "domain": "mobile"},
+    # Testing
+    "jest":       {"repo": "jestjs/jest",               "keywords": ["jest", "jestjs"],               "domain": "testing"},
+    "playwright": {"repo": "microsoft/playwright",      "keywords": ["playwright"],                   "domain": "testing"},
+    "vitest":     {"repo": "vitest-dev/vitest",         "keywords": ["vitest"],                       "domain": "testing"},
+    # Web3
+    "solidity":   {"repo": "ethereum/solidity",         "keywords": ["solidity", "ethereum"],         "domain": "web3"},
+    # Tooling
+    "vite":       {"repo": "vitejs/vite",               "keywords": ["vite", "vitejs"],               "domain": "tooling"},
+    "bun":        {"repo": "oven-sh/bun",               "keywords": ["bun", "bunjs"],                 "domain": "tooling"},
+    "deno":       {"repo": "denoland/deno",             "keywords": ["deno"],                         "domain": "tooling"},
+    "graphql":    {"repo": "graphql/graphql-js",        "keywords": ["graphql"],                      "domain": "api"},
 }
 
 
@@ -80,8 +87,8 @@ def classify_text_to_tools(text: str) -> Set[str]:
     text_lower = text.lower()
     matched_tools: Set[str] = set()
 
-    for tool_slug, keywords in TOOL_KEYWORDS.items():
-        for keyword in keywords:
+    for tool_slug, data in TOOL_REGISTRY.items():
+        for keyword in data["keywords"]:
             if keyword in text_lower:
                 matched_tools.add(tool_slug)
                 break  # One match per tool is enough
@@ -137,24 +144,20 @@ def count_weighted_mentions(
 def _percentile_rank(values: List[float]) -> List[float]:
     """
     Rank a list of values into 0–100 percentile scores.
-    Ties get the same percentile. Higher raw value = higher percentile.
-
-    Example: [10, 50, 50, 100] → [0.0, 33.3, 33.3, 100.0]
+    Ties get the average rank (fractional ranking).
     """
-    if not values or len(values) == 1:
-        return [50.0] * len(values)
-
     n = len(values)
-    sorted_vals = sorted(set(values))
-
-    if len(sorted_vals) == 1:
+    if n <= 1:
         return [50.0] * n
 
-    rank_map = {}
-    for i, v in enumerate(sorted_vals):
-        rank_map[v] = (i / (len(sorted_vals) - 1)) * 100.0
+    ranks = []
+    for v in values:
+        less_than = sum(1 for x in values if x < v)
+        equal_to = sum(1 for x in values if x == v)
+        rank = less_than + (equal_to / 2.0)
+        ranks.append((rank / n) * 100.0)
 
-    return [round(rank_map[v], 1) for v in values]
+    return ranks
 
 
 def calculate_all_tool_scores(
@@ -184,43 +187,45 @@ def calculate_all_tool_scores(
     if not tool_data:
         return []
 
-    # Extract raw signal arrays
-    stars_raw = [d.get("stars", 0) for d in tool_data]
-    forks_raw = [d.get("forks", 0) for d in tool_data]
-    hn_raw = [d.get("hn_count", 0) for d in tool_data]
-    devto_raw = [d.get("devto_count", 0) for d in tool_data]
-    reddit_raw = [d.get("reddit_count", 0) for d in tool_data]
-    news_raw = [d.get("news_count", 0) for d in tool_data]
-
-    # Momentum = total weighted mentions (rewards tools with multi-source buzz)
-    momentum_raw = [
-        d.get("hn_count", 0) * 2.0 +
-        d.get("devto_count", 0) * 1.5 +
-        d.get("reddit_count", 0) * 1.5 +
-        d.get("news_count", 0) * 2.0
-        for d in tool_data
-    ]
-
-    # Convert each signal to percentile ranks
-    stars_pct = _percentile_rank(stars_raw)
-    forks_pct = _percentile_rank(forks_raw)
-    hn_pct = _percentile_rank(hn_raw)
-    devto_pct = _percentile_rank(devto_raw)
-    reddit_pct = _percentile_rank(reddit_raw)
-    news_pct = _percentile_rank(news_raw)
-    momentum_pct = _percentile_rank(momentum_raw)
-
     scores = []
-    for i in range(len(tool_data)):
+    for d in tool_data:
+        stars = d.get("stars", 0)
+        forks = d.get("forks", 0)
+        hn_count = d.get("hn_count", 0)
+        devto_count = d.get("devto_count", 0)
+        reddit_count = d.get("reddit_count", 0)
+        news_count = d.get("news_count", 0)
+
+        # Logarithmic normalization (maxes out around 250k stars)
+        def normalize_log(val, max_val):
+            if val <= 0: return 0.0
+            return min(100.0, (math.log(val + 1) / math.log(max_val + 1)) * 100.0)
+
+        stars_norm = normalize_log(stars, 250000)
+        forks_norm = normalize_log(forks, 50000)
+
+        # Mentions are hourly/daily, so even 1-2 mentions is huge. We use linear for them.
+        def normalize_lin(val, max_val):
+            return min(100.0, (val / max_val) * 100.0)
+
+        hn_norm = normalize_lin(hn_count, 5)
+        devto_norm = normalize_lin(devto_count, 5)
+        reddit_norm = normalize_lin(reddit_count, 5)
+        news_norm = normalize_lin(news_count, 3)
+
+        momentum = (hn_count * 2) + (devto_count * 1.5) + (reddit_count * 1.5) + (news_count * 2)
+        momentum_norm = normalize_lin(momentum, 15)
+
+        # Weights: GitHub heavily anchors the score so popular tools aren't dragged down by quiet news days.
         score = (
-            stars_pct[i] * 0.20 +
-            forks_pct[i] * 0.05 +
-            hn_pct[i] * 0.20 +
-            devto_pct[i] * 0.10 +
-            reddit_pct[i] * 0.15 +
-            news_pct[i] * 0.10 +
-            momentum_pct[i] * 0.15 +
-            5.0  # Base score for being a tracked tool
+            stars_norm * 0.45 +
+            forks_norm * 0.20 +
+            hn_norm * 0.05 +
+            devto_norm * 0.05 +
+            reddit_norm * 0.05 +
+            news_norm * 0.05 +
+            momentum_norm * 0.05 +
+            10.0  # Base score
         )
         scores.append(round(min(score, 100.0), 1))
 

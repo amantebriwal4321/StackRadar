@@ -1,0 +1,32 @@
+name: Backend CI
+on: [push, pull_request]
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Check imports
+        run: cd backend && python -c "from app.main import app; print('✅ App imports successfully')"
+      - name: Verify API routes
+        run: |
+          cd backend
+          python -c "
+          from app.main import app
+          routes = [r.path for r in app.routes]
+          assert '/api/v1/tools' in routes or any('/tools' in r for r in routes), 'Missing /tools route'
+          print(f'✅ {len(routes)} routes registered')
+          "
+
+  docker-build:
+    needs: lint-and-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t stackradar-backend:latest ./backend

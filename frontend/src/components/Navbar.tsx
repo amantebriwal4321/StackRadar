@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Radar, Menu, X, Sun, Moon } from "lucide-react";
+import { Radar, Menu, X, Sun, Moon, Bookmark } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 
 const navLinks = [
   { href: "/", label: "Dashboard" },
@@ -16,6 +17,7 @@ const navLinks = [
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isSignedIn, isLoaded } = useUser();
   
   // Theme State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -86,6 +88,26 @@ export default function Navbar() {
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Live Data
           </div>
+
+          {/* Auth: Watchlist + Sign In */}
+          {isLoaded && isSignedIn ? (
+            <>
+              <Link
+                href="/watchlist"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors"
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                Watchlist
+              </Link>
+              <UserButton />
+            </>
+          ) : isLoaded ? (
+            <SignInButton mode="modal">
+              <button className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
+                Sign In
+              </button>
+            </SignInButton>
+          ) : null}
 
           {/* Theme Toggle */}
           {mounted ? (

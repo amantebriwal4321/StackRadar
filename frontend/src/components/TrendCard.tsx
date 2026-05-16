@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, TrendingUp, TrendingDown, Minus, Star } from "lucide-react";
 import { type Tool } from "@/data/trends";
 import { motion } from "framer-motion";
+import WatchlistButton from "@/components/WatchlistButton";
 
 const MotionLink = motion.create(Link);
 
@@ -111,7 +112,12 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
     >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
 
-      <div className="flex justify-between items-start mb-4 relative z-10">
+      {/* Bookmark Button */}
+      <div className="absolute top-4 right-4 z-20">
+        <WatchlistButton toolSlug={tool.slug} />
+      </div>
+
+      <div className="flex justify-between items-start mb-4 relative z-10 pr-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center text-2xl shadow-sm border border-border/40 group-hover:scale-105 transition-transform duration-300">
             {tool.icon}
@@ -161,26 +167,18 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
             </span>
           </div>
         )}
-        <div className="grid grid-cols-5 gap-1 text-center text-xs">
+        <div className="grid grid-cols-3 gap-1 text-center text-xs">
           <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
             <div className="font-bold text-foreground text-sm">{tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}</div>
             <div className="text-muted-foreground text-[10px] uppercase font-semibold">Stars</div>
           </div>
           <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-            <div className="font-bold text-foreground text-sm">{tool.hn_count}</div>
-            <div className="text-muted-foreground text-[10px] uppercase font-semibold">HN</div>
+            <div className="font-bold text-foreground text-sm">{tool.forks >= 1000 ? `${(tool.forks / 1000).toFixed(0)}k` : tool.forks}</div>
+            <div className="text-muted-foreground text-[10px] uppercase font-semibold">Forks</div>
           </div>
           <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-            <div className="font-bold text-foreground text-sm">{tool.devto_count}</div>
-            <div className="text-muted-foreground text-[10px] uppercase font-semibold">Dev.to</div>
-          </div>
-          <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-            <div className="font-bold text-foreground text-sm">{tool.reddit_count}</div>
-            <div className="text-muted-foreground text-[10px] uppercase font-semibold">Reddit</div>
-          </div>
-          <div className="hover:bg-muted/40 rounded-lg py-1 transition-colors">
-            <div className="font-bold text-foreground text-sm">{tool.news_count}</div>
-            <div className="text-muted-foreground text-[10px] uppercase font-semibold">News</div>
+            <div className="font-bold text-foreground text-sm">{totalMentions}</div>
+            <div className="text-muted-foreground text-[10px] uppercase font-semibold">Daily Mentions</div>
           </div>
         </div>
       </div>
