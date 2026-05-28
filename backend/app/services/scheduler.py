@@ -2,30 +2,47 @@
 Scheduler — Background scraper loop with sentiment-aware, tool-level aggregation pipeline.
 
 Flow:
-  1. Fetch raw data from all sources (GitHub repo stats, HN, DevTo, Reddit, RSS News)
-  2. Run batch sentiment analysis on all content via Groq LLM
-  3. Count sentiment-weighted mentions per tool
-  4. Fetch GitHub stats per tool (targeted, 1 API call each)
-  5. Calculate weighted scores, growth stages, and decision intelligence
-  6. Upsert Tool records in database
-  7. Insert daily ToolSnapshot for time-series tracking
-  8. Aggregate tool scores per domain
+  1. Validate GitHub token + check rate budget
+  2. Fetch raw data from all sources (GitHub repo stats, HN, DevTo, Reddit, RSS News)
+  3. Run batch sentiment analysis on all content via Groq LLM
+  4. Count sentiment-weighted mentions per tool
+  5. Fetch GitHub stats per tool (shared client, adaptive delays)
+  6. Calculate weighted scores, growth stages, and decision intelligence
+  7. Upsert Tool records in database
+  8. Insert daily ToolSnapshot for time-series tracking
+  9. Aggregate tool scores per domain
+
+Phase 1 improvements:
+  - Shared httpx.AsyncClient for all GitHub calls (connection pooling)
+  - Adaptive delay between calls based on X-RateLimit-Remaining
+  - Token validation at start of each cycle
+  - Rate budget logging
+
+Phase 4 improvements:
+  - Fixed github_stars_delta calculation
+  - Accumulative mention_count in daily snapshots
+  - 7-day rolling average for growth_pct calculation
 """
 
 import asyncio
 import logging
+import time
+import httpx
 from datetime import datetime, timezone, timedelta, date
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.db.session import SessionLocal
 from app.models.all_models import Tool, ToolSnapshot, Domain
 from app.services.scraper import (
     fetch_github_repo_stats, fetch_hackernews, fetch_devto,
     fetch_reddit, fetch_tech_news, batch_sentiment_analysis,
+    validate_github_token, _adaptive_delay, _rate_remaining, _rate_limit,
 )
 from app.services.scoring import (
     count_weighted_mentions, calculate_tool_score, calculate_all_tool_scores,
     classify_growth_stage, generate_tool_summary, TOOL_REGISTRY,
     classify_trend, generate_recommendation, classify_learning_priority,
+    classify_text_to_tools,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,27 +81,24 @@ async def run_scraper_loop():
 
 async def perform_full_scrape():
     """
-    Full scraping pipeline:
-    1. Fetch community sources in parallel
-    2. Sentiment analysis via Groq LLM
-    3. Count sentiment-weighted mentions per tool
-    4. Fetch GitHub stats per tool
-    5. Calculate scores, growth, decision intelligence
-    6. Save to DB + create daily snapshot
-    7. Aggregate domain scores
+    Full scraping pipeline with Phase 1 + Phase 4 hardening.
     """
-    import time
     _start = time.time()
     scrape_status["is_running"] = True
     scrape_status["start_time"] = datetime.now(timezone.utc).isoformat()
-    scrape_status["current_step"] = "1/7 — Fetching community sources"
-    scrape_status["errors"] = []  # reset errors for this run
+    scrape_status["current_step"] = "0/8 — Validating GitHub token"
+    scrape_status["errors"] = []
 
     db: Session = SessionLocal()
 
+    # Shared HTTP client for all GitHub calls (Phase 1.3 — connection pooling)
+    github_client = httpx.AsyncClient(timeout=15.0)
+
     try:
-        # ━━━ STEP 0: Sync TOOL_REGISTRY with DB ━━━
-        logger.info("Step 0: Syncing TOOL_REGISTRY with database...")
+        # ━━━ STEP 0: Validate GitHub token + sync registry ━━━
+        logger.info("Step 0: Validating GitHub token and syncing tool registry...")
+        await validate_github_token(github_client)
+
         for slug, data in TOOL_REGISTRY.items():
             tool = db.query(Tool).filter_by(slug=slug).first()
             if not tool:
@@ -93,6 +107,7 @@ async def perform_full_scrape():
         db.commit()
 
         # ━━━ STEP 1: Fetch all community sources ━━━
+        scrape_status["current_step"] = "1/8 — Fetching community sources"
         logger.info("Step 1: Fetching from community sources...")
 
         hn_stories, devto_articles, reddit_posts, news_articles = await asyncio.gather(
@@ -115,13 +130,13 @@ async def perform_full_scrape():
         )
 
         # ━━━ STEP 2: Sentiment Analysis ━━━
-        scrape_status["current_step"] = "2/7 — Running sentiment analysis"
+        scrape_status["current_step"] = "2/8 — Running sentiment analysis"
         logger.info("Step 2: Running sentiment analysis via Groq LLM...")
 
         all_content = hn_stories + devto_articles + reddit_posts + news_articles
         all_content = await batch_sentiment_analysis(all_content)
 
-        # Split back into sources (they were concatenated in order)
+        # Split back into sources
         hn_end = len(hn_stories)
         devto_end = hn_end + len(devto_articles)
         reddit_end = devto_end + len(reddit_posts)
@@ -145,6 +160,7 @@ async def perform_full_scrape():
         }
 
         # ━━━ STEP 3: Count sentiment-weighted mentions per tool ━━━
+        scrape_status["current_step"] = "3/8 — Counting mentions"
         logger.info("Step 3: Counting sentiment-weighted mentions per tool...")
 
         all_tools = db.query(Tool).filter(Tool.slug.in_(TOOL_REGISTRY.keys())).all()
@@ -155,31 +171,37 @@ async def perform_full_scrape():
         reddit_weighted = count_weighted_mentions(reddit_posts, "reddit", all_slugs)
         news_weighted = count_weighted_mentions(news_articles, "news", all_slugs)
 
-        # ━━━ STEP 4: Fetch GitHub stats per tool ━━━
-        logger.info("Step 4: Fetching GitHub repo stats per tool...")
+        # ━━━ STEP 4: Fetch GitHub stats (Phase 1 — shared client + adaptive delay) ━━━
+        scrape_status["current_step"] = "4/8 — Fetching GitHub stats"
+        logger.info("Step 4: Fetching GitHub repo stats (shared client, adaptive delays)...")
 
         github_stats: dict[str, dict] = {}
         for tool in all_tools:
             if tool.github_repo:
-                stats = await fetch_github_repo_stats(tool.github_repo)
+                stats = await fetch_github_repo_stats(tool.github_repo, client=github_client)
                 if stats:
                     github_stats[tool.slug] = stats
-                await asyncio.sleep(0.5)
+
+                # Adaptive delay (Phase 1.2)
+                delay = _adaptive_delay()
+                await asyncio.sleep(delay)
 
         scrape_status["sources"]["github_repos"] = len(github_stats)
-        logger.info(f"GitHub: Fetched stats for {len(github_stats)} / {len(all_tools)} repos")
+        logger.info(
+            f"GitHub: Fetched stats for {len(github_stats)}/{len(all_tools)} repos "
+            f"(rate remaining: {_rate_remaining}/{_rate_limit})"
+        )
 
         # ━━━ STEP 5: Calculate scores + Decision Intelligence ━━━
+        scrape_status["current_step"] = "5/8 — Computing scores"
         logger.info("Step 5: Computing scores, growth, and decision intelligence...")
 
         today = date.today()
         tools_updated = 0
 
-        # 5a. Count raw sentiment (positive/negative) per tool for UI badges
+        # 5a. Count raw sentiment per tool
         tool_sentiment_pos: dict[str, int] = {t.slug: 0 for t in all_tools}
         tool_sentiment_neg: dict[str, int] = {t.slug: 0 for t in all_tools}
-
-        from app.services.scoring import classify_text_to_tools
 
         for item in all_content:
             sentiment = item.get("sentiment", "neutral")
@@ -223,10 +245,12 @@ async def perform_full_scrape():
                 "mention_count": hn_count + devto_count + reddit_count + news_count,
             })
 
-        # 5c. Calculate ALL scores at once (percentile-based — this fixes score compression)
+        # 5c. Calculate ALL scores at once (percentile-based)
         all_scores = calculate_all_tool_scores(tool_signals)
 
-        # 5d. Apply scores, sentiment, and decision intelligence to each tool
+        # 5d. Apply scores, sentiment, and decision intelligence
+        scrape_status["current_step"] = "6/8 — Updating tool records"
+
         for i, tool in enumerate(all_tools):
             slug = tool.slug
             gh = github_stats.get(slug, {})
@@ -240,10 +264,15 @@ async def perform_full_scrape():
             reddit_count = signals["reddit_count"]
             news_count = signals["news_count"]
 
-            # growth (7-day rolling average for smoothness)
-            old_score = tool.score if tool.score else 0.0
-            if old_score > 0:
-                growth_pct = round(((new_score - old_score) / old_score) * 100, 1)
+            # Phase 4.3: 7-day rolling average growth calculation
+            seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+            avg_result = db.query(func.avg(ToolSnapshot.score)).filter(
+                ToolSnapshot.tool_id == tool.id,
+                ToolSnapshot.recorded_at >= seven_days_ago,
+            ).scalar()
+
+            if avg_result and avg_result > 0:
+                growth_pct = round(((new_score - float(avg_result)) / float(avg_result)) * 100, 1)
             else:
                 growth_pct = 0.0
 
@@ -253,7 +282,7 @@ async def perform_full_scrape():
             learning_priority = classify_learning_priority(trend_stage)
             stage = classify_growth_stage(new_score)
 
-            # Sentiment label for frontend
+            # Sentiment label
             pos = tool_sentiment_pos.get(slug, 0)
             neg = tool_sentiment_neg.get(slug, 0)
             if pos + neg == 0:
@@ -265,14 +294,15 @@ async def perform_full_scrape():
             else:
                 sentiment_label = "mixed"
 
-            # Sentiment score logic (from Groq)
-            # We calculate a score from -1.0 to 1.0 based on pos/neg counts.
             sentiment_score = 0.0
             if pos + neg > 0:
                 sentiment_score = float((pos - neg) / (pos + neg))
 
+            # Phase 4.1: Calculate stars delta BEFORE updating tool.stars
+            stars_delta = new_stars - (tool.stars or 0) if tool.stars else 0
+
             # Update tool record
-            tool.github_stars = new_stars # Updated column
+            tool.github_stars = new_stars
             tool.stars = new_stars
             tool.forks = new_forks
             tool.open_issues = gh.get("open_issues", tool.open_issues)
@@ -294,7 +324,7 @@ async def perform_full_scrape():
             tool.sentiment_score = sentiment_score
             tool.last_updated = datetime.now(timezone.utc)
 
-            # ━━━ STEP 6: Insert daily snapshot (upsert) ━━━
+            # ━━━ STEP 7: Insert daily snapshot ━━━
             total_mentions = hn_count + devto_count + reddit_count + news_count
 
             existing_snapshot = db.query(ToolSnapshot).filter(
@@ -304,17 +334,19 @@ async def perform_full_scrape():
 
             if existing_snapshot:
                 existing_snapshot.score = new_score
-                existing_snapshot.github_stars_delta = new_stars - existing_snapshot.github_stars_delta # Simplified tracking
-                existing_snapshot.mention_count = total_mentions
+                # Phase 4.1: Store actual stars delta, not self-referencing subtraction
+                existing_snapshot.github_stars_delta = stars_delta
+                # Phase 4.2: Accumulate mentions throughout the day
+                existing_snapshot.mention_count = (existing_snapshot.mention_count or 0) + total_mentions
                 existing_snapshot.sentiment_score = sentiment_score
             else:
                 snapshot = ToolSnapshot(
                     tool_id=tool.id,
                     recorded_at=datetime.now(timezone.utc),
                     score=new_score,
-                    github_stars_delta=0,
+                    github_stars_delta=stars_delta,
                     mention_count=total_mentions,
-                    sentiment_score=sentiment_score
+                    sentiment_score=sentiment_score,
                 )
                 db.add(snapshot)
 
@@ -328,8 +360,9 @@ async def perform_full_scrape():
                 f"sentiment={sentiment_label}(+{pos}/-{neg})"
             )
 
-        # ━━━ STEP 7: Aggregate domain scores ━━━
-        logger.info("Step 7: Aggregating domain-level scores...")
+        # ━━━ STEP 8: Aggregate domain scores ━━━
+        scrape_status["current_step"] = "7/8 — Aggregating domains"
+        logger.info("Step 8: Aggregating domain-level scores...")
 
         domains = db.query(Domain).all()
         for domain in domains:
@@ -354,7 +387,7 @@ async def perform_full_scrape():
                 logger.info(f"  {domain.name}: avg_score={domain.score} stage={domain.stage}")
 
         scrape_status["tools_updated"] = tools_updated
-        scrape_status["current_step"] = "7/7 — Saving to database"
+        scrape_status["current_step"] = "8/8 — Saving to database"
         db.commit()
         logger.info(f"All {tools_updated} tools updated and saved successfully!")
 
@@ -364,6 +397,7 @@ async def perform_full_scrape():
         scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
     finally:
         db.close()
+        await github_client.aclose()
         scrape_status["is_running"] = False
         scrape_status["current_step"] = None
         scrape_status["duration_seconds"] = round(time.time() - _start, 1)

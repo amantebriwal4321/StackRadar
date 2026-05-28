@@ -76,24 +76,42 @@ TOOL_REGISTRY = {
 }
 
 
+import re
+
+# Pre-compile regex patterns for each tool keyword (Phase 5.1)
+# Short keywords (<=3 chars) use strict word boundaries to avoid false positives
+# (e.g. "go" matching every sentence containing "go to", "going", etc.)
+_TOOL_PATTERNS: Dict[str, List[re.Pattern]] = {}
+for _slug, _data in TOOL_REGISTRY.items():
+    _patterns = []
+    for _kw in _data["keywords"]:
+        # Use word boundaries for all keywords
+        _patterns.append(re.compile(r'\b' + re.escape(_kw) + r'\b', re.IGNORECASE))
+    _TOOL_PATTERNS[_slug] = _patterns
+
+
 def classify_text_to_tools(text: str) -> Set[str]:
     """
-    Classify a text string into matching tool slugs based on keyword matching.
+    Classify a text string into matching tool slugs using word boundary regex.
+
+    Phase 5.1 improvement: Uses \\b word boundaries instead of naive `in` substring
+    matching. This prevents "go" from matching "going", "ts" from matching "its", etc.
+
     Returns a set of tool slugs (e.g. {"react", "pytorch"}).
     """
     if not text:
         return set()
 
-    text_lower = text.lower()
     matched_tools: Set[str] = set()
 
-    for tool_slug, data in TOOL_REGISTRY.items():
-        for keyword in data["keywords"]:
-            if keyword in text_lower:
+    for tool_slug, patterns in _TOOL_PATTERNS.items():
+        for pattern in patterns:
+            if pattern.search(text):
                 matched_tools.add(tool_slug)
                 break  # One match per tool is enough
 
     return matched_tools
+
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

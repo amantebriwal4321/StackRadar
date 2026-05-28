@@ -7,21 +7,34 @@ Sources:
   - Dev.to API (latest articles)
   - Reddit JSON API (posts from tech subreddits)
   - Tech News RSS feeds (TechCrunch, Ars Technica, The Verge)
+
+Phase 1 improvements:
+  - ETag caching (conditional requests — saves rate limit on unchanged repos)
+  - Adaptive rate limiting (reads X-RateLimit-Remaining, backs off dynamically)
+  - Shared httpx.AsyncClient (connection pooling across all GitHub calls)
+  - Token validation on startup
 """
 
 import httpx
 import logging
 import asyncio
 import feedparser
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# GITHUB — Targeted Repo Stats
+# GITHUB — Targeted Repo Stats (Phase 1 Hardened)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# ETag cache: {owner_repo: (etag_value, cached_response_dict)}
+_etag_cache: Dict[str, Tuple[str, Dict[str, Any]]] = {}
+
+# Rate budget tracker (updated per-request from response headers)
+_rate_remaining: int = 5000
+_rate_limit: int = 5000
 
 # Validate token on module load
 _gh_token = settings.GITHUB_TOKEN
@@ -31,69 +44,150 @@ else:
     logger.warning("⚠️  GITHUB_TOKEN is empty — GitHub API will use unauthenticated rate limit (60 req/hr)")
 
 MAX_RETRIES = 2
-RETRY_BACKOFF = [1.0, 3.0]
+RETRY_BACKOFF = [2.0, 5.0]
 
 
-async def fetch_github_repo_stats(owner_repo: str) -> Optional[Dict[str, Any]]:
-    """
-    Fetch stats for a specific GitHub repo (e.g. 'facebook/react').
-
-    Uses GET /repos/{owner}/{repo} — single API call, returns:
-      stars, forks, watchers, open_issues, description
-    """
-    token = settings.GITHUB_TOKEN
-
+def _build_github_headers() -> Dict[str, str]:
+    """Build GitHub API headers with optional auth token."""
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
+    token = settings.GITHUB_TOKEN
     if token:
         headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
+def _adaptive_delay() -> float:
+    """Calculate delay based on remaining rate limit budget."""
+    global _rate_remaining
+    if _rate_remaining < 10:
+        return 60.0
+    elif _rate_remaining < 50:
+        return 15.0
+    elif _rate_remaining < 100:
+        return 5.0
+    elif _rate_remaining < 500:
+        return 1.0
+    return 0.3
+
+
+def _update_rate_budget(response: httpx.Response) -> None:
+    """Update rate limit tracking from response headers."""
+    global _rate_remaining, _rate_limit
+    remaining_str = response.headers.get("x-ratelimit-remaining", "")
+    limit_str = response.headers.get("x-ratelimit-limit", "")
+    if remaining_str.isdigit():
+        _rate_remaining = int(remaining_str)
+    if limit_str.isdigit():
+        _rate_limit = int(limit_str)
+
+
+async def validate_github_token(client: httpx.AsyncClient) -> Dict[str, Any]:
+    """
+    Validate GitHub token by hitting the rate_limit endpoint.
+    Returns rate limit info. Called once at the start of each scrape cycle.
+    """
+    global _rate_remaining, _rate_limit
+    try:
+        headers = _build_github_headers()
+        response = await client.get("https://api.github.com/rate_limit", headers=headers, timeout=10.0)
+        if response.status_code == 200:
+            data = response.json()
+            core = data.get("resources", {}).get("core", {})
+            _rate_limit = core.get("limit", 60)
+            _rate_remaining = core.get("remaining", 60)
+            logger.info(
+                f"GitHub rate limit: {_rate_remaining}/{_rate_limit} "
+                f"({'authenticated ✅' if _rate_limit > 60 else 'unauthenticated ⚠️'})"
+            )
+            if _rate_limit <= 60:
+                logger.warning(
+                    "⚠️  GitHub token is missing or invalid — only 60 requests/hour. "
+                    "Set GITHUB_TOKEN in .env for 5,000 requests/hour."
+                )
+            return core
+        else:
+            logger.warning(f"GitHub rate_limit check returned {response.status_code}")
+    except Exception as e:
+        logger.warning(f"GitHub rate_limit check failed: {e}")
+    return {}
+
+
+async def fetch_github_repo_stats(
+    owner_repo: str,
+    client: Optional[httpx.AsyncClient] = None,
+) -> Optional[Dict[str, Any]]:
+    """
+    Fetch stats for a specific GitHub repo (e.g. 'facebook/react').
+
+    Uses conditional requests (If-None-Match/ETag) to avoid consuming
+    rate limit on unchanged repos. Returns cached data on 304.
+    """
+    global _rate_remaining
+
+    headers = _build_github_headers()
+
+    # Add ETag for conditional request (Phase 1.1)
+    cached_etag, cached_data = _etag_cache.get(owner_repo, (None, None))
+    if cached_etag:
+        headers["If-None-Match"] = cached_etag
 
     url = f"https://api.github.com/repos/{owner_repo}"
+    owns_client = client is None
 
-    for attempt in range(MAX_RETRIES + 1):
-        async with httpx.AsyncClient() as client:
+    if owns_client:
+        client = httpx.AsyncClient()
+
+    try:
+        for attempt in range(MAX_RETRIES + 1):
             try:
                 response = await client.get(url, headers=headers, timeout=15.0)
+                _update_rate_budget(response)
 
-                remaining_str = response.headers.get("x-ratelimit-remaining", "-1")
-                remaining = int(remaining_str) if remaining_str.isdigit() else -1
-                limit = response.headers.get("x-ratelimit-limit", "?")
-
-                if remaining != -1 and remaining < 10:
-                    logger.warning(f"GitHub rate limit almost exhausted (remaining: {remaining}). Sleeping 60s.")
-                    await asyncio.sleep(60)
+                if response.status_code == 304:
+                    # Not modified — return cached data (free! no rate limit consumed)
+                    logger.debug(f"GitHub '{owner_repo}': 304 Not Modified (cached)")
+                    return cached_data
 
                 if response.status_code == 200:
                     data = response.json()
-                    logger.debug(
-                        f"GitHub '{owner_repo}': ⭐{data.get('stargazers_count', 0):,} "
-                        f"(rate: {remaining}/{limit})"
-                    )
-                    return {
+
+                    # Cache the ETag for next request
+                    etag = response.headers.get("etag")
+                    result = {
                         "stars": data.get("stargazers_count", 0),
                         "forks": data.get("forks_count", 0),
                         "watchers": data.get("subscribers_count", 0),
                         "open_issues": data.get("open_issues_count", 0),
                         "description": data.get("description", ""),
                     }
+                    if etag:
+                        _etag_cache[owner_repo] = (etag, result)
+
+                    logger.debug(
+                        f"GitHub '{owner_repo}': ⭐{result['stars']:,} "
+                        f"(rate: {_rate_remaining}/{_rate_limit})"
+                    )
+                    return result
 
                 elif response.status_code == 404:
                     logger.error(f"GitHub 404: repo '{owner_repo}' not found")
                     return None
 
                 elif response.status_code in (401, 403, 429):
+                    wait = 60
                     logger.warning(
-                        f"WARNING: GitHub rate limit hit, sleeping 60s (status {response.status_code} for '{owner_repo}', "
-                        f"rate: {remaining_str}/{limit}, attempt {attempt + 1})"
+                        f"GitHub rate limit hit (HTTP {response.status_code}) for '{owner_repo}' "
+                        f"(rate: {_rate_remaining}/{_rate_limit}, attempt {attempt + 1}). "
+                        f"Sleeping {wait}s..."
                     )
-                    await asyncio.sleep(60)
+                    await asyncio.sleep(wait)
                     continue
 
                 elif response.status_code >= 500:
                     logger.error(f"GitHub {response.status_code} server error for '{owner_repo}'")
-
                 else:
                     logger.error(f"GitHub unexpected {response.status_code} for '{owner_repo}'")
 
@@ -105,14 +199,18 @@ async def fetch_github_repo_stats(owner_repo: str) -> Optional[Dict[str, Any]]:
             except Exception as e:
                 logger.error(f"GitHub unexpected error for '{owner_repo}': {type(e).__name__}: {e}")
 
-        # Backoff before retry
-        if attempt < MAX_RETRIES:
-            delay = RETRY_BACKOFF[attempt]
-            logger.info(f"GitHub: retrying '{owner_repo}' in {delay}s...")
-            await asyncio.sleep(delay)
+            # Backoff before retry
+            if attempt < MAX_RETRIES:
+                delay = RETRY_BACKOFF[attempt]
+                logger.info(f"GitHub: retrying '{owner_repo}' in {delay}s...")
+                await asyncio.sleep(delay)
 
-    logger.error(f"GitHub: all {MAX_RETRIES + 1} attempts failed for '{owner_repo}'")
-    return None
+        logger.error(f"GitHub: all {MAX_RETRIES + 1} attempts failed for '{owner_repo}'")
+        return None
+
+    finally:
+        if owns_client:
+            await client.aclose()
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -264,7 +362,8 @@ async def fetch_tech_news() -> List[Dict[str, Any]]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# SENTIMENT ANALYSIS (Groq LLM)
+# SENTIMENT ANALYSIS + TOOL CLASSIFICATION (Groq LLM)
+# Phase 5: Combined sentiment + tool identification in one call
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int = 20) -> List[Dict[str, Any]]:

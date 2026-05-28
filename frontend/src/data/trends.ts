@@ -32,6 +32,7 @@ export interface Tool {
   rank_in_category: number;
   category_size: number;
   percentile: number;
+  last_7_scores: number[];
   updated_at: string | null;
 }
 
@@ -207,5 +208,40 @@ export async function fetchCompareTools(slugs: string[]): Promise<{ tools: Compa
   const res = await fetch(`${API_BASE}/api/v1/tools/compare?slugs=${slugs.join(",")}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to compare tools");
   return res.json();
+}
+
+// Phase 2: Top movers (sorted by growth_pct)
+export async function fetchTopMovers(limit = 5): Promise<Tool[]> {
+  const tools = await fetchTools();
+  return tools
+    .filter(t => t.growth_pct !== 0)
+    .sort((a, b) => b.growth_pct - a.growth_pct)
+    .slice(0, limit);
+}
+
+// Phase 3.1: Tools grouped by domain
+export interface DomainWithTools {
+  name: string;
+  slug: string;
+  icon: string;
+  score: number;
+  tools: {
+    slug: string;
+    name: string;
+    icon: string;
+    score: number;
+    stars: number;
+    stage: string;
+    growth_pct: number;
+    learning_priority: string;
+    description: string;
+  }[];
+}
+
+export async function fetchToolsByDomain(): Promise<DomainWithTools[]> {
+  const res = await fetch(`${API_BASE}/api/v1/tools/by-domain`, { next: { revalidate: REVALIDATE_SECONDS } });
+  if (!res.ok) throw new Error("Failed to fetch tools by domain");
+  const data = await res.json();
+  return data.domains || [];
 }
 

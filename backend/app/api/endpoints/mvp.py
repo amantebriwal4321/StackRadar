@@ -21,6 +21,7 @@ import os
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import date, timedelta, datetime
 from app.db.session import get_db
 from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain
@@ -75,6 +76,21 @@ def get_tools(
     # Build parent slug map (no N+1 queries)
     id_to_slug = {t.id: t.slug for t in all_tools}
 
+    # Phase 4.5: Batch-fetch last 7 daily scores for sparklines
+    seven_days_ago = datetime.now() - timedelta(days=7)
+    tool_ids = [t.id for t in all_tools]
+    sparkline_map: dict[int, list[float]] = {tid: [] for tid in tool_ids}
+    if tool_ids:
+        snapshots = (
+            db.query(ToolSnapshot.tool_id, ToolSnapshot.score, ToolSnapshot.recorded_at)
+            .filter(ToolSnapshot.tool_id.in_(tool_ids), ToolSnapshot.recorded_at >= seven_days_ago)
+            .order_by(ToolSnapshot.recorded_at.asc())
+            .all()
+        )
+        for snap in snapshots:
+            if snap.tool_id in sparkline_map:
+                sparkline_map[snap.tool_id].append(round(snap.score, 1) if snap.score else 0.0)
+
     # Filter if category specified
     if category:
         tools = [t for t in all_tools if category.lower() in (t.category or "").lower()]
@@ -118,6 +134,7 @@ def get_tools(
             "rank_in_category": cat_rank_map.get(t.id, (0, 0))[0],
             "category_size": cat_rank_map.get(t.id, (0, 0))[1],
             "percentile": round((1 - (rank_map.get(t.id, total_tools) - 1) / max(total_tools - 1, 1)) * 100) if total_tools > 1 else 50,
+            "last_7_scores": sparkline_map.get(t.id, []),
             "updated_at": t.updated_at.isoformat() if t.updated_at else None,
         }
         for t in paginated_tools
@@ -130,6 +147,45 @@ def get_tools(
         "per_page": per_page,
         "total_pages": (total_filtered + per_page - 1) // per_page,
     }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TOOLS BY DOMAIN (Phase 3.1 — for Explore page)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@router.get("/tools/by-domain")
+def get_tools_by_domain(db: Session = Depends(get_db)):
+    """Get all tools grouped by domain. Used by the Explore page."""
+    domains = db.query(Domain).order_by(Domain.score.desc()).all()
+    result = []
+    for domain in domains:
+        domain_tools = (
+            db.query(Tool)
+            .filter(Tool.domain_id == domain.id)
+            .order_by(Tool.score.desc())
+            .all()
+        )
+        result.append({
+            "name": domain.name,
+            "slug": domain.slug,
+            "icon": domain.icon,
+            "score": domain.score,
+            "tools": [
+                {
+                    "slug": t.slug,
+                    "name": t.name,
+                    "icon": t.icon,
+                    "score": t.score,
+                    "stars": t.stars,
+                    "stage": t.stage,
+                    "growth_pct": t.growth_pct,
+                    "learning_priority": t.learning_priority,
+                    "description": t.description,
+                }
+                for t in domain_tools
+            ],
+        })
+    return {"domains": result}
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
