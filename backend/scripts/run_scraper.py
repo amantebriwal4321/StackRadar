@@ -10,6 +10,9 @@ For local dev, the scraper runs inline inside FastAPI (see main.py).
 
 import asyncio
 import logging
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
 from app.services.seed import run_seed

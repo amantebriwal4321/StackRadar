@@ -1,108 +1,75 @@
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# FULL STACK PROJECT .GITIGNORE
+# StackRadar — Production .gitignore
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# --- Environment & Secrets ---
+# ── Secrets & Environment ──
 .env
 .env.*
 !.env.example
 *.pem
 *.key
 
-# --- Backend (Python / FastAPI) ---
+# ── Python / Backend ──
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-backend/lib/
-!frontend/src/lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
-
-# Virtual Environments
+*.egg-info/
+.Python
 venv/
 .venv/
 env/
-.env/
 ENV/
-env.bak/
-venv.bak/
 
-# Database
+# ── Database (runtime) ──
+*.db
 *.sqlite
 *.sqlite3
-*.db
-test.db
 
-# Logs
+# ── Logs (runtime) ──
 *.log
-logs/
+backend/logs/
 
-# pytest / coverage
+# ── Celery (legacy) ──
+celerybeat-schedule*
+
+# ── Test / Coverage ──
 .coverage
 .coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
 .pytest_cache/
-cover/
+.hypothesis/
+htmlcov/
+coverage.xml
 
-# --- Frontend (Node / React / Next / Vite) ---
+# ── Node / Frontend ──
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-.pnpm-store/
 
-# Build outputs
+# ── Next.js Build ──
 .next/
 out/
+.swc/
+tsconfig.tsbuildinfo
+
+# ── Generic Build ──
 build/
 dist/
-.swc/
 
-# --- OS & IDE Files ---
+# ── OS ──
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+ehthumbs.db
 
-# IDEs
+# ── IDE ──
 .idea/
 .vscode/
 *.swp
 *.swo
-.project
-.settings/
-.classpath
 
-# --- Project Specific (TechTrends.AI) ---
+# ── Project-Specific (generated / scratch) ──
 worker_logs.txt
-db_error.log
-celerybeat-schedule.db
-backend/logs/
 files.txt
-PROJECT_STATUS.md
