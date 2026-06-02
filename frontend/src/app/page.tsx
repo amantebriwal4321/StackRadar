@@ -26,6 +26,7 @@ import {
 import TechSphere from "@/components/3d/TechSphere";
 import TrendCard from "@/components/TrendCard";
 import FilterBar from "@/components/FilterBar";
+import DashboardShell from "@/components/DashboardShell";
 
 /* ─── Helper for Relative Time ─── */
 function getRelativeTime(isoString: string): string {
@@ -235,11 +236,8 @@ export default function HomePage() {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#050810] text-[#F0F4FF] overflow-hidden relative dot-grid-decor pb-24">
-      
-      {/* Cinematic glows */}
-      <div className="bg-glow-overlay absolute top-[-10%] left-[-20%] w-[60%] h-[50%] rounded-full bg-gradient-to-br from-blue-500/10 via-transparent to-transparent blur-[120px] pointer-events-none" />
-      <div className="bg-glow-overlay absolute bottom-[10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent blur-[120px] pointer-events-none" />
+    <DashboardShell fullWidth>
+      <div ref={containerRef} className="space-y-12 relative pb-24">
 
       {/* ══════════════════════════════════════════
           SECTION 1: HERO & 3D SPHERE CENTERPIECE
@@ -835,6 +833,7 @@ export default function HomePage() {
         </div>
       </section>
 
-    </div>
+      </div>
+    </DashboardShell>
   );
 }
