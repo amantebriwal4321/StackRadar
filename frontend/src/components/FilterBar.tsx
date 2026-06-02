@@ -1,5 +1,6 @@
 import { Filter } from "lucide-react";
 import { type ReactNode } from "react";
+import { motion } from "framer-motion";
 
 interface FilterBarProps {
   activeDomain: string;
@@ -16,39 +17,56 @@ export default function FilterBar({
   onDomainChange,
   domains,
   allLabel = "All Domains",
-  className = "flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none",
+  className = "flex items-center gap-1.5 overflow-x-auto p-1 glass rounded-2xl w-fit max-w-full scrollbar-none",
   showIcon = true,
   prefixNode,
 }: FilterBarProps) {
   return (
     <div className={className}>
-      {showIcon && <Filter className="w-4 h-4 text-muted-foreground mr-1 shrink-0" />}
+      {showIcon && <Filter className="w-4 h-4 text-muted-foreground mr-2 ml-1.5 shrink-0" />}
       {prefixNode}
       
       <button
         onClick={() => onDomainChange("All")}
-        className={`px-3.5 py-1.5 rounded-full text-sm font-medium shrink-0 transition-all duration-200 ${
+        className={`relative px-4 py-1.5 rounded-xl text-sm font-semibold shrink-0 transition-all duration-300 select-none cursor-pointer ${
           activeDomain === "All"
-            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-            : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border/60"
+            ? "text-primary-foreground font-bold"
+            : "text-muted-foreground hover:text-foreground"
         }`}
       >
-        {allLabel}
+        {activeDomain === "All" && (
+          <motion.div
+            layoutId="filter-pill"
+            className="absolute inset-0 rounded-xl bg-primary shadow-md shadow-primary/20"
+            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+          />
+        )}
+        <span className="relative z-10">{allLabel}</span>
       </button>
 
-      {domains.map((domain) => (
-        <button
-          key={domain}
-          onClick={() => onDomainChange(domain)}
-          className={`px-3.5 py-1.5 rounded-full text-sm font-medium shrink-0 transition-all duration-200 ${
-            activeDomain === domain
-              ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-              : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border/60"
-          }`}
-        >
-          {domain}
-        </button>
-      ))}
+      {domains.map((domain) => {
+        const isActive = activeDomain === domain;
+        return (
+          <button
+            key={domain}
+            onClick={() => onDomainChange(domain)}
+            className={`relative px-4 py-1.5 rounded-xl text-sm font-semibold shrink-0 transition-all duration-300 select-none cursor-pointer ${
+              isActive
+                ? "text-primary-foreground font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {isActive && (
+              <motion.div
+                layoutId="filter-pill"
+                className="absolute inset-0 rounded-xl bg-primary shadow-md shadow-primary/20"
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{domain}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -61,6 +61,48 @@ function GrowthIndicator({ growth }: { growth: number }) {
 }
 
 export default function TrendCard({ tool, variant = "default", index = 0 }: ToolCardProps) {
+  // Sparkline Component
+  const Sparkline = ({ points, growth, slug }: { points?: number[]; growth: number; slug: string }) => {
+    const chartPoints = points && points.length > 0
+      ? points
+      : [50, 50, 50, 50, 50, 50, 50]; // default fallback
+    
+    const width = 120;
+    const height = 36;
+    const min = Math.min(...chartPoints);
+    const max = Math.max(...chartPoints);
+    const range = max - min === 0 ? 1 : max - min;
+    const padding = 2;
+    const chartHeight = height - padding * 2;
+
+    const coords = chartPoints.map((p, idx) => {
+      const x = (idx / (chartPoints.length - 1)) * width;
+      const y = height - padding - ((p - min) / range) * chartHeight;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+
+    const pathD = `M ${coords.join(" L ")}`;
+    const fillPathD = `${pathD} L ${width},${height} L 0,${height} Z`;
+
+    const strokeColor = growth > 0
+      ? "oklch(0.70 0.16 185)" // Emerald
+      : growth < 0
+        ? "oklch(0.60 0.20 25)"  // Rose
+        : "oklch(0.55 0.02 240)"; // Muted
+
+    return (
+      <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="overflow-visible">
+        <defs>
+          <linearGradient id={`sparkline-grad-${slug}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        <path d={fillPathD} fill={`url(#sparkline-grad-${slug})`} />
+        <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  };
 
   if (variant === "compact") {
     return (
@@ -79,16 +121,22 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
           </div>
           <GrowthIndicator growth={tool.growth_pct} />
         </div>
-        <div className="mt-4 flex items-end justify-between">
+
+        {/* Sparkline in compact variant */}
+        <div className="h-8 my-3 w-full opacity-80">
+          <Sparkline points={tool.last_7_scores} growth={tool.growth_pct} slug={tool.slug} />
+        </div>
+
+        <div className="mt-2 flex items-end justify-between">
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Score</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Score</p>
             <p className="text-3xl font-black text-foreground">{tool.score}</p>
           </div>
           <div className="text-right space-y-1">
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${stageBadge[tool.stage] || stageBadge["Emerging"]}`}>
               {tool.stage}
             </span>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground justify-end">
               <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
               {tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(1)}k` : tool.stars}
             </div>
@@ -117,31 +165,37 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
         <WatchlistButton toolSlug={tool.slug} />
       </div>
 
-      <div className="flex justify-between items-start mb-4 relative z-10 pr-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center text-2xl shadow-sm border border-border/40 group-hover:scale-105 transition-transform duration-300">
+      <div className="flex justify-between items-center mb-4 relative z-10 pr-8">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center text-2xl shadow-sm border border-border/40 group-hover:scale-105 transition-transform duration-300 shrink-0">
             {tool.icon}
           </div>
-          <div>
-            <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{tool.name}</h3>
-            <div className="flex gap-2 flex-wrap mt-1">
-              <span className={`px-2 py-0.5 rounded-md text-xs font-bold border ${stageBadge[tool.stage] || stageBadge["Emerging"]}`}>
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold group-hover:text-primary transition-colors truncate">{tool.name}</h3>
+            <div className="flex gap-1.5 flex-wrap mt-1">
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${stageBadge[tool.stage] || stageBadge["Emerging"]}`}>
                 {tool.stage}
               </span>
               <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${priorityBadge[tool.learning_priority] || priorityBadge["MEDIUM"]}`}>
-                {tool.learning_priority === "HIGH" ? "🔥 HIGH PRIORITY" :
+                {tool.learning_priority === "HIGH" ? "🔥 HIGH" :
                  tool.learning_priority === "AVOID" ? "⚠️ CAUTION" :
                  tool.learning_priority}
               </span>
               {sentiment.label && (
-                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${sentiment.class}`}>
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${sentiment.class} hidden sm:inline-block`}>
                   {sentiment.label}
                 </span>
               )}
             </div>
           </div>
         </div>
-        <div className="text-right">
+
+        {/* Inline Sparkline */}
+        <div className="hidden sm:block mx-4 h-9 w-24 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+          <Sparkline points={tool.last_7_scores} growth={tool.growth_pct} slug={tool.slug} />
+        </div>
+
+        <div className="text-right shrink-0">
           <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">
             Score
           </span>

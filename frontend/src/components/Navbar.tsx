@@ -2,26 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Radar, Menu, X, Sun, Moon, Bookmark } from "lucide-react";
+import { Radar, Menu, X, Sun, Moon, Bookmark, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
+import { motion, AnimatePresence } from "framer-motion";
+import { gsap } from "gsap";
 
 const navLinks = [
-  { href: "/", label: "Dashboard" },
-  { href: "/trends", label: "Trends" },
-  { href: "/compare", label: "Compare" },
-  { href: "/explore", label: "Explore" },
-  { href: "/roadmaps", label: "Roadmaps" },
+  { href: "/", label: "console" },
+  { href: "/explore", label: "explore" },
+  { href: "/trends", label: "trends" },
+  { href: "/compare", label: "compare" },
+  { href: "/roadmaps", label: "roadmaps" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
-  
-  // Theme State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -35,6 +36,15 @@ export default function Navbar() {
     }
   }, []);
 
+  // Handle scroll trigger background classes
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
@@ -46,21 +56,39 @@ export default function Navbar() {
     }
   };
 
+  // Stagger links entrance on mobile menu open
+  useEffect(() => {
+    if (mobileOpen) {
+      gsap.fromTo(
+        ".mobile-nav-link",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, stagger: 0.1, duration: 0.5, ease: "power3.out", delay: 0.2 }
+      );
+    }
+  }, [mobileOpen]);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl transition-colors duration-300">
-      <div className="flex h-16 items-center justify-between px-4 md:px-8">
-        {/* Logo */}
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 border-b ${
+        scrolled
+          ? "backdrop-blur-xl bg-[#050810]/80 border-border-subtle shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+          : "bg-transparent border-transparent"
+      }`}
+    >
+      <div className="flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
+        {/* ─── Logo ─── */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-indigo-500/25 transition-all duration-300">
-            <Radar className="w-5 h-5 text-white" />
+          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-[#2563EB] to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
+            <Radar className="w-[18px] h-[18px] text-white" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#2563EB] to-cyan-400 blur-md opacity-30 group-hover:opacity-60 transition-opacity" />
           </div>
-          <span className="text-lg font-bold tracking-tight gradient-text hidden sm:inline">
-            StackRadar
+          <span className="text-lg font-bold tracking-tight font-display hidden sm:inline text-text-primary">
+            stack<span className="text-accent-primary">radar</span>
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* ─── Desktop Navigation ─── */}
+        <nav className="hidden md:flex items-center gap-3" role="navigation">
           {navLinks.map((link) => {
             const isActive =
               link.href === "/"
@@ -70,98 +98,134 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                className={`relative px-3 py-1.5 text-xs font-semibold tracking-wider transition-colors duration-300 font-mono select-none ${
+                  isActive ? "text-accent-primary" : "text-text-secondary hover:text-text-primary"
                 }`}
               >
-                {link.label}
+                <span className="opacity-40 mr-1 font-light">[</span>
+                <span>{link.label}</span>
+                <span className="opacity-40 ml-1 font-light">]</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="nav-underline"
+                    className="absolute bottom-0 left-3 right-3 h-[2px] bg-accent-primary shadow-[0_0_8px_#3B82F6]"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Right side */}
+        {/* ─── Right Actions ─── */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 text-xs text-muted-foreground mr-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Live Data
+          {/* Live indicator */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold text-text-secondary border border-border-subtle bg-[#0A0F1E]/50 font-mono">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+            </span>
+            active
           </div>
 
-          {/* Auth: Watchlist + Sign In */}
+          {/* Auth buttons */}
           {isLoaded && isSignedIn ? (
             <>
               <Link
                 href="/watchlist"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-accent-primary bg-accent-primary/10 border border-accent-primary/20 hover:bg-accent-primary/20 transition-colors duration-300 font-mono"
               >
                 <Bookmark className="w-3.5 h-3.5" />
-                Watchlist
+                watchlist
               </Link>
               <UserButton />
             </>
           ) : isLoaded ? (
             <SignInButton mode="modal">
-              <button className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
-                Sign In
+              <button className="btn-primary text-xs py-1.5 px-4 hidden sm:flex items-center gap-1.5 cursor-pointer select-none">
+                <Sparkles className="w-3.5 h-3.5" />
+                start console
               </button>
             </SignInButton>
           ) : null}
 
-          {/* Theme Toggle */}
-          {mounted ? (
+          {/* Theme switcher */}
+          {mounted && (
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-card border border-border/40 hover:bg-muted transition-colors text-foreground group shadow-sm flex items-center justify-center shrink-0"
+              className="p-2 rounded-full border border-border-subtle bg-[#0A0F1E]/50 hover:bg-[#2563EB]/10 transition-colors duration-300 text-text-secondary hover:text-text-primary cursor-pointer select-none"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
-                <Moon className="w-4.5 h-4.5 group-hover:text-indigo-400 transition-colors" />
+                <Moon className="w-3.5 h-3.5 text-accent-glow" />
               ) : (
-                <Sun className="w-4.5 h-4.5 group-hover:text-amber-500 transition-colors" />
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
               )}
             </button>
-          ) : (
-            <div className="w-9 h-9 rounded-lg bg-muted animate-pulse" /> // skeleton
           )}
 
-          {/* Mobile menu button */}
+          {/* Mobile menu trigger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
-            aria-label="Toggle menu"
+            className="md:hidden p-2 rounded-full border border-border-subtle bg-[#0A0F1E]/50 text-text-secondary cursor-pointer select-none"
+            aria-label="Toggle mobile menu"
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Nav */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-border/40 py-2 px-4 bg-background/95 backdrop-blur-xl">
-          {navLinks.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </div>
-      )}
+      {/* ─── Mobile Fullscreen Overlay ─── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 top-16 z-40 bg-[#050810] flex flex-col justify-between p-6 md:hidden"
+          >
+            <div className="flex flex-col space-y-6 pt-8">
+              {navLinks.map((link) => {
+                const isActive =
+                  link.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="mobile-nav-link text-3xl font-bold font-display tracking-tight text-left flex items-center"
+                  >
+                    <span className={`transition-colors duration-300 ${
+                      isActive ? "text-accent-primary" : "text-text-secondary hover:text-text-primary"
+                    }`}>
+                      {link.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="space-y-4 pb-12">
+              {isLoaded && isSignedIn && (
+                <Link
+                  href="/watchlist"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary font-bold text-sm"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  My Watchlist
+                </Link>
+              )}
+              <div className="text-center text-xs text-text-secondary font-mono">
+                stackradar v2.0 • live stats
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

@@ -50,25 +50,25 @@ export default function RoadmapsIndexPage() {
 
         {/* Header & Search Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 border-b border-border/40 pb-6 shrink-0">
-          <div>
+          <div className="space-y-1">
             <h1 className="text-3xl font-extrabold flex items-center gap-3">
               <Compass className="w-8 h-8 text-primary" />
-              Learning Roadmaps
+              <span className="gradient-text">Learning Roadmaps</span>
             </h1>
-            <p className="text-muted-foreground mt-2 max-w-xl">
+            <p className="text-muted-foreground text-sm max-w-xl">
               Step-by-step learning paths for technology domains. Curated curricula from beginner fundamentals to advanced production deployments.
             </p>
           </div>
 
           <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
             <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input
                 type="text"
                 placeholder="Search roadmaps..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 bg-card border border-border/60 rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
+                className="w-full sm:w-64 glass rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
               />
             </div>
           </div>

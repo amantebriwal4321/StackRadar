@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   GitCompare, Loader2, Star, GitFork, TrendingUp, TrendingDown,
-  Minus, X, Search, ArrowRight,
+  Minus, X, Search, ArrowRight, Share2, Award, Check, MessageSquare, Terminal, Eye
 } from "lucide-react";
 import {
   type Tool, type CompareTool,
@@ -15,7 +15,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 
-const COMPARE_COLORS = ["#818cf8", "#34d399", "#fbbf24", "#f87171", "#a78bfa"];
+const COMPARE_COLORS = ["#2563EB", "#6366F1", "#3B82F6", "#10B981", "#EC4899"];
 
 export default function ComparePage() {
   const [allTools, setAllTools] = useState<Tool[]>([]);
@@ -24,15 +24,43 @@ export default function ComparePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [toolsLoading, setToolsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  // Load all tools for the selector
+  // 1. Load all tools for selector
   useEffect(() => {
     fetchTools()
-      .then((data) => { setAllTools(data); setToolsLoading(false); })
+      .then((data) => {
+        setAllTools(data);
+        setToolsLoading(false);
+      })
       .catch(() => setToolsLoading(false));
   }, []);
 
-  // Fetch comparison when slugs change (minimum 2)
+  // 2. Read slugs from URL query param on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlSlugs = params.get("slugs");
+      if (urlSlugs) {
+        setSelectedSlugs(urlSlugs.split(",").slice(0, 5));
+      }
+    }
+  }, []);
+
+  // 3. Write slugs to URL query params on change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams();
+      if (selectedSlugs.length > 0) {
+        params.set("slugs", selectedSlugs.join(","));
+        window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+      } else {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, [selectedSlugs]);
+
+  // 4. Fetch compare telemetry
   useEffect(() => {
     if (selectedSlugs.length < 2) {
       setCompareData(null);
@@ -61,20 +89,53 @@ export default function ComparePage() {
     });
   };
 
-  // Filter tools by search
+  const clearSelection = () => {
+    setSelectedSlugs([]);
+  };
+
+  const copyShareLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Filter selector list
   const filteredTools = useMemo(() => {
     if (!searchQuery.trim()) return allTools;
+    const q = searchQuery.toLowerCase();
     return allTools.filter(
       (t) =>
-        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.category.toLowerCase().includes(searchQuery.toLowerCase())
+        t.name.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q)
     );
   }, [searchQuery, allTools]);
 
-  // Build unified chart data from compare results
+  // Max value markers for metrics to evaluate winner and relative bars
+  const maxMetrics = useMemo(() => {
+    if (!compareData || compareData.length === 0) return {};
+    const keys = [
+      "score",
+      "stars",
+      "forks",
+      "growth_pct",
+      "hn_count",
+      "reddit_count",
+      "devto_count",
+      "news_count",
+      "sentiment_positive"
+    ];
+    const vals: Record<string, number> = {};
+    keys.forEach(k => {
+      vals[k] = Math.max(...compareData.map(t => Number((t as any)[k] ?? 0)));
+    });
+    return vals;
+  }, [compareData]);
+
+  // Unified chart historical scores
   const chartData = useMemo(() => {
     if (!compareData || compareData.length < 2) return [];
-    // Collect all unique dates
     const dateSet = new Set<string>();
     compareData.forEach((t) => t.history.forEach((h) => dateSet.add(h.date)));
     const dates = Array.from(dateSet).sort();
@@ -91,65 +152,102 @@ export default function ComparePage() {
 
   return (
     <DashboardShell>
-      <div className="space-y-6 fade-in">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold flex items-center gap-3">
-            <GitCompare className="w-7 h-7 text-primary" />
-            Compare Tools
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Select 2–5 tools to compare their scores, community signals, and trend history side by side.
-          </p>
-        </div>
+      
+      {/* Background glow overlay */}
+      <div className="absolute top-0 right-1/4 w-[350px] h-[300px] rounded-full bg-blue-500/5 blur-[90px] pointer-events-none z-0" />
 
-        {/* Tool Selector */}
-        <div className="bg-card border border-border/60 rounded-xl p-4 space-y-3">
-          {/* Selected Pills */}
-          <div className="flex items-center gap-2 flex-wrap min-h-[36px]">
-            <span className="text-xs font-semibold text-muted-foreground shrink-0">Selected:</span>
+      <div className="space-y-8 relative z-10 pb-16">
+        
+        {/* Opacity Blurred Header */}
+        <header className="p-6 md:p-8 rounded-2xl border border-blue-500/10 bg-[#0A0F1E]/85 backdrop-blur-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent pointer-events-none" />
+          
+          <div className="space-y-1">
+            <span className="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-widest block">
+              DIFFERENTIAL TELEMETRY VIEW
+            </span>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-display flex items-center gap-3">
+              <GitCompare className="w-8 h-8 text-blue-400" />
+              <span className="gradient-text">Compare Matrix</span>
+            </h1>
+            <p className="text-[#8899BB] text-sm font-light">
+              Select 2 to 5 technologies from the scanner index. Shares links directly containing parameters.
+            </p>
+          </div>
+
+          <div className="flex gap-3 relative z-10">
+            {selectedSlugs.length >= 2 && (
+              <button
+                onClick={copyShareLink}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold transition-all active:scale-95 shadow-md shadow-blue-500/10"
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                {copied ? "COPIED!" : "SHARE_LINK"}
+              </button>
+            )}
+            {selectedSlugs.length > 0 && (
+              <button
+                onClick={clearSelection}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-blue-500/15 bg-[#0D1526] hover:bg-[#0D1526]/80 text-xs font-mono text-[#8899BB] transition-all hover:text-white"
+              >
+                CLEAR_ALL
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* Selector Panel */}
+        <div className="glass-panel border border-blue-500/10 rounded-2xl p-6 space-y-4">
+          
+          {/* Selected items list */}
+          <div className="flex items-center gap-2.5 flex-wrap min-h-[38px] pb-2 border-b border-blue-500/5">
+            <span className="text-[10px] font-mono font-bold text-[#8899BB]/50 uppercase tracking-widest mr-2">TRACKED:</span>
             {selectedSlugs.length === 0 && (
-              <span className="text-xs text-muted-foreground italic">Pick tools from below…</span>
+              <span className="text-xs text-[#8899BB]/40 italic">Add technologies using the list index below...</span>
             )}
             {selectedSlugs.map((slug, idx) => {
               const tool = allTools.find((t) => t.slug === slug);
+              const accentColor = COMPARE_COLORS[idx % COMPARE_COLORS.length];
               return (
                 <button
                   key={slug}
                   onClick={() => toggleTool(slug)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-bold border transition-all hover:scale-105"
                   style={{
-                    borderColor: COMPARE_COLORS[idx % COMPARE_COLORS.length],
-                    color: COMPARE_COLORS[idx % COMPARE_COLORS.length],
-                    backgroundColor: `${COMPARE_COLORS[idx % COMPARE_COLORS.length]}15`,
+                    borderColor: `${accentColor}40`,
+                    color: accentColor,
+                    backgroundColor: `${accentColor}10`,
                   }}
                 >
                   {tool?.icon} {tool?.name || slug}
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5 ml-1 text-slate-500 hover:text-white" />
                 </button>
               );
             })}
           </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search tools to add…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-background border border-border/60 rounded-lg py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
-            />
+          {/* Search bar inside selector */}
+          <div className="relative group max-w-md">
+            <div className="absolute -inset-[1px] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl opacity-10 group-focus-within:opacity-40 transition-opacity duration-300 blur-sm" />
+            <div className="relative bg-[#0D1526] rounded-xl flex items-center border border-blue-500/10 px-3">
+              <Search className="w-4 h-4 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search tools to add..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-transparent border-none py-2.5 px-2 text-xs text-white focus:outline-none placeholder-[#8899BB]/50"
+              />
+            </div>
           </div>
 
-          {/* Tool Grid */}
+          {/* Selector grid scroll area */}
           {toolsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-36 overflow-y-auto pr-1 scrollbar-none">
               {filteredTools.map((tool) => {
                 const isSelected = selectedSlugs.includes(tool.slug);
                 const colorIdx = selectedSlugs.indexOf(tool.slug);
@@ -158,17 +256,17 @@ export default function ComparePage() {
                     key={tool.slug}
                     onClick={() => toggleTool(tool.slug)}
                     disabled={!isSelected && selectedSlugs.length >= 5}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono transition-all border cursor-pointer select-none text-left truncate ${
                       isSelected
-                        ? "bg-primary/10 border-primary/40 text-primary"
-                        : "bg-background border-border/40 text-muted-foreground hover:text-foreground hover:border-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                        ? "bg-[#2563EB]/15 border-blue-500 text-white font-bold"
+                        : "bg-[#0A0F1E]/50 border-blue-500/5 text-[#8899BB] hover:text-white hover:border-blue-500/20 disabled:opacity-20 disabled:cursor-not-allowed"
                     }`}
                   >
-                    <span className="text-base">{tool.icon}</span>
-                    <span className="truncate">{tool.name}</span>
+                    <span className="text-base select-none">{tool.icon}</span>
+                    <span className="truncate flex-1">{tool.name}</span>
                     {isSelected && (
-                      <div
-                        className="w-2 h-2 rounded-full ml-auto shrink-0"
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: COMPARE_COLORS[colorIdx % COMPARE_COLORS.length] }}
                       />
                     )}
@@ -177,98 +275,230 @@ export default function ComparePage() {
               })}
             </div>
           )}
+
         </div>
 
-        {/* Comparison Results */}
+        {/* ── Comparison Results View ── */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+            <span className="text-xs font-mono text-[#8899BB]/70">Gathering metric structures...</span>
           </div>
         ) : compareData && compareData.length >= 2 ? (
-          <div className="space-y-6">
-            {/* Metrics Table */}
-            <div className="bg-card border border-border/60 rounded-xl overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/40">
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Metric</th>
-                    {compareData.map((t, idx) => (
-                      <th key={t.slug} className="text-center px-4 py-3 min-w-[120px]">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-xl">{t.icon}</span>
-                          <span className="font-bold text-xs" style={{ color: COMPARE_COLORS[idx] }}>
-                            {t.name}
-                          </span>
+          <div className="space-y-8">
+            
+            {/* COLUMN COMPARISON MATRIX GRID */}
+            <div className="glass-panel border border-blue-500/10 rounded-2xl overflow-hidden shadow-lg overflow-x-auto">
+              
+              <div className="min-w-[800px] divide-y divide-blue-500/5">
+                
+                {/* 1. Header names row */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-5 bg-[#0A0F1E]/80 border-b border-blue-500/10 items-center">
+                  <div className="col-span-3 font-mono text-[10px] text-[#8899BB] tracking-widest uppercase">
+                    METRIC CATEGORY
+                  </div>
+                  {compareData.map((t, idx) => {
+                    const color = COMPARE_COLORS[idx % COMPARE_COLORS.length];
+                    return (
+                      <div key={t.slug} className="col-span-2 text-center" style={{ minWidth: "120px" }}>
+                        <div className="flex flex-col items-center gap-1.5 p-2 bg-[#0D1526]/50 rounded-xl border border-blue-500/5 relative">
+                          <div className="absolute top-1 right-2 w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                          <span className="text-3xl select-none">{t.icon}</span>
+                          <span className="font-bold text-sm text-white">{t.name}</span>
+                          <span className="text-[8px] font-mono text-[#8899BB]/60 uppercase">{t.category}</span>
                         </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {([
-                    { label: "Score", key: "score", format: (v: any) => <span className="text-lg font-black">{v}</span> },
-                    { label: "Stage", key: "stage", format: (v: any) => <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary">{v}</span> },
-                    { label: "Growth", key: "growth_pct", format: (v: any) => {
-                      const Icon = v > 5 ? TrendingUp : v < -5 ? TrendingDown : Minus;
-                      const color = v > 5 ? "text-emerald-500" : v < -5 ? "text-rose-500" : "text-muted-foreground";
-                      return <span className={`inline-flex items-center gap-0.5 font-bold ${color}`}><Icon className="w-3.5 h-3.5" />{v >= 0 ? "+" : ""}{Number(v).toFixed(1)}%</span>;
-                    }},
-                    { label: "Stars", key: "stars", format: (v: any) => <span className="inline-flex items-center gap-1"><Star className="w-3 h-3 text-amber-500 fill-amber-500" />{v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}</span> },
-                    { label: "Forks", key: "forks", format: (v: any) => <span className="inline-flex items-center gap-1"><GitFork className="w-3 h-3" />{v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}</span> },
-                    { label: "HN Mentions", key: "hn_count", format: undefined },
-                    { label: "Dev.to", key: "devto_count", format: undefined },
-                    { label: "Reddit", key: "reddit_count", format: undefined },
-                    { label: "News", key: "news_count", format: undefined },
-                    { label: "Sentiment", key: "sentiment_label", format: (v: any) => {
-                      const emoji = v === "positive" ? "🟢" : v === "negative" ? "🔴" : v === "mixed" ? "🟡" : "⚪";
-                      return <span className="text-xs font-semibold">{emoji} {v}</span>;
-                    }},
-                    { label: "Priority", key: "learning_priority", format: (v: any) => {
-                      const colors: Record<string, string> = { HIGH: "text-emerald-500", MEDIUM: "text-amber-500", LOW: "text-slate-400", AVOID: "text-rose-500" };
-                      return <span className={`font-bold text-xs ${colors[v] || ""}`}>{v}</span>;
-                    }},
-                  ] as { label: string; key: string; format: ((v: any) => React.ReactNode) | undefined }[]).map((row) => (
-                    <tr key={row.label} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">{row.label}</td>
-                      {compareData.map((t) => {
-                        const val = (t as any)[row.key];
-                        return (
-                          <td key={t.slug} className="px-4 py-2.5 text-center">
-                            {row.format ? row.format(val) : <span className="font-semibold">{val}</span>}
-                          </td>
-                        );
-                      })}
-                    </tr>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 2. Momentum Score row */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+                  <div className="col-span-3 font-mono text-xs font-bold text-white">
+                    MOMENTUM SCORE
+                  </div>
+                  {compareData.map((t) => {
+                    const isWinner = t.score === maxMetrics.score;
+                    return (
+                      <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1.5">
+                        <span className="text-2xl font-black font-mono text-white">{t.score}</span>
+                        {isWinner && (
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-mono font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-0.5 shadow-sm">
+                            <Award className="w-2.5 h-2.5" /> HIGHEST
+                          </span>
+                        )}
+                        {/* Relative Bar */}
+                        <div className="h-1 w-16 bg-[#0D1526] rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500" style={{ width: `${(t.score / maxMetrics.score) * 100}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 3. Adoption stage row */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+                  <div className="col-span-3 font-mono text-xs text-[#8899BB]">
+                    ADOPTION STAGE
+                  </div>
+                  {compareData.map((t) => (
+                    <div key={t.slug} className="col-span-2 text-center">
+                      <span className="px-2.5 py-0.5 rounded bg-[#0A0F1E] border border-blue-500/10 text-xs font-mono text-blue-300 uppercase tracking-wider">
+                        {t.stage}
+                      </span>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+
+                {/* 4. Growth percentage delta */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+                  <div className="col-span-3 font-mono text-xs text-[#8899BB]">
+                    CYCLE GROWTH DELTA
+                  </div>
+                  {compareData.map((t) => {
+                    const isWinner = t.growth_pct === maxMetrics.growth_pct;
+                    const Icon = t.growth_pct > 0 ? TrendingUp : t.growth_pct < 0 ? TrendingDown : Minus;
+                    const color = t.growth_pct > 0 ? "text-emerald-400" : t.growth_pct < 0 ? "text-rose-400" : "text-[#8899BB]";
+                    return (
+                      <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
+                        <span className={`inline-flex items-center gap-1 font-bold font-mono text-xs ${color}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                          {t.growth_pct >= 0 ? "+" : ""}{t.growth_pct.toFixed(1)}%
+                        </span>
+                        {isWinner && t.growth_pct > 0 && (
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-mono font-bold text-emerald-400">
+                            FASTEST
+                          </span>
+                        )}
+                        <div className="h-1 w-16 bg-[#0D1526] rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500" style={{ width: `${Math.max(0, (t.growth_pct / maxMetrics.growth_pct) * 100)}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 5. Github Stars */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+                  <div className="col-span-3 font-mono text-xs text-[#8899BB]">
+                    GITHUB STARS
+                  </div>
+                  {compareData.map((t) => {
+                    const isWinner = t.stars === maxMetrics.stars;
+                    return (
+                      <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
+                        <span className="inline-flex items-center gap-1 font-mono text-xs text-white">
+                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          {t.stars >= 1000 ? `${(t.stars / 1000).toFixed(1)}k` : t.stars}
+                        </span>
+                        {isWinner && (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[7px] font-mono font-bold text-amber-400">
+                            MOST STARS
+                          </span>
+                        )}
+                        <div className="h-1 w-16 bg-[#0D1526] rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-500" style={{ width: `${(t.stars / maxMetrics.stars) * 100}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 6. Forks */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+                  <div className="col-span-3 font-mono text-xs text-[#8899BB]">
+                    REPOS FORKS
+                  </div>
+                  {compareData.map((t) => (
+                    <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
+                      <span className="inline-flex items-center gap-1 font-mono text-xs text-[#8899BB]">
+                        <GitFork className="w-3.5 h-3.5 text-blue-400" />
+                        {t.forks >= 1000 ? `${(t.forks / 1000).toFixed(1)}k` : t.forks}
+                      </span>
+                      <div className="h-1 w-16 bg-[#0D1526] rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-400" style={{ width: `${(t.forks / maxMetrics.forks) * 100}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 7. Total discussion Mentions */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+                  <div className="col-span-3 font-mono text-xs text-[#8899BB]">
+                    COMMUNITY MENTIONS
+                  </div>
+                  {compareData.map((t) => {
+                    const totalMentions = t.hn_count + t.reddit_count + t.devto_count;
+                    const maxTotalMentions = maxMetrics.hn_count + maxMetrics.reddit_count + maxMetrics.devto_count;
+                    const isWinner = totalMentions === maxTotalMentions;
+                    return (
+                      <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
+                        <span className="font-mono text-xs text-white">{totalMentions} scans</span>
+                        {isWinner && (
+                          <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-[7px] font-mono font-bold text-indigo-400">
+                            MOST DISCUSSIONS
+                          </span>
+                        )}
+                        <div className="h-1 w-16 bg-[#0D1526] rounded-full overflow-hidden">
+                          <div className="h-full bg-indigo-500" style={{ width: `${(totalMentions / maxTotalMentions) * 100}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 8. Sentiment values */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+                  <div className="col-span-3 font-mono text-xs text-[#8899BB]">
+                    SENTIMENT ANALYSIS
+                  </div>
+                  {compareData.map((t) => {
+                    const isWinner = t.sentiment_positive === maxMetrics.sentiment_positive;
+                    return (
+                      <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
+                        <span className="text-xs font-mono font-bold text-white">
+                          {t.sentiment_label?.toUpperCase()} ({(t.sentiment_positive * 100).toFixed(0)}% pos)
+                        </span>
+                        {isWinner && (
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-mono font-bold text-emerald-400">
+                            MOST FAVORABLE
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+              </div>
+
             </div>
 
-            {/* History Chart */}
+            {/* LINE CHART SCORE OVERTIME COMPARISONS */}
             {chartData.length > 1 && (
-              <div className="bg-card p-5 rounded-2xl border border-border/60 shadow-sm">
-                <h2 className="text-base font-bold mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  Score History — Last 30 Days
-                </h2>
-                <ChartContainer height={320}>
-                  <LineChart data={chartData} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
-                    <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
+              <div className="glass-panel p-6 rounded-2xl border border-blue-500/10 bg-[#0D1526]/10 shadow-lg relative overflow-hidden">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp className="w-5 h-5 text-blue-400" />
+                  <h2 className="text-lg font-bold font-display">Comparative Score History</h2>
+                </div>
+                
+                <ChartContainer height={300}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(37, 99, 235, 0.05)" vertical={false} />
+                    <XAxis dataKey="date" stroke="#8899BB" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#8899BB" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} />
                     <Tooltip contentStyle={chartTooltipStyle} itemStyle={chartItemStyle} labelStyle={chartLabelStyle} />
-                    <Legend wrapperStyle={{ fontSize: "12px", fontWeight: 600 }} />
+                    <Legend wrapperStyle={{ fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-mono)", paddingTop: 12 }} />
                     {compareData.map((t, idx) => (
                       <Line
                         key={t.slug}
                         type="monotone"
                         dataKey={t.name}
-                        stroke={COMPARE_COLORS[idx]}
+                        stroke={COMPARE_COLORS[idx % COMPARE_COLORS.length]}
                         strokeWidth={2.5}
                         dot={false}
                         activeDot={{ r: 5 }}
                         connectNulls
-                        animationDuration={1500}
+                        animationDuration={1000}
                       />
                     ))}
                   </LineChart>
@@ -276,32 +506,42 @@ export default function ComparePage() {
               </div>
             )}
 
-            {/* Recommendations */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {compareData.map((t, idx) => (
-                <div
-                  key={t.slug}
-                  className="bg-card p-4 rounded-xl border border-border/60 space-y-2"
-                  style={{ borderLeftWidth: "3px", borderLeftColor: COMPARE_COLORS[idx] }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{t.icon}</span>
-                    <h3 className="font-bold text-sm">{t.name}</h3>
+            {/* RECOMMENDATIONS SIDE-BY-SIDE CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {compareData.map((t, idx) => {
+                const color = COMPARE_COLORS[idx % COMPARE_COLORS.length];
+                return (
+                  <div
+                    key={t.slug}
+                    className="glass-panel p-6 rounded-2xl border border-blue-500/10 bg-[#0D1526]/30 relative overflow-hidden"
+                    style={{ borderTopWidth: "3px", borderTopColor: color }}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-3xl select-none">{t.icon}</span>
+                      <div>
+                        <h3 className="font-bold text-sm text-white font-display">{t.name} Recommendation</h3>
+                        <span className="text-[9px] font-mono text-[#8899BB] uppercase">{t.category}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-[#8899BB] leading-relaxed font-light font-mono">
+                      {t.recommendation || "No specialized profile recommendations. This technology represents stable developer vectors."}
+                    </p>
                   </div>
-                  <p className="text-xs text-foreground/80 leading-relaxed">{t.recommendation}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
           </div>
-        ) : selectedSlugs.length >= 2 ? null : (
-          <div className="text-center py-16 border border-dashed border-border/60 rounded-2xl bg-muted/10">
-            <GitCompare className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-bold mb-1">Select Tools to Compare</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Pick at least 2 tools from the list above to see a detailed side-by-side comparison with metrics, sentiment, and historical trends.
+        ) : (
+          <div className="text-center py-20 border border-dashed border-blue-500/10 rounded-2xl bg-[#0D1526]/20 glass-panel">
+            <GitCompare className="w-14 h-14 text-blue-400/40 mx-auto mb-4 animate-pulse" />
+            <h3 className="text-base font-bold font-display mb-2">Select Technologies To Compare</h3>
+            <p className="text-xs text-[#8899BB] max-w-sm mx-auto leading-relaxed font-light">
+              Add at least 2 technologies from the scanner selection above to compile details side-by-side.
             </p>
           </div>
         )}
+
       </div>
     </DashboardShell>
   );

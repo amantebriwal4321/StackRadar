@@ -1,40 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import {
   ArrowLeft, Github, MessageSquare, FileText, GraduationCap,
   TrendingUp, TrendingDown, Minus, Loader2, ExternalLink, Star, GitFork,
-  Sparkles, ArrowRight, Rocket, MapPin,
+  Sparkles, Rocket, MapPin, Eye, Info, BarChart3, AlertCircle
 } from "lucide-react";
 import { fetchToolDetail, fetchToolHistory, type ToolDetail, type ToolHistoryPoint } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
-import StatCard from "@/components/StatCard";
 import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
 
 const priorityColors: Record<string, string> = {
-  "HIGH": "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
-  "MEDIUM": "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+  "HIGH": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  "MEDIUM": "bg-amber-500/10 text-amber-400 border border-amber-500/20",
   "LOW": "bg-slate-500/10 text-slate-400 border border-slate-500/20",
   "AVOID": "bg-rose-500/10 text-rose-500 border border-rose-500/20",
 };
 
 const stageBadge: Record<string, string> = {
-  "Emerging": "bg-cyan-500/10 text-cyan-500",
-  "Growing": "bg-primary/10 text-primary",
-  "Mature": "bg-emerald-500/10 text-emerald-500",
-  "Declining": "bg-rose-500/10 text-rose-500",
+  "Emerging": "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",
+  "Growing": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  "Mature": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  "Declining": "bg-rose-500/10 text-rose-400 border border-rose-500/20",
 };
 
 const levelBadge: Record<string, string> = {
-  "beginner": "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  "intermediate": "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  "advanced": "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  "beginner": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  "intermediate": "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  "advanced": "bg-rose-500/10 text-rose-400 border border-rose-500/20",
 };
 
 export default function ToolDetailPage() {
@@ -58,7 +57,7 @@ export default function ToolDetailPage() {
         setTool(toolData);
         setHistory(historyData.data);
       } catch (err: any) {
-        setError(err.message || "Failed to load");
+        setError(err.message || "Failed to load detailed telemetry.");
       } finally {
         setIsLoading(false);
       }
@@ -66,11 +65,22 @@ export default function ToolDetailPage() {
     load();
   }, [slug]);
 
+  const positivePct = useMemo(() => {
+    if (!tool) return 0;
+    return Math.round((tool.sentiment_positive ?? 0.8) * 100);
+  }, [tool]);
+
+  const negativePct = useMemo(() => {
+    if (!tool) return 0;
+    return Math.round((tool.sentiment_negative ?? 0.2) * 100);
+  }, [tool]);
+
   if (isLoading) {
     return (
       <DashboardShell>
-        <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <div className="flex flex-col items-center justify-center py-32 gap-3">
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+          <span className="text-xs font-mono text-[#8899BB]/70">Accessing tool core telemetry...</span>
         </div>
       </DashboardShell>
     );
@@ -80,218 +90,350 @@ export default function ToolDetailPage() {
     return (
       <DashboardShell>
         <div className="flex items-center justify-center py-32 text-muted-foreground">
-          <div className="text-center space-y-4">
-            <p className="text-xl font-semibold">{error || "Tool not found"}</p>
-            <Link href="/" className="text-primary hover:underline text-sm">← Back to Dashboard</Link>
+          <div className="text-center space-y-4 max-w-sm glass-panel p-8 rounded-xl border border-blue-500/10">
+            <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
+            <p className="font-mono text-sm">{error || "Signal index not found"}</p>
+            <Link href="/" className="inline-block text-xs font-mono bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded">
+              RETURN_TO_DASHBOARD
+            </Link>
           </div>
         </div>
       </DashboardShell>
     );
   }
 
-  const GrowthIcon = tool.growth_pct > 5 ? TrendingUp : tool.growth_pct < -5 ? TrendingDown : Minus;
-  const growthColor = tool.growth_pct > 5 ? "text-emerald-500" : tool.growth_pct < -5 ? "text-rose-500" : "text-muted-foreground";
+  const GrowthIcon = tool.growth_pct > 0 ? TrendingUp : tool.growth_pct < 0 ? TrendingDown : Minus;
+  const growthColor = tool.growth_pct > 0 ? "text-emerald-400" : tool.growth_pct < 0 ? "text-rose-400" : "text-[#8899BB]/70";
 
   return (
     <DashboardShell>
-      <div className="space-y-5 fade-in">
+      
+      {/* Cinematic Hero Backdrop glows */}
+      <div className="absolute top-0 left-[10%] w-[500px] h-[300px] rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/5 blur-[120px] pointer-events-none z-0" />
 
-        <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+      <div className="space-y-8 relative z-10 pb-16">
+
+        {/* Back Link */}
+        <Link href="/" className="inline-flex items-center text-xs font-mono text-[#8899BB] hover:text-white transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-2" /> RETURN_TO_DASHBOARD
         </Link>
 
-        {/* ── Title + Score (improved hierarchy) ── */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-          <div className="space-y-3">
-            {/* Title row */}
-            <div className="flex items-center gap-3">
-              <span className="text-4xl">{tool.icon}</span>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold">{tool.name}</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">{tool.description}</p>
+        {/* ── Title & Meta details ── */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+          <div className="space-y-4 flex-1">
+            <div className="flex items-start gap-4">
+              <span className="text-5xl bg-[#0D1526]/80 p-4 rounded-2xl border border-blue-500/10 shrink-0 select-none">
+                {tool.icon}
+              </span>
+              <div className="space-y-1">
+                <span className="text-[9px] font-mono text-blue-400 tracking-widest uppercase">
+                  CLASSIFIED NODE PROFILE
+                </span>
+                <h1 className="text-3xl md:text-5xl font-black font-display tracking-tight text-white leading-tight">
+                  {tool.name}
+                </h1>
+                <p className="text-sm text-[#8899BB] leading-relaxed max-w-2xl font-light">
+                  {tool.description || "Continuous scans are ongoing for this technology index. Real-time mentions are captured below."}
+                </p>
               </div>
             </div>
 
-            {/* Tags row */}
+            {/* Badges block */}
             <div className="flex gap-2 flex-wrap">
-              <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${stageBadge[tool.stage] || "bg-primary/10 text-primary"}`}>
-                {tool.stage}
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider ${stageBadge[tool.stage] || "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>
+                {tool.stage} ADOPTION
               </span>
-              <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${priorityColors[tool.learning_priority] || priorityColors["MEDIUM"]}`}>
-                Priority: {tool.learning_priority}
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider ${priorityColors[tool.learning_priority] || "bg-amber-500/10 text-amber-400"}`}>
+                LEARNING PRIORITY: {tool.learning_priority}
               </span>
-              <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${levelBadge[tool.level] || levelBadge["intermediate"]}`}>
-                {tool.level?.charAt(0).toUpperCase() + tool.level?.slice(1)}
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider border ${levelBadge[tool.level] || "border-blue-500/10 text-[#8899BB]"}`}>
+                STAGE: {tool.level?.toUpperCase()}
               </span>
-              <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-muted/60 text-muted-foreground">
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-[#0D1526] text-[#8899BB] border border-blue-500/5">
                 {tool.category}
               </span>
             </div>
           </div>
 
-          {/* Score card */}
-          <div className="bg-card p-4 rounded-xl border border-border/60 text-center min-w-[130px] shrink-0">
-            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider mb-1">Score</span>
-            <span className="text-3xl font-black text-primary">{tool.score}</span>
-            <span className="text-sm text-muted-foreground"> / 100</span>
-            <div className={`flex items-center justify-center gap-1 mt-1 font-bold text-sm ${growthColor}`}>
+          {/* Large Core Score badge */}
+          <div className="glass-panel p-6 rounded-2xl border border-blue-500/10 text-center min-w-[150px] shrink-0 relative overflow-hidden shadow-lg bg-[#0D1526]/30">
+            <span className="block text-[9px] text-[#8899BB]/60 uppercase font-mono tracking-widest mb-1">MOMENTUM SCORE</span>
+            <span className="text-5xl font-black text-white font-mono">{tool.score}</span>
+            <span className="text-xs text-[#8899BB]/60 font-mono">/100</span>
+            <div className={`flex items-center justify-center gap-1 mt-2.5 font-bold font-mono text-xs ${growthColor}`}>
               <GrowthIcon className="w-4 h-4" />
-              {tool.growth_pct >= 0 ? "+" : ""}{tool.growth_pct.toFixed(1)}%
+              {tool.growth_pct >= 0 ? "+" : ""}{tool.growth_pct.toFixed(1)}% GROWTH
             </div>
           </div>
         </div>
 
-        {/* ── Entry Point / Prerequisite Banners ── */}
-        {tool.is_entry_point && (
-          <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-            <Rocket className="w-5 h-5 text-emerald-500 shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-emerald-500">🚀 Recommended starting point for {tool.category}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">This is the best tool to begin your learning journey in this domain.</p>
-            </div>
-          </div>
-        )}
-
-        {tool.parent_slug && tool.parent_name && (
-          <div className="flex items-center gap-3 p-4 bg-card border border-border/60 rounded-xl">
-            <MapPin className="w-5 h-5 text-amber-500 shrink-0" />
-            <div>
-              <p className="text-sm font-semibold">
-                📍 Prerequisite:{" "}
-                <Link href={`/tools/${tool.parent_slug}`} className="text-primary hover:underline font-bold">
-                  {tool.parent_name}
-                </Link>
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">We recommend learning {tool.parent_name} before diving into {tool.name}.</p>
-            </div>
-          </div>
-        )}
-
-        {/* ── Decision Intelligence (highlighted card) ── */}
+        {/* ── Recommendation Panel ── */}
         {tool.recommendation && (
-          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500/10 via-card to-cyan-500/5 p-5 rounded-xl border border-indigo-500/20 shadow-sm">
-            <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
+          <div className="glass-panel p-6 rounded-2xl border border-blue-500/10 bg-[#0D1526]/20 relative overflow-hidden shadow-lg">
+            <div className="absolute top-4 right-4 p-2 bg-blue-600/10 border border-blue-500/20 rounded-xl text-blue-400">
+              <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-2 flex items-center gap-2">
-              📊 Decision Intelligence
-            </h3>
-            <p className="text-foreground/90 leading-relaxed text-sm pr-10">{tool.recommendation}</p>
+            <h4 className="text-[10px] font-mono font-bold uppercase tracking-widest text-blue-400 mb-2 flex items-center gap-2">
+              <Info className="w-4 h-4" /> Decision Matrix Analysis
+            </h4>
+            <p className="text-sm text-[#8899BB] leading-relaxed max-w-4xl font-light pr-10">
+              {tool.recommendation}
+            </p>
           </div>
         )}
 
-        {/* ── Metrics ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-          <StatCard number={tool.stars.toLocaleString()} label="Stars"
-            icon={<Star className="w-full h-full" />} iconColorClass="text-amber-500" hoverColorClass="hover:border-amber-500/30" />
-          <StatCard number={tool.forks.toLocaleString()} label="Forks"
-            icon={<GitFork className="w-full h-full" />} iconColorClass="text-muted-foreground" hoverColorClass="hover:border-primary/30" />
-          <StatCard number={tool.hn_count.toLocaleString()} label="HN"
-            icon={<MessageSquare className="w-full h-full" />} iconColorClass="text-orange-500" hoverColorClass="hover:border-orange-500/30" />
-          <StatCard number={tool.devto_count.toLocaleString()} label="Dev.to"
-            icon={<FileText className="w-full h-full" />} iconColorClass="text-primary" hoverColorClass="hover:border-primary/30" />
-          <StatCard number={tool.reddit_count.toLocaleString()} label="Reddit"
-            icon={<MessageSquare className="w-full h-full" />} iconColorClass="text-orange-600" hoverColorClass="hover:border-orange-600/30" />
-          <StatCard number={tool.news_count.toLocaleString()} label="News"
-            icon={<FileText className="w-full h-full" />} iconColorClass="text-sky-500" hoverColorClass="hover:border-sky-500/30" />
+        {/* ── Dual Layout: Main Chart (left) and Sentiment Dial (right) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          
+          {/* A. Recharts Area Chart (lg:col-span-8) */}
+          <div className="lg:col-span-8 glass-panel p-6 rounded-2xl border border-blue-500/10 bg-[#0D1526]/10 flex flex-col justify-between shadow-lg">
+            <div>
+              <h2 className="text-base font-bold font-display mb-4 flex items-center gap-2 text-white">
+                <BarChart3 className="w-5 h-5 text-blue-400" />
+                Score Trend Analysis (30d History)
+              </h2>
+            </div>
+            
+            {history.length > 1 ? (
+              <ChartContainer height={260}>
+                <AreaChart data={history} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="areaGlow" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(37, 99, 235, 0.05)" vertical={false} />
+                  
+                  <XAxis
+                    dataKey="date"
+                    stroke="#8899BB"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v: string) => v.slice(5)}
+                  />
+                  <YAxis
+                    stroke="#8899BB"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    domain={[0, 100]}
+                  />
+                  <Tooltip
+                    contentStyle={chartTooltipStyle}
+                    itemStyle={chartItemStyle}
+                    labelStyle={chartLabelStyle}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="score"
+                    stroke="#2563EB"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#areaGlow)"
+                    animationDuration={1200}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            ) : (
+              <div className="h-60 flex flex-col items-center justify-center text-center p-6 space-y-3">
+                <span className="text-3xl">📊</span>
+                <p className="text-xs font-mono text-[#8899BB]">Collecting temporal data logs. Requires 48 hours scan period.</p>
+              </div>
+            )}
+          </div>
+
+          {/* B. Circular Sentiment Radar Dial (lg:col-span-4) */}
+          <div className="lg:col-span-4 glass-panel p-6 rounded-2xl border border-blue-500/10 bg-[#0D1526]/10 flex flex-col justify-between items-center text-center shadow-lg relative">
+            <div className="w-full flex items-center justify-between border-b border-blue-500/5 pb-2 mb-4">
+              <span className="text-[10px] font-mono text-[#8899BB] uppercase">SENTIMENT PROFILE</span>
+              <span className="text-xs font-mono font-bold text-blue-400 uppercase">{tool.sentiment_label ?? "POSITIVE"}</span>
+            </div>
+
+            {/* Radar Dial Svg representation */}
+            <div className="relative w-44 h-44 flex items-center justify-center my-2">
+              <svg width="170" height="170" viewBox="0 0 170 170" className="transform -rotate-90">
+                {/* Dial background */}
+                <circle cx="85" cy="85" r="75" stroke="rgba(37,99,235,0.05)" strokeWidth="6" fill="none" />
+                {/* Negative outer line (red) */}
+                <circle cx="85" cy="85" r="75" stroke="rgba(239,68,68,0.15)" strokeWidth="6" fill="none" />
+                {/* Positive arc (green) */}
+                <circle
+                  cx="85"
+                  cy="85"
+                  r="75"
+                  stroke="#10B981"
+                  strokeWidth="8"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 75}
+                  strokeDashoffset={2 * Math.PI * 75 - (positivePct / 100) * (2 * Math.PI * 75)}
+                  strokeLinecap="round"
+                  className="transition-all duration-1000 ease-out"
+                />
+              </svg>
+              
+              {/* Dial needle sweeping inside */}
+              <div
+                className="absolute inset-0 flex items-center justify-center origin-center transition-transform duration-1000"
+                style={{ transform: `rotate(${(positivePct / 100) * 360 - 90}deg)` }}
+              >
+                <div className="w-[70px] h-[2px] bg-gradient-to-r from-transparent to-blue-400 translate-x-[35px]" />
+              </div>
+
+              {/* Central Text */}
+              <div className="absolute flex flex-col items-center justify-center bg-[#0A0F1E] w-24 h-24 rounded-full border border-blue-500/10">
+                <span className="text-3xl font-mono font-black text-white">{positivePct}%</span>
+                <span className="text-[8px] font-mono text-[#8899BB] uppercase tracking-wider">POSITIVE</span>
+              </div>
+            </div>
+
+            <div className="w-full flex justify-between font-mono text-[10px] text-[#8899BB] pt-4 border-t border-blue-500/5">
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" /> POSITIVE: {positivePct}%</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500" /> NEGATIVE: {negativePct}%</span>
+            </div>
+          </div>
+
         </div>
 
-        {/* ── GitHub ── */}
+        {/* ── Sequential Roadmap CTA & Prerequisites ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          
+          {/* Prerequisite Node details */}
+          {tool.parent_slug && tool.parent_name ? (
+            <div className="glass-panel p-5 rounded-2xl border border-blue-500/10 flex items-center gap-4 bg-[#0D1526]/40">
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 shrink-0">
+                <MapPin className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                  Prerequisite: <Link href={`/tools/${tool.parent_slug}`} className="text-blue-400 hover:underline">{tool.parent_name}</Link>
+                </h4>
+                <p className="text-xs text-[#8899BB] leading-relaxed font-light">
+                  We highly recommend mapping out the concepts of {tool.parent_name} before indexing {tool.name}.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="glass-panel p-5 rounded-2xl border border-blue-500/5 flex items-center gap-4 bg-[#0D1526]/10 opacity-70">
+              <div className="p-3 bg-blue-500/10 border border-blue-500/5 rounded-xl text-blue-400 shrink-0">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-white">No Prerequisite Nodes</h4>
+                <p className="text-xs text-[#8899BB] leading-relaxed font-light">
+                  This technology is an entry-level root index. You can learn this directly without prior dependencies.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Learning path CTA */}
+          {tool.has_roadmap && tool.roadmap_slug ? (
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 text-white flex justify-between items-center gap-4 shadow-lg shadow-blue-500/10">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5" /> Master {tool.name} Sequence
+                </h4>
+                <p className="text-blue-100 text-xs leading-relaxed font-light">
+                  Explore the curated learning sequence layout maps designed for {tool.category}.
+                </p>
+              </div>
+              <Link
+                href={`/roadmap/${tool.roadmap_slug}`}
+                className="bg-white hover:bg-slate-100 text-blue-600 px-4 py-2.5 rounded-xl font-mono text-xs font-bold shrink-0 shadow transition-all active:scale-95"
+              >
+                GO_TO_ROADMAP
+              </Link>
+            </div>
+          ) : (
+            <div className="glass-panel p-5 rounded-2xl border border-blue-500/5 flex justify-between items-center gap-4 bg-[#0D1526]/10 opacity-70">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                  Custom Roadmap Scrapers
+                </h4>
+                <p className="text-xs text-[#8899BB] leading-relaxed font-light">
+                  No dedicated roadmap created yet. Use explore sidebar to learn similar tools.
+                </p>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* ── Multi-channel Telemetry metric counters ── */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          
+          <div className="glass-panel p-4 rounded-xl border border-blue-500/10 bg-[#0D1526]/20">
+            <span className="text-[10px] font-mono text-[#8899BB] uppercase block mb-1">GITHUB STARS</span>
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <span className="text-lg font-bold font-mono text-white">{tool.stars.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="glass-panel p-4 rounded-xl border border-blue-500/10 bg-[#0D1526]/20">
+            <span className="text-[10px] font-mono text-[#8899BB] uppercase block mb-1">FORKS</span>
+            <div className="flex items-center gap-2">
+              <GitFork className="w-4 h-4 text-blue-400" />
+              <span className="text-lg font-bold font-mono text-white">{tool.forks.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="glass-panel p-4 rounded-xl border border-blue-500/10 bg-[#0D1526]/20">
+            <span className="text-[10px] font-mono text-[#8899BB] uppercase block mb-1">HN DISCUSSIONS</span>
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-orange-500" />
+              <span className="text-lg font-bold font-mono text-white">{tool.hn_count.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="glass-panel p-4 rounded-xl border border-blue-500/10 bg-[#0D1526]/20">
+            <span className="text-[10px] font-mono text-[#8899BB] uppercase block mb-1">DEV.TO ARTICLES</span>
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-cyan-400" />
+              <span className="text-lg font-bold font-mono text-white">{tool.devto_count.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="glass-panel p-4 rounded-xl border border-blue-500/10 bg-[#0D1526]/20">
+            <span className="text-[10px] font-mono text-[#8899BB] uppercase block mb-1">REDDIT POSTS</span>
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-rose-500" />
+              <span className="text-lg font-bold font-mono text-white">{tool.reddit_count.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="glass-panel p-4 rounded-xl border border-blue-500/10 bg-[#0D1526]/20">
+            <span className="text-[10px] font-mono text-[#8899BB] uppercase block mb-1">TECH NEWS SCAN</span>
+            <div className="flex items-center gap-2">
+              <ExternalLink className="w-4 h-4 text-purple-400" />
+              <span className="text-lg font-bold font-mono text-white">{tool.news_count.toLocaleString()}</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── Raw Github Repository connection ── */}
         {tool.github_repo && (
           <a
             href={`https://github.com/${tool.github_repo}`}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-3 p-3.5 bg-card border border-border/60 rounded-xl hover:border-primary/40 transition-colors group"
+            className="flex items-center gap-4 p-4 glass-panel border border-blue-500/10 rounded-xl bg-[#0D1526]/20 hover:border-blue-400/40 transition-all duration-300 group"
           >
-            <Github className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            <span className="font-semibold text-sm group-hover:text-primary transition-colors">{tool.github_repo}</span>
-            <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto" />
+            <div className="p-2.5 bg-[#0A0F1E] border border-blue-500/10 rounded-lg group-hover:scale-105 transition-all">
+              <Github className="w-5 h-5 text-white group-hover:text-blue-400" />
+            </div>
+            <div>
+              <span className="text-[10px] font-mono text-[#8899BB] block uppercase leading-none">CONNECTED REPO</span>
+              <span className="font-bold text-sm text-white group-hover:text-blue-400 transition-colors font-mono">{tool.github_repo}</span>
+            </div>
+            <ExternalLink className="w-4 h-4 text-[#8899BB] ml-auto group-hover:text-blue-400 transition-all" />
           </a>
         )}
 
-        {/* ── History Chart ── */}
-        {history.length > 1 ? (
-          <div className="bg-card p-5 rounded-2xl border border-border/60 shadow-sm">
-            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Score History (Last 30 Days)
-            </h2>
-            <ChartContainer height={280}>
-              <LineChart data={history} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
-                <XAxis
-                  dataKey="date"
-                  stroke="var(--muted-foreground)"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v: string) => v.slice(5)}
-                />
-                <YAxis
-                  stroke="var(--muted-foreground)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  domain={[0, 100]}
-                />
-                <Tooltip
-                  contentStyle={chartTooltipStyle}
-                  itemStyle={chartItemStyle}
-                  labelStyle={chartLabelStyle}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="score"
-                  stroke={chartColors[0]}
-                  strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{ r: 5 }}
-                  animationDuration={1500}
-                />
-              </LineChart>
-            </ChartContainer>
-          </div>
-        ) : (
-          <div className="bg-card p-5 rounded-2xl border border-border/60 shadow-sm text-center space-y-3">
-            <h2 className="text-base font-bold flex items-center justify-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Score History
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              📊 Collecting data points... Chart will appear after 2+ days of tracking.
-            </p>
-            <div className="max-w-xs mx-auto h-2 bg-muted/40 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary/60 rounded-full animate-pulse transition-all"
-                style={{ width: `${Math.min(history.length * 50, 100)}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {history.length}/2 data points collected
-            </p>
-          </div>
-        )}
-
-        {/* ── Roadmap CTA ── */}
-        {tool.has_roadmap && tool.roadmap_slug && (
-          <div className="bg-gradient-to-r from-indigo-600 to-cyan-600 rounded-xl p-5 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg shadow-indigo-500/10">
-            <div>
-              <h3 className="font-bold flex items-center gap-2">
-                <GraduationCap className="w-5 h-5" /> Ready to learn {tool.name}?
-              </h3>
-              <p className="text-indigo-100 text-sm mt-1">
-                View the learning roadmap for {tool.category}
-              </p>
-            </div>
-            <Link
-              href={`/roadmap/${tool.roadmap_slug}`}
-              className="bg-white text-indigo-600 px-5 py-2 rounded-lg font-bold text-sm shadow-sm hover:shadow-lg transition-all shrink-0"
-            >
-              View Roadmap →
-            </Link>
-          </div>
-        )}
       </div>
     </DashboardShell>
   );
