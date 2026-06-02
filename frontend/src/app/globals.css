@@ -45,17 +45,6 @@
   --font-sans: var(--font-inter), "Inter", sans-serif;
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 
-  /* Spacing Scale */
-  --spacing-base: 8px;
-  --spacing-xs: 8px;
-  --spacing-sm: 16px;
-  --spacing-md: 24px;
-  --spacing-lg: 32px;
-  --spacing-xl: 48px;
-  --spacing-2xl: 64px;
-  --spacing-3xl: 96px;
-  --spacing-4xl: 128px;
-  --spacing-5xl: 192px;
 
   /* Motion system presets */
   --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
