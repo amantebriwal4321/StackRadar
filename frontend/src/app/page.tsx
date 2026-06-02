@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Zap, TrendingUp, Loader2, RefreshCw, Clock, Search } from "lucide-react";
 import { type Tool, fetchTools, fetchCategories } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
@@ -27,6 +27,25 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut listener to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || e.key === "/") {
+        // Only trigger if focus is not already inside input/textarea
+        const activeElement = document.activeElement;
+        const isInput = activeElement?.tagName === "INPUT" || activeElement?.tagName === "TEXTAREA";
+        if (!isInput) {
+          e.preventDefault();
+          searchInputRef.current?.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Load categories on mount
   useEffect(() => {
@@ -58,25 +77,27 @@ export default function HomePage() {
     const q = searchQuery.toLowerCase();
     return tools.filter(
       (t) =>
-        t.name.toLowerCase().includes(q) ||
-        (t.description || "").toLowerCase().includes(q) ||
-        t.category.toLowerCase().includes(q)
+         t.name.toLowerCase().includes(q) ||
+         (t.description || "").toLowerCase().includes(q) ||
+         t.category.toLowerCase().includes(q)
     );
   }, [tools, searchQuery]);
 
   return (
     <DashboardShell>
-      <div className="space-y-6 fade-in">
+      <div className="space-y-6 fade-in relative">
+        {/* Decorative background glow sphere */}
+        <div className="absolute top-[-5%] left-1/2 -translate-x-1/2 w-full max-w-3xl h-[280px] rounded-full bg-gradient-to-b from-primary/10 via-primary/5 to-transparent blur-[80px] pointer-events-none -z-10" />
 
         {/* Compact Hero */}
-        <div className="text-center space-y-3 py-6 md:py-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 shadow-sm shadow-primary/10">
-            <Zap className="w-3.5 h-3.5 animate-pulse" />
-            Tool-Based Intelligence Engine
+        <div className="text-center space-y-4 py-8 md:py-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 shadow-sm shadow-primary/5">
+            <Zap className="w-3.5 h-3.5 animate-pulse text-primary" />
+            Developer Trend Intelligence Engine
           </div>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
             Real-Time Tech{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-cyan-300">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-indigo-400 to-cyan-300">
               Intelligence
             </span>
           </h1>
@@ -85,25 +106,31 @@ export default function HomePage() {
           </p>
 
           {/* Search Bar */}
-          <div className="relative max-w-md mx-auto mt-2">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative max-w-md mx-auto mt-4 group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search tools... (e.g. React, PyTorch, Kubernetes)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-card border border-border/60 rounded-full py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground shadow-sm"
+              className="w-full bg-card border border-border/80 rounded-full py-3 pl-10 pr-12 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground shadow-sm hover:border-border"
             />
-            {searchQuery && (
+            {searchQuery ? (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
               >
                 Clear
               </button>
+            ) : (
+              <kbd className="hidden sm:inline-flex absolute right-4 top-1/2 -translate-y-1/2 h-5 select-none items-center gap-0.5 rounded border border-border/60 bg-muted px-1.5 font-mono text-[10px] font-bold text-muted-foreground shadow-sm">
+                /
+              </kbd>
             )}
           </div>
         </div>
+
 
         {/* Filter Bar */}
         <div className="border-b border-border/40 pb-4">

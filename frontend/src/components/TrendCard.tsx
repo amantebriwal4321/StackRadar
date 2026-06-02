@@ -37,25 +37,25 @@ const sentimentBadge: Record<string, { class: string; label: string }> = {
 };
 
 function GrowthIndicator({ growth }: { growth: number }) {
-  if (growth > 5) {
+  if (growth > 0) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-emerald-500 font-bold text-xs">
+      <span className="inline-flex items-center gap-1 text-emerald-500 dark:text-emerald-400 font-bold text-xs">
         <TrendingUp className="w-3.5 h-3.5" />
         +{growth.toFixed(1)}%
       </span>
     );
-  } else if (growth < -5) {
+  } else if (growth < 0) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-rose-500 font-bold text-xs">
+      <span className="inline-flex items-center gap-1 text-rose-500 dark:text-rose-400 font-bold text-xs">
         <TrendingDown className="w-3.5 h-3.5" />
         {growth.toFixed(1)}%
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-0.5 text-muted-foreground font-bold text-xs">
+    <span className="inline-flex items-center gap-1 text-muted-foreground font-bold text-xs">
       <Minus className="w-3.5 h-3.5" />
-      {growth >= 0 ? "+" : ""}{growth.toFixed(1)}%
+      0.0%
     </span>
   );
 }

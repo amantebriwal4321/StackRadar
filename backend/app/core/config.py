@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     
     
     # GITHUB
-    GITHUB_TOKEN: str
+    GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
 
     # GROQ (for sentiment analysis)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")

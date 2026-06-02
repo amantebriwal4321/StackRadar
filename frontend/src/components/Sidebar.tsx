@@ -32,7 +32,7 @@ export default function Sidebar() {
       }`}
     >
       {/* Nav Items */}
-      <nav className="flex-1 py-4 px-2 space-y-1">
+      <nav className="flex-1 py-6 px-3 space-y-1.5">
         {sidebarItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -45,28 +45,38 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
+              className={`relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-primary font-semibold shadow-sm shadow-primary/5"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
+              {/* Sleek vertical active line indicator */}
+              {isActive && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-[3px] rounded-r-full bg-primary" />
+              )}
               <Icon
-                className={`w-[18px] h-[18px] shrink-0 transition-colors ${
-                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                className={`w-[18px] h-[18px] shrink-0 transition-all duration-200 ${
+                  isActive 
+                    ? "text-primary scale-105" 
+                    : "text-muted-foreground group-hover:text-foreground group-hover:scale-105"
                 }`}
               />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && (
+                <span className="transition-opacity duration-300">
+                  {item.label}
+                </span>
+              )}
             </Link>
           );
         })}
       </nav>
 
       {/* Collapse Toggle */}
-      <div className="p-2 border-t border-border/40">
+      <div className="p-3 border-t border-border/40">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
@@ -74,7 +84,7 @@ export default function Sidebar() {
           ) : (
             <>
               <ChevronLeft className="w-4 h-4" />
-              <span>Collapse</span>
+              <span>Collapse Sidebar</span>
             </>
           )}
         </button>
