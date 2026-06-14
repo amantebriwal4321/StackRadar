@@ -81,8 +81,8 @@ export default function ExplorePage() {
     return (
       <DashboardShell>
         <div className="flex flex-col items-center justify-center py-32 gap-3">
-          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-          <span className="text-xs font-mono text-[#8899BB]/70">Scanning space paths...</span>
+          <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+          <span className="text-xs font-mono text-[#A1A1AA]/70">Scanning space paths...</span>
         </div>
       </DashboardShell>
     );
@@ -92,40 +92,40 @@ export default function ExplorePage() {
     <DashboardShell>
       
       {/* Visual background glows */}
-      <div className="absolute top-10 left-10 w-[300px] h-[300px] rounded-full bg-blue-500/5 blur-[90px] pointer-events-none z-0" />
-      <div className="absolute bottom-20 right-10 w-[400px] h-[400px] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute top-10 left-10 w-[300px] h-[300px] rounded-full bg-violet-500/5 blur-[90px] pointer-events-none z-0" />
+      <div className="absolute bottom-20 right-10 w-[400px] h-[400px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none z-0" />
 
       <div className="space-y-8 relative z-10 pb-16">
 
         {/* Cinematic Blurred Page Header */}
-        <header className="p-6 md:p-8 rounded-2xl border border-blue-500/10 bg-[#0A0F1E]/80 backdrop-blur-md relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent pointer-events-none" />
+        <header className="p-6 md:p-8 rounded-2xl border border-violet-500/10 bg-[#111113]/80 backdrop-blur-md relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-transparent pointer-events-none" />
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5">
             <div className="space-y-1.5">
-              <span className="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-widest block">
+              <span className="text-[10px] font-mono font-bold text-violet-400 uppercase tracking-widest block">
                 SEQUENTIAL LEARNING NETWORKS
               </span>
               <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-display flex items-center gap-3">
-                <Compass className="w-8 h-8 text-blue-400" />
+                <Compass className="w-8 h-8 text-violet-400" />
                 <span className="gradient-text">Explore Universe</span>
               </h1>
-              <p className="text-[#8899BB] text-sm max-w-xl font-light">
+              <p className="text-[#A1A1AA] text-sm max-w-xl font-light">
                 Discover developer learning sequences structured dynamically. Hover over a technology to reveal detail matrices and prerequisites.
               </p>
             </div>
             
             {/* Search Input Filter */}
             <div className="relative group w-full md:w-80">
-              <div className="absolute -inset-[1px] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl opacity-20 group-focus-within:opacity-50 transition-opacity duration-300 blur-sm" />
-              <div className="relative bg-[#0D1526] rounded-xl flex items-center border border-blue-500/10 px-3">
-                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-blue-400" />
+              <div className="absolute -inset-[1px] bg-gradient-to-r from-violet-500 to-cyan-500 rounded-xl opacity-20 group-focus-within:opacity-50 transition-opacity duration-300 blur-sm" />
+              <div className="relative bg-[#18181B] rounded-xl flex items-center border border-violet-500/10 px-3">
+                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-violet-400" />
                 <input
                   type="text"
                   placeholder="Search technologies..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent border-none py-3 px-2 text-xs text-white focus:outline-none placeholder-[#8899BB]/50"
+                  className="w-full bg-transparent border-none py-3 px-2 text-xs text-white focus:outline-none placeholder-[#A1A1AA]/50"
                 />
               </div>
             </div>
@@ -136,8 +136,8 @@ export default function ExplorePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* 1. Left Sidebar menu (lg:col-span-3) */}
-          <aside className="lg:col-span-3 bg-[#0A0F1E]/80 border border-blue-500/10 rounded-xl p-4 space-y-2 lg:sticky lg:top-24 z-10 backdrop-blur-md">
-            <span className="text-[10px] font-mono font-bold text-[#8899BB]/50 uppercase tracking-widest block px-2 pb-2 border-b border-blue-500/5">
+          <aside className="lg:col-span-3 bg-[#111113]/80 border border-violet-500/10 rounded-xl p-4 space-y-2 lg:sticky lg:top-24 z-10 backdrop-blur-md">
+            <span className="text-[10px] font-mono font-bold text-[#A1A1AA]/50 uppercase tracking-widest block px-2 pb-2 border-b border-violet-500/5">
               Select Category
             </span>
             
@@ -153,13 +153,13 @@ export default function ExplorePage() {
                     }}
                     className={`w-full flex items-center gap-2.5 px-3 py-3 rounded-lg border text-xs font-mono tracking-wider transition-all duration-300 shrink-0 text-left cursor-pointer ${
                       isActive
-                        ? "bg-[#2563EB]/15 border-blue-500 text-white font-bold"
-                        : "bg-transparent border-transparent text-[#8899BB] hover:text-white hover:bg-[#0D1526]/50"
+                        ? "bg-[#A78BFA]/15 border-violet-500 text-white font-bold"
+                        : "bg-transparent border-transparent text-[#A1A1AA] hover:text-white hover:bg-[#18181B]/50"
                     }`}
                   >
                     <span className="text-base select-none">{d.icon}</span>
                     <span className="flex-1 truncate">{d.name}</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#0D1526] border border-blue-500/5 text-blue-300 font-bold">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#18181B] border border-violet-500/5 text-violet-300 font-bold">
                       {d.tool_count}
                     </span>
                   </button>
@@ -175,14 +175,14 @@ export default function ExplorePage() {
             {searchResults ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-mono text-[#8899BB]">
+                  <h3 className="text-sm font-mono text-[#A1A1AA]">
                     SEARCH RESULTS FOR &quot;{searchQuery}&quot;
                   </h3>
-                  <span className="text-xs font-mono text-blue-400 font-bold">{searchResults.length} FOUND</span>
+                  <span className="text-xs font-mono text-violet-400 font-bold">{searchResults.length} FOUND</span>
                 </div>
                 
                 {searchResults.length === 0 ? (
-                  <div className="p-12 glass-panel rounded-2xl text-center font-mono text-xs text-[#8899BB]">
+                  <div className="p-12 glass-panel rounded-2xl text-center font-mono text-xs text-[#A1A1AA]">
                     No monitored technologies match this lookup.
                   </div>
                 ) : (
@@ -199,15 +199,15 @@ export default function ExplorePage() {
                 
                 {/* Entry solver / confusion resolver */}
                 {learningPath && learningPath.entry && (
-                  <div className="glass-panel p-5 rounded-xl border border-blue-500/10 flex items-start gap-4 bg-[#0D1526]/30">
-                    <div className="p-2.5 bg-blue-600/10 border border-blue-500/20 rounded-lg text-blue-400 shrink-0">
+                  <div className="glass-panel p-5 rounded-xl border border-violet-500/10 flex items-start gap-4 bg-[#18181B]/30">
+                    <div className="p-2.5 bg-violet-600/10 border border-violet-500/20 rounded-lg text-violet-400 shrink-0">
                       <Sparkles className="w-5 h-5 animate-pulse" />
                     </div>
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-white">Recommended Entry Node</h4>
-                      <p className="text-xs text-[#8899BB] leading-relaxed">
+                      <p className="text-xs text-[#A1A1AA] leading-relaxed">
                         To master {currentDomainName}, StackRadar recommends starting with{" "}
-                        <Link href={`/tools/${learningPath.entry}`} className="text-blue-400 font-bold hover:underline">
+                        <Link href={`/tools/${learningPath.entry}`} className="text-violet-400 font-bold hover:underline">
                           {learningPath.path[0]?.tools.find(t => t.slug === learningPath.entry)?.name || learningPath.entry}
                         </Link>
                         . Follow the sequential paths from Beginner to Advanced levels.
@@ -218,8 +218,8 @@ export default function ExplorePage() {
 
                 {pathLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-3">
-                    <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
-                    <span className="text-xs font-mono text-[#8899BB]/60">Recalculating vectors...</span>
+                    <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
+                    <span className="text-xs font-mono text-[#A1A1AA]/60">Recalculating vectors...</span>
                   </div>
                 ) : learningPath ? (
                   <div className="space-y-12">
@@ -233,10 +233,10 @@ export default function ExplorePage() {
                         <div key={tier.level} className="space-y-6">
                           
                           {/* Tier title */}
-                          <div className="flex items-center gap-3 border-b border-blue-500/5 pb-2">
+                          <div className="flex items-center gap-3 border-b border-violet-500/5 pb-2">
                             <span className={`w-2.5 h-2.5 rounded-full ${bulletColor} shadow-md`} />
                             <h3 className="text-base font-bold font-display uppercase tracking-wider">{tier.label}</h3>
-                            <span className="text-[10px] font-mono bg-[#0D1526] border border-blue-500/5 text-[#8899BB] px-2 py-0.5 rounded">
+                            <span className="text-[10px] font-mono bg-[#18181B] border border-violet-500/5 text-[#A1A1AA] px-2 py-0.5 rounded">
                               {tier.tools.length} technology nodes
                             </span>
                           </div>
@@ -263,7 +263,7 @@ export default function ExplorePage() {
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-16 text-[#8899BB]/50 text-xs font-mono border border-dashed border-blue-500/10 rounded-xl">
+                  <div className="text-center py-16 text-[#A1A1AA]/50 text-xs font-mono border border-dashed border-violet-500/10 rounded-xl">
                     Select a domain to resolve learning sequence pathways.
                   </div>
                 )}
@@ -297,67 +297,67 @@ function ThreeDFlipCard({
       <div className="relative h-full w-full rounded-2xl transition-transform duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
         
         {/* FRONT SIDE */}
-        <div className="absolute inset-0 h-full w-full rounded-2xl border border-blue-500/10 bg-[#0D1526]/50 p-5 [backface-visibility:hidden] flex flex-col justify-between overflow-hidden shadow-lg">
+        <div className="absolute inset-0 h-full w-full rounded-2xl border border-violet-500/10 bg-[#18181B]/50 p-5 [backface-visibility:hidden] flex flex-col justify-between overflow-hidden shadow-lg">
           {/* Subtle inner grid lines */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.02)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
           
           <div className="flex items-start justify-between relative z-10">
             <div className="flex items-center gap-3">
-              <span className="text-3xl p-2 bg-[#0A0F1E] border border-blue-500/10 rounded-xl select-none group-hover:scale-105 transition-transform">
+              <span className="text-3xl p-2 bg-[#111113] border border-violet-500/10 rounded-xl select-none group-hover:scale-105 transition-transform">
                 {tool.icon}
               </span>
               <div>
-                <h4 className="font-bold text-sm text-white group-hover:text-blue-400 transition-colors truncate max-w-[120px]">
+                <h4 className="font-bold text-sm text-white group-hover:text-violet-400 transition-colors truncate max-w-[120px]">
                   {tool.name}
                 </h4>
-                <span className="text-[9px] font-mono text-[#8899BB] uppercase">{tool.category}</span>
+                <span className="text-[9px] font-mono text-[#A1A1AA] uppercase">{tool.category}</span>
               </div>
             </div>
             
             <div className="text-right">
               <span className="text-lg font-black font-mono text-white">{tool.score}</span>
-              <p className="text-[8px] font-mono text-[#8899BB]/50 uppercase tracking-widest leading-none">score</p>
+              <p className="text-[8px] font-mono text-[#A1A1AA]/50 uppercase tracking-widest leading-none">score</p>
             </div>
           </div>
 
           {/* Indicators details */}
-          <div className="flex items-end justify-between border-t border-blue-500/5 pt-3 relative z-10">
-            <div className="flex items-center gap-1 text-[10px] font-mono text-[#8899BB]">
+          <div className="flex items-end justify-between border-t border-violet-500/5 pt-3 relative z-10">
+            <div className="flex items-center gap-1 text-[10px] font-mono text-[#A1A1AA]">
               <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
               <span>{tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(1)}k` : tool.stars}</span>
             </div>
             
             {isEntry && (
-              <span className="px-2 py-0.5 bg-blue-600 rounded text-[8px] font-mono font-bold text-white uppercase tracking-wider flex items-center gap-1 shadow-sm">
+              <span className="px-2 py-0.5 bg-violet-600 rounded text-[8px] font-mono font-bold text-white uppercase tracking-wider flex items-center gap-1 shadow-sm">
                 <GraduationCap className="w-3 h-3" /> ENTRY NODE
               </span>
             )}
 
-            <span className="text-[9px] font-mono text-blue-400 group-hover:text-white flex items-center gap-0.5">
+            <span className="text-[9px] font-mono text-violet-400 group-hover:text-white flex items-center gap-0.5">
               Hover to Flip <ArrowRight className="w-2.5 h-2.5 animate-pulse" />
             </span>
           </div>
         </div>
 
         {/* BACK SIDE */}
-        <div className="absolute inset-0 h-full w-full rounded-2xl border border-blue-400/20 bg-[#0A0F1E] p-5 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-between shadow-lg overflow-hidden">
-          <div className="absolute inset-0 bg-radial-gradient from-blue-500/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 h-full w-full rounded-2xl border border-violet-400/20 bg-[#111113] p-5 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-between shadow-lg overflow-hidden">
+          <div className="absolute inset-0 bg-radial-gradient from-violet-500/5 to-transparent pointer-events-none" />
           
           <div className="space-y-2">
-            <h5 className="font-bold text-xs text-white uppercase tracking-wider font-mono flex items-center gap-1.5 border-b border-blue-500/5 pb-1">
-              <Award className="w-3.5 h-3.5 text-blue-400" /> TELEMETRY METRIC
+            <h5 className="font-bold text-xs text-white uppercase tracking-wider font-mono flex items-center gap-1.5 border-b border-violet-500/5 pb-1">
+              <Award className="w-3.5 h-3.5 text-violet-400" /> TELEMETRY METRIC
             </h5>
-            <p className="text-[10px] text-[#8899BB] leading-relaxed line-clamp-3 font-sans font-light">
+            <p className="text-[10px] text-[#A1A1AA] leading-relaxed line-clamp-3 font-sans font-light">
               {tool.description || "No signal summary provided. Tracking metrics show positive Adoption."}
             </p>
           </div>
 
           <div className="space-y-2">
             {/* Prerequisite and Growth */}
-            <div className="flex justify-between font-mono text-[9px] text-[#8899BB]/70">
+            <div className="flex justify-between font-mono text-[9px] text-[#A1A1AA]/70">
               <span>GROWTH SPEED: <b className={growthColor}>{growthStr}</b></span>
               {parentSlug ? (
-                <span>REQ: <b className="text-indigo-400 capitalize">{parentSlug}</b></span>
+                <span>REQ: <b className="text-cyan-400 capitalize">{parentSlug}</b></span>
               ) : (
                 <span>NO PRE-REQ</span>
               )}
@@ -366,7 +366,7 @@ function ThreeDFlipCard({
             {/* Link details CTA */}
             <Link
               href={`/tools/${tool.slug}`}
-              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded bg-blue-600 hover:bg-blue-500 transition-colors font-mono text-[10px] font-bold text-white uppercase text-center"
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded bg-violet-600 hover:bg-violet-500 transition-colors font-mono text-[10px] font-bold text-white uppercase text-center"
             >
               <Eye className="w-3 h-3" /> ANALYZE MATRIX
             </Link>

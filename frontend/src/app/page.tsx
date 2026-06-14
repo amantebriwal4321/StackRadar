@@ -5,11 +5,14 @@ import Link from "next/link";
 import {
   Zap, TrendingUp, Loader2, RefreshCw, Search,
   Sparkles, ArrowRight, Brain, Compass, Star,
-  Shield, Globe, Database, Cpu, MessageSquare, Terminal, Eye
+  Shield, Globe, Database, Cpu, MessageSquare, Terminal, Eye,
+  Layers, Code2, ChevronRight, Activity, BarChart3, Rocket,
+  Users, BookOpen, GitBranch, Flame
 } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -39,12 +42,74 @@ function getRelativeTime(isoString: string): string {
   return `${Math.floor(diffHr / 24)}d ago`;
 }
 
+/* ─── Animated Counter ─── */
+function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; suffix?: string; prefix?: string }) {
+  const [display, setDisplay] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    const duration = 2000;
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      const current = Math.floor(start + (end - start) * eased);
+      setDisplay(current);
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+  }, [value]);
+
+  return <span ref={ref}>{prefix}{display.toLocaleString()}{suffix}</span>;
+}
+
 /* ─── Decision Prompts ─── */
 const decisionPrompts = [
   { icon: "🛠️", label: "What should I build?", query: "build ideas" },
   { icon: "📚", label: "What should I learn?", query: "learning" },
   { icon: "🚀", label: "Startup opportunities", query: "startup" },
   { icon: "📈", label: "What's trending?", query: "trending" },
+];
+
+/* ─── Process Steps ─── */
+const processSteps = [
+  {
+    num: "01",
+    title: "Ingest Stream",
+    desc: "We crawl GitHub, Reddit, HN, and developer newsletters continuously to capture discussion peaks and code metrics.",
+    icon: Database,
+    gradient: "from-violet-500 to-cyan-500",
+    color: "text-violet-400",
+  },
+  {
+    num: "02",
+    title: "Analyze & NLP",
+    desc: "Our models parse discussions to assign positive/negative sentiment labels and classify tool relevance.",
+    icon: Brain,
+    gradient: "from-cyan-500 to-pink-500",
+    color: "text-cyan-400",
+  },
+  {
+    num: "03",
+    title: "Score Momentum",
+    desc: "Technologies are ranked dynamically by delta change rates, star ratios, and category concentration percentiles.",
+    icon: Activity,
+    gradient: "from-purple-500 to-cyan-500",
+    color: "text-purple-400",
+  },
+  {
+    num: "04",
+    title: "Deliver Roadmap",
+    desc: "We compile sequence learning paths and detailed tech profiles for developers to construct decisions.",
+    icon: Rocket,
+    gradient: "from-cyan-500 to-emerald-500",
+    color: "text-cyan-400",
+  },
 ];
 
 export default function HomePage() {
@@ -62,6 +127,23 @@ export default function HomePage() {
   
   // Interactive Comparison Framework State
   const [selectedCompareTech, setSelectedCompareTech] = useState<"react" | "vue" | "bun">("react");
+
+  // Mouse parallax for hero
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 50, damping: 30 });
+  const springY = useSpring(mouseY, { stiffness: 50, damping: 30 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 30;
+      const y = (e.clientY / window.innerHeight - 0.5) * 30;
+      mouseX.set(x);
+      mouseY.set(y);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   /* ─── Fetch Home Page Data ─── */
   useEffect(() => {
@@ -137,38 +219,98 @@ export default function HomePage() {
 
     const tl = gsap.timeline();
 
-    // Fade in structural visual dots and glows
-    tl.fromTo(".bg-glow-overlay", { opacity: 0 }, { opacity: 1, duration: 1.5, ease: "power2.out" });
-
     // Hero title line-by-line reveal
     tl.fromTo(
       ".hero-line",
-      { y: 80, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.9, stagger: 0.15, ease: "power4.out" },
-      "-=1.0"
+      { y: 100, opacity: 0, rotateX: -15 },
+      { y: 0, opacity: 1, rotateX: 0, duration: 1.1, stagger: 0.12, ease: "power4.out" },
+      0.3
     );
 
     // Hero description & components
     tl.fromTo(
       ".hero-anim-item",
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power3.out" },
-      "-=0.5"
+      { y: 40, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.9, stagger: 0.1, ease: "power3.out" },
+      "-=0.6"
     );
 
-    // Grid staggers
+    // 3D sphere area entrance
+    tl.fromTo(
+      ".sphere-container",
+      { scale: 0.8, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 1.2, ease: "power3.out" },
+      "-=0.8"
+    );
+
+    // Scroll-triggered section reveals
+    gsap.utils.toArray<HTMLElement>(".section-reveal").forEach((el) => {
+      gsap.fromTo(el,
+        { y: 60, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 85%",
+            toggleActions: "play none none none",
+          }
+        }
+      );
+    });
+
+    // Stagger card reveals
+    gsap.utils.toArray<HTMLElement>(".stagger-grid-trigger").forEach((trigger) => {
+      gsap.fromTo(
+        trigger.querySelectorAll(".stagger-card"),
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          stagger: 0.1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger,
+            start: "top 80%",
+          }
+        }
+      );
+    });
+
+    // Process steps timeline
     gsap.fromTo(
-      ".stagger-card",
-      { y: 40, opacity: 0 },
+      ".process-step",
+      { y: 40, opacity: 0, scale: 0.95 },
       {
         y: 0,
         opacity: 1,
-        duration: 0.6,
-        stagger: 0.08,
-        ease: "power2.out",
+        scale: 1,
+        duration: 0.7,
+        stagger: 0.15,
+        ease: "power3.out",
         scrollTrigger: {
-          trigger: ".stagger-grid-trigger",
-          start: "top 80%",
+          trigger: ".process-section",
+          start: "top 75%",
+        }
+      }
+    );
+
+    // CTA section
+    gsap.fromTo(
+      ".cta-section",
+      { y: 60, opacity: 0, scale: 0.96 },
+      {
+        y: 0,
+        opacity: 1,
+        scale: 1,
+        duration: 1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: ".cta-section",
+          start: "top 85%",
         }
       }
     );
@@ -235,30 +377,52 @@ export default function HomePage() {
     }
   };
 
+  // Stats for the hero area
+  const heroStats = useMemo(() => ({
+    tools: tools.length || 150,
+    domains: domains.length || 8,
+    discussions: 48931,
+    accuracy: 98.4,
+  }), [tools, domains]);
+
   return (
     <DashboardShell fullWidth>
-      <div ref={containerRef} className="space-y-12 relative pb-24">
+      <div ref={containerRef} className="relative pb-24">
 
       {/* ══════════════════════════════════════════
           SECTION 1: HERO & 3D SPHERE CENTERPIECE
          ══════════════════════════════════════════ */}
-      <section className="relative w-full max-w-7xl mx-auto px-6 pt-10 md:pt-16 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[70vh]">
+      <section className="relative w-full max-w-7xl mx-auto px-6 pt-16 md:pt-24 pb-16 min-h-[90vh] flex items-center">
+        
+        {/* Hero background gradient mesh */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-500/[0.04] rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/[0.05] rounded-full blur-[100px]" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full">
           
           {/* Left Column: Hero Copy */}
           <div className="lg:col-span-7 space-y-8 z-10 text-left">
             
             {/* Real-time Indicator Pill */}
-            <div className="hero-anim-item inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 text-xs font-mono font-bold text-blue-400 tracking-wider">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.6 }}
+              className="hero-anim-item inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-violet-500/20 bg-violet-500/[0.06] text-xs font-mono font-bold text-violet-400 tracking-wider"
+            >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
               </span>
               REAL-TIME WEB TELEMETRY
-            </div>
+              <span className="w-px h-3 bg-violet-500/30" />
+              <span className="text-violet-300/60">v2.0</span>
+            </motion.div>
 
             {/* Split Header Titles */}
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.95] font-display">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[0.92] font-display" style={{ perspective: "1000px" }}>
               <span className="block overflow-hidden">
                 <span className="hero-line block">The Internet</span>
               </span>
@@ -266,14 +430,14 @@ export default function HomePage() {
                 <span className="hero-line block">is talking.</span>
               </span>
               <span className="block overflow-hidden">
-                <span className="hero-line block text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-indigo-400 to-cyan-400">
+                <span className="hero-line block text-shimmer">
                   Are you listening?
                 </span>
               </span>
             </h1>
 
             {/* Paragraph Subhead */}
-            <p className="hero-anim-item text-base md:text-lg text-[#8899BB] max-w-xl leading-relaxed font-sans font-light">
+            <p className="hero-anim-item text-base md:text-lg text-[#A1A1AA] max-w-xl leading-relaxed font-sans font-light">
               StackRadar continuously listens to developer telemetry across GitHub, Reddit, HackerNews, and forums to map trends, developer sentiment, and startup opportunities before they break out.
             </p>
 
@@ -282,40 +446,40 @@ export default function HomePage() {
               
               {/* Interactive Search Box */}
               <div className="relative group">
-                <div className="absolute -inset-[1px] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl opacity-20 group-focus-within:opacity-60 transition-opacity duration-500 blur-sm" />
-                <div className="relative bg-[#0A0F1E] rounded-xl flex items-center border border-blue-500/10">
-                  <Search className="w-5 h-5 ml-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                <div className="absolute -inset-[1px] bg-gradient-to-r from-violet-500 via-cyan-500 to-cyan-500 rounded-2xl opacity-0 group-focus-within:opacity-40 transition-opacity duration-700 blur-md" />
+                <div className="relative bg-[#111113]/90 backdrop-blur-xl rounded-2xl flex items-center border border-violet-500/10 group-focus-within:border-violet-500/30 transition-colors duration-500">
+                  <Search className="w-5 h-5 ml-5 text-slate-500 group-focus-within:text-violet-400 transition-colors duration-300" />
                   <input
                     ref={searchInputRef}
                     type="text"
                     placeholder="Search technologies, trends, opportunities..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-transparent border-none py-4 px-3 text-sm focus:outline-none text-[#F0F4FF] placeholder-[#8899BB]/50"
+                    className="w-full bg-transparent border-none py-4.5 px-3 text-sm focus:outline-none text-[#FAFAFA] placeholder-[#A1A1AA]/50 font-sans"
                   />
                   {searchQuery ? (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="mr-4 text-xs font-mono text-[#8899BB] hover:text-white px-2 py-1 rounded bg-[#0D1526] transition-colors"
+                      className="mr-4 text-xs font-mono text-[#A1A1AA] hover:text-white px-2.5 py-1 rounded-lg bg-[#18181B] border border-violet-500/10 transition-colors cursor-pointer"
                     >
                       CLEAR
                     </button>
                   ) : (
-                    <kbd className="hidden sm:inline-flex mr-4 h-6 select-none items-center gap-0.5 rounded border border-[#2563EB]/20 bg-[#0D1526] px-2 font-mono text-[10px] font-bold text-[#8899BB]">
+                    <kbd className="hidden sm:inline-flex mr-4 h-7 select-none items-center gap-0.5 rounded-lg border border-[#A78BFA]/15 bg-[#18181B] px-2.5 font-mono text-[10px] font-bold text-[#A1A1AA]">
                       /
                     </kbd>
                   )}
                 </div>
               </div>
 
-              {/* Suggestions pills */}
-              <div className="flex flex-wrap gap-2 pt-1.5">
-                <span className="text-xs text-[#8899BB]/60 font-mono py-1.5 flex items-center">Try:</span>
+              {/* Suggestion Prompt pills */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <span className="text-xs text-[#A1A1AA]/50 font-mono py-1.5 flex items-center">Try:</span>
                 {decisionPrompts.map((prompt) => (
                   <button
                     key={prompt.query}
                     onClick={() => handlePromptClick(prompt.query)}
-                    className="px-3.5 py-1.5 rounded-full border border-blue-500/10 bg-[#0A0F1E] text-xs font-medium text-[#8899BB] hover:text-[#F0F4FF] hover:border-blue-400/40 hover:bg-[#0D1526] transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
+                    className="px-3.5 py-1.5 rounded-full border border-violet-500/8 bg-[#111113]/60 text-xs font-medium text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-violet-400/30 hover:bg-[#18181B] transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] cursor-pointer backdrop-blur-sm"
                   >
                     <span className="mr-1">{prompt.icon}</span> {prompt.label}
                   </button>
@@ -324,22 +488,66 @@ export default function HomePage() {
 
             </div>
 
+            {/* Mini Stats Row */}
+            <div className="hero-anim-item flex flex-wrap gap-6 pt-4">
+              {[
+                { label: "Technologies Tracked", value: heroStats.tools, suffix: "+" },
+                { label: "Discussions Today", value: heroStats.discussions, prefix: "" },
+                { label: "Telemetry Accuracy", value: heroStats.accuracy, suffix: "%" },
+              ].map((stat) => (
+                <div key={stat.label} className="space-y-1">
+                  <div className="text-2xl font-black font-mono text-[#FAFAFA]">
+                    {!isLoading && <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} />}
+                    {isLoading && <span className="text-[#A1A1AA]/40">—</span>}
+                  </div>
+                  <div className="text-[10px] font-mono text-[#A1A1AA]/60 uppercase tracking-widest">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
           </div>
 
           {/* Right Column: Interactive 3D Sphere */}
-          <div className="lg:col-span-5 h-[350px] md:h-[500px] flex items-center justify-center relative">
+          <motion.div 
+            className="lg:col-span-5 h-[350px] md:h-[520px] flex items-center justify-center relative sphere-container"
+            style={{ x: springX, y: springY }}
+          >
             <div className="absolute inset-0 w-full h-full flex items-center justify-center z-0">
               <TechSphere />
             </div>
             
             {/* Visual Floating Telemetry Tags around sphere */}
-            <div className="absolute top-10 left-12 px-3 py-1 bg-[#0A0F1E]/80 border border-blue-500/20 backdrop-blur-md rounded text-[10px] font-mono text-blue-400 select-none animate-[pulse_6s_infinite_ease-in-out]">
-              ROTATION_X: LERP
-            </div>
-            <div className="absolute bottom-16 right-4 px-3 py-1 bg-[#0A0F1E]/80 border border-indigo-500/20 backdrop-blur-md rounded text-[10px] font-mono text-indigo-400 select-none animate-[pulse_4s_infinite_ease-in-out_1s]">
-              R3F_ICOSPHERE
-            </div>
-          </div>
+            <motion.div
+              className="absolute top-8 left-8 px-3 py-1.5 bg-[#111113]/80 border border-violet-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-violet-400 select-none"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-violet-400" />
+                ROTATION_X: LERP
+              </span>
+            </motion.div>
+            <motion.div
+              className="absolute bottom-14 right-4 px-3 py-1.5 bg-[#111113]/80 border border-cyan-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-cyan-400 select-none"
+              animate={{ y: [0, 6, 0] }}
+              transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-cyan-400" />
+                R3F_ICOSPHERE
+              </span>
+            </motion.div>
+            <motion.div
+              className="absolute top-1/2 right-0 px-3 py-1.5 bg-[#111113]/80 border border-cyan-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-cyan-400 select-none"
+              animate={{ y: [0, -6, 0] }}
+              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut", delay: 2 }}
+            >
+              <span className="flex items-center gap-1.5">
+                <Activity className="w-3 h-3" />
+                48.9K SIGNALS
+              </span>
+            </motion.div>
+          </motion.div>
 
         </div>
       </section>
@@ -347,14 +555,14 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 2: INFINITE SCROLLING TICKERS
          ══════════════════════════════════════════ */}
-      <section className="w-full py-6 border-y border-blue-500/10 bg-[#0A0F1E]/40 overflow-hidden space-y-4">
+      <section className="w-full py-5 border-y border-violet-500/8 bg-[#111113]/30 overflow-hidden space-y-3">
         
         {/* Track 1: Scrolls Left */}
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
             {dynamicSignalsLeft.concat(dynamicSignalsLeft).map((signal, idx) => (
-              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-[#8899BB] tracking-wider uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-[#A1A1AA]/80 tracking-wider uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-500/60" />
                 {signal}
               </span>
             ))}
@@ -365,8 +573,8 @@ export default function HomePage() {
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <div className="ticker-scroll-right flex items-center gap-16 shrink-0">
             {dynamicSignalsRight.concat(dynamicSignalsRight).map((signal, idx) => (
-              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-indigo-300/80 tracking-wider uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-cyan-300/60 tracking-wider uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500/60" />
                 {signal}
               </span>
             ))}
@@ -378,18 +586,19 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 3: DOMAIN CATEGORIES GRID
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-20 stagger-grid-trigger">
+      <section className="max-w-7xl mx-auto px-6 py-24 stagger-grid-trigger section-reveal">
         
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 font-mono text-xs text-blue-400 font-bold uppercase tracking-widest">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 font-mono text-xs text-violet-400 font-bold uppercase tracking-widest">
+              <div className="w-8 h-[2px] bg-gradient-to-r from-violet-500 to-transparent" />
               <Cpu className="w-4 h-4" /> Domains of Intelligence
             </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold font-display">
+            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight">
               Aggregated Tech Domains
             </h2>
           </div>
-          <p className="text-sm text-[#8899BB] max-w-md font-sans font-light leading-relaxed">
+          <p className="text-sm text-[#A1A1AA] max-w-md font-sans font-light leading-relaxed">
             Developer conversations categorized into core segments. We analyze and score each domain recursively.
           </p>
         </div>
@@ -397,49 +606,64 @@ export default function HomePage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map(idx => (
-              <div key={idx} className="h-44 rounded-xl border border-blue-500/5 bg-[#0D1526]/50 animate-pulse" />
+              <div key={idx} className="h-52 rounded-2xl border border-violet-500/5 bg-[#18181B]/30 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {domains.map((domain) => {
-              // Custom scoring scale colors
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {domains.map((domain, i) => {
               const scoreColor = domain.score >= 80 ? "text-emerald-400" : domain.score >= 60 ? "text-amber-400" : "text-rose-400";
-              const scoreBg = domain.score >= 80 ? "bg-emerald-500/10 border-emerald-500/20" : domain.score >= 60 ? "bg-amber-500/10 border-amber-500/20" : "bg-rose-500/10 border-rose-500/20";
+              const scoreBg = domain.score >= 80 ? "bg-emerald-500/10 border-emerald-500/15" : domain.score >= 60 ? "bg-amber-500/10 border-amber-500/15" : "bg-rose-500/10 border-rose-500/15";
+              const scoreBarColor = domain.score >= 80 ? "bg-emerald-500" : domain.score >= 60 ? "bg-amber-500" : "bg-rose-500";
               
               return (
-                <div
+                <motion.div
                   key={domain.slug}
-                  className="stagger-card group block p-6 rounded-xl border border-blue-500/10 bg-[#0D1526]/40 hover:bg-[#0D1526]/75 hover:border-blue-400/30 transition-all duration-300 relative overflow-hidden"
+                  className="stagger-card group block p-6 rounded-2xl border border-violet-500/8 bg-[#18181B]/30 hover:bg-[#18181B]/60 hover:border-violet-400/20 transition-all duration-500 relative overflow-hidden card-hover-glow"
+                  whileHover={{ y: -4 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
-                  {/* Subtle inner card gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  {/* Inner gradient reveal */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                   
-                  {/* Header info */}
-                  <div className="flex items-start justify-between relative mb-4">
-                    <div className="p-3 bg-[#0A0F1E] border border-blue-500/10 rounded-lg group-hover:border-blue-400/40 group-hover:scale-105 transition-all">
+                  {/* Header */}
+                  <div className="flex items-start justify-between relative mb-5">
+                    <div className="p-3 bg-[#111113]/80 border border-violet-500/8 rounded-xl group-hover:border-violet-400/25 group-hover:scale-105 transition-all duration-300">
                       <span className="text-2xl">{domain.icon || "📂"}</span>
                     </div>
                     
-                    <div className={`px-2.5 py-1 rounded-md border text-xs font-mono font-bold ${scoreBg} ${scoreColor}`}>
-                      SCORE {domain.score}
+                    <div className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold ${scoreBg} ${scoreColor}`}>
+                      {domain.score}
                     </div>
                   </div>
 
-                  {/* Body copy */}
-                  <h3 className="text-lg font-bold font-display group-hover:text-blue-400 transition-colors mb-2">
+                  {/* Body */}
+                  <h3 className="text-lg font-bold font-display group-hover:text-violet-400 transition-colors duration-300 mb-2">
                     {domain.name}
                   </h3>
-                  <p className="text-xs text-[#8899BB] line-clamp-2 leading-relaxed mb-6 font-light">
+                  <p className="text-xs text-[#A1A1AA] line-clamp-2 leading-relaxed mb-6 font-light">
                     {domain.summary}
                   </p>
 
-                  {/* Bottom Stats details */}
-                  <div className="flex items-center justify-between pt-4 border-t border-blue-500/5 font-mono text-[10px] text-[#8899BB]/70">
-                    <span className="uppercase">{domain.stage} adoption</span>
-                    <span className="text-blue-400 group-hover:text-white transition-colors">{domain.tool_count} technologies monitored</span>
+                  {/* Score progress bar */}
+                  <div className="mb-4">
+                    <div className="h-1 w-full bg-[#111113] rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full ${scoreBarColor} rounded-full`}
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${domain.score}%` }}
+                        transition={{ duration: 1.2, delay: i * 0.1, ease: "easeOut" }}
+                        viewport={{ once: true }}
+                      />
+                    </div>
                   </div>
-                </div>
+
+                  {/* Footer stats */}
+                  <div className="flex items-center justify-between font-mono text-[10px] text-[#A1A1AA]/60">
+                    <span className="uppercase">{domain.stage} adoption</span>
+                    <span className="text-violet-400/70 group-hover:text-violet-400 transition-colors">{domain.tool_count} technologies</span>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
@@ -447,206 +671,217 @@ export default function HomePage() {
 
       </section>
 
+      {/* ─── Glow Line Separator ─── */}
+      <div className="glow-line max-w-4xl mx-auto" />
+
       {/* ══════════════════════════════════════════
           SECTION 4: HORIZONTAL TRENDING MOVERS
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-12 relative">
-        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#050810] to-transparent pointer-events-none z-10 hidden md:block" />
+      <section className="max-w-7xl mx-auto px-6 py-24 relative section-reveal">
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#09090B] to-transparent pointer-events-none z-10 hidden md:block" />
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#09090B] to-transparent pointer-events-none z-10 hidden md:block" />
         
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-1.5 h-6 bg-blue-500 rounded" />
-          <h2 className="text-xl md:text-2xl font-bold font-display uppercase tracking-tight">
-            Trending Movers (Momentum Delta)
-          </h2>
-          <div className="flex-1 h-[1px] bg-blue-500/10" />
-          <span className="text-[10px] font-mono text-blue-400 uppercase tracking-wider font-semibold">
-            Fastest Growing This Cycle
-          </span>
+        <div className="flex flex-col md:flex-row md:items-end gap-4 mb-10">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 font-mono text-xs text-violet-400 font-bold uppercase tracking-widest">
+              <div className="w-8 h-[2px] bg-gradient-to-r from-violet-500 to-transparent" />
+              <Flame className="w-4 h-4" /> Momentum Delta
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black font-display tracking-tight">
+              Trending Movers
+            </h2>
+          </div>
+          <div className="md:ml-auto">
+            <span className="text-[10px] font-mono text-violet-400/60 uppercase tracking-wider font-semibold">
+              Fastest Growing This Cycle
+            </span>
+          </div>
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[1, 2, 3].map(idx => (
-              <div key={idx} className="h-36 rounded-xl border border-blue-500/5 bg-[#0D1526]/50 animate-pulse" />
+              <div key={idx} className="h-40 rounded-2xl border border-violet-500/5 bg-[#18181B]/30 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory">
-            {topGainers.map((tool) => (
-              <div
+          <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory relative z-20">
+            {topGainers.map((tool, i) => (
+              <motion.div
                 key={tool.slug}
-                className="tool-score-card snap-start shrink-0 w-full sm:w-[320px] p-5 rounded-xl border border-blue-500/10 bg-[#0D1526]/40 hover:border-indigo-400/30 transition-all duration-300 relative group"
+                className="tool-score-card snap-start shrink-0 w-full sm:w-[340px] p-6 rounded-2xl border border-violet-500/8 bg-[#18181B]/30 hover:border-cyan-400/25 transition-all duration-500 relative group card-hover-glow"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.6 }}
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-3xl p-2 bg-[#0A0F1E] border border-blue-500/10 rounded-lg group-hover:border-indigo-500/30 transition-all">
+                {/* Gradient inner */}
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl" />
+                
+                <div className="flex items-center gap-4 mb-5 relative">
+                  <span className="text-3xl p-2.5 bg-[#111113]/80 border border-violet-500/8 rounded-xl group-hover:border-cyan-500/25 group-hover:scale-105 transition-all duration-300">
                     {tool.icon}
                   </span>
                   <div>
-                    <h3 className="font-bold text-sm text-[#F0F4FF] group-hover:text-blue-400 transition-colors">
+                    <h3 className="font-bold text-sm text-[#FAFAFA] group-hover:text-violet-400 transition-colors duration-300">
                       {tool.name}
                     </h3>
-                    <p className="text-[10px] text-[#8899BB] font-mono">{tool.category}</p>
+                    <p className="text-[10px] text-[#A1A1AA]/60 font-mono">{tool.category}</p>
                   </div>
                   
                   <div className="ml-auto text-right">
-                    <span className="text-lg font-black font-mono text-[#F0F4FF]">{tool.score}</span>
-                    <p className="text-[8px] font-mono text-[#8899BB] uppercase">score</p>
+                    <span className="text-2xl font-black font-mono text-[#FAFAFA]">{tool.score}</span>
+                    <p className="text-[8px] font-mono text-[#A1A1AA]/50 uppercase tracking-wider">score</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-blue-500/5 pt-3 font-mono text-xs">
-                  <div className="flex items-center gap-1 text-emerald-400 font-bold">
+                <div className="flex items-center justify-between border-t border-violet-500/5 pt-4 font-mono text-xs relative">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
                     <TrendingUp className="w-3.5 h-3.5" />
                     +{tool.growth_pct.toFixed(1)}%
                   </div>
                   
-                  <div className="flex items-center gap-1 text-[#8899BB] text-[10px]">
+                  <div className="flex items-center gap-1 text-[#A1A1AA]/60 text-[10px]">
                     <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     {tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}
                   </div>
 
                   <Link
                     href={`/tools/${tool.slug}`}
-                    className="text-[10px] text-blue-400 group-hover:text-white transition-all flex items-center gap-0.5 hover:underline"
+                    className="text-[10px] text-violet-400/70 group-hover:text-violet-400 transition-all flex items-center gap-0.5 hover:underline"
                   >
-                    View <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    Explore <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-300" />
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
       </section>
 
+      {/* ─── Glow Line Separator ─── */}
+      <div className="glow-line max-w-4xl mx-auto" />
+
       {/* ══════════════════════════════════════════
           SECTION 5: REACT VS VUE VS BUN SPLIT
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-20">
-        <div className="glass-panel rounded-2xl p-8 border border-blue-500/10 relative overflow-hidden">
+      <section className="max-w-7xl mx-auto px-6 py-24 section-reveal">
+        <div className="glass-panel rounded-3xl p-8 md:p-10 border border-violet-500/8 relative overflow-hidden">
           
-          {/* Subtle light mesh */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(99,102,241,0.05),transparent_60%)] pointer-events-none" />
+          {/* Ambient background mesh */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(99,102,241,0.04),transparent_60%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,rgba(37,99,235,0.04),transparent_60%)] pointer-events-none" />
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
             
-            {/* Split description column */}
-            <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
+            {/* Description column */}
+            <div className="lg:col-span-5 space-y-8 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest block mb-2">
-                  Interactive Telemetry Comparisons
-                </span>
-                <h3 className="text-3xl font-black font-display tracking-tight mb-4">
-                  Framework Momentum Compare
+                <div className="inline-flex items-center gap-2 font-mono text-xs text-cyan-400 font-bold uppercase tracking-widest mb-3">
+                  <div className="w-8 h-[2px] bg-gradient-to-r from-cyan-500 to-transparent" />
+                  Interactive Telemetry
+                </div>
+                <h3 className="text-3xl md:text-4xl font-black font-display tracking-tight mb-4">
+                  Framework Momentum<br/>
+                  <span className="text-shimmer">Compare</span>
                 </h3>
-                <p className="text-sm text-[#8899BB] leading-relaxed font-sans font-light">
+                <p className="text-sm text-[#A1A1AA] leading-relaxed font-sans font-light">
                   Compare real-time Adoption, Sentiment, GitHub delta, and community velocity of leading development frameworks inside the StackRadar parser index.
                 </p>
               </div>
 
               {/* Selection Tabs */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {(["react", "vue", "bun"] as const).map((tech) => (
                   <button
                     key={tech}
                     onClick={() => setSelectedCompareTech(tech)}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl border font-mono text-xs uppercase tracking-wider text-left transition-all duration-300 ${
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border font-mono text-xs uppercase tracking-wider text-left transition-all duration-400 cursor-pointer ${
                       selectedCompareTech === tech
-                        ? "bg-[#2563EB]/15 border-blue-500 text-white shadow-lg shadow-blue-500/5 font-bold scale-[1.02]"
-                        : "bg-[#0A0F1E]/50 border-blue-500/5 text-[#8899BB] hover:text-white hover:border-blue-500/20"
+                        ? "bg-[#A78BFA]/12 border-violet-500/40 text-white shadow-lg shadow-violet-500/5 font-bold"
+                        : "bg-[#111113]/40 border-violet-500/5 text-[#A1A1AA] hover:text-white hover:border-violet-500/15"
                     }`}
                   >
                     <span>{tech === "react" ? "⚛️ React 19 Core" : tech === "vue" ? "💚 Vue 3 Engine" : "⚡ Bun.js Runtime"}</span>
-                    <ArrowRight className={`w-4 h-4 transition-transform duration-300 ${selectedCompareTech === tech ? "translate-x-0" : "-translate-x-2 opacity-0"}`} />
+                    <ChevronRight className={`w-4 h-4 transition-all duration-300 ${selectedCompareTech === tech ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"}`} />
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Metrics Graph/Details split column */}
-            <div className="lg:col-span-7 bg-[#0A0F1E]/80 border border-blue-500/10 rounded-xl p-6 md:p-8 flex flex-col justify-between relative">
+            {/* Metrics column */}
+            <div className="lg:col-span-7 bg-[#111113]/60 border border-violet-500/8 rounded-2xl p-6 md:p-8 flex flex-col justify-between relative">
               
               <div className="space-y-6">
                 
-                <div className="flex items-center justify-between pb-4 border-b border-blue-500/5">
+                <div className="flex items-center justify-between pb-4 border-b border-violet-500/5">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-[#8899BB]/60">ACTIVE TRACKING</span>
+                    <span className="text-xs font-mono text-[#A1A1AA]/50">ACTIVE TRACKING</span>
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
-                  <span className="text-xl font-bold font-mono text-blue-400">
-                    {comparisonData[selectedCompareTech].name}
-                  </span>
+                  <AnimatePresence mode="wait">
+                    <motion.span 
+                      key={selectedCompareTech}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="text-xl font-bold font-mono text-violet-400"
+                    >
+                      {comparisonData[selectedCompareTech].name}
+                    </motion.span>
+                  </AnimatePresence>
                 </div>
 
-                {/* Progress bar comparison values */}
-                <div className="space-y-4 pt-2">
-                  
-                  {/* Metric 1 */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between font-mono text-[10px] text-[#8899BB]">
-                      <span>COMMUNITY SENTIMENT</span>
-                      <span className="font-bold text-white">{comparisonData[selectedCompareTech].sentiment}%</span>
+                {/* Progress bars */}
+                <div className="space-y-5 pt-2">
+                  {[
+                    { label: "COMMUNITY SENTIMENT", value: comparisonData[selectedCompareTech].sentiment, suffix: "%", gradient: "from-violet-500 to-cyan-500" },
+                    { label: "GITHUB ACTIVITY DELTA", value: comparisonData[selectedCompareTech].github_growth, suffix: "%", gradient: "from-cyan-500 to-cyan-500" },
+                    { label: "DEVELOPER VELOCITY SCORE", value: comparisonData[selectedCompareTech].velocity, suffix: "/100", gradient: "from-cyan-500 to-emerald-500" },
+                    { label: "COMMUNITY ADOPTION", value: comparisonData[selectedCompareTech].community, suffix: "%", gradient: "from-emerald-500 to-violet-500" },
+                  ].map((metric) => (
+                    <div key={metric.label} className="space-y-2">
+                      <div className="flex justify-between font-mono text-[10px] text-[#A1A1AA]/70">
+                        <span>{metric.label}</span>
+                        <motion.span 
+                          className="font-bold text-white"
+                          key={`${selectedCompareTech}-${metric.label}`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          {metric.value}{metric.suffix}
+                        </motion.span>
+                      </div>
+                      <div className="h-2 w-full bg-[#18181B] rounded-full overflow-hidden border border-violet-500/5">
+                        <motion.div
+                          className={`h-full bg-gradient-to-r ${metric.gradient} rounded-full`}
+                          key={`bar-${selectedCompareTech}-${metric.label}`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${metric.value}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 w-full bg-[#0D1526] rounded-full overflow-hidden border border-blue-500/5">
-                      <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${comparisonData[selectedCompareTech].sentiment}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Metric 2 */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between font-mono text-[10px] text-[#8899BB]">
-                      <span>GITHUB ACTIVITY DELTA</span>
-                      <span className="font-bold text-white">{comparisonData[selectedCompareTech].github_growth}%</span>
-                    </div>
-                    <div className="h-2 w-full bg-[#0D1526] rounded-full overflow-hidden border border-blue-500/5">
-                      <div
-                        className="h-full bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${comparisonData[selectedCompareTech].github_growth}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Metric 3 */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between font-mono text-[10px] text-[#8899BB]">
-                      <span>DEVELOPER VELOCITY SCORE</span>
-                      <span className="font-bold text-white">{comparisonData[selectedCompareTech].velocity}/100</span>
-                    </div>
-                    <div className="h-2 w-full bg-[#0D1526] rounded-full overflow-hidden border border-blue-500/5">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${comparisonData[selectedCompareTech].velocity}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Metric 4 */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between font-mono text-[10px] text-[#8899BB]">
-                      <span>COMMUNITY MENTAL SHIFT</span>
-                      <span className="font-bold text-white">{comparisonData[selectedCompareTech].community}% ADOPTION</span>
-                    </div>
-                    <div className="h-2 w-full bg-[#0D1526] rounded-full overflow-hidden border border-blue-500/5">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${comparisonData[selectedCompareTech].community}%` }}
-                      />
-                    </div>
-                  </div>
-
+                  ))}
                 </div>
 
               </div>
 
-              {/* Bottom Summary text */}
-              <div className="mt-8 p-4 rounded-lg bg-[#0D1526]/50 border border-blue-500/5">
-                <span className="text-[10px] font-mono text-indigo-300 block mb-1">SIGNAL ANALYSIS</span>
-                <p className="text-xs text-[#8899BB] leading-relaxed font-light font-mono">
-                  {comparisonData[selectedCompareTech].summary}
-                </p>
-              </div>
+              {/* Bottom Summary */}
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={selectedCompareTech}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-8 p-4 rounded-xl bg-[#18181B]/40 border border-violet-500/5"
+                >
+                  <span className="text-[10px] font-mono text-cyan-400/70 block mb-1.5">SIGNAL ANALYSIS</span>
+                  <p className="text-xs text-[#A1A1AA] leading-relaxed font-light font-mono">
+                    {comparisonData[selectedCompareTech].summary}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
 
             </div>
 
@@ -655,21 +890,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          SECTION 6: DIVIDER TICKER
-         ══════════════════════════════════════════ */}
-      <section className="w-full py-4 border-y border-blue-500/10 bg-[#0A0F1E]/30 overflow-hidden">
+      {/* ─── Divider Ticker ─── */}
+      <section className="w-full py-4 border-y border-violet-500/5 bg-[#111113]/20 overflow-hidden">
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
             {[1, 2, 3, 4].map((i) => (
-              <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[#8899BB]/50 tracking-widest uppercase">
+              <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[#A1A1AA]/30 tracking-widest uppercase">
                 <span>SCANNED 48,931 DISCUSSIONS TODAY</span>
                 <span>•</span>
                 <span>98.4% TELEMETRY ACCURACY</span>
                 <span>•</span>
-                <span>NEXT SCAPER CYCLE IN 14 MINS</span>
+                <span>NEXT SCRAPER CYCLE IN 14 MINS</span>
                 <span>•</span>
-                <span>DEEP SPACE THEME INJECTED</span>
+                <span>DEEP SPACE THEME ACTIVE</span>
               </span>
             ))}
           </div>
@@ -677,97 +910,80 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════
-          SECTION 7: HOW-IT-WORKS / PROCESS FLOW
+          SECTION 6: HOW-IT-WORKS / PROCESS FLOW
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-20">
+      <section className="max-w-7xl mx-auto px-6 py-24 process-section">
         
-        <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 font-mono text-xs text-blue-400 font-bold uppercase tracking-widest">
-            <Shield className="w-4 h-4" /> Telemetry Processing pipeline
+        <div className="text-center max-w-2xl mx-auto mb-20 space-y-4 section-reveal">
+          <div className="inline-flex items-center gap-2 font-mono text-xs text-violet-400 font-bold uppercase tracking-widest">
+            <Shield className="w-4 h-4" /> Telemetry Processing Pipeline
           </div>
           <h2 className="text-3xl md:text-5xl font-black font-display leading-tight">
-            How StackRadar Scrapes the Tech Ecosystem
+            How StackRadar Scrapes<br/>
+            <span className="text-shimmer">the Tech Ecosystem</span>
           </h2>
-          <p className="text-sm text-[#8899BB] leading-relaxed font-sans font-light">
+          <p className="text-sm text-[#A1A1AA] leading-relaxed font-sans font-light max-w-lg mx-auto">
             We map community trends through recursive cycles of data ingestion, classification, and prediction models.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
           
-          {/* Connector lines behind steps (desktop only) */}
-          <div className="absolute top-16 left-8 right-8 h-[1px] bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-transparent z-0 hidden md:block" />
+          {/* Desktop connector line */}
+          <div className="absolute top-20 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-violet-500/15 to-transparent z-0 hidden lg:block" />
 
-          {/* Step 1 */}
-          <div className="space-y-4 relative z-10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center font-mono font-bold text-white text-sm shadow-lg shadow-blue-500/10">
-              01
-            </div>
-            <h3 className="text-base font-bold font-display">Ingest Stream</h3>
-            <p className="text-xs text-[#8899BB] leading-relaxed font-light">
-              We crawl GitHub, Reddit, HN, and developer newsletters continuously to capture discussion peaks and code metrics.
-            </p>
-          </div>
-
-          {/* Step 2 */}
-          <div className="space-y-4 relative z-10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center font-mono font-bold text-white text-sm shadow-lg shadow-indigo-500/10">
-              02
-            </div>
-            <h3 className="text-base font-bold font-display">Analyze & NLP</h3>
-            <p className="text-xs text-[#8899BB] leading-relaxed font-light">
-              Our models parse discussions to assign positive/negative sentiment labels and classify tool relevance.
-            </p>
-          </div>
-
-          {/* Step 3 */}
-          <div className="space-y-4 relative z-10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center font-mono font-bold text-white text-sm shadow-lg shadow-cyan-500/10">
-              03
-            </div>
-            <h3 className="text-base font-bold font-display">Score Momentum</h3>
-            <p className="text-xs text-[#8899BB] leading-relaxed font-light">
-              Technologies are ranked dynamically by delta change rates, star ratios, and category concentration percentiles.
-            </p>
-          </div>
-
-          {/* Step 4 */}
-          <div className="space-y-4 relative z-10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center font-mono font-bold text-white text-sm shadow-lg shadow-emerald-500/10">
-              04
-            </div>
-            <h3 className="text-base font-bold font-display">Deliver Roadmap</h3>
-            <p className="text-xs text-[#8899BB] leading-relaxed font-light">
-              We compile sequence learning paths and detailed tech profiles for developers to construct decisions.
-            </p>
-          </div>
-
+          {processSteps.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <motion.div
+                key={step.num}
+                className="process-step relative z-10 p-6 rounded-2xl border border-violet-500/8 bg-[#18181B]/25 hover:bg-[#18181B]/50 transition-all duration-500 group card-hover-glow"
+                whileHover={{ y: -6 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              >
+                {/* Step number badge */}
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center shadow-lg shadow-violet-500/10 mb-5`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+                
+                {/* Step number */}
+                <div className="text-[10px] font-mono text-violet-400/40 mb-2 tracking-widest">STEP {step.num}</div>
+                
+                <h3 className="text-lg font-bold font-display group-hover:text-violet-400 transition-colors duration-300 mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-xs text-[#A1A1AA] leading-relaxed font-light">
+                  {step.desc}
+                </p>
+              </motion.div>
+            );
+          })}
         </div>
 
       </section>
 
+      {/* ─── Glow Line Separator ─── */}
+      <div className="glow-line max-w-4xl mx-auto" />
+
       {/* ══════════════════════════════════════════
-          SECTION 8: CIRCULAR RADAR CTA FOOTER
+          SECTION 7: CTA FOOTER WITH RADAR
          ══════════════════════════════════════════ */}
-      <section className="max-w-5xl mx-auto px-6 py-12">
-        <div className="glass-panel-glow rounded-3xl p-12 text-center relative overflow-hidden border border-blue-500/20 bg-[#0D1526]/80">
+      <section className="max-w-5xl mx-auto px-6 py-24 cta-section">
+        <div className="glass-panel-glow rounded-3xl p-10 md:p-14 text-center relative overflow-hidden border border-violet-500/15 bg-[#18181B]/70">
           
-          {/* Sweeping Radar SVG Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-[0.15] pointer-events-none select-none">
-            <svg width="600" height="600" viewBox="0 0 600 600" fill="none" className="text-blue-500">
-              {/* Radar Rings */}
+          {/* Radar SVG Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.1] pointer-events-none select-none">
+            <svg width="600" height="600" viewBox="0 0 600 600" fill="none" className="text-violet-500">
               <circle cx="300" cy="300" r="280" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" />
               <circle cx="300" cy="300" r="200" stroke="currentColor" strokeWidth="0.5" />
               <circle cx="300" cy="300" r="120" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
               <circle cx="300" cy="300" r="60" stroke="currentColor" strokeWidth="0.5" />
               
-              {/* Sweeping line */}
               <g className="origin-center animate-[spin_12s_linear_infinite]">
                 <line x1="300" y1="300" x2="300" y2="20" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M 300,20 A 280,280 0 0,0 102,102 L 300,300 Z" fill="url(#radar-sweep)" opacity="0.4" />
               </g>
               
-              {/* Radar Gradients */}
               <defs>
                 <radialGradient id="radar-sweep" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="currentColor" stopOpacity="0.4" />
@@ -777,28 +993,36 @@ export default function HomePage() {
             </svg>
           </div>
 
-          {/* Interactive Sparkles in Footer */}
-          <Sparkles className="w-10 h-10 mx-auto text-blue-400 mb-6 animate-pulse" />
+          {/* Content */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <Sparkles className="w-10 h-10 mx-auto text-violet-400 mb-6" />
+          </motion.div>
           
           <h3 className="text-3xl md:text-5xl font-black font-display tracking-tight max-w-2xl mx-auto leading-tight mb-4">
-            Dive Deeper Into The Technology Universe
+            Dive Deeper Into The<br/>
+            <span className="text-shimmer">Technology Universe</span>
           </h3>
           
-          <p className="text-sm md:text-base text-[#8899BB] max-w-lg mx-auto leading-relaxed mb-8 font-light">
+          <p className="text-sm md:text-base text-[#A1A1AA] max-w-lg mx-auto leading-relaxed mb-10 font-light">
             Compare languages, analyze user sentiments, and explore sequential learning roadmaps built from developer behaviors.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 relative z-10">
             <Link
               href="/explore"
-              className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.04] active:scale-[0.96] shadow-lg shadow-blue-500/20 flex items-center gap-2"
+              className="btn-primary text-sm py-3 px-7 rounded-2xl flex items-center gap-2"
             >
               <Compass className="w-4 h-4" /> Explore Universe
             </Link>
             
             <Link
               href="/roadmaps"
-              className="px-6 py-3.5 rounded-xl border border-blue-500/20 bg-[#0A0F1E] hover:bg-[#0D1526] hover:border-blue-400/40 text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.04] active:scale-[0.96] flex items-center gap-2"
+              className="px-7 py-3 rounded-2xl border border-violet-500/15 bg-[#111113]/60 backdrop-blur-sm hover:bg-[#18181B] hover:border-violet-400/30 text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center gap-2 font-bold font-mono"
             >
               Start Learning <ArrowRight className="w-4 h-4" />
             </Link>
@@ -808,9 +1032,9 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════
-          LIVE INTEGRATION FEED LIST
+          LIVE INTEGRATION FEED FOOTER
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-12 border-t border-blue-500/5">
+      <section className="max-w-7xl mx-auto px-6 py-10 border-t border-violet-500/5">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           
           <div className="flex items-center gap-4">
@@ -819,15 +1043,16 @@ export default function HomePage() {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
             </div>
             <div>
-              <p className="text-xs font-mono text-[#8899BB] uppercase">TELEMETRY STREAM</p>
+              <p className="text-xs font-mono text-[#A1A1AA]/50 uppercase tracking-wider">TELEMETRY STREAM</p>
               <h3 className="text-sm font-bold text-white">Live Parser Stream Active</h3>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 text-xs font-mono text-[#8899BB]">
-            <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-blue-400" /> RSS NEWS</span>
-            <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-indigo-400" /> REDDIT DISCUSSIONS</span>
-            <span className="flex items-center gap-1.5"><Terminal className="w-3.5 h-3.5 text-cyan-400" /> GITHUB EVENTS</span>
+          <div className="flex flex-wrap gap-5 text-xs font-mono text-[#A1A1AA]/50">
+            <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-violet-400/60" /> RSS NEWS</span>
+            <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-cyan-400/60" /> REDDIT</span>
+            <span className="flex items-center gap-1.5"><Terminal className="w-3.5 h-3.5 text-cyan-400/60" /> GITHUB</span>
+            <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-emerald-400/60" /> HACKERNEWS</span>
           </div>
 
         </div>
@@ -837,3 +1062,4 @@ export default function HomePage() {
     </DashboardShell>
   );
 }
+

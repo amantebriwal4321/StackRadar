@@ -85,8 +85,8 @@ export default function RoadmapPage() {
     return (
       <DashboardShell>
         <div className="flex flex-col items-center justify-center py-32 gap-3">
-          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-          <span className="text-xs font-mono text-[#8899BB]/70">Retrieving sequence map...</span>
+          <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+          <span className="text-xs font-mono text-[#A1A1AA]/70">Retrieving sequence map...</span>
         </div>
       </DashboardShell>
     );
@@ -96,10 +96,10 @@ export default function RoadmapPage() {
     return (
       <DashboardShell>
         <div className="flex items-center justify-center py-32 text-muted-foreground">
-          <div className="text-center space-y-4 max-w-sm glass-panel p-8 rounded-xl border border-blue-500/10">
+          <div className="text-center space-y-4 max-w-sm glass-panel p-8 rounded-xl border border-violet-500/10">
             <span className="text-3xl">⚠️</span>
             <p className="font-mono text-xs">{error || "Roadmap not found"}</p>
-            <Link href="/roadmaps" className="inline-block text-xs font-mono bg-[#0D1526] hover:bg-[#0D1526]/80 text-[#8899BB] hover:text-white px-4 py-2 border border-blue-500/10 rounded transition-all">
+            <Link href="/roadmaps" className="inline-block text-xs font-mono bg-[#18181B] hover:bg-[#18181B]/80 text-[#A1A1AA] hover:text-white px-4 py-2 border border-violet-500/10 rounded transition-all">
               RETURN_TO_ROADMAPS
             </Link>
           </div>
@@ -114,39 +114,39 @@ export default function RoadmapPage() {
     <DashboardShell>
       
       {/* Page Glow backdrop */}
-      <div className="absolute top-0 right-1/4 w-[350px] h-[350px] rounded-full bg-blue-500/5 blur-[100px] pointer-events-none z-0" />
+      <div className="absolute top-0 right-1/4 w-[350px] h-[350px] rounded-full bg-violet-500/5 blur-[100px] pointer-events-none z-0" />
 
       <div className="max-w-4xl mx-auto space-y-8 relative z-10 pb-16">
 
         {/* Back navigation */}
-        <Link href="/roadmaps" className="inline-flex items-center text-xs font-mono text-[#8899BB] hover:text-white transition-colors">
+        <Link href="/roadmaps" className="inline-flex items-center text-xs font-mono text-[#A1A1AA] hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> RETURN_TO_ROADMAPS
         </Link>
 
         {/* Cinematic Header Block */}
-        <header className="p-6 md:p-8 rounded-2xl border border-blue-500/10 bg-[#0A0F1E]/80 backdrop-blur-md text-center space-y-4 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent pointer-events-none" />
+        <header className="p-6 md:p-8 rounded-2xl border border-violet-500/10 bg-[#111113]/80 backdrop-blur-md text-center space-y-4 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-transparent pointer-events-none" />
           
-          <div className="w-16 h-16 bg-[#0D1526] border border-blue-500/10 rounded-2xl mx-auto flex items-center justify-center text-4xl rotate-3 shadow-md shadow-blue-500/5 select-none">
+          <div className="w-16 h-16 bg-[#18181B] border border-violet-500/10 rounded-2xl mx-auto flex items-center justify-center text-4xl rotate-3 shadow-md shadow-violet-500/5 select-none">
             {roadmap.icon}
           </div>
           
           <div className="space-y-2">
-            <span className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest block">
+            <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-widest block">
               SEQUENTIAL EDUCATION TRACK
             </span>
             <h1 className="text-3xl md:text-5xl font-black font-display text-white tracking-tight">
               Master {roadmap.title}
             </h1>
-            <p className="text-sm text-[#8899BB] leading-relaxed max-w-xl mx-auto font-light">
+            <p className="text-sm text-[#A1A1AA] leading-relaxed max-w-xl mx-auto font-light">
               {roadmap.description || "Guided step-by-step tracks structured directly from monitored technology specifications."}
             </p>
           </div>
 
-          <div className="flex justify-center gap-6 pt-2 font-mono text-[10px] text-[#8899BB] uppercase">
-            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-blue-400" /> ~{roadmap.estimated_weeks} weeks duration</span>
+          <div className="flex justify-center gap-6 pt-2 font-mono text-[10px] text-[#A1A1AA] uppercase">
+            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-violet-400" /> ~{roadmap.estimated_weeks} weeks duration</span>
             <span>•</span>
-            <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-indigo-400" /> {steps.length} learning modules</span>
+            <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-cyan-400" /> {steps.length} learning modules</span>
           </div>
         </header>
 
@@ -154,32 +154,32 @@ export default function RoadmapPage() {
         <div ref={timelineRef} className="relative pl-12 md:pl-20 pr-2 space-y-6">
           
           {/* Static Background track Line */}
-          <div className="absolute left-[2.35rem] md:left-[4.35rem] top-10 bottom-10 w-0.5 bg-blue-500/10 z-0" />
+          <div className="absolute left-[2.35rem] md:left-[4.35rem] top-10 bottom-10 w-0.5 bg-violet-500/10 z-0" />
           
           {/* Active scroll-linked neon line */}
           <div
-            className="absolute left-[2.35rem] md:left-[4.35rem] top-10 w-0.5 bg-gradient-to-b from-blue-500 via-indigo-500 to-cyan-400 shadow-[0_0_10px_rgba(37,99,235,0.4)] z-0 transition-all duration-300 ease-out"
+            className="absolute left-[2.35rem] md:left-[4.35rem] top-10 w-0.5 bg-gradient-to-b from-violet-500 via-cyan-500 to-cyan-400 shadow-[0_0_10px_rgba(37,99,235,0.4)] z-0 transition-all duration-300 ease-out"
             style={{ height: `${scrollFillHeight}%` }}
           />
 
           {steps.map((step, idx) => {
-            const levelStyle = levelBadgeColors[step.level] || "bg-blue-500/10 text-blue-400 border border-blue-500/20";
-            const levelDotClass = levelColors[step.level] || "bg-blue-500";
+            const levelStyle = levelBadgeColors[step.level] || "bg-violet-500/10 text-violet-400 border border-violet-500/20";
+            const levelDotClass = levelColors[step.level] || "bg-violet-500";
             
             return (
               <div
                 key={idx}
-                className="glass-panel p-6 rounded-2xl border border-blue-500/10 bg-[#0D1526]/40 hover:bg-[#0D1526]/70 hover:border-blue-400/30 transition-all duration-300 relative group flex gap-5 items-start slide-up z-10"
+                className="glass-panel p-6 rounded-2xl border border-violet-500/10 bg-[#18181B]/40 hover:bg-[#18181B]/70 hover:border-violet-400/30 transition-all duration-300 relative group flex gap-5 items-start slide-up z-10"
                 style={{ animationDelay: `${idx * 60}ms` }}
               >
                 {/* Floating Module Indicator Label */}
-                <div className="absolute -left-12 md:-left-20 top-7 font-mono text-[9px] text-[#8899BB]/50 uppercase tracking-widest text-right w-8 md:w-14 select-none">
+                <div className="absolute -left-12 md:-left-20 top-7 font-mono text-[9px] text-[#A1A1AA]/50 uppercase tracking-widest text-right w-8 md:w-14 select-none">
                   MOD_[{step.step < 10 ? `0${step.step}` : step.step}]
                 </div>
 
                 {/* Concentric Step node */}
                 <div className="shrink-0 z-20 mt-1 select-none">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono font-bold text-xs ring-4 ring-[#050810] border text-white ${levelDotClass}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono font-bold text-xs ring-4 ring-[#09090B] border text-white ${levelDotClass}`}>
                     {step.step}
                   </div>
                 </div>
@@ -188,7 +188,7 @@ export default function RoadmapPage() {
                 <div className="flex-1 space-y-3">
                   
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h3 className="text-base font-extrabold text-white font-display group-hover:text-blue-400 transition-colors">
+                    <h3 className="text-base font-extrabold text-white font-display group-hover:text-violet-400 transition-colors">
                       {step.title}
                     </h3>
                     <span className={`px-2 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-wider ${levelStyle}`}>
@@ -196,15 +196,15 @@ export default function RoadmapPage() {
                     </span>
                   </div>
 
-                  <p className="text-xs md:text-sm text-[#8899BB] leading-relaxed font-light font-mono">
+                  <p className="text-xs md:text-sm text-[#A1A1AA] leading-relaxed font-light font-mono">
                     {step.description}
                   </p>
 
                   {/* Connected Resources */}
                   {step.resources && step.resources.length > 0 && (
-                    <div className="pt-3 border-t border-blue-500/5 flex flex-wrap gap-4 items-center">
-                      <span className="flex items-center gap-1 text-[9px] font-mono text-[#8899BB]/60 uppercase tracking-wider">
-                        <BookOpen className="w-3.5 h-3.5 text-blue-400" /> Syllabus Materials:
+                    <div className="pt-3 border-t border-violet-500/5 flex flex-wrap gap-4 items-center">
+                      <span className="flex items-center gap-1 text-[9px] font-mono text-[#A1A1AA]/60 uppercase tracking-wider">
+                        <BookOpen className="w-3.5 h-3.5 text-violet-400" /> Syllabus Materials:
                       </span>
                       {step.resources.map((res, rIdx) => (
                         <a
@@ -212,7 +212,7 @@ export default function RoadmapPage() {
                           href={res.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[10px] font-mono font-bold text-blue-400 hover:text-white flex items-center gap-0.5 hover:underline"
+                          className="text-[10px] font-mono font-bold text-violet-400 hover:text-white flex items-center gap-0.5 hover:underline"
                         >
                           {res.label}
                           <ArrowRight className="w-3 h-3 translate-y-[0.5px] group-hover:translate-x-0.5 transition-transform" />

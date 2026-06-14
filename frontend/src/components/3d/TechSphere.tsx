@@ -86,7 +86,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
       <mesh ref={sphereRef}>
         <icosahedronGeometry args={[1.4, 2]} />
         <meshBasicMaterial
-          color="#2563EB"
+          color="#A78BFA"
           wireframe
           transparent
           opacity={0.35}
@@ -98,7 +98,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
       <mesh ref={outerSphereRef}>
         <icosahedronGeometry args={[1.7, 1]} />
         <meshBasicMaterial
-          color="#6366F1"
+          color="#8B5CF6"
           wireframe
           transparent
           opacity={0.12}
@@ -115,7 +115,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
           />
         </bufferGeometry>
         <pointsMaterial
-          color="#3B82F6"
+          color="#C4B5FD"
           size={0.035}
           sizeAttenuation
           transparent
@@ -127,7 +127,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
       {/* Glowing core dot */}
       <mesh>
         <sphereGeometry args={[0.12, 16, 16]} />
-        <meshBasicMaterial color="#3B82F6" />
+        <meshBasicMaterial color="#C4B5FD" />
       </mesh>
     </group>
   );
@@ -154,13 +154,13 @@ export default function TechSphere() {
   if (reducedMotion) {
     return (
       <div className="w-full h-full min-h-[350px] md:min-h-[450px] flex items-center justify-center relative">
-        <div className="absolute w-[200px] h-[200px] rounded-full bg-blue-500/5 blur-[80px]" />
+        <div className="absolute w-[200px] h-[200px] rounded-full bg-violet-500/5 blur-[80px]" />
         <svg
           width="220"
           height="220"
           viewBox="0 0 220 220"
           fill="none"
-          className="text-blue-500/30 animate-[spin_120s_linear_infinite]"
+          className="text-violet-500/30 animate-[spin_120s_linear_infinite]"
         >
           <circle cx="110" cy="110" r="90" stroke="currentColor" strokeWidth="1" strokeDasharray="6 6" />
           <circle cx="110" cy="110" r="60" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" />

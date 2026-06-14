@@ -71,16 +71,16 @@ export default function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 border-b ${
         scrolled
-          ? "backdrop-blur-xl bg-[#050810]/80 border-border-subtle shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+          ? "backdrop-blur-xl bg-[#09090B]/80 border-border-subtle shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
           : "bg-transparent border-transparent"
       }`}
     >
       <div className="flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
         {/* ─── Logo ─── */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-[#2563EB] to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
+          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 via-[#A78BFA] to-cyan-400 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform duration-300">
             <Radar className="w-[18px] h-[18px] text-white" />
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#2563EB] to-cyan-400 blur-md opacity-30 group-hover:opacity-60 transition-opacity" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#A78BFA] to-cyan-400 blur-md opacity-30 group-hover:opacity-60 transition-opacity" />
           </div>
           <span className="text-lg font-bold tracking-tight font-display hidden sm:inline text-text-primary">
             stack<span className="text-accent-primary">radar</span>
@@ -108,7 +108,7 @@ export default function Navbar() {
                 {isActive && (
                   <motion.div
                     layoutId="nav-underline"
-                    className="absolute bottom-0 left-3 right-3 h-[2px] bg-accent-primary shadow-[0_0_8px_#3B82F6]"
+                    className="absolute bottom-0 left-3 right-3 h-[2px] bg-accent-primary shadow-[0_0_8px_#C4B5FD]"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -120,7 +120,7 @@ export default function Navbar() {
         {/* ─── Right Actions ─── */}
         <div className="flex items-center gap-3">
           {/* Live indicator */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold text-text-secondary border border-border-subtle bg-[#0A0F1E]/50 font-mono">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold text-text-secondary border border-border-subtle bg-[#111113]/50 font-mono">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
@@ -153,7 +153,7 @@ export default function Navbar() {
           {mounted && (
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full border border-border-subtle bg-[#0A0F1E]/50 hover:bg-[#2563EB]/10 transition-colors duration-300 text-text-secondary hover:text-text-primary cursor-pointer select-none"
+              className="p-2 rounded-full border border-border-subtle bg-[#111113]/50 hover:bg-[#A78BFA]/10 transition-colors duration-300 text-text-secondary hover:text-text-primary cursor-pointer select-none"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
@@ -167,7 +167,7 @@ export default function Navbar() {
           {/* Mobile menu trigger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-full border border-border-subtle bg-[#0A0F1E]/50 text-text-secondary cursor-pointer select-none"
+            className="md:hidden p-2 rounded-full border border-border-subtle bg-[#111113]/50 text-text-secondary cursor-pointer select-none"
             aria-label="Toggle mobile menu"
           >
             {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -183,7 +183,7 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="fixed inset-0 top-16 z-40 bg-[#050810] flex flex-col justify-between p-6 md:hidden"
+            className="fixed inset-0 top-16 z-40 bg-[#09090B] flex flex-col justify-between p-6 md:hidden"
           >
             <div className="flex flex-col space-y-6 pt-8">
               {navLinks.map((link) => {
