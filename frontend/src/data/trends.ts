@@ -82,6 +82,30 @@ export interface DomainSummary {
   updated_at: string | null;
 }
 
+// Platform-wide aggregate stats (real numbers for the hero)
+export interface Overview {
+  tools_tracked: number;
+  domains: number;
+  roadmaps: number;
+  total_mentions: number;
+  total_stars: number;
+  signals_24h: number;
+  sentiment_ratio: number | null;
+  momentum_index: number;
+  sources: string[];
+  source_count: number;
+  top_mover: { slug: string; name: string; icon: string; score: number; growth_pct: number } | null;
+  last_updated: string | null;
+  is_scraping: boolean;
+  next_cycle: string | null;
+}
+
+export async function fetchOverview(): Promise<Overview> {
+  const res = await fetch(`${API_BASE}/api/v1/overview`, { next: { revalidate: 300 } });
+  if (!res.ok) throw new Error("Failed to fetch overview");
+  return res.json();
+}
+
 // Categories — fetched dynamically from /domains API
 export async function fetchCategories(): Promise<string[]> {
   const domains = await fetchDomains();
