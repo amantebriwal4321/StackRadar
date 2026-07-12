@@ -21,12 +21,14 @@ if (typeof window !== "undefined") {
 import {
   type Tool,
   type DomainSummary,
+  type Overview,
   fetchTools,
   fetchDomains,
-  fetchTopMovers
+  fetchTopMovers,
+  fetchOverview
 } from "@/data/trends";
 
-import TechSphere from "@/components/3d/TechSphere";
+import LiveConstellation from "@/components/3d/LiveConstellation";
 import TrendCard from "@/components/TrendCard";
 import FilterBar from "@/components/FilterBar";
 import DashboardShell from "@/components/DashboardShell";
@@ -121,12 +123,13 @@ export default function HomePage() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [domains, setDomains] = useState<DomainSummary[]>([]);
   const [topGainers, setTopGainers] = useState<Tool[]>([]);
+  const [overview, setOverview] = useState<Overview | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Interactive Comparison Framework State
-  const [selectedCompareTech, setSelectedCompareTech] = useState<"react" | "vue" | "bun">("react");
+  // Interactive Comparison Framework State — index into the real top-3 tools
+  const [compareIdx, setCompareIdx] = useState(0);
 
   // Mouse parallax for hero
   const mouseX = useMotionValue(0);
@@ -153,15 +156,17 @@ export default function HomePage() {
         setError(null);
         
         // Parallel fetching
-        const [allTools, domainList, movers] = await Promise.all([
+        const [allTools, domainList, movers, overviewData] = await Promise.all([
           fetchTools(),
           fetchDomains(),
-          fetchTopMovers(6)
+          fetchTopMovers(6),
+          fetchOverview()
         ]);
 
         setTools(allTools);
         setDomains(domainList);
         setTopGainers(movers);
+        setOverview(overviewData);
       } catch (err: any) {
         console.error("Error loading homepage data:", err);
         setError(err.message || "Failed to fetch StackRadar telemetry.");
@@ -349,41 +354,39 @@ export default function HomePage() {
     });
   }, [tools]);
 
-  // Comparative split metrics
-  const comparisonData = {
-    react: {
-      name: "React 19",
-      sentiment: 84,
-      github_growth: 92,
-      velocity: 88,
-      community: 95,
-      summary: "Surging in mindshare due to React Server Components and fine-grained state updates. Unchallenged ecosystem volume."
-    },
-    vue: {
-      name: "Vue 3",
-      sentiment: 89,
-      github_growth: 78,
-      velocity: 81,
-      community: 84,
-      summary: "Highly positive developer sentiment due to Composition API stability. Leading in micro-frontend developer happiness."
-    },
-    bun: {
-      name: "Bun.js",
-      sentiment: 91,
-      github_growth: 96,
-      velocity: 94,
-      community: 73,
-      summary: "Absolute performance champion. Incredible velocity score driven by built-in bundler and native TypeScript runtime."
-    }
-  };
+  // Comparative split metrics — the real top-3 tools by momentum score
+  const compareTools = useMemo(() => {
+    return [...tools].sort((a, b) => b.score - a.score).slice(0, 3);
+  }, [tools]);
 
-  // Stats for the hero area
+  const activeCompare = compareTools[compareIdx] ?? compareTools[0];
+
+  // Derive four honest metrics from real fields (0–100 each)
+  const compareMetrics = useMemo(() => {
+    if (!activeCompare) return [];
+    const t = activeCompare;
+    const starIndex = t.stars > 0
+      ? Math.min(100, (Math.log(t.stars + 1) / Math.log(300000)) * 100)
+      : 0;
+    const categoryStrength = t.category_size > 1
+      ? Math.round((1 - (t.rank_in_category - 1) / (t.category_size - 1)) * 100)
+      : 100;
+    const growthMetric = Math.max(0, Math.min(100, 50 + t.growth_pct));
+    return [
+      { label: "MOMENTUM SCORE", value: Math.round(t.score), suffix: "/100", gradient: "from-violet-500 to-cyan-500" },
+      { label: "GLOBAL PERCENTILE", value: Math.round(t.percentile), suffix: "%", gradient: "from-cyan-500 to-cyan-500" },
+      { label: "GITHUB STAR INDEX", value: Math.round(starIndex), suffix: "/100", gradient: "from-cyan-500 to-emerald-500" },
+      { label: "CATEGORY STANDING", value: categoryStrength, suffix: "%", gradient: "from-emerald-500 to-violet-500" },
+    ];
+  }, [activeCompare]);
+
+  // Stats for the hero area — all real, sourced from /overview
   const heroStats = useMemo(() => ({
-    tools: tools.length || 150,
-    domains: domains.length || 8,
-    discussions: 48931,
-    accuracy: 98.4,
-  }), [tools, domains]);
+    tools: overview?.tools_tracked || tools.length || 0,
+    stars: overview?.total_stars || 0,
+    sources: overview?.source_count || 5,
+    domains: overview?.domains || domains.length || 0,
+  }), [overview, tools, domains]);
 
   return (
     <DashboardShell fullWidth>
@@ -491,9 +494,9 @@ export default function HomePage() {
             {/* Mini Stats Row */}
             <div className="hero-anim-item flex flex-wrap gap-6 pt-4">
               {[
-                { label: "Technologies Tracked", value: heroStats.tools, suffix: "+" },
-                { label: "Discussions Today", value: heroStats.discussions, prefix: "" },
-                { label: "Telemetry Accuracy", value: heroStats.accuracy, suffix: "%" },
+                { label: "Technologies Tracked", value: heroStats.tools, suffix: "" },
+                { label: "GitHub Stars Indexed", value: heroStats.stars, prefix: "" },
+                { label: "Live Signal Sources", value: heroStats.sources, suffix: "" },
               ].map((stat) => (
                 <div key={stat.label} className="space-y-1">
                   <div className="text-2xl font-black font-mono text-[#FAFAFA]">
@@ -513,7 +516,7 @@ export default function HomePage() {
             style={{ x: springX, y: springY }}
           >
             <div className="absolute inset-0 w-full h-full flex items-center justify-center z-0">
-              <TechSphere />
+              <LiveConstellation tools={tools} />
             </div>
             
             {/* Visual Floating Telemetry Tags around sphere */}
@@ -524,7 +527,7 @@ export default function HomePage() {
             >
               <span className="flex items-center gap-1.5">
                 <span className="w-1 h-1 rounded-full bg-violet-400" />
-                ROTATION_X: LERP
+                {heroStats.tools} NODES LIVE
               </span>
             </motion.div>
             <motion.div
@@ -534,7 +537,7 @@ export default function HomePage() {
             >
               <span className="flex items-center gap-1.5">
                 <span className="w-1 h-1 rounded-full bg-cyan-400" />
-                R3F_ICOSPHERE
+                {topGainers[0] ? `${topGainers[0].name.toUpperCase()} RISING` : "MOMENTUM MAP"}
               </span>
             </motion.div>
             <motion.div
@@ -544,7 +547,7 @@ export default function HomePage() {
             >
               <span className="flex items-center gap-1.5">
                 <Activity className="w-3 h-3" />
-                48.9K SIGNALS
+                {heroStats.stars >= 1000 ? `${(heroStats.stars / 1_000_000).toFixed(2)}M ★ INDEXED` : "LIVE INDEX"}
               </span>
             </motion.div>
           </motion.div>
@@ -782,28 +785,31 @@ export default function HomePage() {
                   Interactive Telemetry
                 </div>
                 <h3 className="text-3xl md:text-4xl font-black font-display tracking-tight mb-4">
-                  Framework Momentum<br/>
-                  <span className="text-shimmer">Compare</span>
+                  Momentum<br/>
+                  <span className="text-shimmer">Head-to-Head</span>
                 </h3>
                 <p className="text-sm text-[#A1A1AA] leading-relaxed font-sans font-light">
-                  Compare real-time Adoption, Sentiment, GitHub delta, and community velocity of leading development frameworks inside the StackRadar parser index.
+                  The three highest-momentum technologies on StackRadar right now, scored live on GitHub presence, global percentile, and category standing — straight from the index.
                 </p>
               </div>
 
-              {/* Selection Tabs */}
+              {/* Selection Tabs — real top-3 tools */}
               <div className="space-y-2.5">
-                {(["react", "vue", "bun"] as const).map((tech) => (
+                {compareTools.map((tech, idx) => (
                   <button
-                    key={tech}
-                    onClick={() => setSelectedCompareTech(tech)}
+                    key={tech.slug}
+                    onClick={() => setCompareIdx(idx)}
                     className={`w-full flex items-center justify-between p-4 rounded-xl border font-mono text-xs uppercase tracking-wider text-left transition-all duration-400 cursor-pointer ${
-                      selectedCompareTech === tech
+                      compareIdx === idx
                         ? "bg-[#A78BFA]/12 border-violet-500/40 text-white shadow-lg shadow-violet-500/5 font-bold"
                         : "bg-[#111113]/40 border-violet-500/5 text-[#A1A1AA] hover:text-white hover:border-violet-500/15"
                     }`}
                   >
-                    <span>{tech === "react" ? "⚛️ React 19 Core" : tech === "vue" ? "💚 Vue 3 Engine" : "⚡ Bun.js Runtime"}</span>
-                    <ChevronRight className={`w-4 h-4 transition-all duration-300 ${selectedCompareTech === tech ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"}`} />
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">{tech.icon}</span> {tech.name}
+                      <span className="text-[9px] text-[#A1A1AA]/50">#{tech.rank}</span>
+                    </span>
+                    <ChevronRight className={`w-4 h-4 transition-all duration-300 ${compareIdx === idx ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"}`} />
                   </button>
                 ))}
               </div>
@@ -820,32 +826,28 @@ export default function HomePage() {
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
                   <AnimatePresence mode="wait">
-                    <motion.span 
-                      key={selectedCompareTech}
+                    <motion.span
+                      key={activeCompare?.slug}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="text-xl font-bold font-mono text-violet-400"
+                      className="text-xl font-bold font-mono text-violet-400 flex items-center gap-2"
                     >
-                      {comparisonData[selectedCompareTech].name}
+                      <span className="text-2xl">{activeCompare?.icon}</span>
+                      {activeCompare?.name}
                     </motion.span>
                   </AnimatePresence>
                 </div>
 
-                {/* Progress bars */}
+                {/* Progress bars — real derived metrics */}
                 <div className="space-y-5 pt-2">
-                  {[
-                    { label: "COMMUNITY SENTIMENT", value: comparisonData[selectedCompareTech].sentiment, suffix: "%", gradient: "from-violet-500 to-cyan-500" },
-                    { label: "GITHUB ACTIVITY DELTA", value: comparisonData[selectedCompareTech].github_growth, suffix: "%", gradient: "from-cyan-500 to-cyan-500" },
-                    { label: "DEVELOPER VELOCITY SCORE", value: comparisonData[selectedCompareTech].velocity, suffix: "/100", gradient: "from-cyan-500 to-emerald-500" },
-                    { label: "COMMUNITY ADOPTION", value: comparisonData[selectedCompareTech].community, suffix: "%", gradient: "from-emerald-500 to-violet-500" },
-                  ].map((metric) => (
+                  {compareMetrics.map((metric) => (
                     <div key={metric.label} className="space-y-2">
                       <div className="flex justify-between font-mono text-[10px] text-[#A1A1AA]/70">
                         <span>{metric.label}</span>
-                        <motion.span 
+                        <motion.span
                           className="font-bold text-white"
-                          key={`${selectedCompareTech}-${metric.label}`}
+                          key={`${activeCompare?.slug}-${metric.label}`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                         >
@@ -855,7 +857,7 @@ export default function HomePage() {
                       <div className="h-2 w-full bg-[#18181B] rounded-full overflow-hidden border border-violet-500/5">
                         <motion.div
                           className={`h-full bg-gradient-to-r ${metric.gradient} rounded-full`}
-                          key={`bar-${selectedCompareTech}-${metric.label}`}
+                          key={`bar-${activeCompare?.slug}-${metric.label}`}
                           initial={{ width: 0 }}
                           animate={{ width: `${metric.value}%` }}
                           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -867,10 +869,10 @@ export default function HomePage() {
 
               </div>
 
-              {/* Bottom Summary */}
+              {/* Bottom Summary — real backend recommendation */}
               <AnimatePresence mode="wait">
-                <motion.div 
-                  key={selectedCompareTech}
+                <motion.div
+                  key={activeCompare?.slug}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -878,7 +880,7 @@ export default function HomePage() {
                 >
                   <span className="text-[10px] font-mono text-cyan-400/70 block mb-1.5">SIGNAL ANALYSIS</span>
                   <p className="text-xs text-[#A1A1AA] leading-relaxed font-light font-mono">
-                    {comparisonData[selectedCompareTech].summary}
+                    {activeCompare?.recommendation || `${activeCompare?.name} is tracked live across ${heroStats.sources} developer signal sources.`}
                   </p>
                 </motion.div>
               </AnimatePresence>
@@ -896,13 +898,13 @@ export default function HomePage() {
           <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
             {[1, 2, 3, 4].map((i) => (
               <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[#A1A1AA]/30 tracking-widest uppercase">
-                <span>SCANNED 48,931 DISCUSSIONS TODAY</span>
+                <span>{heroStats.tools} TECHNOLOGIES TRACKED</span>
                 <span>•</span>
-                <span>98.4% TELEMETRY ACCURACY</span>
+                <span>{heroStats.stars.toLocaleString()} GITHUB STARS INDEXED</span>
                 <span>•</span>
-                <span>NEXT SCRAPER CYCLE IN 14 MINS</span>
+                <span>{heroStats.domains} INTELLIGENCE DOMAINS</span>
                 <span>•</span>
-                <span>DEEP SPACE THEME ACTIVE</span>
+                <span>{heroStats.sources} LIVE SIGNAL SOURCES</span>
               </span>
             ))}
           </div>
