@@ -13,6 +13,7 @@ import json
 import logging
 from sqlalchemy.orm import Session
 from app.models.all_models import Domain, Tool, ToolRoadmap, ToolSnapshot
+from app.services.catalog import TOOLS as SEED_TOOLS, CATALOG_SLUGS
 
 logger = logging.getLogger(__name__)
 
@@ -34,57 +35,12 @@ SEED_DOMAINS = [
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TOOLS — each links to a specific GitHub repo
+# TOOLS — imported from app/services/catalog.py (single source of truth).
+# SEED_TOOLS is now `catalog.TOOLS` (see the import above). The literal list
+# that used to live here was removed so the display catalog and the scraper's
+# mention-tracking registry can never drift apart again.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-SEED_TOOLS = [
-    # Web Development — React is the entry point; Next.js/tRPC are advanced
-    {"name": "React",        "slug": "react",        "icon": "⚛️",  "category": "Web Development",     "github_repo": "facebook/react",          "description": "A JavaScript library for building user interfaces, maintained by Meta.",       "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
-    {"name": "Tailwind CSS", "slug": "tailwindcss",  "icon": "🎨",  "category": "Web Development",     "github_repo": "tailwindlabs/tailwindcss", "description": "A utility-first CSS framework for rapid UI development.",                     "level": "beginner",      "is_entry_point": False, "seq": 15, "parent_slug": None},
-    {"name": "Vite",         "slug": "vite",         "icon": "⚡",  "category": "Web Development",     "github_repo": "vitejs/vite",              "description": "Next-generation frontend build tool with instant HMR.",                      "level": "beginner",      "is_entry_point": False, "seq": 20, "parent_slug": "react"},
-    {"name": "Vue.js",       "slug": "vuejs",        "icon": "💚",  "category": "Web Development",     "github_repo": "vuejs/core",               "description": "Progressive JavaScript framework for building modern web UIs.",              "level": "intermediate",  "is_entry_point": False, "seq": 30, "parent_slug": None},
-    {"name": "Svelte",       "slug": "svelte",       "icon": "🔥",  "category": "Web Development",     "github_repo": "sveltejs/svelte",          "description": "Cybernetically enhanced web apps — compiles to minimal JS.",                 "level": "intermediate",  "is_entry_point": False, "seq": 35, "parent_slug": None},
-    {"name": "Next.js",      "slug": "nextjs",       "icon": "▲",   "category": "Web Development",     "github_repo": "vercel/next.js",           "description": "The React framework for production — SSR, SSG, and API routes.",             "level": "intermediate",  "is_entry_point": False, "seq": 40, "parent_slug": "react"},
-    {"name": "FastAPI",      "slug": "fastapi",      "icon": "🐍",  "category": "Web Development",     "github_repo": "fastapi/fastapi",          "description": "Modern, fast (high-performance) Python web framework for building APIs.",     "level": "intermediate",  "is_entry_point": False, "seq": 45, "parent_slug": None},
-    {"name": "Astro",        "slug": "astro",        "icon": "🚀",  "category": "Web Development",     "github_repo": "withastro/astro",          "description": "The web framework for content-driven websites with island architecture.",     "level": "intermediate",  "is_entry_point": False, "seq": 50, "parent_slug": None},
-    {"name": "tRPC",         "slug": "trpc",         "icon": "🔗",  "category": "Web Development",     "github_repo": "trpc/trpc",                "description": "End-to-end typesafe APIs for TypeScript and JavaScript.",                    "level": "advanced",      "is_entry_point": False, "seq": 70, "parent_slug": "nextjs"},
-    {"name": "Bun",          "slug": "bun",          "icon": "🍞",  "category": "Web Development",     "github_repo": "oven-sh/bun",              "description": "Incredibly fast JavaScript runtime, bundler, and package manager.",          "level": "advanced",      "is_entry_point": False, "seq": 75, "parent_slug": None},
-    {"name": "Deno",         "slug": "deno",         "icon": "🦕",  "category": "Web Development",     "github_repo": "denoland/deno",            "description": "A modern runtime for JavaScript and TypeScript with built-in security.",     "level": "advanced",      "is_entry_point": False, "seq": 80, "parent_slug": None},
-
-    # Data & Databases — Prisma is the entry point
-    {"name": "Prisma",       "slug": "prisma",       "icon": "💎",  "category": "Data & Databases",    "github_repo": "prisma/prisma",            "description": "Next-generation ORM for Node.js and TypeScript.",                           "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
-
-    # AI / ML — PyTorch and TensorFlow are entry points
-    {"name": "PyTorch",      "slug": "pytorch",      "icon": "🔥",  "category": "AI / ML",             "github_repo": "pytorch/pytorch",          "description": "Open-source machine learning framework for research and production.",       "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
-    {"name": "TensorFlow",   "slug": "tensorflow",   "icon": "🧮",  "category": "AI / ML",             "github_repo": "tensorflow/tensorflow",    "description": "End-to-end open source ML platform by Google.",                             "level": "beginner",      "is_entry_point": True,  "seq": 15, "parent_slug": None},
-    {"name": "Hugging Face Transformers", "slug": "transformers", "icon": "🤗", "category": "AI / ML", "github_repo": "huggingface/transformers",  "description": "State-of-the-art NLP models: BERT, GPT, T5, and more.",                     "level": "intermediate",  "is_entry_point": False, "seq": 40, "parent_slug": "pytorch"},
-    {"name": "LangChain",    "slug": "langchain",    "icon": "🦜",  "category": "AI / ML",             "github_repo": "langchain-ai/langchain",   "description": "Build LLM-powered applications with composable chains and agents.",         "level": "advanced",      "is_entry_point": False, "seq": 70, "parent_slug": "transformers"},
-    {"name": "Ollama",       "slug": "ollama",       "icon": "🦙",  "category": "AI / ML",             "github_repo": "ollama/ollama",            "description": "Run large language models locally with a simple CLI.",                      "level": "intermediate",  "is_entry_point": False, "seq": 50, "parent_slug": None},
-
-    # Cloud Native — Supabase is the entry point
-    {"name": "Supabase",     "slug": "supabase",     "icon": "⚡",  "category": "Cloud Native",        "github_repo": "supabase/supabase",        "description": "Open-source Firebase alternative with Postgres backend.",                   "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
-    {"name": "Terraform",    "slug": "terraform",    "icon": "🏗️",  "category": "Cloud Native",        "github_repo": "hashicorp/terraform",      "description": "Infrastructure as Code tool for cloud resource management.",                "level": "intermediate",  "is_entry_point": False, "seq": 40, "parent_slug": None},
-    {"name": "Kubernetes",   "slug": "kubernetes",   "icon": "☸️",  "category": "Cloud Native",        "github_repo": "kubernetes/kubernetes",     "description": "Production-grade container orchestration system.",                          "level": "advanced",      "is_entry_point": False, "seq": 70, "parent_slug": "docker"},
-
-    # DevOps — Docker is the entry point
-    {"name": "Docker",       "slug": "docker",       "icon": "🐳",  "category": "DevOps",              "github_repo": "moby/moby",                "description": "Platform for building, sharing, and running containerized apps.",           "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
-    {"name": "Grafana",      "slug": "grafana",      "icon": "📊",  "category": "DevOps",              "github_repo": "grafana/grafana",          "description": "Open-source platform for monitoring and observability dashboards.",         "level": "intermediate",  "is_entry_point": False, "seq": 40, "parent_slug": "docker"},
-    {"name": "Prometheus",   "slug": "prometheus",   "icon": "📈",  "category": "DevOps",              "github_repo": "prometheus/prometheus",    "description": "Systems monitoring and alerting toolkit for cloud-native environments.",    "level": "intermediate",  "is_entry_point": False, "seq": 45, "parent_slug": "docker"},
-
-    # Systems Programming — Rust and Go are entry points
-    {"name": "Rust",         "slug": "rust",         "icon": "🦀",  "category": "Systems Programming", "github_repo": "rust-lang/rust",           "description": "Memory-safe systems language for performance-critical software.",           "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
-    {"name": "Go",           "slug": "go",           "icon": "🐹",  "category": "Systems Programming", "github_repo": "golang/go",                "description": "Statically typed, compiled language designed for cloud infrastructure.",    "level": "beginner",      "is_entry_point": True,  "seq": 15, "parent_slug": None},
-
-    # Cybersecurity
-    {"name": "Wireshark",    "slug": "wireshark",    "icon": "🦈",  "category": "Cybersecurity",       "github_repo": "wireshark/wireshark",      "description": "The world's most popular network protocol analyzer for traffic inspection.",  "level": "beginner",      "is_entry_point": True,  "seq": 10, "parent_slug": None},
-    {"name": "Metasploit",   "slug": "metasploit",   "icon": "🗡️",  "category": "Cybersecurity",       "github_repo": "rapid7/metasploit-framework", "description": "Penetration testing framework for finding vulnerabilities in systems.",    "level": "intermediate",  "is_entry_point": False, "seq": 40, "parent_slug": "wireshark"},
-    {"name": "OWASP ZAP",    "slug": "owasp-zap",    "icon": "🛡️",  "category": "Cybersecurity",       "github_repo": "zaproxy/zaproxy",          "description": "Free security tool for finding vulnerabilities in web applications.",        "level": "intermediate",  "is_entry_point": False, "seq": 45, "parent_slug": "wireshark"},
-
-    # Web3 / Blockchain
-    {"name": "Hardhat",      "slug": "hardhat",      "icon": "👷",  "category": "Web3 / Blockchain",   "github_repo": "NomicFoundation/hardhat",  "description": "Ethereum development environment for compiling, testing, and deploying smart contracts.", "level": "beginner", "is_entry_point": True,  "seq": 10, "parent_slug": None},
-    {"name": "Foundry",      "slug": "foundry",      "icon": "🔨",  "category": "Web3 / Blockchain",   "github_repo": "foundry-rs/foundry",       "description": "Blazing-fast Solidity development toolkit written in Rust.",                 "level": "intermediate",  "is_entry_point": False, "seq": 40, "parent_slug": "hardhat"},
-    {"name": "Ethers.js",    "slug": "ethersjs",     "icon": "⟠",   "category": "Web3 / Blockchain",   "github_repo": "ethers-io/ethers.js",      "description": "Complete Ethereum library for interacting with the blockchain in JavaScript.", "level": "beginner",  "is_entry_point": False, "seq": 15, "parent_slug": None},
-]
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -332,5 +288,33 @@ def run_seed(db: Session) -> None:
 
     db.commit()
     logger.info("Seed: Database seeded successfully!")
+
+
+def reconcile_catalog(db: Session) -> None:
+    """Make the live `tools` table match the curated catalog exactly.
+
+    Runs on every startup (after run_seed). Its job is to purge rows that are
+    NOT in catalog.TOOLS — i.e. the bare placeholder/duplicate tools the scraper
+    used to create for every TOOL_REGISTRY slug (e.g. a category-less "Python",
+    or "vue" alongside the curated "vuejs"). These are auto-generated artifacts,
+    never user data, so deleting them is safe; their snapshots/roadmaps cascade.
+
+    This is the fix for the long-standing dual-catalog data-integrity bug:
+    without it, `run_seed` early-returns on a non-empty DB and the placeholder
+    rows linger forever, polluting the rankings.
+    """
+    orphans = db.query(Tool).filter(~Tool.slug.in_(CATALOG_SLUGS)).all()
+    if not orphans:
+        logger.info("Reconcile: catalog is clean — no non-catalog tools to remove.")
+        return
+
+    orphan_slugs = [t.slug for t in orphans]
+    for tool in orphans:
+        db.delete(tool)  # cascades to snapshots + roadmap via relationships
+    db.commit()
+    logger.info(
+        f"Reconcile: removed {len(orphans)} non-catalog tools "
+        f"(placeholder/duplicate rows): {', '.join(sorted(orphan_slugs))}"
+    )
 
 

@@ -95,16 +95,22 @@ async def perform_full_scrape():
     github_client = httpx.AsyncClient(timeout=15.0)
 
     try:
-        # ━━━ STEP 0: Validate GitHub token + sync registry ━━━
-        logger.info("Step 0: Validating GitHub token and syncing tool registry...")
+        # ━━━ STEP 0: Validate GitHub token + verify catalog is seeded ━━━
+        logger.info("Step 0: Validating GitHub token and verifying tool catalog...")
         await validate_github_token(github_client)
 
-        for slug, data in TOOL_REGISTRY.items():
-            tool = db.query(Tool).filter_by(slug=slug).first()
-            if not tool:
-                tool = Tool(slug=slug, name=slug.capitalize(), domain=data["domain"], github_repo=data["repo"])
-                db.add(tool)
-        db.commit()
+        # The catalog (app/services/catalog.py) is seeded on startup by run_seed
+        # and kept clean by reconcile_catalog. The scraper must NOT create tool
+        # rows here — doing so used to spawn category-less placeholder duplicates
+        # and pollute the rankings. If a curated tool is somehow missing, warn
+        # loudly rather than inventing a bare row.
+        seeded_slugs = {s for (s,) in db.query(Tool.slug).all()}
+        missing = [slug for slug in TOOL_REGISTRY if slug not in seeded_slugs]
+        if missing:
+            logger.warning(
+                f"Step 0: {len(missing)} catalog tools missing from DB "
+                f"(run_seed should have created them): {', '.join(missing)}"
+            )
 
         # ━━━ STEP 1: Fetch all community sources ━━━
         scrape_status["current_step"] = "1/8 — Fetching community sources"

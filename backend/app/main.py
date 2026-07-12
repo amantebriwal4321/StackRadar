@@ -93,10 +93,13 @@ async def startup_event():
 
     # Seed database with tools, domains, and roadmaps if empty
     from app.db.session import SessionLocal
-    from app.services.seed import run_seed
+    from app.services.seed import run_seed, reconcile_catalog
     db = SessionLocal()
     try:
         run_seed(db)
+        # Purge any non-catalog placeholder/duplicate tool rows left by older
+        # scrape cycles so the rankings only ever reflect the curated catalog.
+        reconcile_catalog(db)
     finally:
         db.close()
 

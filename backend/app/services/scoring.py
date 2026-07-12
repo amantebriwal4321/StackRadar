@@ -14,67 +14,25 @@ import math
 import logging
 from typing import Set, Dict, List, Any
 
+from app.services.catalog import TOOLS
+
 logger = logging.getLogger(__name__)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TOOL KEYWORDS — maps aliases/keywords to tool slugs
+# TOOL REGISTRY — derived from the unified catalog (single source of truth).
+# Keys are the curated tool slugs; each maps to the repo + keywords + category
+# the scraper/scoring pipeline needs. Editing tools happens in catalog.py only.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 TOOL_REGISTRY = {
-    # Frontend
-    "react":      {"repo": "facebook/react",           "keywords": ["react", "reactjs", "react.js"], "domain": "frontend"},
-    "vue":        {"repo": "vuejs/vue",                 "keywords": ["vue", "vuejs", "vue.js"],       "domain": "frontend"},
-    "angular":    {"repo": "angular/angular",           "keywords": ["angular", "angularjs"],         "domain": "frontend"},
-    "svelte":     {"repo": "sveltejs/svelte",           "keywords": ["svelte", "sveltekit"],          "domain": "frontend"},
-    "nextjs":     {"repo": "vercel/next.js",            "keywords": ["next.js", "nextjs"],            "domain": "frontend"},
-    # Backend
-    "fastapi":    {"repo": "tiangolo/fastapi",          "keywords": ["fastapi", "fast api"],          "domain": "backend"},
-    "django":     {"repo": "django/django",             "keywords": ["django"],                       "domain": "backend"},
-    "express":    {"repo": "expressjs/express",         "keywords": ["express", "expressjs"],         "domain": "backend"},
-    "nestjs":     {"repo": "nestjs/nest",               "keywords": ["nestjs", "nest.js"],            "domain": "backend"},
-    "laravel":    {"repo": "laravel/laravel",           "keywords": ["laravel"],                      "domain": "backend"},
-    # Languages
-    "rust":       {"repo": "rust-lang/rust",            "keywords": ["rust", "rustlang"],             "domain": "languages"},
-    "go":         {"repo": "golang/go",                 "keywords": ["golang", "go lang"],            "domain": "languages"},
-    "typescript": {"repo": "microsoft/TypeScript",      "keywords": ["typescript", "ts"],             "domain": "languages"},
-    "python":     {"repo": "python/cpython",            "keywords": ["python", "py"],                 "domain": "languages"},
-    "kotlin":     {"repo": "JetBrains/kotlin",          "keywords": ["kotlin"],                       "domain": "languages"},
-    # AI/ML
-    "pytorch":    {"repo": "pytorch/pytorch",           "keywords": ["pytorch", "torch"],             "domain": "ai_ml"},
-    "tensorflow": {"repo": "tensorflow/tensorflow",     "keywords": ["tensorflow", "tf"],             "domain": "ai_ml"},
-    "langchain":  {"repo": "langchain-ai/langchain",    "keywords": ["langchain"],                    "domain": "ai_ml"},
-    "huggingface":{"repo": "huggingface/transformers",  "keywords": ["huggingface", "transformers"],  "domain": "ai_ml"},
-    "openai":     {"repo": "openai/openai-python",      "keywords": ["openai", "chatgpt", "gpt-4"],   "domain": "ai_ml"},
-    # DevOps / Cloud
-    "docker":     {"repo": "docker/compose",            "keywords": ["docker", "dockerfile"],         "domain": "devops"},
-    "kubernetes": {"repo": "kubernetes/kubernetes",     "keywords": ["kubernetes", "k8s"],            "domain": "devops"},
-    "terraform":  {"repo": "hashicorp/terraform",       "keywords": ["terraform"],                    "domain": "devops"},
-    "github_actions": {"repo": "actions/runner",        "keywords": ["github actions", "gh actions"], "domain": "devops"},
-    "prometheus": {"repo": "prometheus/prometheus",     "keywords": ["prometheus"],                   "domain": "devops"},
-    # Databases
-    "postgresql": {"repo": "postgres/postgres",         "keywords": ["postgresql", "postgres"],       "domain": "databases"},
-    "redis":      {"repo": "redis/redis",               "keywords": ["redis"],                        "domain": "databases"},
-    "mongodb":    {"repo": "mongodb/mongo",             "keywords": ["mongodb", "mongo"],             "domain": "databases"},
-    "supabase":   {"repo": "supabase/supabase",         "keywords": ["supabase"],                     "domain": "databases"},
-    "prisma":     {"repo": "prisma/prisma",             "keywords": ["prisma"],                       "domain": "databases"},
-    # Mobile
-    "react_native":{"repo": "facebook/react-native",   "keywords": ["react native"],                 "domain": "mobile"},
-    "flutter":    {"repo": "flutter/flutter",           "keywords": ["flutter", "dart"],              "domain": "mobile"},
-    "swift":      {"repo": "apple/swift",               "keywords": ["swift", "swiftui"],             "domain": "mobile"},
-    # Testing
-    "jest":       {"repo": "jestjs/jest",               "keywords": ["jest", "jestjs"],               "domain": "testing"},
-    "playwright": {"repo": "microsoft/playwright",      "keywords": ["playwright"],                   "domain": "testing"},
-    "vitest":     {"repo": "vitest-dev/vitest",         "keywords": ["vitest"],                       "domain": "testing"},
-    # Web3
-    "solidity":   {"repo": "ethereum/solidity",         "keywords": ["solidity", "ethereum"],         "domain": "web3"},
-    # Tooling
-    "vite":       {"repo": "vitejs/vite",               "keywords": ["vite", "vitejs"],               "domain": "tooling"},
-    "bun":        {"repo": "oven-sh/bun",               "keywords": ["bun", "bunjs"],                 "domain": "tooling"},
-    "deno":       {"repo": "denoland/deno",             "keywords": ["deno"],                         "domain": "tooling"},
-    "graphql":    {"repo": "graphql/graphql-js",        "keywords": ["graphql"],                      "domain": "api"},
+    t["slug"]: {
+        "repo": t["github_repo"],
+        "keywords": t["keywords"],
+        "domain": t["category"],
+    }
+    for t in TOOLS
 }
-
 
 import re
 
