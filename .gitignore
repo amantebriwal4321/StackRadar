@@ -73,3 +73,6 @@ ehthumbs.db
 # ── Project-Specific (generated / scratch) ──
 worker_logs.txt
 files.txt
+*.out
+dev-next.out
+
