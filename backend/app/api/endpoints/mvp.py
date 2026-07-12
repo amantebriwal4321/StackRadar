@@ -486,6 +486,68 @@ def get_learning_path(domain_slug: str, db: Session = Depends(get_db)):
 # STATUS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+@router.get("/overview")
+def get_overview(db: Session = Depends(get_db)):
+    """
+    Real, aggregate platform stats for the homepage hero + tickers.
+
+    Everything here is derived from the live database — no hardcoded numbers.
+    Only tools with a real category are counted as "tracked" so the registry-sync
+    placeholder rows don't inflate the figures.
+    """
+    curated = db.query(Tool).filter(Tool.category.isnot(None)).all()
+    tracked_count = len(curated)
+    domain_count = db.query(Domain).count()
+    roadmap_count = db.query(ToolRoadmap).count()
+
+    total_mentions = sum(
+        (t.hn_count or 0) + (t.devto_count or 0) + (t.reddit_count or 0) + (t.news_count or 0)
+        for t in curated
+    )
+    total_stars = sum((t.stars or 0) for t in curated)
+
+    pos = sum((t.sentiment_positive or 0) for t in curated)
+    neg = sum((t.sentiment_negative or 0) for t in curated)
+    sentiment_ratio = round((pos / (pos + neg)) * 100, 1) if (pos + neg) > 0 else None
+
+    momentum_index = round(sum((t.score or 0) for t in curated) / tracked_count, 1) if tracked_count else 0.0
+
+    since = datetime.now() - timedelta(days=1)
+    signals_24h = (
+        db.query(func.coalesce(func.sum(ToolSnapshot.mention_count), 0))
+        .filter(ToolSnapshot.recorded_at >= since)
+        .scalar()
+    ) or 0
+
+    movers = sorted(curated, key=lambda t: (t.growth_pct or 0), reverse=True)
+    top_mover = movers[0] if movers and (movers[0].growth_pct or 0) > 0 else None
+
+    last_snapshot = db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
+
+    return {
+        "tools_tracked": tracked_count,
+        "domains": domain_count,
+        "roadmaps": roadmap_count,
+        "total_mentions": total_mentions,
+        "total_stars": total_stars,
+        "signals_24h": int(signals_24h),
+        "sentiment_ratio": sentiment_ratio,
+        "momentum_index": momentum_index,
+        "sources": ["GitHub", "HackerNews", "Reddit", "Dev.to", "RSS News"],
+        "source_count": 5,
+        "top_mover": {
+            "slug": top_mover.slug,
+            "name": top_mover.name,
+            "icon": top_mover.icon,
+            "score": top_mover.score,
+            "growth_pct": top_mover.growth_pct,
+        } if top_mover else None,
+        "last_updated": last_snapshot.recorded_at.isoformat() if last_snapshot else None,
+        "is_scraping": scrape_status.get("is_running", False),
+        "next_cycle": scrape_status.get("next_scraped_time"),
+    }
+
+
 @router.get("/status")
 def get_scraper_status():
     """Get the current scraper pipeline status with real-time progress."""
