@@ -21,9 +21,10 @@ interface NodeDatum {
   color: THREE.Color;
 }
 
-const COLOR_HIGH = new THREE.Color("#34D399"); // score >= 75
-const COLOR_MID = new THREE.Color("#A78BFA"); // 45–75
-const COLOR_LOW = new THREE.Color("#F472B6"); // < 45
+// Neon Noir — deep wine nodes with a magenta glow at the high end (bolder = higher score)
+const COLOR_HIGH = new THREE.Color("#C23E6E"); // score >= 75 (magenta glow)
+const COLOR_MID = new THREE.Color("#7C2D4A"); // 45–75 (wine)
+const COLOR_LOW = new THREE.Color("#9BA0AE"); // < 45 (faint)
 
 function colorForScore(score: number): THREE.Color {
   if (score >= 75) return COLOR_HIGH;
@@ -128,7 +129,7 @@ function ConstellationScene({
       <mesh ref={shellRef}>
         <icosahedronGeometry args={[RADIUS + 0.35, 1]} />
         <meshBasicMaterial
-          color="#6D28D9"
+          color="#4E1E32"
           wireframe
           transparent
           opacity={0.07}
@@ -139,7 +140,7 @@ function ConstellationScene({
       {/* constellation lines */}
       <lineSegments geometry={lineGeometry}>
         <lineBasicMaterial
-          color="#A78BFA"
+          color="#7C2D4A"
           transparent
           opacity={0.12}
           blending={THREE.AdditiveBlending}
@@ -157,9 +158,9 @@ function ConstellationScene({
       {/* glowing core */}
       <mesh>
         <sphereGeometry args={[0.13, 24, 24]} />
-        <meshBasicMaterial color="#C4B5FD" />
+        <meshBasicMaterial color="#C23E6E" />
       </mesh>
-      <pointLight color="#A78BFA" intensity={2} distance={6} />
+      <pointLight color="#C23E6E" intensity={2} distance={6} />
 
       {/* floating labels for the top tools */}
       {labelled.map((node) => (
@@ -171,9 +172,9 @@ function ConstellationScene({
           zIndexRange={[10, 0]}
           style={{ pointerEvents: "none" }}
         >
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#111113]/85 border border-violet-500/25 backdrop-blur-md whitespace-nowrap shadow-lg shadow-black/40">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#FFFFFF]/85 border border-indigo-500/25 backdrop-blur-md whitespace-nowrap shadow-lg shadow-black/40">
             <span className="text-sm leading-none">{node.tool.icon}</span>
-            <span className="text-[10px] font-bold text-white leading-none">
+            <span className="text-[10px] font-bold text-[#141726] leading-none">
               {node.tool.name}
             </span>
             <span
@@ -181,10 +182,10 @@ function ConstellationScene({
               style={{
                 color:
                   node.tool.score >= 75
-                    ? "#34D399"
+                    ? "#C23E6E"
                     : node.tool.score >= 45
-                    ? "#C4B5FD"
-                    : "#F472B6",
+                    ? "#7C2D4A"
+                    : "#9BA0AE",
               }}
             >
               {Math.round(node.tool.score)}
@@ -215,7 +216,7 @@ export default function LiveConstellation({ tools }: { tools: Tool[] }) {
 
   return (
     <div className="w-full h-full min-h-[350px] md:min-h-[500px] relative select-none">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.08),transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(67,56,202,0.08),transparent_70%)] pointer-events-none" />
       <Canvas
         camera={{ position: [0, 0, 5.4], fov: 55 }}
         gl={{ antialias: true, alpha: true }}

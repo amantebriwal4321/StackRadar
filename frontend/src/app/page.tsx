@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Zap, TrendingUp, Loader2, RefreshCw, Search,
   Sparkles, ArrowRight, Brain, Compass, Star,
@@ -29,8 +30,6 @@ import {
 } from "@/data/trends";
 
 import LiveConstellation from "@/components/3d/LiveConstellation";
-import TrendCard from "@/components/TrendCard";
-import FilterBar from "@/components/FilterBar";
 import DashboardShell from "@/components/DashboardShell";
 
 /* ─── Helper for Relative Time ─── */
@@ -70,12 +69,12 @@ function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; s
   return <span ref={ref}>{prefix}{display.toLocaleString()}{suffix}</span>;
 }
 
-/* ─── Decision Prompts ─── */
+/* ─── Decision Prompts ─── each routes somewhere real ─── */
 const decisionPrompts = [
-  { icon: "🛠️", label: "What should I build?", query: "build ideas" },
-  { icon: "📚", label: "What should I learn?", query: "learning" },
-  { icon: "🚀", label: "Startup opportunities", query: "startup" },
-  { icon: "📈", label: "What's trending?", query: "trending" },
+  { icon: "🛠️", label: "What should I build?", href: "/explore" },
+  { icon: "📚", label: "What should I learn?", href: "/roadmaps" },
+  { icon: "🚀", label: "Startup opportunities", href: "/trends" },
+  { icon: "📈", label: "What's trending?", href: "/trends" },
 ];
 
 /* ─── Process Steps ─── */
@@ -85,41 +84,41 @@ const processSteps = [
     title: "Ingest Stream",
     desc: "We crawl GitHub, Reddit, HN, and developer newsletters continuously to capture discussion peaks and code metrics.",
     icon: Database,
-    gradient: "from-violet-500 to-cyan-500",
-    color: "text-violet-400",
+    gradient: "from-indigo-500 to-indigo-500",
+    color: "text-indigo-600",
   },
   {
     num: "02",
     title: "Analyze & NLP",
     desc: "Our models parse discussions to assign positive/negative sentiment labels and classify tool relevance.",
     icon: Brain,
-    gradient: "from-cyan-500 to-pink-500",
-    color: "text-cyan-400",
+    gradient: "from-indigo-500 to-indigo-500",
+    color: "text-indigo-600",
   },
   {
     num: "03",
     title: "Score Momentum",
     desc: "Technologies are ranked dynamically by delta change rates, star ratios, and category concentration percentiles.",
     icon: Activity,
-    gradient: "from-purple-500 to-cyan-500",
-    color: "text-purple-400",
+    gradient: "from-indigo-500 to-indigo-500",
+    color: "text-indigo-600",
   },
   {
     num: "04",
     title: "Deliver Roadmap",
     desc: "We compile sequence learning paths and detailed tech profiles for developers to construct decisions.",
     icon: Rocket,
-    gradient: "from-cyan-500 to-emerald-500",
-    color: "text-cyan-400",
+    gradient: "from-indigo-500 to-emerald-500",
+    color: "text-indigo-600",
   },
 ];
 
 export default function HomePage() {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   /* ─── React States ─── */
-  const [activeCategory, setActiveCategory] = useState<string>("All");
   const [tools, setTools] = useState<Tool[]>([]);
   const [domains, setDomains] = useState<DomainSummary[]>([]);
   const [topGainers, setTopGainers] = useState<Tool[]>([]);
@@ -130,6 +129,14 @@ export default function HomePage() {
   
   // Interactive Comparison Framework State — index into the real top-3 tools
   const [compareIdx, setCompareIdx] = useState(0);
+
+  // Optimus-style cycling hero word (per-letter char-in animation)
+  const heroWords = useMemo(() => ["talking", "shipping", "trending", "evolving", "building"], []);
+  const [wordIndex, setWordIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setWordIndex((p) => (p + 1) % heroWords.length), 2600);
+    return () => clearInterval(id);
+  }, [heroWords.length]);
 
   // Mouse parallax for hero
   const mouseX = useMotionValue(0);
@@ -177,31 +184,21 @@ export default function HomePage() {
     initHomePage();
   }, []);
 
-  /* ─── Search / Filtering logic ─── */
-  const categoriesList = useMemo(() => {
-    return ["All", ...domains.map(d => d.name)];
-  }, [domains]);
-
-  const filteredTools = useMemo(() => {
-    let result = tools;
-    if (activeCategory !== "All") {
-      result = result.filter(t => t.category.toLowerCase() === activeCategory.toLowerCase());
+  // Enter (or the arrow button) in the console runs the query on the Explore board.
+  // If the text matches a single tracked tool, jump straight to its profile.
+  const runSearch = useCallback(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      router.push("/explore");
+      return;
     }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(t =>
-        t.name.toLowerCase().includes(q) ||
-        (t.description || "").toLowerCase().includes(q) ||
-        t.category.toLowerCase().includes(q)
-      );
+    const exact = tools.find((t) => t.name.toLowerCase() === q.toLowerCase());
+    if (exact) {
+      router.push(`/tools/${exact.slug}`);
+      return;
     }
-    return result;
-  }, [tools, activeCategory, searchQuery]);
-
-  const handlePromptClick = useCallback((query: string) => {
-    setSearchQuery(query);
-    searchInputRef.current?.focus();
-  }, []);
+    router.push(`/explore?q=${encodeURIComponent(q)}`);
+  }, [searchQuery, tools, router]);
 
   // Keyboard shortcut listener
   useEffect(() => {
@@ -373,10 +370,10 @@ export default function HomePage() {
       : 100;
     const growthMetric = Math.max(0, Math.min(100, 50 + t.growth_pct));
     return [
-      { label: "MOMENTUM SCORE", value: Math.round(t.score), suffix: "/100", gradient: "from-violet-500 to-cyan-500" },
-      { label: "GLOBAL PERCENTILE", value: Math.round(t.percentile), suffix: "%", gradient: "from-cyan-500 to-cyan-500" },
-      { label: "GITHUB STAR INDEX", value: Math.round(starIndex), suffix: "/100", gradient: "from-cyan-500 to-emerald-500" },
-      { label: "CATEGORY STANDING", value: categoryStrength, suffix: "%", gradient: "from-emerald-500 to-violet-500" },
+      { label: "MOMENTUM SCORE", value: Math.round(t.score), suffix: "/100", gradient: "from-indigo-500 to-indigo-500" },
+      { label: "GLOBAL PERCENTILE", value: Math.round(t.percentile), suffix: "%", gradient: "from-indigo-500 to-indigo-500" },
+      { label: "GITHUB STAR INDEX", value: Math.round(starIndex), suffix: "/100", gradient: "from-indigo-500 to-emerald-500" },
+      { label: "CATEGORY STANDING", value: categoryStrength, suffix: "%", gradient: "from-emerald-500 to-indigo-500" },
     ];
   }, [activeCompare]);
 
@@ -397,11 +394,18 @@ export default function HomePage() {
          ══════════════════════════════════════════ */}
       <section className="relative w-full max-w-7xl mx-auto px-6 pt-16 md:pt-24 pb-16 min-h-[90vh] flex items-center">
         
-        {/* Hero background gradient mesh */}
+        {/* Hero background — vibrant aurora mesh (multi-color wash) */}
+        <div className="absolute inset-0 pointer-events-none aurora-mesh [mask-image:radial-gradient(ellipse_at_center,black,transparent_85%)]" />
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-500/[0.04] rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/[0.05] rounded-full blur-[100px]" />
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/[0.08] rounded-full blur-[100px]" />
         </div>
+
+        {/* Editorial grid lines (Optimus reference) */}
+        <div
+          className="absolute inset-0 pointer-events-none editorial-grid opacity-60 [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]"
+          aria-hidden="true"
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full">
           
@@ -413,82 +417,125 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.6 }}
-              className="hero-anim-item inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-violet-500/20 bg-violet-500/[0.06] text-xs font-mono font-bold text-violet-400 tracking-wider"
+              className="hero-anim-item inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-indigo-500/20 bg-indigo-500/[0.06] text-xs font-mono font-bold text-indigo-600 tracking-wider"
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
               </span>
               REAL-TIME WEB TELEMETRY
-              <span className="w-px h-3 bg-violet-500/30" />
-              <span className="text-violet-300/60">v2.0</span>
+              <span className="w-px h-3 bg-indigo-500/30" />
+              <span className="text-indigo-600/60">v2.0</span>
             </motion.div>
 
-            {/* Split Header Titles */}
+            {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[0.92] font-display" style={{ perspective: "1000px" }}>
               <span className="block overflow-hidden">
-                <span className="hero-line block">The Internet</span>
+                <span className="hero-line block">The internet is</span>
               </span>
               <span className="block overflow-hidden">
-                <span className="hero-line block">is talking.</span>
+                <span className="hero-line block">
+                  <span className="relative inline-block align-baseline">
+                    <span key={wordIndex} className="inline-flex gradient-text">
+                      {heroWords[wordIndex].split("").map((ch, i) => (
+                        <span
+                          key={`${wordIndex}-${i}`}
+                          className="animate-char-in"
+                          style={{ animationDelay: `${i * 45}ms` }}
+                        >
+                          {ch}
+                        </span>
+                      ))}
+                    </span>
+                    <span className="absolute -bottom-1 left-0 right-0 h-2 bg-indigo-500/15 rounded-full" />
+                  </span>
+                  <span className="text-[#141726]">.</span>
+                </span>
               </span>
               <span className="block overflow-hidden">
-                <span className="hero-line block text-shimmer">
-                  Are you listening?
+                <span className="hero-line block">
+                  Are you{" "}
+                  <span className="inline-flex" aria-label="listening">
+                    {"listening".split("").map((ch, i) => (
+                      <span key={i} className="letter-spin">{ch}</span>
+                    ))}
+                  </span>
+                  ?
                 </span>
               </span>
             </h1>
 
             {/* Paragraph Subhead */}
-            <p className="hero-anim-item text-base md:text-lg text-[#A1A1AA] max-w-xl leading-relaxed font-sans font-light">
+            <p className="hero-anim-item text-base md:text-lg text-[#5A6072] max-w-xl leading-relaxed font-sans font-light">
               StackRadar continuously listens to developer telemetry across GitHub, Reddit, HackerNews, and forums to map trends, developer sentiment, and startup opportunities before they break out.
             </p>
 
-            {/* Decision Engine / Search Input */}
-            <div className="hero-anim-item space-y-4 max-w-2xl">
-              
-              {/* Interactive Search Box */}
-              <div className="relative group">
-                <div className="absolute -inset-[1px] bg-gradient-to-r from-violet-500 via-cyan-500 to-cyan-500 rounded-2xl opacity-0 group-focus-within:opacity-40 transition-opacity duration-700 blur-md" />
-                <div className="relative bg-[#111113]/90 backdrop-blur-xl rounded-2xl flex items-center border border-violet-500/10 group-focus-within:border-violet-500/30 transition-colors duration-500">
-                  <Search className="w-5 h-5 ml-5 text-slate-500 group-focus-within:text-violet-400 transition-colors duration-300" />
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search technologies, trends, opportunities..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-transparent border-none py-4.5 px-3 text-sm focus:outline-none text-[#FAFAFA] placeholder-[#A1A1AA]/50 font-sans"
-                  />
-                  {searchQuery ? (
+            {/* Decision Engine — framed as a live console window */}
+            <div className="hero-anim-item max-w-2xl">
+              <div className="terminal-window rounded-2xl">
+
+                {/* Dark chrome title bar (the "techy" dark accent, on-palette ink) */}
+                <div className="terminal-bar">
+                  <span className="terminal-dot bg-[#F04438]/85" />
+                  <span className="terminal-dot bg-[#E0A82E]/85" />
+                  <span className="terminal-dot bg-[#12B76A]/85" />
+                  <span className="terminal-path ml-2 hidden sm:inline">stackradar://console</span>
+                  <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> live
+                  </span>
+                </div>
+
+                {/* Console body */}
+                <div className="p-4 sm:p-5 space-y-4 bg-white">
+
+                  {/* Query line — Enter or the arrow button runs it */}
+                  <div className="group relative flex items-center rounded-xl bg-[#F7F8FC] border border-[rgba(20,23,38,0.12)] focus-within:border-indigo-500/50 focus-within:shadow-[0_0_0_3px_rgba(67,56,202,0.10)] transition-all duration-300">
+                    <span className="pl-4 pr-1 text-indigo-500 font-mono text-sm font-bold select-none">&gt;</span>
+                    <Search className="w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors duration-300" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="query a technology, trend, or opportunity…"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }}
+                      className="w-full bg-transparent border-none py-3.5 px-3 text-sm focus:outline-none text-[#141726] placeholder-[#5A6072]/50 font-mono"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => { setSearchQuery(""); searchInputRef.current?.focus(); }}
+                        className="mr-1.5 text-[10px] font-mono text-[#5A6072] hover:text-[#141726] px-2 py-1 rounded-md hover:bg-[#EDEFF5] transition-colors cursor-pointer"
+                        aria-label="Clear query"
+                      >
+                        ESC
+                      </button>
+                    )}
                     <button
-                      onClick={() => setSearchQuery("")}
-                      className="mr-4 text-xs font-mono text-[#A1A1AA] hover:text-white px-2.5 py-1 rounded-lg bg-[#18181B] border border-violet-500/10 transition-colors cursor-pointer"
+                      onClick={runSearch}
+                      aria-label="Run query"
+                      className="mr-2 shrink-0 h-9 w-9 flex items-center justify-center rounded-lg bg-[var(--accent-1)] text-white hover:bg-[var(--accent-3)] transition-colors cursor-pointer shadow-lg shadow-indigo-500/25 active:scale-95"
                     >
-                      CLEAR
+                      <ArrowRight className="w-4 h-4" />
                     </button>
-                  ) : (
-                    <kbd className="hidden sm:inline-flex mr-4 h-7 select-none items-center gap-0.5 rounded-lg border border-[#A78BFA]/15 bg-[#18181B] px-2.5 font-mono text-[10px] font-bold text-[#A1A1AA]">
-                      /
-                    </kbd>
-                  )}
+                  </div>
+
+                  {/* Prompt shortcuts — each one redirects to a real page */}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-[10px] text-[#5A6072]/60 font-mono py-1.5 flex items-center uppercase tracking-wider select-none">Jump to:</span>
+                    {decisionPrompts.map((prompt) => (
+                      <Link
+                        key={prompt.href + prompt.label}
+                        href={prompt.href}
+                        className="group px-3 py-1.5 rounded-lg border border-[rgba(20,23,38,0.12)] bg-[#F7F8FC] text-xs font-medium text-[#5A6072] hover:text-[#141726] hover:border-indigo-500/40 hover:bg-white hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-300 active:scale-[0.97] cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span>{prompt.icon}</span> {prompt.label}
+                        <ArrowRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                      </Link>
+                    ))}
+                  </div>
+
                 </div>
               </div>
-
-              {/* Suggestion Prompt pills */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                <span className="text-xs text-[#A1A1AA]/50 font-mono py-1.5 flex items-center">Try:</span>
-                {decisionPrompts.map((prompt) => (
-                  <button
-                    key={prompt.query}
-                    onClick={() => handlePromptClick(prompt.query)}
-                    className="px-3.5 py-1.5 rounded-full border border-violet-500/8 bg-[#111113]/60 text-xs font-medium text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-violet-400/30 hover:bg-[#18181B] transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] cursor-pointer backdrop-blur-sm"
-                  >
-                    <span className="mr-1">{prompt.icon}</span> {prompt.label}
-                  </button>
-                ))}
-              </div>
-
             </div>
 
             {/* Mini Stats Row */}
@@ -499,11 +546,11 @@ export default function HomePage() {
                 { label: "Live Signal Sources", value: heroStats.sources, suffix: "" },
               ].map((stat) => (
                 <div key={stat.label} className="space-y-1">
-                  <div className="text-2xl font-black font-mono text-[#FAFAFA]">
+                  <div className="text-2xl font-black font-mono text-[#141726]">
                     {!isLoading && <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} />}
-                    {isLoading && <span className="text-[#A1A1AA]/40">—</span>}
+                    {isLoading && <span className="text-[#5A6072]/40">—</span>}
                   </div>
-                  <div className="text-[10px] font-mono text-[#A1A1AA]/60 uppercase tracking-widest">{stat.label}</div>
+                  <div className="text-[10px] font-mono text-[#5A6072]/60 uppercase tracking-widest">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -521,27 +568,27 @@ export default function HomePage() {
             
             {/* Visual Floating Telemetry Tags around sphere */}
             <motion.div
-              className="absolute top-8 left-8 px-3 py-1.5 bg-[#111113]/80 border border-violet-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-violet-400 select-none"
+              className="absolute top-8 left-8 px-3 py-1.5 bg-[#FFFFFF]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
               animate={{ y: [0, -8, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
             >
               <span className="flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-violet-400" />
+                <span className="w-1 h-1 rounded-full bg-indigo-400" />
                 {heroStats.tools} NODES LIVE
               </span>
             </motion.div>
             <motion.div
-              className="absolute bottom-14 right-4 px-3 py-1.5 bg-[#111113]/80 border border-cyan-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-cyan-400 select-none"
+              className="absolute bottom-14 right-4 px-3 py-1.5 bg-[#FFFFFF]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
               animate={{ y: [0, 6, 0] }}
               transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
             >
               <span className="flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-cyan-400" />
+                <span className="w-1 h-1 rounded-full bg-indigo-400" />
                 {topGainers[0] ? `${topGainers[0].name.toUpperCase()} RISING` : "MOMENTUM MAP"}
               </span>
             </motion.div>
             <motion.div
-              className="absolute top-1/2 right-0 px-3 py-1.5 bg-[#111113]/80 border border-cyan-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-cyan-400 select-none"
+              className="absolute top-1/2 right-0 px-3 py-1.5 bg-[#FFFFFF]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
               animate={{ y: [0, -6, 0] }}
               transition={{ repeat: Infinity, duration: 6, ease: "easeInOut", delay: 2 }}
             >
@@ -558,14 +605,14 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 2: INFINITE SCROLLING TICKERS
          ══════════════════════════════════════════ */}
-      <section className="w-full py-5 border-y border-violet-500/8 bg-[#111113]/30 overflow-hidden space-y-3">
+      <section className="w-full py-5 border-y border-indigo-500/8 bg-[#FFFFFF]/30 overflow-hidden space-y-3">
         
         {/* Track 1: Scrolls Left */}
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
             {dynamicSignalsLeft.concat(dynamicSignalsLeft).map((signal, idx) => (
-              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-[#A1A1AA]/80 tracking-wider uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-500/60" />
+              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-[#5A6072]/80 tracking-wider uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/60" />
                 {signal}
               </span>
             ))}
@@ -576,8 +623,8 @@ export default function HomePage() {
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <div className="ticker-scroll-right flex items-center gap-16 shrink-0">
             {dynamicSignalsRight.concat(dynamicSignalsRight).map((signal, idx) => (
-              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-cyan-300/60 tracking-wider uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500/60" />
+              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-indigo-600/60 tracking-wider uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/60" />
                 {signal}
               </span>
             ))}
@@ -593,15 +640,15 @@ export default function HomePage() {
         
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 font-mono text-xs text-violet-400 font-bold uppercase tracking-widest">
-              <div className="w-8 h-[2px] bg-gradient-to-r from-violet-500 to-transparent" />
+            <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
+              <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
               <Cpu className="w-4 h-4" /> Domains of Intelligence
             </div>
             <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight">
               Aggregated Tech Domains
             </h2>
           </div>
-          <p className="text-sm text-[#A1A1AA] max-w-md font-sans font-light leading-relaxed">
+          <p className="text-sm text-[#5A6072] max-w-md font-sans font-light leading-relaxed">
             Developer conversations categorized into core segments. We analyze and score each domain recursively.
           </p>
         </div>
@@ -609,29 +656,29 @@ export default function HomePage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map(idx => (
-              <div key={idx} className="h-52 rounded-2xl border border-violet-500/5 bg-[#18181B]/30 animate-pulse" />
+              <div key={idx} className="h-52 rounded-2xl border border-indigo-500/5 bg-[#F1F3FA]/30 animate-pulse" />
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {domains.map((domain, i) => {
-              const scoreColor = domain.score >= 80 ? "text-emerald-400" : domain.score >= 60 ? "text-amber-400" : "text-rose-400";
+              const scoreColor = domain.score >= 80 ? "text-emerald-600" : domain.score >= 60 ? "text-amber-600" : "text-rose-600";
               const scoreBg = domain.score >= 80 ? "bg-emerald-500/10 border-emerald-500/15" : domain.score >= 60 ? "bg-amber-500/10 border-amber-500/15" : "bg-rose-500/10 border-rose-500/15";
               const scoreBarColor = domain.score >= 80 ? "bg-emerald-500" : domain.score >= 60 ? "bg-amber-500" : "bg-rose-500";
               
               return (
                 <motion.div
                   key={domain.slug}
-                  className="stagger-card group block p-6 rounded-2xl border border-violet-500/8 bg-[#18181B]/30 hover:bg-[#18181B]/60 hover:border-violet-400/20 transition-all duration-500 relative overflow-hidden card-hover-glow"
+                  className="stagger-card group block p-6 rounded-2xl relative overflow-hidden tech-panel tech-panel-interactive"
                   whileHover={{ y: -4 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
                   {/* Inner gradient reveal */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                  
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
                   {/* Header */}
                   <div className="flex items-start justify-between relative mb-5">
-                    <div className="p-3 bg-[#111113]/80 border border-violet-500/8 rounded-xl group-hover:border-violet-400/25 group-hover:scale-105 transition-all duration-300">
+                    <div className="p-3 bg-[#F7F8FC] border border-[rgba(20,23,38,0.10)] rounded-xl group-hover:border-indigo-400/40 group-hover:scale-105 transition-all duration-300">
                       <span className="text-2xl">{domain.icon || "📂"}</span>
                     </div>
                     
@@ -641,16 +688,16 @@ export default function HomePage() {
                   </div>
 
                   {/* Body */}
-                  <h3 className="text-lg font-bold font-display group-hover:text-violet-400 transition-colors duration-300 mb-2">
+                  <h3 className="text-lg font-bold font-display group-hover:text-indigo-600 transition-colors duration-300 mb-2">
                     {domain.name}
                   </h3>
-                  <p className="text-xs text-[#A1A1AA] line-clamp-2 leading-relaxed mb-6 font-light">
+                  <p className="text-xs text-[#5A6072] line-clamp-2 leading-relaxed mb-6 font-light">
                     {domain.summary}
                   </p>
 
                   {/* Score progress bar */}
                   <div className="mb-4">
-                    <div className="h-1 w-full bg-[#111113] rounded-full overflow-hidden">
+                    <div className="h-1 w-full bg-[#EDEFF5] rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full ${scoreBarColor} rounded-full`}
                         initial={{ width: 0 }}
@@ -662,9 +709,9 @@ export default function HomePage() {
                   </div>
 
                   {/* Footer stats */}
-                  <div className="flex items-center justify-between font-mono text-[10px] text-[#A1A1AA]/60">
+                  <div className="flex items-center justify-between font-mono text-[10px] text-[#5A6072]/60">
                     <span className="uppercase">{domain.stage} adoption</span>
-                    <span className="text-violet-400/70 group-hover:text-violet-400 transition-colors">{domain.tool_count} technologies</span>
+                    <span className="text-indigo-600/70 group-hover:text-indigo-600 transition-colors">{domain.tool_count} technologies</span>
                   </div>
                 </motion.div>
               );
@@ -681,13 +728,13 @@ export default function HomePage() {
           SECTION 4: HORIZONTAL TRENDING MOVERS
          ══════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-6 py-24 relative section-reveal">
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#09090B] to-transparent pointer-events-none z-10 hidden md:block" />
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#09090B] to-transparent pointer-events-none z-10 hidden md:block" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#EDEFF5] to-transparent pointer-events-none z-10 hidden md:block" />
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#EDEFF5] to-transparent pointer-events-none z-10 hidden md:block" />
         
         <div className="flex flex-col md:flex-row md:items-end gap-4 mb-10">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 font-mono text-xs text-violet-400 font-bold uppercase tracking-widest">
-              <div className="w-8 h-[2px] bg-gradient-to-r from-violet-500 to-transparent" />
+            <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
+              <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
               <Flame className="w-4 h-4" /> Momentum Delta
             </div>
             <h2 className="text-3xl md:text-4xl font-black font-display tracking-tight">
@@ -695,7 +742,7 @@ export default function HomePage() {
             </h2>
           </div>
           <div className="md:ml-auto">
-            <span className="text-[10px] font-mono text-violet-400/60 uppercase tracking-wider font-semibold">
+            <span className="text-[10px] font-mono text-indigo-600/60 uppercase tracking-wider font-semibold">
               Fastest Growing This Cycle
             </span>
           </div>
@@ -704,7 +751,7 @@ export default function HomePage() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[1, 2, 3].map(idx => (
-              <div key={idx} className="h-40 rounded-2xl border border-violet-500/5 bg-[#18181B]/30 animate-pulse" />
+              <div key={idx} className="h-40 rounded-2xl border border-indigo-500/5 bg-[#F1F3FA]/30 animate-pulse" />
             ))}
           </div>
         ) : (
@@ -712,46 +759,47 @@ export default function HomePage() {
             {topGainers.map((tool, i) => (
               <motion.div
                 key={tool.slug}
-                className="tool-score-card snap-start shrink-0 w-full sm:w-[340px] p-6 rounded-2xl border border-violet-500/8 bg-[#18181B]/30 hover:border-cyan-400/25 transition-all duration-500 relative group card-hover-glow"
+                onClick={() => router.push(`/tools/${tool.slug}`)}
+                className="tool-score-card snap-start shrink-0 w-full sm:w-[340px] p-6 rounded-2xl relative group tech-panel tech-panel-interactive"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.6 }}
               >
                 {/* Gradient inner */}
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl" />
-                
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl" />
+
                 <div className="flex items-center gap-4 mb-5 relative">
-                  <span className="text-3xl p-2.5 bg-[#111113]/80 border border-violet-500/8 rounded-xl group-hover:border-cyan-500/25 group-hover:scale-105 transition-all duration-300">
+                  <span className="text-3xl p-2.5 bg-[#F7F8FC] border border-[rgba(20,23,38,0.10)] rounded-xl group-hover:border-indigo-500/40 group-hover:scale-105 transition-all duration-300">
                     {tool.icon}
                   </span>
                   <div>
-                    <h3 className="font-bold text-sm text-[#FAFAFA] group-hover:text-violet-400 transition-colors duration-300">
+                    <h3 className="font-bold text-sm text-[#141726] group-hover:text-indigo-600 transition-colors duration-300">
                       {tool.name}
                     </h3>
-                    <p className="text-[10px] text-[#A1A1AA]/60 font-mono">{tool.category}</p>
+                    <p className="text-[10px] text-[#5A6072]/60 font-mono">{tool.category}</p>
                   </div>
                   
                   <div className="ml-auto text-right">
-                    <span className="text-2xl font-black font-mono text-[#FAFAFA]">{tool.score}</span>
-                    <p className="text-[8px] font-mono text-[#A1A1AA]/50 uppercase tracking-wider">score</p>
+                    <span className="text-2xl font-black font-mono text-[#141726]">{tool.score}</span>
+                    <p className="text-[8px] font-mono text-[#5A6072]/50 uppercase tracking-wider">score</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-violet-500/5 pt-4 font-mono text-xs relative">
-                  <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                <div className="flex items-center justify-between border-t border-indigo-500/5 pt-4 font-mono text-xs relative">
+                  <div className="flex items-center gap-1.5 text-emerald-600 font-bold">
                     <TrendingUp className="w-3.5 h-3.5" />
                     +{tool.growth_pct.toFixed(1)}%
                   </div>
                   
-                  <div className="flex items-center gap-1 text-[#A1A1AA]/60 text-[10px]">
+                  <div className="flex items-center gap-1 text-[#5A6072]/60 text-[10px]">
                     <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     {tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}
                   </div>
 
                   <Link
                     href={`/tools/${tool.slug}`}
-                    className="text-[10px] text-violet-400/70 group-hover:text-violet-400 transition-all flex items-center gap-0.5 hover:underline"
+                    className="text-[10px] text-indigo-600/70 group-hover:text-indigo-600 transition-all flex items-center gap-0.5 hover:underline"
                   >
                     Explore <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-300" />
                   </Link>
@@ -769,7 +817,7 @@ export default function HomePage() {
           SECTION 5: REACT VS VUE VS BUN SPLIT
          ══════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-6 py-24 section-reveal">
-        <div className="glass-panel rounded-3xl p-8 md:p-10 border border-violet-500/8 relative overflow-hidden">
+        <div className="glass-panel rounded-3xl p-8 md:p-10 border border-indigo-500/8 relative overflow-hidden">
           
           {/* Ambient background mesh */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(99,102,241,0.04),transparent_60%)] pointer-events-none" />
@@ -780,15 +828,15 @@ export default function HomePage() {
             {/* Description column */}
             <div className="lg:col-span-5 space-y-8 flex flex-col justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 font-mono text-xs text-cyan-400 font-bold uppercase tracking-widest mb-3">
-                  <div className="w-8 h-[2px] bg-gradient-to-r from-cyan-500 to-transparent" />
+                <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest mb-3">
+                  <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
                   Interactive Telemetry
                 </div>
                 <h3 className="text-3xl md:text-4xl font-black font-display tracking-tight mb-4">
                   Momentum<br/>
                   <span className="text-shimmer">Head-to-Head</span>
                 </h3>
-                <p className="text-sm text-[#A1A1AA] leading-relaxed font-sans font-light">
+                <p className="text-sm text-[#5A6072] leading-relaxed font-sans font-light">
                   The three highest-momentum technologies on StackRadar right now, scored live on GitHub presence, global percentile, and category standing — straight from the index.
                 </p>
               </div>
@@ -801,13 +849,13 @@ export default function HomePage() {
                     onClick={() => setCompareIdx(idx)}
                     className={`w-full flex items-center justify-between p-4 rounded-xl border font-mono text-xs uppercase tracking-wider text-left transition-all duration-400 cursor-pointer ${
                       compareIdx === idx
-                        ? "bg-[#A78BFA]/12 border-violet-500/40 text-white shadow-lg shadow-violet-500/5 font-bold"
-                        : "bg-[#111113]/40 border-violet-500/5 text-[#A1A1AA] hover:text-white hover:border-violet-500/15"
+                        ? "bg-indigo-600/12 border-indigo-500/40 text-[#141726] shadow-lg shadow-indigo-500/5 font-bold"
+                        : "bg-[#FFFFFF]/40 border-indigo-500/5 text-[#5A6072] hover:text-[#141726] hover:border-indigo-500/15"
                     }`}
                   >
                     <span className="flex items-center gap-2">
                       <span className="text-base">{tech.icon}</span> {tech.name}
-                      <span className="text-[9px] text-[#A1A1AA]/50">#{tech.rank}</span>
+                      <span className="text-[9px] text-[#5A6072]/50">#{tech.rank}</span>
                     </span>
                     <ChevronRight className={`w-4 h-4 transition-all duration-300 ${compareIdx === idx ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"}`} />
                   </button>
@@ -816,13 +864,13 @@ export default function HomePage() {
             </div>
 
             {/* Metrics column */}
-            <div className="lg:col-span-7 bg-[#111113]/60 border border-violet-500/8 rounded-2xl p-6 md:p-8 flex flex-col justify-between relative">
+            <div className="lg:col-span-7 tech-panel rounded-2xl p-6 md:p-8 flex flex-col justify-between relative">
               
               <div className="space-y-6">
                 
-                <div className="flex items-center justify-between pb-4 border-b border-violet-500/5">
+                <div className="flex items-center justify-between pb-4 border-b border-indigo-500/5">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-[#A1A1AA]/50">ACTIVE TRACKING</span>
+                    <span className="text-xs font-mono text-[#5A6072]/50">ACTIVE TRACKING</span>
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
                   <AnimatePresence mode="wait">
@@ -831,7 +879,7 @@ export default function HomePage() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="text-xl font-bold font-mono text-violet-400 flex items-center gap-2"
+                      className="text-xl font-bold font-mono text-indigo-600 flex items-center gap-2"
                     >
                       <span className="text-2xl">{activeCompare?.icon}</span>
                       {activeCompare?.name}
@@ -843,10 +891,10 @@ export default function HomePage() {
                 <div className="space-y-5 pt-2">
                   {compareMetrics.map((metric) => (
                     <div key={metric.label} className="space-y-2">
-                      <div className="flex justify-between font-mono text-[10px] text-[#A1A1AA]/70">
+                      <div className="flex justify-between font-mono text-[10px] text-[#5A6072]/70">
                         <span>{metric.label}</span>
                         <motion.span
-                          className="font-bold text-white"
+                          className="font-bold text-[#141726]"
                           key={`${activeCompare?.slug}-${metric.label}`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -854,7 +902,7 @@ export default function HomePage() {
                           {metric.value}{metric.suffix}
                         </motion.span>
                       </div>
-                      <div className="h-2 w-full bg-[#18181B] rounded-full overflow-hidden border border-violet-500/5">
+                      <div className="h-2 w-full bg-[#F1F3FA] rounded-full overflow-hidden border border-indigo-500/5">
                         <motion.div
                           className={`h-full bg-gradient-to-r ${metric.gradient} rounded-full`}
                           key={`bar-${activeCompare?.slug}-${metric.label}`}
@@ -876,10 +924,10 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="mt-8 p-4 rounded-xl bg-[#18181B]/40 border border-violet-500/5"
+                  className="mt-8 p-4 rounded-xl bg-[#F1F3FA]/40 border border-indigo-500/5"
                 >
-                  <span className="text-[10px] font-mono text-cyan-400/70 block mb-1.5">SIGNAL ANALYSIS</span>
-                  <p className="text-xs text-[#A1A1AA] leading-relaxed font-light font-mono">
+                  <span className="text-[10px] font-mono text-indigo-600/70 block mb-1.5">SIGNAL ANALYSIS</span>
+                  <p className="text-xs text-[#5A6072] leading-relaxed font-light font-mono">
                     {activeCompare?.recommendation || `${activeCompare?.name} is tracked live across ${heroStats.sources} developer signal sources.`}
                   </p>
                 </motion.div>
@@ -893,11 +941,11 @@ export default function HomePage() {
       </section>
 
       {/* ─── Divider Ticker ─── */}
-      <section className="w-full py-4 border-y border-violet-500/5 bg-[#111113]/20 overflow-hidden">
+      <section className="w-full py-4 border-y border-indigo-500/5 bg-[#FFFFFF]/20 overflow-hidden">
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
             {[1, 2, 3, 4].map((i) => (
-              <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[#A1A1AA]/30 tracking-widest uppercase">
+              <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[#5A6072]/30 tracking-widest uppercase">
                 <span>{heroStats.tools} TECHNOLOGIES TRACKED</span>
                 <span>•</span>
                 <span>{heroStats.stars.toLocaleString()} GITHUB STARS INDEXED</span>
@@ -917,14 +965,14 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-6 py-24 process-section">
         
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-4 section-reveal">
-          <div className="inline-flex items-center gap-2 font-mono text-xs text-violet-400 font-bold uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
             <Shield className="w-4 h-4" /> Telemetry Processing Pipeline
           </div>
           <h2 className="text-3xl md:text-5xl font-black font-display leading-tight">
             How StackRadar Scrapes<br/>
             <span className="text-shimmer">the Tech Ecosystem</span>
           </h2>
-          <p className="text-sm text-[#A1A1AA] leading-relaxed font-sans font-light max-w-lg mx-auto">
+          <p className="text-sm text-[#5A6072] leading-relaxed font-sans font-light max-w-lg mx-auto">
             We map community trends through recursive cycles of data ingestion, classification, and prediction models.
           </p>
         </div>
@@ -932,29 +980,29 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
           
           {/* Desktop connector line */}
-          <div className="absolute top-20 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-violet-500/15 to-transparent z-0 hidden lg:block" />
+          <div className="absolute top-20 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-indigo-500/15 to-transparent z-0 hidden lg:block" />
 
           {processSteps.map((step, i) => {
             const Icon = step.icon;
             return (
               <motion.div
                 key={step.num}
-                className="process-step relative z-10 p-6 rounded-2xl border border-violet-500/8 bg-[#18181B]/25 hover:bg-[#18181B]/50 transition-all duration-500 group card-hover-glow"
+                className="process-step relative z-10 p-6 rounded-2xl group tech-panel tech-panel-interactive"
                 whileHover={{ y: -6 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 {/* Step number badge */}
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center shadow-lg shadow-violet-500/10 mb-5`}>
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center shadow-lg shadow-indigo-500/25 mb-5`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 
                 {/* Step number */}
-                <div className="text-[10px] font-mono text-violet-400/40 mb-2 tracking-widest">STEP {step.num}</div>
+                <div className="text-[10px] font-mono text-indigo-600/40 mb-2 tracking-widest">STEP {step.num}</div>
                 
-                <h3 className="text-lg font-bold font-display group-hover:text-violet-400 transition-colors duration-300 mb-3">
+                <h3 className="text-lg font-bold font-display group-hover:text-indigo-600 transition-colors duration-300 mb-3">
                   {step.title}
                 </h3>
-                <p className="text-xs text-[#A1A1AA] leading-relaxed font-light">
+                <p className="text-xs text-[#5A6072] leading-relaxed font-light">
                   {step.desc}
                 </p>
               </motion.div>
@@ -971,11 +1019,11 @@ export default function HomePage() {
           SECTION 7: CTA FOOTER WITH RADAR
          ══════════════════════════════════════════ */}
       <section className="max-w-5xl mx-auto px-6 py-24 cta-section">
-        <div className="glass-panel-glow rounded-3xl p-10 md:p-14 text-center relative overflow-hidden border border-violet-500/15 bg-[#18181B]/70">
+        <div className="glass-panel-glow rounded-3xl p-10 md:p-14 text-center relative overflow-hidden border border-indigo-500/15 bg-[#F1F3FA]/70">
           
           {/* Radar SVG Overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-[0.1] pointer-events-none select-none">
-            <svg width="600" height="600" viewBox="0 0 600 600" fill="none" className="text-violet-500">
+            <svg width="600" height="600" viewBox="0 0 600 600" fill="none" className="text-indigo-500">
               <circle cx="300" cy="300" r="280" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" />
               <circle cx="300" cy="300" r="200" stroke="currentColor" strokeWidth="0.5" />
               <circle cx="300" cy="300" r="120" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
@@ -1002,7 +1050,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Sparkles className="w-10 h-10 mx-auto text-violet-400 mb-6" />
+            <Sparkles className="w-10 h-10 mx-auto text-indigo-600 mb-6" />
           </motion.div>
           
           <h3 className="text-3xl md:text-5xl font-black font-display tracking-tight max-w-2xl mx-auto leading-tight mb-4">
@@ -1010,7 +1058,7 @@ export default function HomePage() {
             <span className="text-shimmer">Technology Universe</span>
           </h3>
           
-          <p className="text-sm md:text-base text-[#A1A1AA] max-w-lg mx-auto leading-relaxed mb-10 font-light">
+          <p className="text-sm md:text-base text-[#5A6072] max-w-lg mx-auto leading-relaxed mb-10 font-light">
             Compare languages, analyze user sentiments, and explore sequential learning roadmaps built from developer behaviors.
           </p>
 
@@ -1024,7 +1072,7 @@ export default function HomePage() {
             
             <Link
               href="/roadmaps"
-              className="px-7 py-3 rounded-2xl border border-violet-500/15 bg-[#111113]/60 backdrop-blur-sm hover:bg-[#18181B] hover:border-violet-400/30 text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center gap-2 font-bold font-mono"
+              className="px-7 py-3 rounded-2xl border border-indigo-500/15 bg-[#FFFFFF]/60 backdrop-blur-sm hover:bg-[#F1F3FA] hover:border-indigo-400/30 text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center gap-2 font-bold font-mono"
             >
               Start Learning <ArrowRight className="w-4 h-4" />
             </Link>
@@ -1036,7 +1084,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           LIVE INTEGRATION FEED FOOTER
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-10 border-t border-violet-500/5">
+      <section className="max-w-7xl mx-auto px-6 py-10 border-t border-indigo-500/5">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           
           <div className="flex items-center gap-4">
@@ -1045,16 +1093,16 @@ export default function HomePage() {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
             </div>
             <div>
-              <p className="text-xs font-mono text-[#A1A1AA]/50 uppercase tracking-wider">TELEMETRY STREAM</p>
-              <h3 className="text-sm font-bold text-white">Live Parser Stream Active</h3>
+              <p className="text-xs font-mono text-[#5A6072]/50 uppercase tracking-wider">TELEMETRY STREAM</p>
+              <h3 className="text-sm font-bold text-[#141726]">Live Parser Stream Active</h3>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-5 text-xs font-mono text-[#A1A1AA]/50">
-            <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-violet-400/60" /> RSS NEWS</span>
-            <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-cyan-400/60" /> REDDIT</span>
-            <span className="flex items-center gap-1.5"><Terminal className="w-3.5 h-3.5 text-cyan-400/60" /> GITHUB</span>
-            <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-emerald-400/60" /> HACKERNEWS</span>
+          <div className="flex flex-wrap gap-5 text-xs font-mono text-[#5A6072]/50">
+            <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-indigo-600/60" /> RSS NEWS</span>
+            <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-indigo-600/60" /> REDDIT</span>
+            <span className="flex items-center gap-1.5"><Terminal className="w-3.5 h-3.5 text-indigo-600/60" /> GITHUB</span>
+            <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-emerald-600/60" /> HACKERNEWS</span>
           </div>
 
         </div>

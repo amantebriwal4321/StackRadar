@@ -25,25 +25,37 @@
   --color-ring: var(--ring);
 
   /* ══════════════════════════════════════════════
-     STITCH DESIGN SYSTEM: Deep Space v2
-     Violet-Cyan-Pink triad palette
+     DESIGN SYSTEM: Terminal Light — disciplined
+     Calm paper canvas · ink text · ONE indigo accent ·
+     green/red reserved strictly for data meaning.
      ══════════════════════════════════════════════ */
-  --color-bg-primary: #09090B;
-  --color-bg-secondary: #111113;
-  --color-bg-card: #18181B;
-  --color-accent-primary: #A78BFA;
-  --color-accent-glow: #C4B5FD;
-  --color-accent-hot: #F472B6;
-  --color-accent-cyan: #22D3EE;
-  --color-text-primary: #FAFAFA;
-  --color-text-secondary: #A1A1AA;
-  --color-text-accent: #C4B5FD;
-  --color-score-high: #34D399;
-  --color-score-mid: #FBBF24;
-  --color-score-low: #F87171;
-  --color-border-subtle: rgba(167, 139, 250, 0.08);
-  --color-glow-violet: rgba(167, 139, 250, 0.15);
-  --color-glow-cyan: rgba(34, 211, 238, 0.12);
+  --color-bg-primary: #E8E6EC;     /* cool light canvas */
+  --color-bg-secondary: #F4F2F6;   /* raised surface */
+  --color-bg-card: #FFFFFF;        /* cards */
+  --color-ink: #141726;
+
+  --color-accent-primary: #7C2D4A; /* the one accent — deep wine */
+  --color-accent-glow: #C23E6E;    /* magenta glow */
+  --color-accent-deep: #4E1E32;    /* hover / pressed */
+  /* Aliases kept so existing token references resolve to the SINGLE accent. */
+  --color-accent-hot: #7C2D4A;
+  --color-accent-cyan: #7C2D4A;
+  --color-accent-violet: #7C2D4A;
+  --color-accent-lime: #7C2D4A;
+
+  --color-text-primary: #141726;
+  --color-text-secondary: #5A6072;
+  --color-text-faint: #9BA0AE;
+  --color-text-accent: #7C2D4A;
+
+  /* Data-only semantics — used ONLY to encode momentum/trend, never decoration */
+  --color-score-high: #12B76A;     /* rising / strong */
+  --color-score-mid: #B54708;      /* watch */
+  --color-score-low: #F04438;      /* cooling / weak */
+
+  --color-border-subtle: rgba(20, 23, 38, 0.10);
+  --color-glow-violet: rgba(67, 56, 202, 0.14);
+  --color-glow-cyan: rgba(67, 56, 202, 0.10);
 
   /* Typography */
   --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
@@ -60,83 +72,96 @@
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: #09090B;
-  --foreground: #FAFAFA;
-  --card: #111113;
-  --card-foreground: #FAFAFA;
-  --popover: #09090B;
-  --popover-foreground: #FAFAFA;
-  --primary: #A78BFA;
-  --primary-foreground: #09090B;
-  --secondary: #111113;
-  --secondary-foreground: #A1A1AA;
-  --muted: #18181B;
-  --muted-foreground: #71717A;
-  --accent: #22D3EE;
-  --accent-foreground: #09090B;
-  --destructive: #F87171;
-  --border: rgba(167, 139, 250, 0.08);
-  --input: rgba(167, 139, 250, 0.08);
-  --ring: #A78BFA;
+  --radius: 0.85rem;
+  --background: #E8E6EC;
+  --foreground: #141726;
+  --card: #FFFFFF;
+  --card-foreground: #141726;
+  --popover: #FFFFFF;
+  --popover-foreground: #141726;
+  --primary: #7C2D4A;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F4F2F6;
+  --secondary-foreground: #141726;
+  --muted: #E1DEE6;
+  --muted-foreground: #5A6072;
+  --accent: #7C2D4A;
+  --accent-foreground: #FFFFFF;
+  --destructive: #F04438;
+  --border: rgba(20, 23, 38, 0.10);
+  --input: rgba(20, 23, 38, 0.10);
+  --ring: #7C2D4A;
+
+  /* ── FINAL PALETTE: Neon Noir — deep wine + controlled magenta glow ── */
+  --accent-1: #7C2D4A;   /* wine — solid fills, text, borders */
+  --accent-2: #C23E6E;   /* magenta glow — gradients, glows, hover pop (sparingly) */
+  --accent-3: #4E1E32;   /* deep wine — pressed */
+  --ground: #E8E6EC;     /* cool light canvas (not warm — kills the "cafe" feel) */
+
+  /* Remap Tailwind's whole indigo scale to wine so every `*-indigo-*` class follows */
+  --color-indigo-400: #B0567A;
+  --color-indigo-500: #8A3357;
+  --color-indigo-600: #7C2D4A;
+  --color-indigo-700: #5C2138;
 }
 
 body {
-  background-color: #09090B;
-  color: #FAFAFA;
+  background-color: #E8E6EC;
+  color: #141726;
   font-family: var(--font-sans);
   overflow-x: hidden;
 }
 
 /* ─────────────────────────────────────────────
-   GLASSMORPHISM SYSTEM — Stitch v2
+   GLASS / SURFACES — light frosted
    ───────────────────────────────────────────── */
 .glass-panel {
-  background: rgba(17, 17, 19, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(167, 139, 250, 0.08);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(20, 23, 38, 0.08);
+  box-shadow: 0 10px 34px -20px rgba(20, 23, 38, 0.35);
 }
 
 .glass-panel-glow {
-  background: rgba(17, 17, 19, 0.85);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(167, 139, 250, 0.15);
-  box-shadow: 0 0 40px -10px rgba(167, 139, 250, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+  border: 1px solid color-mix(in srgb, var(--accent-1) 16%, transparent);
+  box-shadow: 0 16px 44px -22px color-mix(in srgb, var(--accent-1) 30%, transparent);
 }
 
 .glass {
-  background: rgba(17, 17, 19, 0.5);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(20, 23, 38, 0.07);
 }
 
 /* ─────────────────────────────────────────────
-   NOISE OVERLAY (Film Grain)
+   NOISE OVERLAY (very subtle grain)
    ───────────────────────────────────────────── */
 .noise-overlay {
   position: fixed;
   inset: 0;
   z-index: 999999;
   pointer-events: none;
-  opacity: 0.03;
-  mix-blend-mode: overlay;
+  opacity: 0.02;
+  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
 }
 
 /* ─────────────────────────────────────────────
-   CURSOR SPOTLIGHT (Violet ambient glow)
+   CURSOR SPOTLIGHT (subtle accent glow)
    ───────────────────────────────────────────── */
 .cursor-spotlight {
   position: fixed;
-  width: 500px;
-  height: 500px;
-  margin-left: -250px;
-  margin-top: -250px;
+  width: 520px;
+  height: 520px;
+  margin-left: -260px;
+  margin-top: -260px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.04) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-1) 6%, transparent) 0%, transparent 70%);
   pointer-events: none;
   z-index: 1;
   transition: opacity 0.4s ease;
@@ -144,7 +169,7 @@ body {
 }
 
 /* ─────────────────────────────────────────────
-   AMBIENT ORBS (Violet / Cyan / Pink)
+   AMBIENT ORBS — single accent, restrained
    ───────────────────────────────────────────── */
 .ambient-orb {
   position: fixed;
@@ -152,284 +177,300 @@ body {
   filter: blur(100px);
   pointer-events: none;
   z-index: 0;
+  opacity: 0.5;
   will-change: transform;
 }
 
 .ambient-orb-1 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.08) 0%, transparent 70%);
-  top: -10%;
-  right: -5%;
-  animation: orb-float-1 18s ease-in-out infinite;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-1) 18%, transparent) 0%, transparent 70%);
+  top: -12%; right: -6%;
+  animation: orb-float-1 20s ease-in-out infinite;
 }
-
 .ambient-orb-2 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.06) 0%, transparent 70%);
-  bottom: 10%;
-  left: -8%;
-  animation: orb-float-2 22s ease-in-out infinite;
+  width: 420px; height: 420px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-1) 10%, transparent) 0%, transparent 70%);
+  bottom: 8%; left: -8%;
+  animation: orb-float-2 24s ease-in-out infinite;
 }
-
 .ambient-orb-3 {
-  width: 350px;
-  height: 350px;
-  background: radial-gradient(circle, rgba(244, 114, 182, 0.05) 0%, transparent 70%);
-  top: 40%;
-  right: 15%;
-  animation: orb-float-3 25s ease-in-out infinite;
+  width: 360px; height: 360px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 10%, transparent) 0%, transparent 70%);
+  top: 42%; right: 14%;
+  animation: orb-float-3 26s ease-in-out infinite;
 }
 
-@keyframes orb-float-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-30px, 40px) scale(1.1); }
-  66% { transform: translate(20px, -30px) scale(0.95); }
-}
-
-@keyframes orb-float-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(40px, -20px) scale(1.05); }
-  66% { transform: translate(-25px, 35px) scale(0.9); }
-}
-
-@keyframes orb-float-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-20px, -40px) scale(1.15); }
-  66% { transform: translate(30px, 20px) scale(0.85); }
-}
+@keyframes orb-float-1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-30px,40px) scale(1.1)} 66%{transform:translate(20px,-30px) scale(.95)} }
+@keyframes orb-float-2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,-20px) scale(1.05)} 66%{transform:translate(-25px,35px) scale(.9)} }
+@keyframes orb-float-3 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-20px,-40px) scale(1.15)} 66%{transform:translate(30px,20px) scale(.85)} }
 
 /* ─────────────────────────────────────────────
-   DOT GRID — Violet-tinted
+   DOT GRID — ink-tinted hairlines
    ───────────────────────────────────────────── */
 .bg-dot-grid {
-  background-image: radial-gradient(rgba(167, 139, 250, 0.04) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(20, 23, 38, 0.05) 1px, transparent 1px);
   background-size: 32px 32px;
 }
-
 .dot-grid-decor {
-  background-image: radial-gradient(rgba(167, 139, 250, 0.06) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(color-mix(in srgb, var(--accent-1) 8%, transparent) 1.5px, transparent 1.5px);
   background-size: 28px 28px;
 }
 
 /* ─────────────────────────────────────────────
-   PRIMARY BUTTON — Violet Gradient
+   PRIMARY BUTTON — solid indigo (the one accent)
    ───────────────────────────────────────────── */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1.25rem;
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%);
-  color: #FAFAFA;
+  padding: 0.55rem 1.3rem;
+  border-radius: 999px;
+  background: var(--accent-1);
+  color: #FFFFFF;
   font-weight: 700;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  border: 1px solid rgba(167, 139, 250, 0.4);
-  box-shadow: 0 0 20px -4px rgba(167, 139, 250, 0.3);
-  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--accent-1) 55%, transparent);
+  transition: all 0.25s var(--ease-spring);
   font-family: var(--font-mono);
 }
-
 .btn-primary:hover {
-  transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 0 30px -4px rgba(167, 139, 250, 0.5);
-  background: linear-gradient(135deg, #C4B5FD 0%, #A78BFA 50%, #8B5CF6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--accent-1) 65%, transparent);
+  background: var(--accent-3);
 }
-
-.btn-primary:active {
-  transform: translateY(0) scale(0.97);
-}
+.btn-primary:active { transform: translateY(0) scale(0.98); }
 
 /* ─────────────────────────────────────────────
    MARQUEE / TICKER
    ───────────────────────────────────────────── */
-@keyframes ticker-scroll-left {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-50%, 0, 0); }
-}
-
-@keyframes ticker-scroll-right {
-  0% { transform: translate3d(-50%, 0, 0); }
-  100% { transform: translate3d(0, 0, 0); }
-}
-
-.ticker-scroll-left {
-  animation: ticker-scroll-left 45s linear infinite;
-}
-
-.ticker-scroll-right {
-  animation: ticker-scroll-right 45s linear infinite;
-}
+@keyframes ticker-scroll-left { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-50%,0,0)} }
+@keyframes ticker-scroll-right { 0%{transform:translate3d(-50%,0,0)} 100%{transform:translate3d(0,0,0)} }
+.ticker-scroll-left { animation: ticker-scroll-left 48s linear infinite; }
+.ticker-scroll-right { animation: ticker-scroll-right 48s linear infinite; }
 
 /* ─────────────────────────────────────────────
    CURSOR FOLLOWER HOVER
    ───────────────────────────────────────────── */
 .ring-hover {
-  width: 64px !important;
-  height: 64px !important;
-  margin-left: -32px !important;
-  margin-top: -32px !important;
-  border-color: #A78BFA !important;
-  background-color: rgba(167, 139, 250, 0.1) !important;
+  width: 64px !important; height: 64px !important;
+  margin-left: -32px !important; margin-top: -32px !important;
+  border-color: var(--accent-1) !important;
+  background-color: color-mix(in srgb, var(--accent-1) 10%, transparent) !important;
   backdrop-filter: blur(2px);
 }
 
-/* ─────────────────────────────────────────────
-   SCROLLBAR HIDDEN
-   ───────────────────────────────────────────── */
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ─────────────────────────────────────────────
    SCROLL REVEAL
    ───────────────────────────────────────────── */
-.reveal-up {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s var(--ease-standard), transform 0.8s var(--ease-standard);
-}
+.reveal-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s var(--ease-standard), transform 0.8s var(--ease-standard); }
 .reveal-up.revealed { opacity: 1; transform: translateY(0); }
-
-.reveal-scale {
-  opacity: 0;
-  transform: scale(0.92);
-  transition: opacity 0.6s var(--ease-standard), transform 0.6s var(--ease-spring);
-}
+.reveal-scale { opacity: 0; transform: scale(0.92); transition: opacity 0.6s var(--ease-standard), transform 0.6s var(--ease-spring); }
 .reveal-scale.revealed { opacity: 1; transform: scale(1); }
 
 /* ─────────────────────────────────────────────
-   GLOW LINE SEPARATOR — Violet
+   HAIRLINE SEPARATOR
    ───────────────────────────────────────────── */
 .glow-line {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.2), rgba(34, 211, 238, 0.15), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-1) 30%, transparent), transparent);
 }
 
 /* ─────────────────────────────────────────────
-   CARD HOVER GLOW — Violet
+   CARD HOVER — subtle accent lift
    ───────────────────────────────────────────── */
-.card-hover-glow {
-  position: relative;
-  transition: all 0.3s ease;
-}
-
+.card-hover-glow { position: relative; transition: all 0.3s var(--ease-spring); }
 .card-hover-glow::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(167, 139, 250, 0.12), rgba(34, 211, 238, 0.08), transparent);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  z-index: -1;
+  content: ''; position: absolute; inset: -1px; border-radius: inherit;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-1) 10%, transparent), transparent);
+  opacity: 0; transition: opacity 0.4s ease; z-index: -1;
 }
-
 .card-hover-glow:hover::before { opacity: 1; }
-.card-hover-glow:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 40px -12px rgba(167, 139, 250, 0.15);
+.card-hover-glow:hover { transform: translateY(-4px); box-shadow: 0 18px 44px -22px rgba(20, 23, 38, 0.30); }
+
+/* ─────────────────────────────────────────────
+   TECH PANELS — crisp separation from the paper canvas.
+   Defined border + layered shadow so a surface reads as a
+   raised "window", not a wash of the background. Same palette:
+   white body, ink-tinted borders, ONE indigo accent on hover.
+   ───────────────────────────────────────────── */
+.tech-panel {
+  background: #FFFFFF;
+  border: 1px solid rgba(20, 23, 38, 0.12);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px rgba(20, 23, 38, 0.04),
+    0 18px 40px -26px rgba(20, 23, 38, 0.45);
+  transition: border-color 0.35s var(--ease-standard),
+              box-shadow 0.35s var(--ease-standard),
+              transform 0.35s var(--ease-spring);
+}
+/* interactive surfaces: border lights up indigo + lifts on hover */
+.tech-panel-interactive { cursor: pointer; }
+.tech-panel-interactive:hover {
+  border-color: color-mix(in srgb, var(--accent-1) 45%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent-1) 14%, transparent),
+    0 24px 50px -24px color-mix(in srgb, var(--accent-1) 40%, transparent);
+  transform: translateY(-4px);
+}
+
+/* Animated conic border — a subtle "scanning" edge on the console */
+@keyframes tech-border-spin { to { transform: rotate(360deg); } }
+.tech-scan-border { position: relative; }
+.tech-scan-border::before {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit;
+  padding: 1px; pointer-events: none; z-index: 0;
+  background: conic-gradient(from 0deg,
+    transparent 0deg, transparent 300deg,
+    color-mix(in srgb, var(--accent-1) 55%, transparent) 340deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: tech-border-spin 6s linear infinite;
+  opacity: 0.9;
 }
 
 /* ─────────────────────────────────────────────
-   GRADIENT TEXT — Violet-Cyan-Pink shimmer
+   TERMINAL WINDOW — the "console" framing (techy dark chrome)
    ───────────────────────────────────────────── */
-@keyframes text-shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+.terminal-window {
+  background: #FFFFFF;
+  border: 1px solid rgba(20, 23, 38, 0.16);
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(20, 23, 38, 0.05),
+    0 28px 55px -28px rgba(20, 23, 38, 0.55);
+}
+.terminal-bar {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding: 0.62rem 0.95rem;
+  background: #141726;                         /* dark ink chrome — the "techy dark" accent */
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-2) 30%, transparent);
+}
+.terminal-dot { width: 11px; height: 11px; border-radius: 50%; }
+.terminal-path {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
 }
 
+/* Engineering corner ticks — blueprint marks, used sparingly */
+.corner-ticks { position: relative; }
+.corner-ticks::before, .corner-ticks::after {
+  content: ''; position: absolute; width: 11px; height: 11px;
+  border-color: color-mix(in srgb, var(--accent-1) 55%, transparent); pointer-events: none; z-index: 1;
+}
+.corner-ticks::before { top: 10px; left: 10px; border-top: 1.5px solid; border-left: 1.5px solid; }
+.corner-ticks::after { bottom: 10px; right: 10px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+
+/* ─────────────────────────────────────────────
+   ACCENT TEXT (was rainbow "gradient-text") — now ONE accent
+   ───────────────────────────────────────────── */
+@keyframes text-shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
 .text-shimmer {
-  background: linear-gradient(
-    90deg,
-    #A78BFA 0%,
-    #22D3EE 25%,
-    #F472B6 50%,
-    #22D3EE 75%,
-    #A78BFA 100%
-  );
+  background: linear-gradient(90deg, var(--accent-1) 0%, var(--accent-2) 50%, var(--accent-1) 100%);
   background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: text-shimmer 4s linear infinite;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  animation: text-shimmer 6s linear infinite;
 }
-
 .gradient-text {
-  background: linear-gradient(135deg, #A78BFA, #22D3EE, #F472B6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: linear-gradient(120deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.gradient-text-cool {
+  background: linear-gradient(120deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 
 /* ─────────────────────────────────────────────
-   FLOAT ANIMATION
+   FLOAT / PULSE / STAR / VIGNETTE / MISC
    ───────────────────────────────────────────── */
-@keyframes float-gentle {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
+@keyframes float-gentle { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 .animate-float { animation: float-gentle 4s ease-in-out infinite; }
 
-/* ─────────────────────────────────────────────
-   PULSE RING
-   ───────────────────────────────────────────── */
-@keyframes pulse-ring {
-  0% { transform: scale(0.8); opacity: 1; }
-  80%, 100% { transform: scale(2.2); opacity: 0; }
-}
+@keyframes pulse-ring { 0%{transform:scale(.8);opacity:1} 80%,100%{transform:scale(2.2);opacity:0} }
+.pulse-ring::before { content:''; position:absolute; inset:0; border-radius:inherit; border:2px solid currentColor; animation:pulse-ring 2s ease-out infinite; }
 
-.pulse-ring::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 2px solid currentColor;
-  animation: pulse-ring 2s ease-out infinite;
-}
-
-/* ─────────────────────────────────────────────
-   STAR ROTATE
-   ───────────────────────────────────────────── */
 .star-rotate { animation: rotateStar 20s linear infinite; }
-@keyframes rotateStar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes rotateStar { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
-/* ─────────────────────────────────────────────
-   SECTION VIGNETTES
-   ───────────────────────────────────────────── */
 .section-vignette-top { position: relative; }
-.section-vignette-top::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, #09090B, transparent);
-  pointer-events: none;
-  z-index: 2;
-}
+.section-vignette-top::before { content:''; position:absolute; top:0; left:0; right:0; height:120px; background:linear-gradient(to bottom,#EDEFF5,transparent); pointer-events:none; z-index:2; }
+.section-vignette-bottom::after { content:''; position:absolute; bottom:0; left:0; right:0; height:120px; background:linear-gradient(to top,#EDEFF5,transparent); pointer-events:none; z-index:2; }
 
-.section-vignette-bottom::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 120px;
-  background: linear-gradient(to top, #09090B, transparent);
-  pointer-events: none;
-  z-index: 2;
-}
+.bg-radial-gradient { background: radial-gradient(circle at center, var(--tw-gradient-from, color-mix(in srgb, var(--accent-1) 6%, transparent)), var(--tw-gradient-to, transparent)); }
 
-/* ─────────────────────────────────────────────
-   RADIAL GRADIENT BG
-   ───────────────────────────────────────────── */
-.bg-radial-gradient {
-  background: radial-gradient(circle at center, var(--tw-gradient-from, rgba(167,139,250,0.05)), var(--tw-gradient-to, transparent));
-}
-
-/* ─────────────────────────────────────────────
-   ANIMATE FADE IN
-   ───────────────────────────────────────────── */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
 .animate-fade-in { animation: fadeIn 0.3s ease-in; }
+
+/* ─────────────────────────────────────────────
+   MOTION — purposeful, restrained
+   ───────────────────────────────────────────── */
+@keyframes char-in { 0%{opacity:0;filter:blur(20px);transform:translateY(90%)} 100%{opacity:1;filter:blur(0);transform:translateY(0)} }
+.animate-char-in { display:inline-block; opacity:0; animation:char-in 0.55s var(--ease-standard) forwards; }
+
+.letter-spin { display:inline-block; transition:transform 0.6s var(--ease-spring); transform-style:preserve-3d; }
+.letter-spin:hover { transform:rotateY(360deg); }
+
+@keyframes line-reveal { to{clip-path:inset(0 0 0 0)} }
+.line-reveal { clip-path:inset(0 100% 0 0); animation:line-reveal 0.9s cubic-bezier(0.77,0,0.175,1) forwards; }
+
+.hover-lift { transition: transform 0.35s var(--ease-spring); }
+.hover-lift:hover { transform: translateY(-4px); }
+
+/* Magnetic button base (JS nudges --mx/--my) */
+.magnetic { transition: transform 0.25s var(--ease-spring); }
+
+.editorial-grid {
+  background-image:
+    linear-gradient(to right, rgba(20,23,38,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(20,23,38,0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Single-accent aurora wash (no rainbow) */
+.aurora-mesh {
+  background:
+    radial-gradient(45% 55% at 18% 20%, color-mix(in srgb, var(--accent-1) 16%, transparent), transparent 62%),
+    radial-gradient(40% 45% at 82% 18%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 62%),
+    radial-gradient(45% 50% at 75% 88%, color-mix(in srgb, var(--accent-1) 10%, transparent), transparent 62%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-char-in { animation: none; opacity: 1; filter: none; transform: none; }
+  .letter-spin:hover { transform: none; }
+  .line-reveal { animation: none; clip-path: none; }
+}
+
+/* ══════════════════════════════════════════════
+   TECHY GRID / HUD OVERLAY — Neon Noir "readout" texture.
+   Faint wine grid + scanline for a restrained cyberpunk feel
+   (used on hero / About sections so they read technical, not soft).
+   ══════════════════════════════════════════════ */
+.hud-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--accent-1) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--accent-1) 7%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.hud-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--accent-1) 4%, transparent) 0px,
+    color-mix(in srgb, var(--accent-1) 4%, transparent) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+/* Neon underline / edge — a thin magenta-wine glow bar */
+.neon-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-2), transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-2) 60%, transparent);
+}

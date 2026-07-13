@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <aside className="w-64 flex-shrink-0 border-r bg-card/50 backdrop-blur-sm hidden md:flex md:flex-col">
                 <div className="flex h-16 items-center px-6 border-b">
                     <Layers className="w-6 h-6 mr-2 text-primary" />
-                    <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-violet-500">
+                    <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">
                         StackRadar
                     </span>
                 </div>
@@ -61,7 +61,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <header className="h-16 flex items-center justify-between px-6 border-b md:hidden bg-background">
                     <div className="flex items-center">
                         <Layers className="w-6 h-6 mr-2 text-primary" />
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-violet-500">
+                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">
                             StackRadar
                         </span>
                     </div>

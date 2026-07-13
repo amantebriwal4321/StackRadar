@@ -97,10 +97,7 @@ def count_weighted_mentions(
     counts: Dict[str, float] = {slug: 0.0 for slug in all_tool_slugs}
 
     for item in items:
-        title = item.get("title", "")
-        tags = " ".join(item.get("tag_list", [])) if isinstance(item.get("tag_list"), list) else ""
-        subreddit = item.get("subreddit", "")
-        text = f"{title} {tags} {subreddit}".strip()
+        text = _item_text(item)
 
         sentiment = item.get("sentiment", "neutral")
         weight = SENTIMENT_WEIGHTS.get(sentiment, 0.5)
@@ -110,6 +107,39 @@ def count_weighted_mentions(
             if slug in counts:
                 counts[slug] += weight
 
+    return counts
+
+
+def _item_text(item: Dict) -> str:
+    """Assemble the searchable text for a content item.
+
+    Includes the Dev.to `description` and comma `tags` string in addition to
+    title / tag_list / subreddit — these carry real tool mentions that were
+    previously ignored, so more posts now attribute to a tool.
+    """
+    title = item.get("title", "") or ""
+    tag_list = item.get("tag_list", [])
+    tags = " ".join(tag_list) if isinstance(tag_list, list) else (item.get("tags", "") or "")
+    subreddit = item.get("subreddit", "") or ""
+    description = item.get("description", "") or ""
+    return f"{title} {tags} {subreddit} {description}".strip()
+
+
+def count_mentions(items: List[Dict], all_tool_slugs: set) -> Dict[str, int]:
+    """Raw mention counts — how many items mention each tool.
+
+    Unlike `count_weighted_mentions`, this returns integer counts (one per
+    matching item) and does NOT apply sentiment weighting. This is what the
+    UI's "N mentions" reflects: with sentiment disabled, a single mention must
+    still count as 1 (the old code multiplied by the 0.5 neutral weight and then
+    `round()`-ed, so isolated mentions silently became 0).
+    """
+    counts: Dict[str, int] = {slug: 0 for slug in all_tool_slugs}
+    for item in items:
+        matched = classify_text_to_tools(_item_text(item))
+        for slug in matched:
+            if slug in counts:
+                counts[slug] += 1
     return counts
 
 

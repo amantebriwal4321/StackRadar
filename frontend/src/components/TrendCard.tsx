@@ -14,7 +14,7 @@ interface ToolCardProps {
 
 // Stage badge colors
 const stageBadge: Record<string, string> = {
-  "Emerging": "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  "Emerging": "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
   "Growing": "bg-primary/10 text-primary border-primary/20",
   "Mature": "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   "Declining": "bg-rose-500/10 text-rose-500 border-rose-500/20",
@@ -30,23 +30,23 @@ const priorityBadge: Record<string, string> = {
 
 // Sentiment badge
 const sentimentBadge: Record<string, { class: string; label: string }> = {
-  "positive": { class: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", label: "🟢 Positive Buzz" },
-  "negative": { class: "bg-rose-500/10 text-rose-400 border-rose-500/20", label: "🔴 Negative Buzz" },
-  "mixed":    { class: "bg-amber-500/10 text-amber-400 border-amber-500/20", label: "🟡 Mixed Signals" },
+  "positive": { class: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20", label: "🟢 Positive Buzz" },
+  "negative": { class: "bg-rose-500/10 text-rose-600 border-rose-500/20", label: "🔴 Negative Buzz" },
+  "mixed":    { class: "bg-amber-500/10 text-amber-600 border-amber-500/20", label: "🟡 Mixed Signals" },
   "neutral":  { class: "", label: "" },
 };
 
 function GrowthIndicator({ growth }: { growth: number }) {
   if (growth > 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-emerald-500 dark:text-emerald-400 font-bold text-xs">
+      <span className="inline-flex items-center gap-1 text-emerald-500 dark:text-emerald-600 font-bold text-xs">
         <TrendingUp className="w-3.5 h-3.5" />
         +{growth.toFixed(1)}%
       </span>
     );
   } else if (growth < 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-rose-500 dark:text-rose-400 font-bold text-xs">
+      <span className="inline-flex items-center gap-1 text-rose-500 dark:text-rose-600 font-bold text-xs">
         <TrendingDown className="w-3.5 h-3.5" />
         {growth.toFixed(1)}%
       </span>

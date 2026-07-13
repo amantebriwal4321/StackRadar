@@ -48,7 +48,7 @@ export default function Preloader() {
           initial={{ y: 0 }}
           animate={progress === 100 ? { y: "-100%" } : { y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute top-0 left-0 w-full h-1/2 bg-[#09090B] border-b border-[#A78BFA]/15 pointer-events-auto"
+          className="absolute top-0 left-0 w-full h-1/2 bg-[#141726] border-b border-[#4338CA]/15 pointer-events-auto"
         />
 
         {/* Bottom Half Split */}
@@ -56,7 +56,7 @@ export default function Preloader() {
           initial={{ y: 0 }}
           animate={progress === 100 ? { y: "100%" } : { y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute bottom-0 left-0 w-full h-1/2 bg-[#09090B] pointer-events-auto"
+          className="absolute bottom-0 left-0 w-full h-1/2 bg-[#141726] pointer-events-auto"
         />
 
         {/* Cinematic progress text */}
@@ -65,11 +65,11 @@ export default function Preloader() {
             initial={{ opacity: 0, y: 10 }}
             animate={progress >= 40 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
             transition={{ duration: 0.5 }}
-            className="text-sm font-bold tracking-[0.4em] font-display text-[#A1A1AA] uppercase text-center"
+            className="text-sm font-bold tracking-[0.4em] font-display text-white/60 uppercase text-center"
           >
             STACKRADAR
           </motion.div>
-          <div className="text-7xl md:text-9xl font-black font-display text-[#A78BFA] tracking-tighter leading-none select-none">
+          <div className="text-7xl md:text-9xl font-black font-display gradient-text tracking-tighter leading-none select-none">
             {progress}%
           </div>
         </div>

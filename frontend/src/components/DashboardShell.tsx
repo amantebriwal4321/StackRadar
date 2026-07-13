@@ -7,9 +7,11 @@ interface DashboardShellProps {
   children: React.ReactNode;
   /** Hide the sidebar and use full-width layout */
   fullWidth?: boolean;
+  /** Per-page accent theme: "teal" | "graphite" | "clay" | "wine" (comparison mode) */
+  theme?: "teal" | "graphite" | "clay" | "wine";
 }
 
-export default function DashboardShell({ children, fullWidth = false }: DashboardShellProps) {
+export default function DashboardShell({ children, fullWidth = false, theme }: DashboardShellProps) {
   const spotlightRef = useRef<HTMLDivElement>(null);
 
   // Cursor spotlight tracking (inspired by XR reference)
@@ -37,7 +39,7 @@ export default function DashboardShell({ children, fullWidth = false }: Dashboar
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
+    <div className={`flex flex-col min-h-screen bg-background relative overflow-hidden${theme ? ` theme-${theme}` : ""}`}>
       {/* ─── Noise Texture (like XR reference grain) ─── */}
       <div className="noise-overlay" aria-hidden="true" />
       

@@ -139,7 +139,7 @@ export default function WatchlistPage() {
                   </div>
                   <button
                     onClick={() => handleRemove(tool.slug)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-500/10 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     Remove

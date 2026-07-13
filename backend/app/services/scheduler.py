@@ -39,7 +39,7 @@ from app.services.scraper import (
     validate_github_token, _adaptive_delay, _rate_remaining, _rate_limit,
 )
 from app.services.scoring import (
-    count_weighted_mentions, calculate_tool_score, calculate_all_tool_scores,
+    count_mentions, calculate_tool_score, calculate_all_tool_scores,
     classify_growth_stage, generate_tool_summary, TOOL_REGISTRY,
     classify_trend, generate_recommendation, classify_learning_priority,
     classify_text_to_tools,
@@ -165,17 +165,22 @@ async def perform_full_scrape():
             "total": len(all_content),
         }
 
-        # ━━━ STEP 3: Count sentiment-weighted mentions per tool ━━━
+        # ━━━ STEP 3: Count mentions per tool (raw, from all source text) ━━━
         scrape_status["current_step"] = "3/8 — Counting mentions"
-        logger.info("Step 3: Counting sentiment-weighted mentions per tool...")
+        logger.info("Step 3: Counting tool mentions across sources...")
 
         all_tools = db.query(Tool).filter(Tool.slug.in_(TOOL_REGISTRY.keys())).all()
         all_slugs = {t.slug for t in all_tools}
 
-        hn_weighted = count_weighted_mentions(hn_stories, "hn", all_slugs)
-        devto_weighted = count_weighted_mentions(devto_articles, "devto", all_slugs)
-        reddit_weighted = count_weighted_mentions(reddit_posts, "reddit", all_slugs)
-        news_weighted = count_weighted_mentions(news_articles, "news", all_slugs)
+        hn_weighted = count_mentions(hn_stories, all_slugs)
+        devto_weighted = count_mentions(devto_articles, all_slugs)
+        reddit_weighted = count_mentions(reddit_posts, all_slugs)
+        news_weighted = count_mentions(news_articles, all_slugs)
+
+        _cycle_mentions = sum(
+            sum(src.values()) for src in (hn_weighted, devto_weighted, reddit_weighted, news_weighted)
+        )
+        logger.info(f"Step 3: matched {_cycle_mentions} tool mentions this cycle.")
 
         # ━━━ STEP 4: Fetch GitHub stats (Phase 1 — shared client + adaptive delay) ━━━
         scrape_status["current_step"] = "4/8 — Fetching GitHub stats"
@@ -231,15 +236,12 @@ async def perform_full_scrape():
             new_stars = gh.get("stars", tool.stars)
             new_forks = gh.get("forks", tool.forks)
 
-            hn_val = hn_weighted.get(slug, 0.0)
-            devto_val = devto_weighted.get(slug, 0.0)
-            reddit_val = reddit_weighted.get(slug, 0.0)
-            news_val = news_weighted.get(slug, 0.0)
-
-            hn_count = max(0, round(hn_val))
-            devto_count = max(0, round(devto_val))
-            reddit_count = max(0, round(reddit_val))
-            news_count = max(0, round(news_val))
+            # Raw integer mention counts (no rounding sink — a single mention
+            # now registers as 1 instead of round(0.5)=0).
+            hn_count = hn_weighted.get(slug, 0)
+            devto_count = devto_weighted.get(slug, 0)
+            reddit_count = reddit_weighted.get(slug, 0)
+            news_count = news_weighted.get(slug, 0)
 
             tool_signals.append({
                 "stars": new_stars,

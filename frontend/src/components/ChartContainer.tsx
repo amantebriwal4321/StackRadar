@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { ResponsiveContainer } from "recharts";
 
 export const chartColors = [
-  "#8B5CF6", // indigo
+  "#3730A3", // indigo
   "#06b6d4", // cyan
   "#8b5cf6", // violet
   "#f43f5e", // rose

@@ -19,9 +19,9 @@ const reveal = {
 };
 
 function scoreColor(score: number) {
-  if (score >= 75) return "#34D399";
-  if (score >= 45) return "#A78BFA";
-  return "#F472B6";
+  if (score >= 75) return "#12B76A"; // strong
+  if (score >= 45) return "#B54708"; // watch
+  return "#F04438";                  // weak
 }
 
 export default function AboutPage() {
@@ -44,8 +44,13 @@ export default function AboutPage() {
   return (
     <DashboardShell fullWidth>
       {/* ══════════════ HERO ══════════════ */}
-      <section className="grid lg:grid-cols-[1.1fr_.9fr] gap-12 lg:gap-16 items-center pt-6 md:pt-10 pb-16">
-        <div>
+      <section className="relative grid lg:grid-cols-[1.1fr_.9fr] gap-12 lg:gap-16 items-center pt-6 md:pt-10 pb-16">
+        {/* techy HUD grid backdrop */}
+        <div
+          className="absolute inset-0 -z-10 hud-grid opacity-70 [mask-image:radial-gradient(ellipse_at_35%_40%,black,transparent_78%)] pointer-events-none"
+          aria-hidden="true"
+        />
+        <div className="relative">
           <motion.span
             {...reveal}
             className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.28em] uppercase text-accent-primary"
@@ -120,7 +125,7 @@ export default function AboutPage() {
           {/* concentric rings */}
           <svg viewBox="0 0 400 400" className="absolute inset-0 w-full h-full">
             {[190, 140, 90, 42].map((r) => (
-              <circle key={r} cx="200" cy="200" r={r} fill="none" stroke="rgba(167,139,250,0.14)" strokeWidth="1" />
+              <circle key={r} cx="200" cy="200" r={r} fill="none" stroke="rgba(20,23,38,0.12)" strokeWidth="1" />
             ))}
             {[0, 30, 60, 90, 120, 150].map((deg) => {
               const rad = (deg * Math.PI) / 180;
@@ -131,7 +136,7 @@ export default function AboutPage() {
                   y1={200 - Math.sin(rad) * 190}
                   x2={200 + Math.cos(rad) * 190}
                   y2={200 + Math.sin(rad) * 190}
-                  stroke="rgba(167,139,250,0.07)"
+                  stroke="rgba(20,23,38,0.06)"
                   strokeWidth="1"
                 />
               );
@@ -143,13 +148,13 @@ export default function AboutPage() {
             className="absolute inset-0 rounded-full motion-safe:animate-[spin_7s_linear_infinite]"
             style={{
               background:
-                "conic-gradient(from 0deg, rgba(167,139,250,0.30) 0deg, rgba(167,139,250,0.04) 34deg, transparent 60deg, transparent 360deg)",
+                "conic-gradient(from 0deg, rgba(194,62,110,0.35) 0deg, rgba(194,62,110,0.05) 34deg, transparent 60deg, transparent 360deg)",
               maskImage: "radial-gradient(circle at center, black 0%, black 47%, transparent 48%)",
               WebkitMaskImage: "radial-gradient(circle at center, black 0%, black 47%, transparent 48%)",
             }}
           />
           {/* core */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-accent-glow shadow-[0_0_16px_#C4B5FD]" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-accent-glow shadow-[0_0_16px_var(--accent-2)]" />
 
           {/* real top-3 tool chips */}
           {topTools.map((t, i) => {
@@ -182,7 +187,7 @@ export default function AboutPage() {
         blurb="“Should I learn this? Is it still worth investing in? What’s rising right now?” — asked constantly, answered badly."
       >
         <div className="grid md:grid-cols-2 gap-5">
-          <div className="glass-panel rounded-2xl p-6 md:p-7">
+          <div className="tech-panel rounded-2xl p-6 md:p-7">
             <h3 className="font-mono text-xs tracking-[0.16em] uppercase text-text-secondary mb-4">
               Today, you rely on…
             </h3>
@@ -259,7 +264,7 @@ export default function AboutPage() {
           ].map((step, i) => {
             const Icon = step.icon;
             return (
-              <div key={step.k} className="relative glass-panel rounded-2xl p-6 card-hover-glow">
+              <div key={step.k} className="relative tech-panel tech-panel-interactive rounded-2xl p-6">
                 <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-text-secondary/70">
                   {step.n}
                 </div>
@@ -306,25 +311,25 @@ export default function AboutPage() {
         <div className="grid md:grid-cols-3 gap-4">
           {[
             {
-              tag: "Primary", accent: "#A78BFA", icon: GraduationCap,
+              tag: "Primary", accent: "#7C2D4A", icon: GraduationCap,
               who: "Learners & career-switchers",
               jtbd: "“I have limited time — what do I learn next so it still matters in two years?”",
               hook: "See what’s rising, then start its roadmap in one click. Intelligence becomes action.",
             },
             {
-              tag: "Secondary", accent: "#22D3EE", icon: Users,
+              tag: "Secondary", accent: "#7C2D4A", icon: Users,
               who: "Senior devs & tech leads",
               jtbd: "“Is this tool safe to standardize on, or is it already cooling off?”",
               hook: "Compare momentum and trajectory before you bet a codebase on it.",
             },
             {
-              tag: "Growth loop", accent: "#F472B6", icon: Megaphone,
+              tag: "Growth loop", accent: "#7C2D4A", icon: Megaphone,
               who: "DevRel & creators",
               jtbd: "“What’s heating up that I should make content about this week?”",
               hook: "Screenshot-ready score cards and movers → built-in distribution.",
             },
           ].map((a) => (
-            <div key={a.who} className="relative glass-panel rounded-2xl p-6 overflow-hidden flex flex-col gap-3">
+            <div key={a.who} className="relative tech-panel rounded-2xl p-6 overflow-hidden flex flex-col gap-3">
               <span className="absolute left-0 inset-y-0 w-[3px]" style={{ background: a.accent, opacity: 0.6 }} />
               <div className="flex items-center justify-between">
                 <a.icon className="w-5 h-5" style={{ color: a.accent }} />
@@ -383,6 +388,7 @@ function Section({
 }) {
   return (
     <motion.section {...reveal} className="py-14 border-t border-border-subtle">
+      <span className="block w-10 neon-rule mb-7" aria-hidden="true" />
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <div>
           <span className="font-mono text-[11px] tracking-[0.28em] uppercase text-accent-primary">
