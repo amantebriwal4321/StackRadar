@@ -14,6 +14,7 @@ const navLinks = [
   { href: "/trends", label: "trends" },
   { href: "/compare", label: "compare" },
   { href: "/roadmaps", label: "roadmaps" },
+  { href: "/about", label: "about" },
 ];
 
 export default function Navbar() {
