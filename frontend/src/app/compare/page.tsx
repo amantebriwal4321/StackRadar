@@ -161,7 +161,7 @@ export default function ComparePage() {
       <div className="space-y-8 relative z-10 pb-16">
         
         {/* Opacity Blurred Header */}
-        <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[#FFFFFF]/85 backdrop-blur-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[var(--c-surface)]/85 backdrop-blur-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none" />
           
           <div className="space-y-1">
@@ -170,9 +170,9 @@ export default function ComparePage() {
             </span>
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-display flex items-center gap-3">
               <GitCompare className="w-8 h-8 text-indigo-600" />
-              <span className="gradient-text">Compare Matrix</span>
+              <span className="text-text-primary">Compare Matrix</span>
             </h1>
-            <p className="text-[#5A6072] text-sm font-light">
+            <p className="text-[var(--c-ink-2)] text-sm font-light">
               Select 2 to 5 technologies from the scanner index. Shares links directly containing parameters.
             </p>
           </div>
@@ -190,7 +190,7 @@ export default function ComparePage() {
             {selectedSlugs.length > 0 && (
               <button
                 onClick={clearSelection}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-indigo-500/15 bg-[#F1F3FA] hover:bg-[#F1F3FA]/80 text-xs font-mono text-[#5A6072] transition-all hover:text-[#141726]"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-indigo-500/15 bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-2)]/80 text-xs font-mono text-[var(--c-ink-2)] transition-all hover:text-[var(--c-ink)]"
               >
                 CLEAR_ALL
               </button>
@@ -203,9 +203,9 @@ export default function ComparePage() {
           
           {/* Selected items list */}
           <div className="flex items-center gap-2.5 flex-wrap min-h-[38px] pb-2 border-b border-indigo-500/5">
-            <span className="text-[10px] font-mono font-bold text-[#5A6072]/50 uppercase tracking-widest mr-2">TRACKED:</span>
+            <span className="text-[10px] font-mono font-bold text-[var(--c-ink-2)]/50 uppercase tracking-widest mr-2">TRACKED:</span>
             {selectedSlugs.length === 0 && (
-              <span className="text-xs text-[#5A6072]/40 italic">Add technologies using the list index below...</span>
+              <span className="text-xs text-[var(--c-ink-2)]/40 italic">Add technologies using the list index below...</span>
             )}
             {selectedSlugs.map((slug, idx) => {
               const tool = allTools.find((t) => t.slug === slug);
@@ -222,7 +222,7 @@ export default function ComparePage() {
                   }}
                 >
                   {tool?.icon} {tool?.name || slug}
-                  <X className="w-3.5 h-3.5 ml-1 text-slate-500 hover:text-[#141726]" />
+                  <X className="w-3.5 h-3.5 ml-1 text-slate-500 hover:text-[var(--c-ink)]" />
                 </button>
               );
             })}
@@ -231,14 +231,14 @@ export default function ComparePage() {
           {/* Search bar inside selector */}
           <div className="relative group max-w-md">
             <div className="absolute -inset-[1px] bg-gradient-to-r from-indigo-500 to-indigo-500 rounded-xl opacity-10 group-focus-within:opacity-40 transition-opacity duration-300 blur-sm" />
-            <div className="relative bg-[#F1F3FA] rounded-xl flex items-center border border-indigo-500/10 px-3">
+            <div className="relative bg-[var(--c-surface-2)] rounded-xl flex items-center border border-indigo-500/10 px-3">
               <Search className="w-4 h-4 text-slate-500" />
               <input
                 type="text"
                 placeholder="Search tools to add..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent border-none py-2.5 px-2 text-xs text-[#141726] focus:outline-none placeholder-[#5A6072]/50"
+                className="w-full bg-transparent border-none py-2.5 px-2 text-xs text-[var(--c-ink)] focus:outline-none placeholder-[var(--c-ink-2)]/50"
               />
             </div>
           </div>
@@ -260,8 +260,8 @@ export default function ComparePage() {
                     disabled={!isSelected && selectedSlugs.length >= 5}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono transition-all border cursor-pointer select-none text-left truncate ${
                       isSelected
-                        ? "bg-[#4338CA]/15 border-indigo-500 text-[#141726] font-bold"
-                        : "bg-[#FFFFFF]/50 border-indigo-500/5 text-[#5A6072] hover:text-[#141726] hover:border-indigo-500/20 disabled:opacity-20 disabled:cursor-not-allowed"
+                        ? "bg-[#4338CA]/15 border-indigo-500 text-[var(--c-ink)] font-bold"
+                        : "bg-[var(--c-surface)]/50 border-indigo-500/5 text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:border-indigo-500/20 disabled:opacity-20 disabled:cursor-not-allowed"
                     }`}
                   >
                     <span className="text-base select-none">{tool.icon}</span>
@@ -284,7 +284,7 @@ export default function ComparePage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-            <span className="text-xs font-mono text-[#5A6072]/70">Gathering metric structures...</span>
+            <span className="text-xs font-mono text-[var(--c-ink-2)]/70">Gathering metric structures...</span>
           </div>
         ) : compareData && compareData.length >= 2 ? (
           <div className="space-y-8">
@@ -295,19 +295,19 @@ export default function ComparePage() {
               <div className="min-w-[800px] divide-y divide-indigo-500/5">
                 
                 {/* 1. Header names row */}
-                <div className="grid grid-cols-12 gap-4 px-6 py-5 bg-[#FFFFFF]/80 border-b border-indigo-500/10 items-center">
-                  <div className="col-span-3 font-mono text-[10px] text-[#5A6072] tracking-widest uppercase">
+                <div className="grid grid-cols-12 gap-4 px-6 py-5 bg-[var(--c-surface)]/80 border-b border-indigo-500/10 items-center">
+                  <div className="col-span-3 font-mono text-[10px] text-[var(--c-ink-2)] tracking-widest uppercase">
                     METRIC CATEGORY
                   </div>
                   {compareData.map((t, idx) => {
                     const color = COMPARE_COLORS[idx % COMPARE_COLORS.length];
                     return (
                       <div key={t.slug} className="col-span-2 text-center" style={{ minWidth: "120px" }}>
-                        <div className="flex flex-col items-center gap-1.5 p-2 bg-[#F1F3FA]/50 rounded-xl border border-indigo-500/5 relative">
+                        <div className="flex flex-col items-center gap-1.5 p-2 bg-[var(--c-surface-2)]/50 rounded-xl border border-indigo-500/5 relative">
                           <div className="absolute top-1 right-2 w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
                           <span className="text-3xl select-none">{t.icon}</span>
-                          <span className="font-bold text-sm text-[#141726]">{t.name}</span>
-                          <span className="text-[8px] font-mono text-[#5A6072]/60 uppercase">{t.category}</span>
+                          <span className="font-bold text-sm text-[var(--c-ink)]">{t.name}</span>
+                          <span className="text-[8px] font-mono text-[var(--c-ink-2)]/60 uppercase">{t.category}</span>
                         </div>
                       </div>
                     );
@@ -316,21 +316,21 @@ export default function ComparePage() {
 
                 {/* 2. Momentum Score row */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3 font-mono text-xs font-bold text-[#141726]">
+                  <div className="col-span-3 font-mono text-xs font-bold text-[var(--c-ink)]">
                     MOMENTUM SCORE
                   </div>
                   {compareData.map((t) => {
                     const isWinner = t.score === maxMetrics.score;
                     return (
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1.5">
-                        <span className="text-2xl font-black font-mono text-[#141726]">{t.score}</span>
+                        <span className="text-2xl font-black font-mono text-[var(--c-ink)]">{t.score}</span>
                         {isWinner && (
                           <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-mono font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-0.5 shadow-sm">
                             <Award className="w-2.5 h-2.5" /> HIGHEST
                           </span>
                         )}
                         {/* Relative Bar */}
-                        <div className="h-1 w-16 bg-[#F1F3FA] rounded-full overflow-hidden">
+                        <div className="h-1 w-16 bg-[var(--c-surface-2)] rounded-full overflow-hidden">
                           <div className="h-full bg-indigo-500" style={{ width: `${(t.score / maxMetrics.score) * 100}%` }} />
                         </div>
                       </div>
@@ -340,12 +340,12 @@ export default function ComparePage() {
 
                 {/* 3. Adoption stage row */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3 font-mono text-xs text-[#5A6072]">
+                  <div className="col-span-3 font-mono text-xs text-[var(--c-ink-2)]">
                     ADOPTION STAGE
                   </div>
                   {compareData.map((t) => (
                     <div key={t.slug} className="col-span-2 text-center">
-                      <span className="px-2.5 py-0.5 rounded bg-[#FFFFFF] border border-indigo-500/10 text-xs font-mono text-indigo-600 uppercase tracking-wider">
+                      <span className="px-2.5 py-0.5 rounded bg-[var(--c-surface)] border border-indigo-500/10 text-xs font-mono text-indigo-600 uppercase tracking-wider">
                         {t.stage}
                       </span>
                     </div>
@@ -354,13 +354,13 @@ export default function ComparePage() {
 
                 {/* 4. Growth percentage delta */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3 font-mono text-xs text-[#5A6072]">
+                  <div className="col-span-3 font-mono text-xs text-[var(--c-ink-2)]">
                     CYCLE GROWTH DELTA
                   </div>
                   {compareData.map((t) => {
                     const isWinner = t.growth_pct === maxMetrics.growth_pct;
                     const Icon = t.growth_pct > 0 ? TrendingUp : t.growth_pct < 0 ? TrendingDown : Minus;
-                    const color = t.growth_pct > 0 ? "text-emerald-600" : t.growth_pct < 0 ? "text-rose-600" : "text-[#5A6072]";
+                    const color = t.growth_pct > 0 ? "text-emerald-600" : t.growth_pct < 0 ? "text-rose-600" : "text-[var(--c-ink-2)]";
                     return (
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
                         <span className={`inline-flex items-center gap-1 font-bold font-mono text-xs ${color}`}>
@@ -372,7 +372,7 @@ export default function ComparePage() {
                             FASTEST
                           </span>
                         )}
-                        <div className="h-1 w-16 bg-[#F1F3FA] rounded-full overflow-hidden">
+                        <div className="h-1 w-16 bg-[var(--c-surface-2)] rounded-full overflow-hidden">
                           <div className="h-full bg-emerald-500" style={{ width: `${Math.max(0, (t.growth_pct / maxMetrics.growth_pct) * 100)}%` }} />
                         </div>
                       </div>
@@ -382,14 +382,14 @@ export default function ComparePage() {
 
                 {/* 5. Github Stars */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3 font-mono text-xs text-[#5A6072]">
+                  <div className="col-span-3 font-mono text-xs text-[var(--c-ink-2)]">
                     GITHUB STARS
                   </div>
                   {compareData.map((t) => {
                     const isWinner = t.stars === maxMetrics.stars;
                     return (
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
-                        <span className="inline-flex items-center gap-1 font-mono text-xs text-[#141726]">
+                        <span className="inline-flex items-center gap-1 font-mono text-xs text-[var(--c-ink)]">
                           <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                           {t.stars >= 1000 ? `${(t.stars / 1000).toFixed(1)}k` : t.stars}
                         </span>
@@ -398,7 +398,7 @@ export default function ComparePage() {
                             MOST STARS
                           </span>
                         )}
-                        <div className="h-1 w-16 bg-[#F1F3FA] rounded-full overflow-hidden">
+                        <div className="h-1 w-16 bg-[var(--c-surface-2)] rounded-full overflow-hidden">
                           <div className="h-full bg-amber-500" style={{ width: `${(t.stars / maxMetrics.stars) * 100}%` }} />
                         </div>
                       </div>
@@ -408,16 +408,16 @@ export default function ComparePage() {
 
                 {/* 6. Forks */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3 font-mono text-xs text-[#5A6072]">
+                  <div className="col-span-3 font-mono text-xs text-[var(--c-ink-2)]">
                     REPOS FORKS
                   </div>
                   {compareData.map((t) => (
                     <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
-                      <span className="inline-flex items-center gap-1 font-mono text-xs text-[#5A6072]">
+                      <span className="inline-flex items-center gap-1 font-mono text-xs text-[var(--c-ink-2)]">
                         <GitFork className="w-3.5 h-3.5 text-indigo-600" />
                         {t.forks >= 1000 ? `${(t.forks / 1000).toFixed(1)}k` : t.forks}
                       </span>
-                      <div className="h-1 w-16 bg-[#F1F3FA] rounded-full overflow-hidden">
+                      <div className="h-1 w-16 bg-[var(--c-surface-2)] rounded-full overflow-hidden">
                         <div className="h-full bg-indigo-400" style={{ width: `${(t.forks / maxMetrics.forks) * 100}%` }} />
                       </div>
                     </div>
@@ -426,7 +426,7 @@ export default function ComparePage() {
 
                 {/* 7. Total discussion Mentions */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3 font-mono text-xs text-[#5A6072]">
+                  <div className="col-span-3 font-mono text-xs text-[var(--c-ink-2)]">
                     COMMUNITY MENTIONS
                   </div>
                   {compareData.map((t) => {
@@ -435,13 +435,13 @@ export default function ComparePage() {
                     const isWinner = totalMentions === maxTotalMentions;
                     return (
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
-                        <span className="font-mono text-xs text-[#141726]">{totalMentions} scans</span>
+                        <span className="font-mono text-xs text-[var(--c-ink)]">{totalMentions} scans</span>
                         {isWinner && (
                           <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-[7px] font-mono font-bold text-indigo-600">
                             MOST DISCUSSIONS
                           </span>
                         )}
-                        <div className="h-1 w-16 bg-[#F1F3FA] rounded-full overflow-hidden">
+                        <div className="h-1 w-16 bg-[var(--c-surface-2)] rounded-full overflow-hidden">
                           <div className="h-full bg-indigo-500" style={{ width: `${(totalMentions / maxTotalMentions) * 100}%` }} />
                         </div>
                       </div>
@@ -451,14 +451,14 @@ export default function ComparePage() {
 
                 {/* 8. Sentiment values */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3 font-mono text-xs text-[#5A6072]">
+                  <div className="col-span-3 font-mono text-xs text-[var(--c-ink-2)]">
                     SENTIMENT ANALYSIS
                   </div>
                   {compareData.map((t) => {
                     const isWinner = t.sentiment_positive === maxMetrics.sentiment_positive;
                     return (
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
-                        <span className="text-xs font-mono font-bold text-[#141726]">
+                        <span className="text-xs font-mono font-bold text-[var(--c-ink)]">
                           {t.sentiment_label?.toUpperCase()} ({(t.sentiment_positive * 100).toFixed(0)}% pos)
                         </span>
                         {isWinner && (
@@ -521,11 +521,11 @@ export default function ComparePage() {
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-3xl select-none">{t.icon}</span>
                       <div>
-                        <h3 className="font-bold text-sm text-[#141726] font-display">{t.name} Recommendation</h3>
-                        <span className="text-[9px] font-mono text-[#5A6072] uppercase">{t.category}</span>
+                        <h3 className="font-bold text-sm text-[var(--c-ink)] font-display">{t.name} Recommendation</h3>
+                        <span className="text-[9px] font-mono text-[var(--c-ink-2)] uppercase">{t.category}</span>
                       </div>
                     </div>
-                    <p className="text-xs text-[#5A6072] leading-relaxed font-light font-mono">
+                    <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light font-mono">
                       {t.recommendation || "No specialized profile recommendations. This technology represents stable developer vectors."}
                     </p>
                   </div>
@@ -535,10 +535,10 @@ export default function ComparePage() {
 
           </div>
         ) : (
-          <div className="text-center py-20 border border-dashed border-indigo-500/10 rounded-2xl bg-[#F1F3FA]/20 glass-panel">
+          <div className="text-center py-20 border border-dashed border-indigo-500/10 rounded-2xl bg-[var(--c-surface-2)]/20 glass-panel">
             <GitCompare className="w-14 h-14 text-indigo-600/40 mx-auto mb-4 animate-pulse" />
             <h3 className="text-base font-bold font-display mb-2">Select Technologies To Compare</h3>
-            <p className="text-xs text-[#5A6072] max-w-sm mx-auto leading-relaxed font-light">
+            <p className="text-xs text-[var(--c-ink-2)] max-w-sm mx-auto leading-relaxed font-light">
               Add at least 2 technologies from the scanner selection above to compile details side-by-side.
             </p>
           </div>
