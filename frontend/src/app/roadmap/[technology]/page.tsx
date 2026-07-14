@@ -86,7 +86,7 @@ export default function RoadmapPage() {
       <DashboardShell>
         <div className="flex flex-col items-center justify-center py-32 gap-3">
           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-          <span className="text-xs font-mono text-[#5A6072]/70">Retrieving sequence map...</span>
+          <span className="text-xs font-mono text-[var(--c-ink-2)]/70">Retrieving sequence map...</span>
         </div>
       </DashboardShell>
     );
@@ -99,7 +99,7 @@ export default function RoadmapPage() {
           <div className="text-center space-y-4 max-w-sm glass-panel p-8 rounded-xl border border-indigo-500/10">
             <span className="text-3xl">⚠️</span>
             <p className="font-mono text-xs">{error || "Roadmap not found"}</p>
-            <Link href="/roadmaps" className="inline-block text-xs font-mono bg-[#F1F3FA] hover:bg-[#F1F3FA]/80 text-[#5A6072] hover:text-[#141726] px-4 py-2 border border-indigo-500/10 rounded transition-all">
+            <Link href="/roadmaps" className="inline-block text-xs font-mono bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-2)]/80 text-[var(--c-ink-2)] hover:text-[var(--c-ink)] px-4 py-2 border border-indigo-500/10 rounded transition-all">
               RETURN_TO_ROADMAPS
             </Link>
           </div>
@@ -119,15 +119,15 @@ export default function RoadmapPage() {
       <div className="max-w-4xl mx-auto space-y-8 relative z-10 pb-16">
 
         {/* Back navigation */}
-        <Link href="/roadmaps" className="inline-flex items-center text-xs font-mono text-[#5A6072] hover:text-[#141726] transition-colors">
+        <Link href="/roadmaps" className="inline-flex items-center text-xs font-mono text-[var(--c-ink-2)] hover:text-[var(--c-ink)] transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> RETURN_TO_ROADMAPS
         </Link>
 
         {/* Cinematic Header Block */}
-        <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[#FFFFFF]/80 backdrop-blur-md text-center space-y-4 relative overflow-hidden">
+        <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[var(--c-surface)]/80 backdrop-blur-md text-center space-y-4 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none" />
           
-          <div className="w-16 h-16 bg-[#F1F3FA] border border-indigo-500/10 rounded-2xl mx-auto flex items-center justify-center text-4xl rotate-3 shadow-md shadow-indigo-500/5 select-none">
+          <div className="w-16 h-16 bg-[var(--c-surface-2)] border border-indigo-500/10 rounded-2xl mx-auto flex items-center justify-center text-4xl rotate-3 shadow-md shadow-indigo-500/5 select-none">
             {roadmap.icon}
           </div>
           
@@ -135,15 +135,15 @@ export default function RoadmapPage() {
             <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest block">
               SEQUENTIAL EDUCATION TRACK
             </span>
-            <h1 className="text-3xl md:text-5xl font-black font-display text-[#141726] tracking-tight">
+            <h1 className="text-3xl md:text-5xl font-black font-display text-[var(--c-ink)] tracking-tight">
               Master {roadmap.title}
             </h1>
-            <p className="text-sm text-[#5A6072] leading-relaxed max-w-xl mx-auto font-light">
+            <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-xl mx-auto font-light">
               {roadmap.description || "Guided step-by-step tracks structured directly from monitored technology specifications."}
             </p>
           </div>
 
-          <div className="flex justify-center gap-6 pt-2 font-mono text-[10px] text-[#5A6072] uppercase">
+          <div className="flex justify-center gap-6 pt-2 font-mono text-[10px] text-[var(--c-ink-2)] uppercase">
             <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-indigo-600" /> ~{roadmap.estimated_weeks} weeks duration</span>
             <span>•</span>
             <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-indigo-600" /> {steps.length} learning modules</span>
@@ -169,17 +169,17 @@ export default function RoadmapPage() {
             return (
               <div
                 key={idx}
-                className="glass-panel p-6 rounded-2xl border border-indigo-500/10 bg-[#F1F3FA]/40 hover:bg-[#F1F3FA]/70 hover:border-indigo-400/30 transition-all duration-300 relative group flex gap-5 items-start slide-up z-10"
+                className="glass-panel p-6 rounded-2xl border border-indigo-500/10 bg-[var(--c-surface-2)]/40 hover:bg-[var(--c-surface-2)]/70 hover:border-indigo-400/30 transition-all duration-300 relative group flex gap-5 items-start slide-up z-10"
                 style={{ animationDelay: `${idx * 60}ms` }}
               >
                 {/* Floating Module Indicator Label */}
-                <div className="absolute -left-12 md:-left-20 top-7 font-mono text-[9px] text-[#5A6072]/50 uppercase tracking-widest text-right w-8 md:w-14 select-none">
+                <div className="absolute -left-12 md:-left-20 top-7 font-mono text-[9px] text-[var(--c-ink-2)]/50 uppercase tracking-widest text-right w-8 md:w-14 select-none">
                   MOD_[{step.step < 10 ? `0${step.step}` : step.step}]
                 </div>
 
                 {/* Concentric Step node */}
                 <div className="shrink-0 z-20 mt-1 select-none">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono font-bold text-xs ring-4 ring-[#09090B] border text-[#141726] ${levelDotClass}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono font-bold text-xs ring-4 ring-[#09090B] border text-[var(--c-ink)] ${levelDotClass}`}>
                     {step.step}
                   </div>
                 </div>
@@ -188,7 +188,7 @@ export default function RoadmapPage() {
                 <div className="flex-1 space-y-3">
                   
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h3 className="text-base font-extrabold text-[#141726] font-display group-hover:text-indigo-600 transition-colors">
+                    <h3 className="text-base font-extrabold text-[var(--c-ink)] font-display group-hover:text-indigo-600 transition-colors">
                       {step.title}
                     </h3>
                     <span className={`px-2 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-wider ${levelStyle}`}>
@@ -196,14 +196,14 @@ export default function RoadmapPage() {
                     </span>
                   </div>
 
-                  <p className="text-xs md:text-sm text-[#5A6072] leading-relaxed font-light font-mono">
+                  <p className="text-xs md:text-sm text-[var(--c-ink-2)] leading-relaxed font-light font-mono">
                     {step.description}
                   </p>
 
                   {/* Connected Resources */}
                   {step.resources && step.resources.length > 0 && (
                     <div className="pt-3 border-t border-indigo-500/5 flex flex-wrap gap-4 items-center">
-                      <span className="flex items-center gap-1 text-[9px] font-mono text-[#5A6072]/60 uppercase tracking-wider">
+                      <span className="flex items-center gap-1 text-[9px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-wider">
                         <BookOpen className="w-3.5 h-3.5 text-indigo-600" /> Syllabus Materials:
                       </span>
                       {step.resources.map((res, rIdx) => (
@@ -212,7 +212,7 @@ export default function RoadmapPage() {
                           href={res.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[10px] font-mono font-bold text-indigo-600 hover:text-[#141726] flex items-center gap-0.5 hover:underline"
+                          className="text-[10px] font-mono font-bold text-indigo-600 hover:text-[var(--c-ink)] flex items-center gap-0.5 hover:underline"
                         >
                           {res.label}
                           <ArrowRight className="w-3 h-3 translate-y-[0.5px] group-hover:translate-x-0.5 transition-transform" />
