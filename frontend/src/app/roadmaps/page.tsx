@@ -53,7 +53,7 @@ export default function RoadmapsIndexPage() {
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold flex items-center gap-3">
               <Compass className="w-8 h-8 text-primary" />
-              <span className="gradient-text">Learning Roadmaps</span>
+              <span className="text-text-primary">Learning Roadmaps</span>
             </h1>
             <p className="text-muted-foreground text-sm max-w-xl">
               Step-by-step learning paths for technology domains. Curated curricula from beginner fundamentals to advanced production deployments.
