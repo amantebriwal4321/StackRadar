@@ -1,13 +1,14 @@
-import DashboardShell from "@/components/DashboardShell";
 import { Loader2 } from "lucide-react";
 
+// Lightweight route-transition fallback. Deliberately NOT a full DashboardShell
+// (that rendered a second navbar/main — heavy, and the inert "double-main").
 export default function Loading() {
   return (
-    <DashboardShell>
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground animate-in fade-in duration-500">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-sm font-semibold tracking-wide uppercase">Organizing insights...</p>
-      </div>
-    </DashboardShell>
+    <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-background/55 backdrop-blur-sm pointer-events-none">
+      <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+        Loading…
+      </span>
+    </div>
   );
 }
