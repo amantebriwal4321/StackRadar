@@ -81,11 +81,17 @@ function ConstellationScene({
     }));
   }, [tools]);
 
-  // Top movers get floating labels (real data)
+  // Floating labels: high-score nodes, but spatially spread so the chips
+  // never pile on top of each other (greedy min-distance pick).
   const labelled = useMemo(() => {
-    return [...nodes]
-      .sort((a, b) => b.tool.score - a.tool.score)
-      .slice(0, 6);
+    const ranked = [...nodes].sort((a, b) => b.tool.score - a.tool.score);
+    const chosen: NodeDatum[] = [];
+    const MIN_DIST = 1.7; // world units (sphere radius ~2.05)
+    for (const n of ranked) {
+      if (chosen.length >= 5) break;
+      if (chosen.every((c) => c.pos.distanceTo(n.pos) > MIN_DIST)) chosen.push(n);
+    }
+    return chosen;
   }, [nodes]);
 
   // Constellation lines: connect each labelled node to its 2 nearest neighbours
@@ -172,9 +178,9 @@ function ConstellationScene({
           zIndexRange={[10, 0]}
           style={{ pointerEvents: "none" }}
         >
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#FFFFFF]/85 border border-indigo-500/25 backdrop-blur-md whitespace-nowrap shadow-lg shadow-black/40">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--c-surface)]/85 border border-indigo-500/25 backdrop-blur-md whitespace-nowrap shadow-lg shadow-black/40">
             <span className="text-sm leading-none">{node.tool.icon}</span>
-            <span className="text-[10px] font-bold text-[#141726] leading-none">
+            <span className="text-[10px] font-bold text-[var(--c-ink)] leading-none">
               {node.tool.name}
             </span>
             <span
