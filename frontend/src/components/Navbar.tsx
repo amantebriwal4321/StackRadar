@@ -21,19 +21,19 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "light") {
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
-    } else {
+    if (savedTheme === "dark") {
       setTheme("dark");
       document.documentElement.classList.add("dark");
+    } else {
+      setTheme("light");
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
@@ -72,7 +72,7 @@ export default function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 border-b ${
         scrolled
-          ? "backdrop-blur-xl bg-[#EDEFF5]/80 border-border-subtle shadow-[0_4px_30px_rgba(37,64,255,0.10)]"
+          ? "backdrop-blur-xl bg-[var(--c-ground)]/80 border-border-subtle shadow-[0_4px_30px_rgba(37,64,255,0.10)]"
           : "bg-transparent border-transparent"
       }`}
     >
@@ -99,6 +99,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch
                 className={`relative px-3 py-1.5 text-xs font-semibold tracking-wider transition-colors duration-300 font-mono select-none ${
                   isActive ? "text-accent-primary" : "text-text-secondary hover:text-text-primary"
                 }`}
@@ -121,7 +122,7 @@ export default function Navbar() {
         {/* ─── Right Actions ─── */}
         <div className="flex items-center gap-3">
           {/* Live indicator */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold text-text-secondary border border-border-subtle bg-[#FFFFFF]/50 font-mono">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold text-text-secondary border border-border-subtle bg-[var(--c-surface)]/50 font-mono">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
@@ -154,7 +155,7 @@ export default function Navbar() {
           {mounted && (
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full border border-border-subtle bg-[#FFFFFF]/50 hover:bg-indigo-600/10 transition-colors duration-300 text-text-secondary hover:text-text-primary cursor-pointer select-none"
+              className="p-2 rounded-full border border-border-subtle bg-[var(--c-surface)]/50 hover:bg-indigo-600/10 transition-colors duration-300 text-text-secondary hover:text-text-primary cursor-pointer select-none"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
@@ -168,7 +169,7 @@ export default function Navbar() {
           {/* Mobile menu trigger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-full border border-border-subtle bg-[#FFFFFF]/50 text-text-secondary cursor-pointer select-none"
+            className="md:hidden p-2 rounded-full border border-border-subtle bg-[var(--c-surface)]/50 text-text-secondary cursor-pointer select-none"
             aria-label="Toggle mobile menu"
           >
             {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -184,7 +185,7 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="fixed inset-0 top-16 z-40 bg-[#EDEFF5] flex flex-col justify-between p-6 md:hidden"
+            className="fixed inset-0 top-16 z-40 bg-[var(--c-ground)] flex flex-col justify-between p-6 md:hidden"
           >
             <div className="flex flex-col space-y-6 pt-8">
               {navLinks.map((link) => {
