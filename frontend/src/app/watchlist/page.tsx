@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { Bookmark, BookmarkCheck, Trash2, Loader2, TrendingUp, Star, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import DashboardShell from "@/components/DashboardShell";
@@ -19,6 +19,7 @@ function getWatchlist(userId: string): string[] {
 
 function setWatchlist(userId: string, slugs: string[]) {
   localStorage.setItem(`watchlist_${userId}`, JSON.stringify(slugs));
+  window.dispatchEvent(new CustomEvent("watchlist:changed"));
 }
 
 export function toggleWatchlistItem(userId: string, slug: string): boolean {
@@ -37,21 +38,28 @@ export function isInWatchlist(userId: string, slug: string): boolean {
 }
 
 export default function WatchlistPage() {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const [allTools, setAllTools] = useState<Tool[]>([]);
   const [watchedSlugs, setWatchedSlugs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const userId = user?.id || "";
 
-  // Load tools + watchlist
+  // Load the tool catalog once.
   useEffect(() => {
-    if (!isLoaded || !userId) return;
-    setWatchedSlugs(getWatchlist(userId));
     fetchTools()
       .then((data) => { setAllTools(data); setIsLoading(false); })
       .catch(() => setIsLoading(false));
-  }, [isLoaded, userId]);
+  }, []);
+
+  // Keep the watched set in sync, and live-update when a bookmark is toggled anywhere.
+  useEffect(() => {
+    if (!userId) return;
+    const sync = () => setWatchedSlugs(getWatchlist(userId));
+    sync();
+    window.addEventListener("watchlist:changed", sync);
+    return () => window.removeEventListener("watchlist:changed", sync);
+  }, [userId]);
 
   const watchedTools = allTools.filter((t) => watchedSlugs.includes(t.slug));
 
@@ -70,6 +78,24 @@ export default function WatchlistPage() {
     );
   }
 
+  // Signed-out gate — no more infinite spinner.
+  if (!isSignedIn) {
+    return (
+      <DashboardShell>
+        <div className="text-center py-24 max-w-md mx-auto">
+          <Bookmark className="w-12 h-12 text-primary mx-auto mb-4 opacity-70" />
+          <h1 className="text-2xl font-extrabold mb-2">Sign in to build your watchlist</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            Save the tools you&apos;re tracking and jump back to their live scores any time.
+          </p>
+          <SignInButton mode="modal">
+            <button className="btn-primary text-xs py-3 px-6 cursor-pointer">Sign in</button>
+          </SignInButton>
+        </div>
+      </DashboardShell>
+    );
+  }
+
   return (
     <DashboardShell>
       <div className="space-y-6 fade-in">
@@ -80,7 +106,7 @@ export default function WatchlistPage() {
             My Watchlist
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Tools you&apos;re tracking. Click the ⭐ on any tool card across the site to add it here.
+            Tools you&apos;re tracking. Hit the bookmark icon on any tool across the site to add it here.
           </p>
         </div>
 
