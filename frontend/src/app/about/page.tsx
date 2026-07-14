@@ -67,7 +67,7 @@ export default function AboutPage() {
             transition={{ ...reveal.transition, delay: 0.05 }}
             className="font-display font-extrabold tracking-tight leading-[0.98] text-[clamp(2.5rem,6vw,4.5rem)] mt-5 mb-5 text-balance"
           >
-            The <span className="gradient-text">Bloomberg Terminal</span> for your tech stack.
+            The <span className="text-text-primary">Bloomberg Terminal</span> for your tech stack.
           </motion.h1>
 
           <motion.p
@@ -89,7 +89,7 @@ export default function AboutPage() {
             </Link>
             <Link
               href="/explore"
-              className="font-mono text-xs tracking-[0.14em] uppercase font-bold py-3 px-6 rounded-xl border border-border-subtle bg-white/[0.02] text-text-secondary hover:text-text-primary hover:border-accent-primary transition-colors flex items-center gap-2"
+              className="font-mono text-xs tracking-[0.14em] uppercase font-bold py-3 px-6 rounded-xl border border-border-subtle bg-[var(--c-surface)]/[0.02] text-text-secondary hover:text-text-primary hover:border-accent-primary transition-colors flex items-center gap-2"
             >
               <Compass className="w-4 h-4" /> Start learning
             </Link>
@@ -125,7 +125,7 @@ export default function AboutPage() {
           {/* concentric rings */}
           <svg viewBox="0 0 400 400" className="absolute inset-0 w-full h-full">
             {[190, 140, 90, 42].map((r) => (
-              <circle key={r} cx="200" cy="200" r={r} fill="none" stroke="rgba(20,23,38,0.12)" strokeWidth="1" />
+              <circle key={r} cx="200" cy="200" r={r} fill="none" style={{ stroke: "var(--c-border)" }} strokeWidth="1" />
             ))}
             {[0, 30, 60, 90, 120, 150].map((deg) => {
               const rad = (deg * Math.PI) / 180;
@@ -136,7 +136,7 @@ export default function AboutPage() {
                   y1={200 - Math.sin(rad) * 190}
                   x2={200 + Math.cos(rad) * 190}
                   y2={200 + Math.sin(rad) * 190}
-                  stroke="rgba(20,23,38,0.06)"
+                  style={{ stroke: "var(--c-border)" }}
                   strokeWidth="1"
                 />
               );
@@ -367,7 +367,7 @@ export default function AboutPage() {
           </Link>
           <Link
             href="/explore"
-            className="font-mono text-xs tracking-[0.14em] uppercase font-bold py-3 px-6 rounded-xl border border-border-subtle bg-white/[0.02] text-text-secondary hover:text-text-primary hover:border-accent-primary transition-colors flex items-center gap-2"
+            className="font-mono text-xs tracking-[0.14em] uppercase font-bold py-3 px-6 rounded-xl border border-border-subtle bg-[var(--c-surface)]/[0.02] text-text-secondary hover:text-text-primary hover:border-accent-primary transition-colors flex items-center gap-2"
           >
             <Compass className="w-4 h-4" /> Browse learning paths
           </Link>
