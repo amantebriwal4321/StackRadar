@@ -103,11 +103,74 @@
   --color-indigo-500: #8A3357;
   --color-indigo-600: #7C2D4A;
   --color-indigo-700: #5C2138;
+
+  /* Themeable surface/text vars — hardcoded light hexes were migrated to these
+     so they flip under html.dark. (LIGHT values here.) */
+  --c-ground: #E8E6EC;             /* page canvas */
+  --c-surface: #FFFFFF;            /* cards / panels */
+  --c-surface-2: #F7F8FC;          /* raised chips / insets */
+  --c-ink: #141726;                /* primary text */
+  --c-ink-2: #5A6072;              /* secondary text */
+  --c-border: rgba(20, 23, 38, 0.10);
+}
+
+/* ══════════════════════════════════════════════
+   DARK MODE — "Neon Noir" after dark: near-black wine ground,
+   luminous wine-rose accent + neon magenta glow (cyberpunk).
+   Flips every themeable var; data colours stay constant.
+   ══════════════════════════════════════════════ */
+html.dark {
+  /* surfaces / text */
+  --c-ground: #0E0B12;
+  --c-surface: #17121D;
+  --c-surface-2: #201A29;
+  --c-ink: #ECE7F1;
+  --c-ink-2: #A79FB4;
+  --c-border: rgba(236, 230, 242, 0.12);
+  --ground: #0E0B12;
+
+  /* accent — brighter so it glows on black */
+  --accent-1: #E0577F;
+  --accent-2: #FF5C93;
+  --accent-3: #B23A62;
+  --color-indigo-400: #F090AE;
+  --color-indigo-500: #E0577F;
+  --color-indigo-600: #E0577F;
+  --color-indigo-700: #B23A62;
+  --color-accent-primary: #E0577F;
+  --color-accent-glow: #FF5C93;
+  --color-accent-deep: #B23A62;
+  --color-text-accent: #E0577F;
+
+  /* design tokens */
+  --color-bg-primary: #0E0B12;
+  --color-bg-secondary: #201A29;
+  --color-bg-card: #17121D;
+  --color-text-primary: #ECE7F1;
+  --color-text-secondary: #A79FB4;
+  --color-text-faint: #6E6678;
+  --color-border-subtle: rgba(236, 230, 242, 0.12);
+
+  --background: #0E0B12;
+  --foreground: #ECE7F1;
+  --card: #17121D;
+  --card-foreground: #ECE7F1;
+  --popover: #17121D;
+  --popover-foreground: #ECE7F1;
+  --primary: #E0577F;
+  --secondary: #201A29;
+  --secondary-foreground: #ECE7F1;
+  --muted: #201A29;
+  --muted-foreground: #A79FB4;
+  --accent: #E0577F;
+  --border: rgba(236, 230, 242, 0.12);
+  --input: rgba(236, 230, 242, 0.14);
+  --ring: #E0577F;
 }
 
 body {
-  background-color: #E8E6EC;
-  color: #141726;
+  background-color: var(--c-ground);
+  color: var(--c-ink);
   font-family: var(--font-sans);
   overflow-x: hidden;
 }
@@ -116,15 +179,15 @@ body {
    GLASS / SURFACES — light frosted
    ───────────────────────────────────────────── */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.75);
+  background: color-mix(in srgb, var(--c-surface) 82%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(20, 23, 38, 0.08);
+  border: 1px solid var(--c-border);
   box-shadow: 0 10px 34px -20px rgba(20, 23, 38, 0.35);
 }
 
 .glass-panel-glow {
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--c-surface) 90%, transparent);
   backdrop-filter: blur(26px);
   -webkit-backdrop-filter: blur(26px);
   border: 1px solid color-mix(in srgb, var(--accent-1) 16%, transparent);
@@ -132,10 +195,10 @@ body {
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--c-surface) 60%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(20, 23, 38, 0.07);
+  border: 1px solid var(--c-border);
 }
 
 /* ─────────────────────────────────────────────
@@ -300,12 +363,11 @@ body {
    white body, ink-tinted borders, ONE indigo accent on hover.
    ───────────────────────────────────────────── */
 .tech-panel {
-  background: #FFFFFF;
-  border: 1px solid rgba(20, 23, 38, 0.12);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
-    0 1px 2px rgba(20, 23, 38, 0.04),
-    0 18px 40px -26px rgba(20, 23, 38, 0.45);
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 18px 40px -26px rgba(0, 0, 0, 0.35);
   transition: border-color 0.35s var(--ease-standard),
               box-shadow 0.35s var(--ease-standard),
               transform 0.35s var(--ease-spring);
@@ -340,8 +402,8 @@ body {
    TERMINAL WINDOW — the "console" framing (techy dark chrome)
    ───────────────────────────────────────────── */
 .terminal-window {
-  background: #FFFFFF;
-  border: 1px solid rgba(20, 23, 38, 0.16);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   overflow: hidden;
   box-shadow:
     0 1px 2px rgba(20, 23, 38, 0.05),
