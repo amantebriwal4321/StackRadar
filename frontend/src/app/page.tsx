@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Zap, TrendingUp, Loader2, RefreshCw, Search,
+  Zap, TrendingUp, Loader2, RefreshCw,
   Sparkles, ArrowRight, Brain, Compass, Star,
   Shield, Globe, Database, Cpu, MessageSquare, Terminal, Eye,
   Layers, Code2, ChevronRight, Activity, BarChart3, Rocket,
@@ -69,12 +69,14 @@ function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; s
   return <span ref={ref}>{prefix}{display.toLocaleString()}{suffix}</span>;
 }
 
-/* ─── Decision Prompts ─── each routes somewhere real ─── */
+/* ─── Console questions ─── each one routes to the page that answers it ─── */
 const decisionPrompts = [
-  { icon: "🛠️", label: "What should I build?", href: "/explore" },
-  { icon: "📚", label: "What should I learn?", href: "/roadmaps" },
-  { icon: "🚀", label: "Startup opportunities", href: "/trends" },
-  { icon: "📈", label: "What's trending?", href: "/trends" },
+  { icon: "🧭", label: "What should I learn next?", href: "/explore" },
+  { icon: "🧠", label: "Is AI/ML worth it right now?", href: "/roadmaps" },
+  { icon: "📈", label: "What's trending this week?", href: "/trends" },
+  { icon: "⚖️", label: "Compare two technologies", href: "/compare" },
+  { icon: "🚀", label: "Where are the startup gaps?", href: "/trends" },
+  { icon: "🗺️", label: "Browse learning roadmaps", href: "/roadmaps" },
 ];
 
 /* ─── Process Steps ─── */
@@ -116,7 +118,6 @@ const processSteps = [
 export default function HomePage() {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   /* ─── React States ─── */
   const [tools, setTools] = useState<Tool[]>([]);
@@ -125,8 +126,7 @@ export default function HomePage() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Interactive Comparison Framework State — index into the real top-3 tools
   const [compareIdx, setCompareIdx] = useState(0);
 
@@ -182,37 +182,6 @@ export default function HomePage() {
       }
     }
     initHomePage();
-  }, []);
-
-  // Enter (or the arrow button) in the console runs the query on the Explore board.
-  // If the text matches a single tracked tool, jump straight to its profile.
-  const runSearch = useCallback(() => {
-    const q = searchQuery.trim();
-    if (!q) {
-      router.push("/explore");
-      return;
-    }
-    const exact = tools.find((t) => t.name.toLowerCase() === q.toLowerCase());
-    if (exact) {
-      router.push(`/tools/${exact.slug}`);
-      return;
-    }
-    router.push(`/explore?q=${encodeURIComponent(q)}`);
-  }, [searchQuery, tools, router]);
-
-  // Keyboard shortcut listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || e.key === "/") {
-        const active = document.activeElement;
-        if (active?.tagName !== "INPUT" && active?.tagName !== "TEXTAREA") {
-          e.preventDefault();
-          searchInputRef.current?.focus();
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   /* ─── GSAP Entrance Animations ─── */
@@ -319,36 +288,25 @@ export default function HomePage() {
   }, [isLoading]);
 
   /* ─── Dynamic Signal Tickers Content ─── */
+  // Left ticker — highest momentum scores (real, no fabricated "+0.0%")
   const dynamicSignalsLeft = useMemo(() => {
-    if (tools.length === 0) {
-      return [
-        "🔥 React 19 momentum surging +45.2%",
-        "⚡ FastAPI adoption outpacing flask",
-        "🧠 LangChain mentions up +87%",
-        "🚀 Bun.js overtaking Deno in stars",
-        "⚙️ Rust language adoption rising +23%",
-        "💎 PyTorch leading AI/ML frameworks",
-      ];
-    }
-    return tools.slice(0, 10).map(t => {
-      const growthStr = t.growth_pct >= 0 ? `+${t.growth_pct.toFixed(1)}%` : `${t.growth_pct.toFixed(1)}%`;
-      return `${t.icon} ${t.name} Momentum: ${growthStr} in discussions`;
-    });
+    if (tools.length === 0) return ["◈ Syncing live developer signals…"];
+    return [...tools]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 12)
+      .map((t) => `${t.icon} ${t.name} · momentum ${Math.round(t.score)}/100`);
   }, [tools]);
 
+  // Right ticker — most-starred tracked repos (real GitHub data)
   const dynamicSignalsRight = useMemo(() => {
-    if (tools.length === 0) {
-      return [
-        "⚡ Next.js v16 adopting Server Actions v2",
-        "📈 Tailwind CSS v4 performance scoring high",
-        "🔬 Hugging Face sentiment is 94% positive",
-        "🎯 TypeScript adoption rate hits 88%",
-        "☁️ Kubernetes cluster complexity drops",
-      ];
-    }
-    return tools.slice(10, 20).map(t => {
-      return `📊 ${t.name} sentiment: ${t.sentiment_label} (${(t.sentiment_positive * 100).toFixed(0)}% pos)`;
-    });
+    if (tools.length === 0) return ["◈ Indexing GitHub + community sources…"];
+    return [...tools]
+      .sort((a, b) => b.stars - a.stars)
+      .slice(0, 12)
+      .map((t) => {
+        const s = t.stars >= 1000 ? `${Math.round(t.stars / 1000)}k` : `${t.stars}`;
+        return `${t.icon} ${t.name} · ${s}★ on GitHub`;
+      });
   }, [tools]);
 
   // Comparative split metrics — the real top-3 tools by momentum score
@@ -449,7 +407,7 @@ export default function HomePage() {
                     </span>
                     <span className="absolute -bottom-1 left-0 right-0 h-2 bg-indigo-500/15 rounded-full" />
                   </span>
-                  <span className="text-[#141726]">.</span>
+                  <span className="text-[var(--c-ink)]">.</span>
                 </span>
               </span>
               <span className="block overflow-hidden">
@@ -466,7 +424,7 @@ export default function HomePage() {
             </h1>
 
             {/* Paragraph Subhead */}
-            <p className="hero-anim-item text-base md:text-lg text-[#5A6072] max-w-xl leading-relaxed font-sans font-light">
+            <p className="hero-anim-item text-base md:text-lg text-[var(--c-ink-2)] max-w-xl leading-relaxed font-sans font-light">
               StackRadar continuously listens to developer telemetry across GitHub, Reddit, HackerNews, and forums to map trends, developer sentiment, and startup opportunities before they break out.
             </p>
 
@@ -485,55 +443,30 @@ export default function HomePage() {
                   </span>
                 </div>
 
-                {/* Console body */}
-                <div className="p-4 sm:p-5 space-y-4 bg-white">
-
-                  {/* Query line — Enter or the arrow button runs it */}
-                  <div className="group relative flex items-center rounded-xl bg-[#F7F8FC] border border-[rgba(20,23,38,0.12)] focus-within:border-indigo-500/50 focus-within:shadow-[0_0_0_3px_rgba(67,56,202,0.10)] transition-all duration-300">
-                    <span className="pl-4 pr-1 text-indigo-500 font-mono text-sm font-bold select-none">&gt;</span>
-                    <Search className="w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors duration-300" />
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      placeholder="query a technology, trend, or opportunity…"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }}
-                      className="w-full bg-transparent border-none py-3.5 px-3 text-sm focus:outline-none text-[#141726] placeholder-[#5A6072]/50 font-mono"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => { setSearchQuery(""); searchInputRef.current?.focus(); }}
-                        className="mr-1.5 text-[10px] font-mono text-[#5A6072] hover:text-[#141726] px-2 py-1 rounded-md hover:bg-[#EDEFF5] transition-colors cursor-pointer"
-                        aria-label="Clear query"
-                      >
-                        ESC
-                      </button>
-                    )}
-                    <button
-                      onClick={runSearch}
-                      aria-label="Run query"
-                      className="mr-2 shrink-0 h-9 w-9 flex items-center justify-center rounded-lg bg-[var(--accent-1)] text-white hover:bg-[var(--accent-3)] transition-colors cursor-pointer shadow-lg shadow-indigo-500/25 active:scale-95"
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                {/* Console body — pick a question, we route you to the answer */}
+                <div className="p-4 sm:p-5 bg-[var(--c-surface)]">
+                  <div className="flex items-center gap-2 mb-3.5">
+                    <span className="text-indigo-500 font-mono text-sm font-bold select-none">&gt;</span>
+                    <span className="font-mono text-[11px] text-[var(--c-ink-2)] uppercase tracking-[0.14em] select-none">
+                      what do you want to figure out?
+                    </span>
+                    <span className="ml-0.5 inline-block w-[7px] h-4 bg-indigo-500/70 animate-pulse rounded-[1px]" aria-hidden="true" />
                   </div>
 
-                  {/* Prompt shortcuts — each one redirects to a real page */}
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-[10px] text-[#5A6072]/60 font-mono py-1.5 flex items-center uppercase tracking-wider select-none">Jump to:</span>
+                  <div className="grid sm:grid-cols-2 gap-2">
                     {decisionPrompts.map((prompt) => (
                       <Link
                         key={prompt.href + prompt.label}
                         href={prompt.href}
-                        className="group px-3 py-1.5 rounded-lg border border-[rgba(20,23,38,0.12)] bg-[#F7F8FC] text-xs font-medium text-[#5A6072] hover:text-[#141726] hover:border-indigo-500/40 hover:bg-white hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-300 active:scale-[0.97] cursor-pointer flex items-center gap-1.5"
+                        prefetch
+                        className="group flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-2)] hover:bg-[var(--c-surface)] hover:border-indigo-500/50 hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-300 active:scale-[0.98] cursor-pointer"
                       >
-                        <span>{prompt.icon}</span> {prompt.label}
-                        <ArrowRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                        <span className="text-base leading-none">{prompt.icon}</span>
+                        <span className="text-sm font-medium text-[var(--c-ink)] flex-1 leading-tight">{prompt.label}</span>
+                        <ArrowRight className="w-4 h-4 text-indigo-500 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 shrink-0" />
                       </Link>
                     ))}
                   </div>
-
                 </div>
               </div>
             </div>
@@ -546,11 +479,11 @@ export default function HomePage() {
                 { label: "Live Signal Sources", value: heroStats.sources, suffix: "" },
               ].map((stat) => (
                 <div key={stat.label} className="space-y-1">
-                  <div className="text-2xl font-black font-mono text-[#141726]">
+                  <div className="text-2xl font-black font-mono text-[var(--c-ink)]">
                     {!isLoading && <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} />}
-                    {isLoading && <span className="text-[#5A6072]/40">—</span>}
+                    {isLoading && <span className="text-[var(--c-ink-2)]/40">—</span>}
                   </div>
-                  <div className="text-[10px] font-mono text-[#5A6072]/60 uppercase tracking-widest">{stat.label}</div>
+                  <div className="text-[10px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-widest">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -568,7 +501,7 @@ export default function HomePage() {
             
             {/* Visual Floating Telemetry Tags around sphere */}
             <motion.div
-              className="absolute top-8 left-8 px-3 py-1.5 bg-[#FFFFFF]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
+              className="absolute top-8 left-8 px-3 py-1.5 bg-[var(--c-surface)]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
               animate={{ y: [0, -8, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
             >
@@ -578,7 +511,7 @@ export default function HomePage() {
               </span>
             </motion.div>
             <motion.div
-              className="absolute bottom-14 right-4 px-3 py-1.5 bg-[#FFFFFF]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
+              className="absolute bottom-14 right-4 px-3 py-1.5 bg-[var(--c-surface)]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
               animate={{ y: [0, 6, 0] }}
               transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
             >
@@ -588,7 +521,7 @@ export default function HomePage() {
               </span>
             </motion.div>
             <motion.div
-              className="absolute top-1/2 right-0 px-3 py-1.5 bg-[#FFFFFF]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
+              className="absolute top-1/2 right-0 px-3 py-1.5 bg-[var(--c-surface)]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
               animate={{ y: [0, -6, 0] }}
               transition={{ repeat: Infinity, duration: 6, ease: "easeInOut", delay: 2 }}
             >
@@ -605,13 +538,13 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 2: INFINITE SCROLLING TICKERS
          ══════════════════════════════════════════ */}
-      <section className="w-full py-5 border-y border-indigo-500/8 bg-[#FFFFFF]/30 overflow-hidden space-y-3">
+      <section className="w-full py-5 border-y border-indigo-500/8 bg-[var(--c-surface)]/30 overflow-hidden space-y-3">
         
         {/* Track 1: Scrolls Left */}
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
             {dynamicSignalsLeft.concat(dynamicSignalsLeft).map((signal, idx) => (
-              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-[#5A6072]/80 tracking-wider uppercase">
+              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-[var(--c-ink-2)]/80 tracking-wider uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/60" />
                 {signal}
               </span>
@@ -648,7 +581,7 @@ export default function HomePage() {
               Aggregated Tech Domains
             </h2>
           </div>
-          <p className="text-sm text-[#5A6072] max-w-md font-sans font-light leading-relaxed">
+          <p className="text-sm text-[var(--c-ink-2)] max-w-md font-sans font-light leading-relaxed">
             Developer conversations categorized into core segments. We analyze and score each domain recursively.
           </p>
         </div>
@@ -656,7 +589,7 @@ export default function HomePage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map(idx => (
-              <div key={idx} className="h-52 rounded-2xl border border-indigo-500/5 bg-[#F1F3FA]/30 animate-pulse" />
+              <div key={idx} className="h-52 rounded-2xl border border-indigo-500/5 bg-[var(--c-surface-2)]/30 animate-pulse" />
             ))}
           </div>
         ) : (
@@ -669,6 +602,10 @@ export default function HomePage() {
               return (
                 <motion.div
                   key={domain.slug}
+                  onClick={() => router.push(`/explore?domain=${domain.slug}`)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter") router.push(`/explore?domain=${domain.slug}`); }}
                   className="stagger-card group block p-6 rounded-2xl relative overflow-hidden tech-panel tech-panel-interactive"
                   whileHover={{ y: -4 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -678,7 +615,7 @@ export default function HomePage() {
 
                   {/* Header */}
                   <div className="flex items-start justify-between relative mb-5">
-                    <div className="p-3 bg-[#F7F8FC] border border-[rgba(20,23,38,0.10)] rounded-xl group-hover:border-indigo-400/40 group-hover:scale-105 transition-all duration-300">
+                    <div className="p-3 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl group-hover:border-indigo-400/40 group-hover:scale-105 transition-all duration-300">
                       <span className="text-2xl">{domain.icon || "📂"}</span>
                     </div>
                     
@@ -691,13 +628,13 @@ export default function HomePage() {
                   <h3 className="text-lg font-bold font-display group-hover:text-indigo-600 transition-colors duration-300 mb-2">
                     {domain.name}
                   </h3>
-                  <p className="text-xs text-[#5A6072] line-clamp-2 leading-relaxed mb-6 font-light">
+                  <p className="text-xs text-[var(--c-ink-2)] line-clamp-2 leading-relaxed mb-6 font-light">
                     {domain.summary}
                   </p>
 
                   {/* Score progress bar */}
                   <div className="mb-4">
-                    <div className="h-1 w-full bg-[#EDEFF5] rounded-full overflow-hidden">
+                    <div className="h-1 w-full bg-[var(--c-ground)] rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full ${scoreBarColor} rounded-full`}
                         initial={{ width: 0 }}
@@ -709,7 +646,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Footer stats */}
-                  <div className="flex items-center justify-between font-mono text-[10px] text-[#5A6072]/60">
+                  <div className="flex items-center justify-between font-mono text-[10px] text-[var(--c-ink-2)]/60">
                     <span className="uppercase">{domain.stage} adoption</span>
                     <span className="text-indigo-600/70 group-hover:text-indigo-600 transition-colors">{domain.tool_count} technologies</span>
                   </div>
@@ -751,7 +688,7 @@ export default function HomePage() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[1, 2, 3].map(idx => (
-              <div key={idx} className="h-40 rounded-2xl border border-indigo-500/5 bg-[#F1F3FA]/30 animate-pulse" />
+              <div key={idx} className="h-40 rounded-2xl border border-indigo-500/5 bg-[var(--c-surface-2)]/30 animate-pulse" />
             ))}
           </div>
         ) : (
@@ -770,19 +707,19 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl" />
 
                 <div className="flex items-center gap-4 mb-5 relative">
-                  <span className="text-3xl p-2.5 bg-[#F7F8FC] border border-[rgba(20,23,38,0.10)] rounded-xl group-hover:border-indigo-500/40 group-hover:scale-105 transition-all duration-300">
+                  <span className="text-3xl p-2.5 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl group-hover:border-indigo-500/40 group-hover:scale-105 transition-all duration-300">
                     {tool.icon}
                   </span>
                   <div>
-                    <h3 className="font-bold text-sm text-[#141726] group-hover:text-indigo-600 transition-colors duration-300">
+                    <h3 className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors duration-300">
                       {tool.name}
                     </h3>
-                    <p className="text-[10px] text-[#5A6072]/60 font-mono">{tool.category}</p>
+                    <p className="text-[10px] text-[var(--c-ink-2)]/60 font-mono">{tool.category}</p>
                   </div>
                   
                   <div className="ml-auto text-right">
-                    <span className="text-2xl font-black font-mono text-[#141726]">{tool.score}</span>
-                    <p className="text-[8px] font-mono text-[#5A6072]/50 uppercase tracking-wider">score</p>
+                    <span className="text-2xl font-black font-mono text-[var(--c-ink)]">{tool.score}</span>
+                    <p className="text-[8px] font-mono text-[var(--c-ink-2)]/50 uppercase tracking-wider">score</p>
                   </div>
                 </div>
 
@@ -792,7 +729,7 @@ export default function HomePage() {
                     +{tool.growth_pct.toFixed(1)}%
                   </div>
                   
-                  <div className="flex items-center gap-1 text-[#5A6072]/60 text-[10px]">
+                  <div className="flex items-center gap-1 text-[var(--c-ink-2)]/60 text-[10px]">
                     <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     {tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}
                   </div>
@@ -836,7 +773,7 @@ export default function HomePage() {
                   Momentum<br/>
                   <span className="text-shimmer">Head-to-Head</span>
                 </h3>
-                <p className="text-sm text-[#5A6072] leading-relaxed font-sans font-light">
+                <p className="text-sm text-[var(--c-ink-2)] leading-relaxed font-sans font-light">
                   The three highest-momentum technologies on StackRadar right now, scored live on GitHub presence, global percentile, and category standing — straight from the index.
                 </p>
               </div>
@@ -849,13 +786,13 @@ export default function HomePage() {
                     onClick={() => setCompareIdx(idx)}
                     className={`w-full flex items-center justify-between p-4 rounded-xl border font-mono text-xs uppercase tracking-wider text-left transition-all duration-400 cursor-pointer ${
                       compareIdx === idx
-                        ? "bg-indigo-600/12 border-indigo-500/40 text-[#141726] shadow-lg shadow-indigo-500/5 font-bold"
-                        : "bg-[#FFFFFF]/40 border-indigo-500/5 text-[#5A6072] hover:text-[#141726] hover:border-indigo-500/15"
+                        ? "bg-indigo-600/12 border-indigo-500/40 text-[var(--c-ink)] shadow-lg shadow-indigo-500/5 font-bold"
+                        : "bg-[var(--c-surface)]/40 border-indigo-500/5 text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:border-indigo-500/15"
                     }`}
                   >
                     <span className="flex items-center gap-2">
                       <span className="text-base">{tech.icon}</span> {tech.name}
-                      <span className="text-[9px] text-[#5A6072]/50">#{tech.rank}</span>
+                      <span className="text-[9px] text-[var(--c-ink-2)]/50">#{tech.rank}</span>
                     </span>
                     <ChevronRight className={`w-4 h-4 transition-all duration-300 ${compareIdx === idx ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"}`} />
                   </button>
@@ -870,7 +807,7 @@ export default function HomePage() {
                 
                 <div className="flex items-center justify-between pb-4 border-b border-indigo-500/5">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-[#5A6072]/50">ACTIVE TRACKING</span>
+                    <span className="text-xs font-mono text-[var(--c-ink-2)]/50">ACTIVE TRACKING</span>
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
                   <AnimatePresence mode="wait">
@@ -891,10 +828,10 @@ export default function HomePage() {
                 <div className="space-y-5 pt-2">
                   {compareMetrics.map((metric) => (
                     <div key={metric.label} className="space-y-2">
-                      <div className="flex justify-between font-mono text-[10px] text-[#5A6072]/70">
+                      <div className="flex justify-between font-mono text-[10px] text-[var(--c-ink-2)]/70">
                         <span>{metric.label}</span>
                         <motion.span
-                          className="font-bold text-[#141726]"
+                          className="font-bold text-[var(--c-ink)]"
                           key={`${activeCompare?.slug}-${metric.label}`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -902,7 +839,7 @@ export default function HomePage() {
                           {metric.value}{metric.suffix}
                         </motion.span>
                       </div>
-                      <div className="h-2 w-full bg-[#F1F3FA] rounded-full overflow-hidden border border-indigo-500/5">
+                      <div className="h-2 w-full bg-[var(--c-surface-2)] rounded-full overflow-hidden border border-indigo-500/5">
                         <motion.div
                           className={`h-full bg-gradient-to-r ${metric.gradient} rounded-full`}
                           key={`bar-${activeCompare?.slug}-${metric.label}`}
@@ -924,10 +861,10 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="mt-8 p-4 rounded-xl bg-[#F1F3FA]/40 border border-indigo-500/5"
+                  className="mt-8 p-4 rounded-xl bg-[var(--c-surface-2)]/40 border border-indigo-500/5"
                 >
                   <span className="text-[10px] font-mono text-indigo-600/70 block mb-1.5">SIGNAL ANALYSIS</span>
-                  <p className="text-xs text-[#5A6072] leading-relaxed font-light font-mono">
+                  <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light font-mono">
                     {activeCompare?.recommendation || `${activeCompare?.name} is tracked live across ${heroStats.sources} developer signal sources.`}
                   </p>
                 </motion.div>
@@ -941,11 +878,11 @@ export default function HomePage() {
       </section>
 
       {/* ─── Divider Ticker ─── */}
-      <section className="w-full py-4 border-y border-indigo-500/5 bg-[#FFFFFF]/20 overflow-hidden">
+      <section className="w-full py-4 border-y border-indigo-500/5 bg-[var(--c-surface)]/20 overflow-hidden">
         <div className="w-full flex whitespace-nowrap overflow-hidden">
           <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
             {[1, 2, 3, 4].map((i) => (
-              <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[#5A6072]/30 tracking-widest uppercase">
+              <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[var(--c-ink-2)]/30 tracking-widest uppercase">
                 <span>{heroStats.tools} TECHNOLOGIES TRACKED</span>
                 <span>•</span>
                 <span>{heroStats.stars.toLocaleString()} GITHUB STARS INDEXED</span>
@@ -972,7 +909,7 @@ export default function HomePage() {
             How StackRadar Scrapes<br/>
             <span className="text-shimmer">the Tech Ecosystem</span>
           </h2>
-          <p className="text-sm text-[#5A6072] leading-relaxed font-sans font-light max-w-lg mx-auto">
+          <p className="text-sm text-[var(--c-ink-2)] leading-relaxed font-sans font-light max-w-lg mx-auto">
             We map community trends through recursive cycles of data ingestion, classification, and prediction models.
           </p>
         </div>
@@ -1002,7 +939,7 @@ export default function HomePage() {
                 <h3 className="text-lg font-bold font-display group-hover:text-indigo-600 transition-colors duration-300 mb-3">
                   {step.title}
                 </h3>
-                <p className="text-xs text-[#5A6072] leading-relaxed font-light">
+                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light">
                   {step.desc}
                 </p>
               </motion.div>
@@ -1019,7 +956,7 @@ export default function HomePage() {
           SECTION 7: CTA FOOTER WITH RADAR
          ══════════════════════════════════════════ */}
       <section className="max-w-5xl mx-auto px-6 py-24 cta-section">
-        <div className="glass-panel-glow rounded-3xl p-10 md:p-14 text-center relative overflow-hidden border border-indigo-500/15 bg-[#F1F3FA]/70">
+        <div className="glass-panel-glow rounded-3xl p-10 md:p-14 text-center relative overflow-hidden border border-indigo-500/15 bg-[var(--c-surface-2)]/70">
           
           {/* Radar SVG Overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-[0.1] pointer-events-none select-none">
@@ -1058,7 +995,7 @@ export default function HomePage() {
             <span className="text-shimmer">Technology Universe</span>
           </h3>
           
-          <p className="text-sm md:text-base text-[#5A6072] max-w-lg mx-auto leading-relaxed mb-10 font-light">
+          <p className="text-sm md:text-base text-[var(--c-ink-2)] max-w-lg mx-auto leading-relaxed mb-10 font-light">
             Compare languages, analyze user sentiments, and explore sequential learning roadmaps built from developer behaviors.
           </p>
 
@@ -1072,7 +1009,7 @@ export default function HomePage() {
             
             <Link
               href="/roadmaps"
-              className="px-7 py-3 rounded-2xl border border-indigo-500/15 bg-[#FFFFFF]/60 backdrop-blur-sm hover:bg-[#F1F3FA] hover:border-indigo-400/30 text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center gap-2 font-bold font-mono"
+              className="px-7 py-3 rounded-2xl border border-indigo-500/15 bg-[var(--c-surface)]/60 backdrop-blur-sm hover:bg-[var(--c-surface-2)] hover:border-indigo-400/30 text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center gap-2 font-bold font-mono"
             >
               Start Learning <ArrowRight className="w-4 h-4" />
             </Link>
@@ -1093,12 +1030,12 @@ export default function HomePage() {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
             </div>
             <div>
-              <p className="text-xs font-mono text-[#5A6072]/50 uppercase tracking-wider">TELEMETRY STREAM</p>
-              <h3 className="text-sm font-bold text-[#141726]">Live Parser Stream Active</h3>
+              <p className="text-xs font-mono text-[var(--c-ink-2)]/50 uppercase tracking-wider">TELEMETRY STREAM</p>
+              <h3 className="text-sm font-bold text-[var(--c-ink)]">Live Parser Stream Active</h3>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-5 text-xs font-mono text-[#5A6072]/50">
+          <div className="flex flex-wrap gap-5 text-xs font-mono text-[var(--c-ink-2)]/50">
             <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-indigo-600/60" /> RSS NEWS</span>
             <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-indigo-600/60" /> REDDIT</span>
             <span className="flex items-center gap-1.5"><Terminal className="w-3.5 h-3.5 text-indigo-600/60" /> GITHUB</span>
