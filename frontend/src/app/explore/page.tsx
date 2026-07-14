@@ -10,6 +10,7 @@ import {
   fetchTools, fetchDomains, fetchLearningPath,
 } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
+import WatchlistButton from "@/components/WatchlistButton";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
@@ -25,7 +26,7 @@ function priorityStyle(p: string): { label: string; cls: string } {
     case "MEDIUM": return { label: "Worth learning", cls: "text-indigo-600 bg-indigo-500/10 border-indigo-500/20" };
     case "LOW": return { label: "Stable pick", cls: "text-indigo-600 bg-indigo-500/10 border-indigo-500/20" };
     case "AVOID": return { label: "Declining", cls: "text-rose-600 bg-rose-500/10 border-rose-500/20" };
-    default: return { label: "Tracked", cls: "text-[#5A6072] bg-white/5 border-white/10" };
+    default: return { label: "Tracked", cls: "text-[var(--c-ink-2)] bg-[var(--c-surface)]/5 border-white/10" };
   }
 }
 
@@ -38,7 +39,7 @@ function ScoreRing({ score, size = 56, stroke = 4 }: { score: number; size?: num
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(20,23,38,0.10)" strokeWidth={stroke} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} style={{ stroke: "var(--c-border)" }} strokeWidth={stroke} fill="none" />
         <motion.circle
           cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth={stroke} fill="none"
           strokeLinecap="round" strokeDasharray={circ}
@@ -73,17 +74,17 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
         </span>
       )}
       <div className="flex items-center gap-4 relative">
-        <span className="text-3xl p-2.5 bg-[#F7F8FC] border border-[rgba(20,23,38,0.10)] rounded-xl group-hover:scale-105 group-hover:border-indigo-400/40 transition-all">
+        <span className="text-3xl p-2.5 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl group-hover:scale-105 group-hover:border-indigo-400/40 transition-all">
           {tool.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <h4 className="font-bold text-sm text-[#141726] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>
-          <p className="text-[10px] font-mono text-[#5A6072]/60 uppercase truncate">{tool.category}</p>
+          <h4 className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>
+          <p className="text-[10px] font-mono text-[var(--c-ink-2)]/60 uppercase truncate">{tool.category}</p>
         </div>
         <ScoreRing score={tool.score} />
       </div>
 
-      <p className="text-[11px] text-[#5A6072] leading-relaxed mt-4 line-clamp-2 font-light relative">
+      <p className="text-[11px] text-[var(--c-ink-2)] leading-relaxed mt-4 line-clamp-2 font-light relative">
         {tool.description || "Tracked live across developer signal sources."}
       </p>
 
@@ -91,12 +92,13 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
         <span className={`px-2 py-0.5 rounded-md border text-[9px] font-mono font-bold uppercase tracking-wide ${prio.cls}`}>
           {prio.label}
         </span>
-        <div className="flex items-center gap-3 text-[10px] font-mono">
-          <span className="flex items-center gap-1 text-[#5A6072]/70">
+        <div className="flex items-center gap-2 text-[10px] font-mono">
+          <span className="flex items-center gap-1 text-[var(--c-ink-2)]/70">
             <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
             {tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}
           </span>
-          <Link href={`/tools/${tool.slug}`} className="flex items-center gap-0.5 text-indigo-600 hover:text-[#141726] transition-colors font-bold">
+          <WatchlistButton toolSlug={tool.slug} className="-my-1" />
+          <Link href={`/tools/${tool.slug}`} className="flex items-center gap-0.5 text-indigo-600 hover:text-[var(--c-ink)] transition-colors font-bold">
             Analyze <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
@@ -133,7 +135,13 @@ export default function ExplorePage() {
         const [toolData, domainData] = await Promise.all([fetchTools(), fetchDomains()]);
         setTools(toolData);
         setDomains(domainData);
-        if (domainData.length > 0) setActiveDomain(domainData[0].slug);
+        if (domainData.length > 0) {
+          const domainParam = new URLSearchParams(window.location.search).get("domain");
+          const preselect = domainParam && domainData.some((d) => d.slug === domainParam)
+            ? domainParam
+            : domainData[0].slug;
+          setActiveDomain(preselect);
+        }
       } catch (err) {
         console.error("Failed to fetch data:", err);
       } finally {
@@ -176,7 +184,7 @@ export default function ExplorePage() {
       <DashboardShell>
         <div className="flex flex-col items-center justify-center py-32 gap-3">
           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-          <span className="text-xs font-mono text-[#5A6072]/70">Mapping learning paths…</span>
+          <span className="text-xs font-mono text-[var(--c-ink-2)]/70">Mapping learning paths…</span>
         </div>
       </DashboardShell>
     );
@@ -190,7 +198,7 @@ export default function ExplorePage() {
       <div className="space-y-8 relative z-10 pb-16">
 
         {/* ─── Cinematic Header ─── */}
-        <header className="p-6 md:p-8 rounded-3xl border border-indigo-500/10 bg-[#FFFFFF]/80 backdrop-blur-md relative overflow-hidden">
+        <header className="p-6 md:p-8 rounded-3xl border border-indigo-500/10 bg-[var(--c-surface)]/80 backdrop-blur-md relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(67,56,202,0.08),transparent_55%)] pointer-events-none" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 relative">
             <div className="space-y-2">
@@ -198,9 +206,9 @@ export default function ExplorePage() {
                 <Route className="w-3.5 h-3.5" /> Momentum-driven learning paths
               </span>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight font-display flex items-center gap-3">
-                <span className="gradient-text">Explore Universe</span>
+                <span className="text-text-primary">Explore Universe</span>
               </h1>
-              <p className="text-[#5A6072] text-sm max-w-xl font-light">
+              <p className="text-[var(--c-ink-2)] text-sm max-w-xl font-light">
                 Pick a domain and follow the sequence StackRadar recommends — ordered by what&apos;s worth learning
                 <span className="text-indigo-600"> right now</span>, from entry point to advanced.
               </p>
@@ -208,14 +216,14 @@ export default function ExplorePage() {
 
             <div className="relative group w-full md:w-80">
               <div className="absolute -inset-[1px] bg-gradient-to-r from-indigo-500 to-indigo-500 rounded-xl opacity-20 group-focus-within:opacity-50 transition-opacity duration-300 blur-sm" />
-              <div className="relative bg-[#F1F3FA] rounded-xl flex items-center border border-indigo-500/10 px-3">
+              <div className="relative bg-[var(--c-surface-2)] rounded-xl flex items-center border border-indigo-500/10 px-3">
                 <Search className="w-4 h-4 text-slate-500 group-focus-within:text-indigo-600" />
                 <input
                   type="text"
                   placeholder="Search all technologies…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent border-none py-3 px-2 text-xs text-[#141726] focus:outline-none placeholder-[#5A6072]/50"
+                  className="w-full bg-transparent border-none py-3 px-2 text-xs text-[var(--c-ink)] focus:outline-none placeholder-[var(--c-ink-2)]/50"
                 />
               </div>
             </div>
@@ -225,8 +233,8 @@ export default function ExplorePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* ─── Domain rail ─── */}
-          <aside className="lg:col-span-3 bg-[#FFFFFF]/80 border border-indigo-500/10 rounded-2xl p-4 space-y-1.5 lg:sticky lg:top-24 z-10 backdrop-blur-md">
-            <span className="text-[10px] font-mono font-bold text-[#5A6072]/50 uppercase tracking-widest block px-2 pb-2 border-b border-indigo-500/5">
+          <aside className="lg:col-span-3 bg-[var(--c-surface)]/80 border border-indigo-500/10 rounded-2xl p-4 space-y-1.5 lg:sticky lg:top-24 z-10 backdrop-blur-md">
+            <span className="text-[10px] font-mono font-bold text-[var(--c-ink-2)]/50 uppercase tracking-widest block px-2 pb-2 border-b border-indigo-500/5">
               Domains
             </span>
             <div className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-none">
@@ -237,7 +245,7 @@ export default function ExplorePage() {
                     key={d.slug}
                     onClick={() => { setSearchQuery(""); setActiveDomain(d.slug); }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs font-mono tracking-wider transition-all duration-300 shrink-0 text-left cursor-pointer ${
-                      isActive ? "bg-indigo-600/15 border-indigo-500/40 text-[#141726] font-bold" : "bg-transparent border-transparent text-[#5A6072] hover:text-[#141726] hover:bg-[#F1F3FA]/50"
+                      isActive ? "bg-indigo-600/15 border-indigo-500/40 text-[var(--c-ink)] font-bold" : "bg-transparent border-transparent text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surface-2)]/50"
                     }`}
                   >
                     <span className="text-base select-none">{d.icon}</span>
@@ -256,11 +264,11 @@ export default function ExplorePage() {
             {searchResults ? (
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-mono text-[#5A6072]">SEARCH RESULTS · &quot;{searchQuery}&quot;</h3>
+                  <h3 className="text-sm font-mono text-[var(--c-ink-2)]">SEARCH RESULTS · &quot;{searchQuery}&quot;</h3>
                   <span className="text-xs font-mono text-indigo-600 font-bold">{searchResults.length} FOUND</span>
                 </div>
                 {searchResults.length === 0 ? (
-                  <div className="p-12 glass-panel rounded-2xl text-center font-mono text-xs text-[#5A6072]">
+                  <div className="p-12 glass-panel rounded-2xl text-center font-mono text-xs text-[var(--c-ink-2)]">
                     No tracked technologies match this lookup.
                   </div>
                 ) : (
@@ -284,7 +292,7 @@ export default function ExplorePage() {
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(67,56,202,0.12),transparent_55%)] pointer-events-none" />
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative">
                         <div className="flex items-center gap-5">
-                          <span className="text-5xl p-4 bg-[#FFFFFF] border border-indigo-500/20 rounded-2xl">{entryTool.icon}</span>
+                          <span className="text-5xl p-4 bg-[var(--c-surface)] border border-indigo-500/20 rounded-2xl">{entryTool.icon}</span>
                           <ScoreRing score={entryTool.score} size={76} stroke={5} />
                         </div>
                         <div className="flex-1 space-y-2">
@@ -292,16 +300,16 @@ export default function ExplorePage() {
                             <Sparkles className="w-3.5 h-3.5" /> Recommended entry point · {currentDomain.name}
                           </span>
                           <h2 className="text-2xl md:text-3xl font-black font-display">
-                            Start with <span className="text-[#141726]">{entryTool.name}</span>
+                            Start with <span className="text-[var(--c-ink)]">{entryTool.name}</span>
                           </h2>
-                          <p className="text-sm text-[#5A6072] font-light max-w-xl leading-relaxed">
+                          <p className="text-sm text-[var(--c-ink-2)] font-light max-w-xl leading-relaxed">
                             {entryTool.recommendation || `${entryTool.name} is the highest-leverage place to begin in ${currentDomain.name}. Follow the path below from here.`}
                           </p>
                           <div className="flex flex-wrap gap-3 pt-2">
                             <Link href={`/roadmap/${currentDomain.slug}`} className="btn-primary text-xs py-2.5 px-5 rounded-xl">
                               <Map className="w-4 h-4" /> Start the {currentDomain.name} roadmap
                             </Link>
-                            <Link href={`/tools/${entryTool.slug}`} className="px-5 py-2.5 rounded-xl border border-indigo-500/20 bg-[#FFFFFF]/60 hover:bg-[#F1F3FA] text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors">
+                            <Link href={`/tools/${entryTool.slug}`} className="px-5 py-2.5 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors">
                               <Zap className="w-3.5 h-3.5" /> Analyze {entryTool.name}
                             </Link>
                           </div>
@@ -315,7 +323,7 @@ export default function ExplorePage() {
                 {pathLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-3">
                     <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
-                    <span className="text-xs font-mono text-[#5A6072]/60">Sequencing the path…</span>
+                    <span className="text-xs font-mono text-[var(--c-ink-2)]/60">Sequencing the path…</span>
                   </div>
                 ) : learningPath && learningPath.path.length > 0 ? (
                   <div className="relative pl-6 md:pl-8">
@@ -336,7 +344,7 @@ export default function ExplorePage() {
                                 STEP {meta.num}
                               </span>
                               <h3 className="text-lg md:text-xl font-black font-display uppercase tracking-wide">{meta.label}</h3>
-                              <span className="text-[10px] font-mono text-[#5A6072]/50 border border-indigo-500/10 rounded px-2 py-0.5">
+                              <span className="text-[10px] font-mono text-[var(--c-ink-2)]/50 border border-indigo-500/10 rounded px-2 py-0.5">
                                 {tier.tools.length} {tier.tools.length === 1 ? "tool" : "tools"}
                               </span>
                             </div>
@@ -353,7 +361,7 @@ export default function ExplorePage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-16 text-[#5A6072]/50 text-xs font-mono border border-dashed border-indigo-500/10 rounded-2xl">
+                  <div className="text-center py-16 text-[var(--c-ink-2)]/50 text-xs font-mono border border-dashed border-indigo-500/10 rounded-2xl">
                     Select a domain to reveal its learning sequence.
                   </div>
                 )}
