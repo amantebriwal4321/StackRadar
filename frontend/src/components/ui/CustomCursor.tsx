@@ -125,7 +125,7 @@ export default function CustomCursor() {
         }}
       >
         {hasPlus && (
-          <span className="text-[10px] text-[#141726] font-mono font-bold leading-none animate-fade-in">+</span>
+          <span className="text-[10px] text-[var(--c-ink)] font-mono font-bold leading-none animate-fade-in">+</span>
         )}
       </div>
     </>
