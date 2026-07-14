@@ -6,6 +6,7 @@ import { TrendingUp, TrendingDown, Minus, BarChart3, Filter, Loader2, Star, Shar
 import { type Tool, fetchTools, fetchCategories } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
 import FilterBar from "@/components/FilterBar";
+import WatchlistButton from "@/components/WatchlistButton";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
@@ -49,7 +50,7 @@ function CircularProgressArc({ value, size = 64, strokeWidth = 5.5 }: { value: n
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="rgba(20, 23, 38, 0.10)"
+          style={{ stroke: "var(--c-border)" }}
           strokeWidth={strokeWidth}
           fill="transparent"
         />
@@ -68,7 +69,7 @@ function CircularProgressArc({ value, size = 64, strokeWidth = 5.5 }: { value: n
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-sm font-mono font-black text-[#141726]">{value}</span>
+        <span className="text-sm font-mono font-black text-[var(--c-ink)]">{value}</span>
       </div>
     </div>
   );
@@ -100,7 +101,7 @@ function MiniSparkline({ data, width = 90, height = 30 }: { data: number[]; widt
   // no fabricated curve. Fills in as the scraper accumulates daily snapshots.
   if (clean.length < 2 || distinct < 2) {
     return (
-      <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest text-[#5A6072]/40">
+      <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest text-[var(--c-ink-2)]/40">
         <span className="inline-block w-6 h-px bg-[#5A6072]/25" />
         {clean.length === 0 ? "new" : "stable"}
       </div>
@@ -135,7 +136,7 @@ function MiniSparkline({ data, width = 90, height = 30 }: { data: number[]; widt
           opacity="0.85"
         />
       </svg>
-      <span className="text-[9px] font-mono text-[#5A6072]/40 uppercase tracking-widest">7d history</span>
+      <span className="text-[9px] font-mono text-[var(--c-ink-2)]/40 uppercase tracking-widest">7d history</span>
     </div>
   );
 }
@@ -216,7 +217,7 @@ export default function TrendsPage() {
       <div className="space-y-8 relative z-10 pb-12">
         
         {/* Opacity blurred header section */}
-        <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[#FFFFFF]/80 backdrop-blur-md space-y-3 relative overflow-hidden">
+        <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[var(--c-surface)]/80 backdrop-blur-md space-y-3 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -230,7 +231,7 @@ export default function TrendsPage() {
               </span>
               <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-display flex items-center gap-3">
                 <TrendingUp className="w-8 h-8 text-indigo-600" />
-                <span className="gradient-text">Trends Intelligence</span>
+                <span className="text-text-primary">Trends Intelligence</span>
               </h1>
             </div>
             
@@ -241,12 +242,12 @@ export default function TrendsPage() {
                   alert("Trends URL copied to clipboard!");
                 }
               }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-500/15 bg-[#F1F3FA] hover:bg-[#F1F3FA]/80 text-xs font-mono hover:text-[#141726] transition-all active:scale-95"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-500/15 bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-2)]/80 text-xs font-mono hover:text-[var(--c-ink)] transition-all active:scale-95"
             >
               <Share2 className="w-3.5 h-3.5" /> SHARE_URL
             </button>
           </div>
-          <p className="text-sm text-[#5A6072] max-w-xl font-light">
+          <p className="text-sm text-[var(--c-ink-2)] max-w-xl font-light">
             Every tracked technology, scored 0–100 by live momentum from GitHub stars and developer conversation. Sort by what&apos;s rising, most-starred, or most-discussed.
           </p>
         </header>
@@ -261,7 +262,7 @@ export default function TrendsPage() {
             showIcon={false}
             className="glass p-1 rounded-xl flex items-center gap-1.5 overflow-x-auto w-fit max-w-full shadow-md"
             prefixNode={
-              <div className="flex items-center gap-1.5 pl-3 pr-1 text-[#5A6072] shrink-0 select-none">
+              <div className="flex items-center gap-1.5 pl-3 pr-1 text-[var(--c-ink-2)] shrink-0 select-none">
                 <Filter className="w-4 h-4 text-indigo-600" />
                 <span className="text-xs font-mono font-bold uppercase tracking-wider">DOMAIN:</span>
               </div>
@@ -271,7 +272,7 @@ export default function TrendsPage() {
           <div className="flex flex-wrap items-center gap-4">
             {/* Sort control */}
             <div className="glass p-1 rounded-xl flex items-center gap-1 w-fit shadow-md">
-              <div className="flex items-center gap-1.5 pl-3 pr-1 text-[#5A6072] shrink-0 select-none">
+              <div className="flex items-center gap-1.5 pl-3 pr-1 text-[var(--c-ink-2)] shrink-0 select-none">
                 <ArrowUpDown className="w-4 h-4 text-indigo-600" />
                 <span className="text-xs font-mono font-bold uppercase tracking-wider">SORT:</span>
               </div>
@@ -282,7 +283,7 @@ export default function TrendsPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer select-none ${
                     sortBy === s.key
                       ? "bg-indigo-500/15 text-indigo-700 font-bold"
-                      : "text-[#5A6072] hover:text-[#141726]"
+                      : "text-[var(--c-ink-2)] hover:text-[var(--c-ink)]"
                   }`}
                 >
                   {s.label}
@@ -290,16 +291,16 @@ export default function TrendsPage() {
               ))}
             </div>
 
-            <div className="text-xs font-mono text-[#5A6072]/60">
-              SHOWING <span className="text-[#141726] font-bold">{displayedTools.length}</span> TECHNOLOGIES
+            <div className="text-xs font-mono text-[var(--c-ink-2)]/60">
+              SHOWING <span className="text-[var(--c-ink)] font-bold">{displayedTools.length}</span> TECHNOLOGIES
             </div>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="h-96 rounded-2xl border border-indigo-500/5 bg-[#F1F3FA]/50 flex flex-col items-center justify-center gap-3 animate-pulse">
+          <div className="h-96 rounded-2xl border border-indigo-500/5 bg-[var(--c-surface-2)]/50 flex flex-col items-center justify-center gap-3 animate-pulse">
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-            <span className="text-xs font-mono text-[#5A6072]/70">Retrieving index details...</span>
+            <span className="text-xs font-mono text-[var(--c-ink-2)]/70">Retrieving index details...</span>
           </div>
         ) : (
           <div className="space-y-8">
@@ -359,7 +360,7 @@ export default function TrendsPage() {
             <div className="tech-panel rounded-2xl overflow-hidden">
               
               {/* Header row */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-[#F7F8FC] border-b border-[rgba(20,23,38,0.10)] font-mono text-[10px] text-[#5A6072] tracking-widest uppercase">
+              <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-[var(--c-surface-2)] border-b border-[var(--c-border)] font-mono text-[10px] text-[var(--c-ink-2)] tracking-widest uppercase">
                 <div className="col-span-4">TECHNOLOGY DETAILS</div>
                 <div className="col-span-2 text-center">TREND SCORE</div>
                 <div className="col-span-2">GROWTH STAGE</div>
@@ -369,7 +370,7 @@ export default function TrendsPage() {
 
               {/* Data Rows */}
               {displayedTools.length === 0 ? (
-                <div className="p-12 text-center text-[#5A6072] font-mono text-sm">
+                <div className="p-12 text-center text-[var(--c-ink-2)] font-mono text-sm">
                   No technologies monitored under this filter.
                 </div>
               ) : (
@@ -382,21 +383,21 @@ export default function TrendsPage() {
                         ? { Icon: TrendingUp, label: `+${g.toFixed(1)}%`, cls: "text-emerald-600 bg-emerald-500/5 border-emerald-500/10" }
                         : g < 0
                         ? { Icon: TrendingDown, label: `${g.toFixed(1)}%`, cls: "text-rose-600 bg-rose-500/5 border-rose-500/10" }
-                        : { Icon: Minus, label: "stable", cls: "text-[#5A6072]/70 bg-[#5A6072]/[0.06] border-[#5A6072]/20" };
+                        : { Icon: Minus, label: "stable", cls: "text-[var(--c-ink-2)]/70 bg-[#5A6072]/[0.06] border-[#5A6072]/20" };
 
                     return (
                       <div
                         key={tool.slug}
-                        className="trend-list-row grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-6 py-5 bg-[#F1F3FA]/10 hover:bg-[#F1F3FA]/50 transition-all duration-200"
+                        className="trend-list-row grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-6 py-5 bg-[var(--c-surface-2)]/10 hover:bg-[var(--c-surface-2)]/50 transition-all duration-200"
                       >
                         {/* 1. Name & Info */}
                         <div className="col-span-4 flex items-center gap-3">
-                          <span className="text-3xl p-2 bg-[#F7F8FC] border border-[rgba(20,23,38,0.10)] rounded-lg select-none">
+                          <span className="text-3xl p-2 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-lg select-none">
                             {tool.icon}
                           </span>
                           <div>
                             <div className="flex items-center gap-2">
-                              <h3 className="font-bold text-sm text-[#141726] hover:text-indigo-600 transition-colors">
+                              <h3 className="font-bold text-sm text-[var(--c-ink)] hover:text-indigo-600 transition-colors">
                                 <Link href={`/tools/${tool.slug}`}>{tool.name}</Link>
                               </h3>
                               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold border ${trend.cls}`}>
@@ -404,38 +405,39 @@ export default function TrendsPage() {
                                 {trend.label}
                               </span>
                             </div>
-                            <span className="text-[10px] font-mono text-[#5A6072]">{tool.category}</span>
+                            <span className="text-[10px] font-mono text-[var(--c-ink-2)]">{tool.category}</span>
                           </div>
+                          <WatchlistButton toolSlug={tool.slug} className="ml-auto shrink-0" />
                         </div>
 
                         {/* 2. Circular progress gauge */}
                         <div className="col-span-2 flex items-center justify-start md:justify-center">
-                          <span className="md:hidden text-xs font-mono text-[#5A6072]/60 mr-4">TREND SCORE:</span>
+                          <span className="md:hidden text-xs font-mono text-[var(--c-ink-2)]/60 mr-4">TREND SCORE:</span>
                           <CircularProgressArc value={tool.score} />
                         </div>
 
                         {/* 3. Growth stage */}
                         <div className="col-span-2">
-                          <span className="md:hidden text-xs font-mono text-[#5A6072]/60 mr-2">STAGE:</span>
-                          <span className="px-2.5 py-1 rounded bg-[#F7F8FC] border border-[rgba(20,23,38,0.10)] text-xs font-mono uppercase tracking-wider text-indigo-600">
+                          <span className="md:hidden text-xs font-mono text-[var(--c-ink-2)]/60 mr-2">STAGE:</span>
+                          <span className="px-2.5 py-1 rounded bg-[var(--c-surface-2)] border border-[var(--c-border)] text-xs font-mono uppercase tracking-wider text-indigo-600">
                             {tool.stage}
                           </span>
                         </div>
 
                         {/* 4. Mini Sparkline */}
                         <div className="col-span-2 flex justify-start md:justify-center">
-                          <span className="md:hidden text-xs font-mono text-[#5A6072]/60 mr-4">HISTORICAL:</span>
+                          <span className="md:hidden text-xs font-mono text-[var(--c-ink-2)]/60 mr-4">HISTORICAL:</span>
                           <MiniSparkline data={tool.last_7_scores} />
                         </div>
 
                         {/* 5. Telemetry details */}
                         <div className="col-span-2 text-left md:text-right space-y-1">
-                          <div className="flex items-center md:justify-end gap-1 text-[11px] font-mono text-[#5A6072]">
+                          <div className="flex items-center md:justify-end gap-1 text-[11px] font-mono text-[var(--c-ink-2)]">
                             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                             <span>{tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(1)}k` : tool.stars} stars</span>
                           </div>
                           
-                          <div className="flex items-center md:justify-end gap-1 text-[10px] font-mono text-[#5A6072]/50">
+                          <div className="flex items-center md:justify-end gap-1 text-[10px] font-mono text-[var(--c-ink-2)]/50">
                             <MessageSquare className="w-3 h-3" />
                             <span>{tool.hn_count + tool.reddit_count + tool.devto_count + tool.news_count} mentions</span>
                           </div>
