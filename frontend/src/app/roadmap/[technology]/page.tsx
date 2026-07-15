@@ -141,6 +141,14 @@ export default function RoadmapPage() {
             <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-xl mx-auto font-light">
               {roadmap.description || "Guided step-by-step tracks structured directly from monitored technology specifications."}
             </p>
+            <Link
+              href={`/explore?domain=${slug}`}
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono text-indigo-600 hover:text-[var(--c-ink)] transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              This track is the concepts to master — see which {roadmap.title} tools have live momentum
+              <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
 
           <div className="flex justify-center gap-6 pt-2 font-mono text-[10px] text-[var(--c-ink-2)] uppercase">
@@ -158,7 +166,7 @@ export default function RoadmapPage() {
           
           {/* Active scroll-linked neon line */}
           <div
-            className="absolute left-[2.35rem] md:left-[4.35rem] top-10 w-0.5 bg-gradient-to-b from-indigo-500 via-indigo-500 to-indigo-400 shadow-[0_0_10px_rgba(37,99,235,0.4)] z-0 transition-all duration-300 ease-out"
+            className="absolute left-[2.35rem] md:left-[4.35rem] top-10 w-0.5 bg-gradient-to-b from-indigo-500 via-indigo-500 to-indigo-400 shadow-[0_0_10px_rgba(124,45,74,0.4)] z-0 transition-all duration-300 ease-out"
             style={{ height: `${scrollFillHeight}%` }}
           />
 
