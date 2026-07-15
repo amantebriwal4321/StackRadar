@@ -48,7 +48,7 @@ export default function Preloader() {
           initial={{ y: 0 }}
           animate={progress === 100 ? { y: "-100%" } : { y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute top-0 left-0 w-full h-1/2 bg-[#141726] border-b border-[#4338CA]/15 pointer-events-auto"
+          className="absolute top-0 left-0 w-full h-1/2 bg-[#141726] border-b border-[var(--accent-1)]/20 pointer-events-auto"
         />
 
         {/* Bottom Half Split */}
