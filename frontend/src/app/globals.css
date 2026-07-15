@@ -463,8 +463,8 @@ body {
 @keyframes rotateStar { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
 .section-vignette-top { position: relative; }
-.section-vignette-top::before { content:''; position:absolute; top:0; left:0; right:0; height:120px; background:linear-gradient(to bottom,#EDEFF5,transparent); pointer-events:none; z-index:2; }
-.section-vignette-bottom::after { content:''; position:absolute; bottom:0; left:0; right:0; height:120px; background:linear-gradient(to top,#EDEFF5,transparent); pointer-events:none; z-index:2; }
+.section-vignette-top::before { content:''; position:absolute; top:0; left:0; right:0; height:120px; background:linear-gradient(to bottom,var(--c-ground),transparent); pointer-events:none; z-index:2; }
+.section-vignette-bottom::after { content:''; position:absolute; bottom:0; left:0; right:0; height:120px; background:linear-gradient(to top,var(--c-ground),transparent); pointer-events:none; z-index:2; }
 
 .bg-radial-gradient { background: radial-gradient(circle at center, var(--tw-gradient-from, color-mix(in srgb, var(--accent-1) 6%, transparent)), var(--tw-gradient-to, transparent)); }
 
@@ -476,6 +476,10 @@ body {
    ───────────────────────────────────────────── */
 @keyframes char-in { 0%{opacity:0;filter:blur(20px);transform:translateY(90%)} 100%{opacity:1;filter:blur(0);transform:translateY(0)} }
 .animate-char-in { display:inline-block; opacity:0; animation:char-in 0.55s var(--ease-standard) forwards; }
+
+/* Cycling hero word — swaps in from near-visible so it never reads as a blank line */
+@keyframes word-swap { 0%{opacity:0.15;filter:blur(5px);transform:translateY(0.16em)} 100%{opacity:1;filter:blur(0);transform:translateY(0)} }
+.animate-word-swap { animation: word-swap 0.45s var(--ease-standard) both; }
 
 .letter-spin { display:inline-block; transition:transform 0.6s var(--ease-spring); transform-style:preserve-3d; }
 .letter-spin:hover { transform:rotateY(360deg); }
