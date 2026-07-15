@@ -17,7 +17,7 @@ import {
 
 // Series colors for up to 5 tracked tools — anchored on the indigo accent,
 // distinguishable via the system's own data tokens (no off-brand pink/teal).
-const COMPARE_COLORS = ["#4338CA", "#12B76A", "#B54708", "#F04438", "#6366F1"];
+const COMPARE_COLORS = ["#7C2D4A", "#12B76A", "#B54708", "#F04438", "#C23E6E"];
 
 export default function ComparePage() {
   const [allTools, setAllTools] = useState<Tool[]>([]);
@@ -260,7 +260,7 @@ export default function ComparePage() {
                     disabled={!isSelected && selectedSlugs.length >= 5}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono transition-all border cursor-pointer select-none text-left truncate ${
                       isSelected
-                        ? "bg-[#4338CA]/15 border-indigo-500 text-[var(--c-ink)] font-bold"
+                        ? "bg-indigo-600/15 border-indigo-500 text-[var(--c-ink)] font-bold"
                         : "bg-[var(--c-surface)]/50 border-indigo-500/5 text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:border-indigo-500/20 disabled:opacity-20 disabled:cursor-not-allowed"
                     }`}
                   >
