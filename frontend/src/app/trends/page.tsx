@@ -102,7 +102,7 @@ function MiniSparkline({ data, width = 90, height = 30 }: { data: number[]; widt
   if (clean.length < 2 || distinct < 2) {
     return (
       <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest text-[var(--c-ink-2)]/40">
-        <span className="inline-block w-6 h-px bg-[#5A6072]/25" />
+        <span className="inline-block w-6 h-px bg-[var(--c-ink-2)]/30" />
         {clean.length === 0 ? "new" : "stable"}
       </div>
     );
@@ -208,6 +208,13 @@ export default function TrendsPage() {
     );
   }, [isLoading, displayedTools]);
 
+  // Aggregate stats for the header (fills the empty right side with real provenance)
+  const totalStars = useMemo(() => allTools.reduce((s, t) => s + (t.stars || 0), 0), [allTools]);
+  const starsLabel =
+    totalStars >= 1_000_000 ? `${(totalStars / 1_000_000).toFixed(1)}M`
+    : totalStars >= 1000 ? `${Math.round(totalStars / 1000)}k`
+    : `${totalStars}`;
+
   return (
     <DashboardShell>
 
@@ -235,17 +242,32 @@ export default function TrendsPage() {
               </h1>
             </div>
             
-            <button
-              onClick={() => {
-                if (navigator.clipboard) {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert("Trends URL copied to clipboard!");
-                }
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-500/15 bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-2)]/80 text-xs font-mono hover:text-[var(--c-ink)] transition-all active:scale-95"
-            >
-              <Share2 className="w-3.5 h-3.5" /> SHARE_URL
-            </button>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              {/* live provenance stats — fills the header instead of dead space */}
+              <div className="flex items-center gap-6 font-mono">
+                {[
+                  { v: allTools.length ? String(allTools.length) : "—", l: "tracked" },
+                  { v: allTools.length ? starsLabel : "—", l: "GitHub ★" },
+                  { v: "5", l: "sources" },
+                ].map((s) => (
+                  <div key={s.l} className="text-right">
+                    <div className="text-xl md:text-2xl font-black text-[var(--c-ink)] tabular-nums leading-none">{s.v}</div>
+                    <div className="text-[9px] uppercase tracking-widest text-[var(--c-ink-2)]/60 mt-1">{s.l}</div>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  if (navigator.clipboard) {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert("Trends URL copied to clipboard!");
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-500/15 bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-2)]/80 text-xs font-mono hover:text-[var(--c-ink)] transition-all active:scale-95"
+              >
+                <Share2 className="w-3.5 h-3.5" /> SHARE_URL
+              </button>
+            </div>
           </div>
           <p className="text-sm text-[var(--c-ink-2)] max-w-xl font-light">
             Every tracked technology, scored 0–100 by live momentum from GitHub stars and developer conversation. Sort by what&apos;s rising, most-starred, or most-discussed.
@@ -383,7 +405,7 @@ export default function TrendsPage() {
                         ? { Icon: TrendingUp, label: `+${g.toFixed(1)}%`, cls: "text-emerald-600 bg-emerald-500/5 border-emerald-500/10" }
                         : g < 0
                         ? { Icon: TrendingDown, label: `${g.toFixed(1)}%`, cls: "text-rose-600 bg-rose-500/5 border-rose-500/10" }
-                        : { Icon: Minus, label: "stable", cls: "text-[var(--c-ink-2)]/70 bg-[#5A6072]/[0.06] border-[#5A6072]/20" };
+                        : { Icon: Minus, label: "stable", cls: "text-[var(--c-ink-2)]/70 bg-[var(--c-ink-2)]/[0.08] border-[var(--c-ink-2)]/25" };
 
                     return (
                       <div
