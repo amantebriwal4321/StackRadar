@@ -111,7 +111,7 @@ export default function CustomCursor() {
       }} />
       <div
         ref={dotRef}
-        className="fixed top-0 left-0 w-2.5 h-2.5 -ml-1.25 -mt-1.25 bg-[#6366F1] rounded-full pointer-events-none z-[99999] transition-opacity duration-300"
+        className="fixed top-0 left-0 w-2.5 h-2.5 -ml-1.25 -mt-1.25 bg-[var(--accent-1)] rounded-full pointer-events-none z-[99999] transition-opacity duration-300"
         style={{
           opacity: isVisible ? 1 : 0,
           mixBlendMode: "difference"
@@ -119,7 +119,7 @@ export default function CustomCursor() {
       />
       <div
         ref={ringRef}
-        className="fixed top-0 left-0 w-10 h-10 -ml-5 -mt-5 border border-[#6366F1]/60 rounded-full pointer-events-none z-[99998] transition-[width,height,background-color,border-color,opacity] duration-300 flex items-center justify-center"
+        className="fixed top-0 left-0 w-10 h-10 -ml-5 -mt-5 border border-[var(--accent-1)]/60 rounded-full pointer-events-none z-[99998] transition-[width,height,background-color,border-color,opacity] duration-300 flex items-center justify-center"
         style={{
           opacity: isVisible ? 1 : 0,
         }}
