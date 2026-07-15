@@ -335,7 +335,7 @@ export default function ToolDetailPage() {
 
           {/* Learning path CTA */}
           {tool.has_roadmap && tool.roadmap_slug ? (
-            <div className="bg-gradient-to-r from-[#4338CA] to-[#4F46E5] rounded-2xl p-5 text-white flex justify-between items-center gap-4 shadow-lg shadow-indigo-500/25">
+            <div className="bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] rounded-2xl p-5 text-white flex justify-between items-center gap-4 shadow-lg shadow-indigo-500/25">
               <div className="space-y-1">
                 <h4 className="text-sm font-bold flex items-center gap-2">
                   <GraduationCap className="w-5 h-5" /> Master {tool.name} Sequence
