@@ -394,18 +394,10 @@ export default function HomePage() {
               <span className="block overflow-hidden">
                 <span className="hero-line block">
                   <span className="relative inline-block align-baseline">
-                    <span key={wordIndex} className="inline-flex gradient-text">
-                      {heroWords[wordIndex].split("").map((ch, i) => (
-                        <span
-                          key={`${wordIndex}-${i}`}
-                          className="animate-char-in"
-                          style={{ animationDelay: `${i * 45}ms` }}
-                        >
-                          {ch}
-                        </span>
-                      ))}
+                    <span key={wordIndex} className="inline-block gradient-text animate-word-swap">
+                      {heroWords[wordIndex]}
                     </span>
-                    <span className="absolute -bottom-1 left-0 right-0 h-2 bg-indigo-500/15 rounded-full" />
+                    <span className="absolute -bottom-1.5 left-0 right-0 h-2 bg-indigo-500/15 rounded-full" />
                   </span>
                   <span className="text-[var(--c-ink)]">.</span>
                 </span>
@@ -665,8 +657,8 @@ export default function HomePage() {
           SECTION 4: HORIZONTAL TRENDING MOVERS
          ══════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-6 py-24 relative section-reveal">
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#EDEFF5] to-transparent pointer-events-none z-10 hidden md:block" />
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#EDEFF5] to-transparent pointer-events-none z-10 hidden md:block" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[var(--c-ground)] to-transparent pointer-events-none z-10 hidden md:block" />
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[var(--c-ground)] to-transparent pointer-events-none z-10 hidden md:block" />
         
         <div className="flex flex-col md:flex-row md:items-end gap-4 mb-10">
           <div className="space-y-3">
