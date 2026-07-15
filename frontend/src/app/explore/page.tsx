@@ -68,17 +68,19 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
       className="group relative rounded-2xl p-5 overflow-hidden tech-panel tech-panel-interactive"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-      {isEntry && (
-        <span className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-indigo-600 text-[8px] font-mono font-bold text-white uppercase tracking-wider flex items-center gap-1">
-          <GraduationCap className="w-3 h-3" /> Start here
-        </span>
-      )}
       <div className="flex items-center gap-4 relative">
         <span className="text-3xl p-2.5 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl group-hover:scale-105 group-hover:border-indigo-400/40 transition-all">
           {tool.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <h4 className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>
+          <div className="flex items-center gap-1.5">
+            <h4 className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>
+            {isEntry && (
+              <span className="shrink-0 px-1.5 py-0.5 rounded bg-indigo-600 text-[8px] font-mono font-bold text-white uppercase tracking-wider inline-flex items-center gap-0.5">
+                <GraduationCap className="w-2.5 h-2.5" /> Start
+              </span>
+            )}
+          </div>
           <p className="text-[10px] font-mono text-[var(--c-ink-2)]/60 uppercase truncate">{tool.category}</p>
         </div>
         <ScoreRing score={tool.score} />
@@ -287,7 +289,7 @@ export default function ExplorePage() {
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="relative rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-[#F1F3FA]/80 to-[#FFFFFF]/60 p-6 md:p-8 overflow-hidden glass-panel-glow"
+                      className="relative rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-[var(--c-surface-2)]/80 to-[var(--c-surface)]/60 p-6 md:p-8 overflow-hidden glass-panel-glow"
                     >
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(67,56,202,0.12),transparent_55%)] pointer-events-none" />
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative">
@@ -313,6 +315,9 @@ export default function ExplorePage() {
                               <Zap className="w-3.5 h-3.5" /> Analyze {entryTool.name}
                             </Link>
                           </div>
+                          <p className="text-[11px] font-mono text-[var(--c-ink-2)]/70 pt-2 leading-relaxed max-w-xl">
+                            Two lenses: the <span className="text-[var(--c-ink)] font-semibold">roadmap</span> is the concepts to master start-to-finish; the <span className="text-[var(--c-ink)] font-semibold">sequence below</span> ranks the {currentDomain.name} tools worth learning by live momentum.
+                          </p>
                         </div>
                       </div>
                     </motion.div>
@@ -336,7 +341,7 @@ export default function ExplorePage() {
                           <div key={tier.level} className="relative">
                             {/* node marker */}
                             <div
-                              className={`absolute -left-6 md:-left-8 top-1 w-4 h-4 rounded-full border-2 border-[#EDEFF5] ${meta.ring}`}
+                              className={`absolute -left-6 md:-left-8 top-1 w-4 h-4 rounded-full border-2 border-[var(--c-ground)] ${meta.ring}`}
                               style={{ background: meta.color }}
                             />
                             <div className="flex items-center gap-3 mb-5">
