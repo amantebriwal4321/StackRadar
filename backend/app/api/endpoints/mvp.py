@@ -375,14 +375,44 @@ def get_roadmaps(db: Session = Depends(get_db)):
     ]
 
 
+# Curated mapping of which tracked tools belong to each roadmap step.
+# Keyed by roadmap slug → { step number → [tool slugs] }. The association is
+# editorial (a tool is "used" at a given concept stage); names/scores/stars are
+# hydrated live from the Tool table at request time, so nothing here is stale.
+ROADMAP_STEP_TOOLS: dict[str, dict[int, list[str]]] = {
+    "ai-ml":          {4: ["pytorch", "tensorflow"], 5: ["transformers", "langchain", "ollama"]},
+    "web-development": {1: ["tailwindcss", "vite"], 2: ["react", "vuejs", "svelte", "nextjs", "astro"], 3: ["fastapi", "trpc"], 5: ["bun", "deno"]},
+    "cloud-native":   {2: ["kubernetes", "terraform"], 3: ["supabase"]},
+    "devops":         {2: ["docker"], 4: ["grafana", "prometheus"]},
+    "cybersecurity":  {1: ["wireshark"], 3: ["metasploit", "owasp-zap"]},
+    "web3":           {2: ["hardhat", "foundry"], 3: ["ethersjs"]},
+    "systems":        {2: ["rust"], 3: ["go"]},
+    "data-databases": {3: ["prisma"]},
+}
+
+
 @router.get("/roadmaps/{slug}")
 def get_roadmap(slug: str, db: Session = Depends(get_db)):
-    """Get a full roadmap with all steps."""
+    """Get a full roadmap with all steps, each hydrated with the live tools it uses."""
     roadmap = db.query(ToolRoadmap).filter(ToolRoadmap.slug == slug).first()
     if not roadmap:
         raise HTTPException(status_code=404, detail=f"Roadmap '{slug}' not found")
 
     steps = json.loads(roadmap.steps_json) if roadmap.steps_json else []
+
+    # Attach the tracked tools for this roadmap's steps, hydrated live from the DB.
+    step_tool_map = ROADMAP_STEP_TOOLS.get(slug, {})
+    needed_slugs = [s for slugs in step_tool_map.values() for s in slugs]
+    tools_by_slug: dict[str, dict] = {}
+    if needed_slugs:
+        for t in db.query(Tool).filter(Tool.slug.in_(needed_slugs)).all():
+            tools_by_slug[t.slug] = {
+                "slug": t.slug, "name": t.name, "icon": t.icon,
+                "score": t.score, "stars": t.stars,
+            }
+    for step in steps:
+        slugs = step_tool_map.get(step.get("step"), [])
+        step["tools"] = [tools_by_slug[s] for s in slugs if s in tools_by_slug]
 
     return {
         "slug": roadmap.slug,
