@@ -73,15 +73,15 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
           {tool.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <h4 className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>
+          <h4 className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <p className="text-[10px] font-mono text-[var(--c-ink-2)]/60 uppercase truncate min-w-0">{tool.category}</p>
             {isEntry && (
               <span className="shrink-0 px-1.5 py-0.5 rounded bg-indigo-600 text-[8px] font-mono font-bold text-white uppercase tracking-wider inline-flex items-center gap-0.5">
                 <GraduationCap className="w-2.5 h-2.5" /> Start
               </span>
             )}
           </div>
-          <p className="text-[10px] font-mono text-[var(--c-ink-2)]/60 uppercase truncate">{tool.category}</p>
         </div>
         <ScoreRing score={tool.score} />
       </div>
@@ -110,9 +110,9 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
 }
 
 const TIER_META: Record<string, { label: string; color: string; ring: string; num: string }> = {
-  beginner: { label: "Start Here", color: "#12B76A", ring: "shadow-[0_0_16px_rgba(18,183,106,0.4)]", num: "01" },
-  intermediate: { label: "Build Foundations", color: "#B54708", ring: "shadow-[0_0_16px_rgba(181,71,8,0.35)]", num: "02" },
-  advanced: { label: "Go Advanced", color: "#7C2D4A", ring: "shadow-[0_0_16px_rgba(124,45,74,0.45)]", num: "03" },
+  beginner: { label: "Foundational Tools", color: "#12B76A", ring: "shadow-[0_0_16px_rgba(18,183,106,0.4)]", num: "01" },
+  intermediate: { label: "Core Tools", color: "#B54708", ring: "shadow-[0_0_16px_rgba(181,71,8,0.35)]", num: "02" },
+  advanced: { label: "Advanced Tools", color: "#7C2D4A", ring: "shadow-[0_0_16px_rgba(124,45,74,0.45)]", num: "03" },
 };
 
 export default function ExplorePage() {
@@ -205,14 +205,14 @@ export default function ExplorePage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 relative">
             <div className="space-y-2">
               <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                <Route className="w-3.5 h-3.5" /> Momentum-driven learning paths
+                <Route className="w-3.5 h-3.5" /> The tool radar
               </span>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight font-display flex items-center gap-3">
                 <span className="text-text-primary">Explore Universe</span>
               </h1>
               <p className="text-[var(--c-ink-2)] text-sm max-w-xl font-light">
-                Pick a domain and follow the sequence StackRadar recommends — ordered by what&apos;s worth learning
-                <span className="text-indigo-600"> right now</span>, from entry point to advanced.
+                Pick a domain to see its <span className="text-indigo-600">tools</span> — foundational to advanced — each scored by
+                live momentum. Want the concepts to study in order? Open that domain&apos;s roadmap.
               </p>
             </div>
 
@@ -299,7 +299,7 @@ export default function ExplorePage() {
                         </div>
                         <div className="flex-1 space-y-2">
                           <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5" /> Recommended entry point · {currentDomain.name}
+                            <Sparkles className="w-3.5 h-3.5" /> Recommended first tool · {currentDomain.name}
                           </span>
                           <h2 className="text-2xl md:text-3xl font-black font-display">
                             Start with <span className="text-[var(--c-ink)]">{entryTool.name}</span>
@@ -316,7 +316,7 @@ export default function ExplorePage() {
                             </Link>
                           </div>
                           <p className="text-[11px] font-mono text-[var(--c-ink-2)]/70 pt-2 leading-relaxed max-w-xl">
-                            Two lenses: the <span className="text-[var(--c-ink)] font-semibold">roadmap</span> is the concepts to master start-to-finish; the <span className="text-[var(--c-ink)] font-semibold">sequence below</span> ranks the {currentDomain.name} tools worth learning by live momentum.
+                            Two lenses: the <span className="text-[var(--c-ink)] font-semibold">roadmap</span> is the concepts to master start-to-finish; <span className="text-[var(--c-ink)] font-semibold">the tools below</span> are the {currentDomain.name} toolkit — foundational to advanced — scored by live momentum.
                           </p>
                         </div>
                       </div>
