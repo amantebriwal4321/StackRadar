@@ -381,28 +381,27 @@ export default function HomePage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
               </span>
-              REAL-TIME WEB TELEMETRY
+              LIVE TECH MOMENTUM TRACKER
               <span className="w-px h-3 bg-indigo-500/30" />
               <span className="text-indigo-600/60">v2.0</span>
             </motion.div>
 
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[0.92] font-display" style={{ perspective: "1000px" }}>
-              <span className="block overflow-hidden">
+              <span className="block pb-[0.12em]">
                 <span className="hero-line block">The internet is</span>
               </span>
-              <span className="block overflow-hidden">
+              <span className="block pb-[0.12em]">
                 <span className="hero-line block">
                   <span className="relative inline-block align-baseline">
-                    <span key={wordIndex} className="inline-block gradient-text animate-word-swap">
+                    <span key={wordIndex} className="inline-block gradient-text animate-word-swap pb-[0.28em] -mb-[0.28em]">
                       {heroWords[wordIndex]}
                     </span>
-                    <span className="absolute -bottom-1.5 left-0 right-0 h-2 bg-indigo-500/15 rounded-full" />
                   </span>
                   <span className="text-[var(--c-ink)]">.</span>
                 </span>
               </span>
-              <span className="block overflow-hidden">
+              <span className="block pb-[0.12em]">
                 <span className="hero-line block">
                   Are you{" "}
                   <span className="inline-flex" aria-label="listening">
@@ -415,9 +414,10 @@ export default function HomePage() {
               </span>
             </h1>
 
-            {/* Paragraph Subhead */}
+            {/* Paragraph Subhead — plain-language value prop */}
             <p className="hero-anim-item text-base md:text-lg text-[var(--c-ink-2)] max-w-xl leading-relaxed font-sans font-light">
-              StackRadar continuously listens to developer telemetry across GitHub, Reddit, HackerNews, and forums to map trends, developer sentiment, and startup opportunities before they break out.
+              <span className="font-semibold text-[var(--c-ink)]">StackRadar scores every major dev tool 0–100 by real momentum</span>{" "}
+              — tracked live from GitHub, Reddit, and Hacker News — so you always know what&apos;s worth learning or adopting next.
             </p>
 
             {/* Decision Engine — framed as a live console window */}
