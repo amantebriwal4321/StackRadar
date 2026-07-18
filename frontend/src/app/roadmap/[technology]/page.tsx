@@ -229,6 +229,36 @@ export default function RoadmapPage() {
                     </div>
                   )}
 
+                  {/* Live-tracked tools you'll use at this stage */}
+                  {step.tools && step.tools.length > 0 && (
+                    <div className="pt-3 border-t border-indigo-500/5 space-y-2">
+                      <span className="flex items-center gap-1 text-[9px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-wider">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> Tools you&apos;ll use · live momentum
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {step.tools.map((tool) => (
+                          <Link
+                            key={tool.slug}
+                            href={`/tools/${tool.slug}`}
+                            className="group/tool flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-lg border border-indigo-500/15 bg-[var(--c-surface)]/70 hover:border-indigo-400/40 hover:bg-[var(--c-surface-2)] transition-all"
+                          >
+                            <span className="text-base leading-none select-none">{tool.icon}</span>
+                            <span className="text-[11px] font-bold text-[var(--c-ink)] group-hover/tool:text-indigo-600 transition-colors">{tool.name}</span>
+                            <span
+                              className="text-[10px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
+                              style={{
+                                color: tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#7C2D4A",
+                                background: `${tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#7C2D4A"}14`,
+                              }}
+                            >
+                              {Math.round(tool.score)}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
 
               </div>
