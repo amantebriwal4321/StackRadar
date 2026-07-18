@@ -69,6 +69,7 @@ export interface RoadmapStep {
   description: string;
   level: "Beginner" | "Intermediate" | "Advanced";
   resources: { label: string; url: string }[];
+  tools?: { slug: string; name: string; icon: string; score: number; stars: number }[];
 }
 
 export interface DomainSummary {
