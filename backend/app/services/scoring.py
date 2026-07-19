@@ -12,7 +12,7 @@ Responsibilities:
 
 import math
 import logging
-from typing import Set, Dict, List, Any
+from typing import Set, Dict, List, Any, Optional
 
 from app.services.catalog import TOOLS
 
@@ -166,27 +166,69 @@ def _percentile_rank(values: List[float]) -> List[float]:
     return ranks
 
 
+def _norm_log(val: float, floor: float, ceil: float) -> float:
+    """
+    Floor-anchored logarithmic normalisation → 0-100.
+
+    Values at or below `floor` score 0; at or above `ceil` score 100. Anchoring
+    to a floor (rather than dividing by log(ceil) alone) is what gives the scale
+    real spread instead of bunching everything near the top.
+    """
+    if val <= floor:
+        return 0.0
+    lo, hi = math.log(floor), math.log(ceil)
+    return max(0.0, min(100.0, ((math.log(val) - lo) / (hi - lo)) * 100.0))
+
+
+def calculate_star_velocity(
+    history: List[Dict[str, Any]],
+    min_days: float = 3.0,
+) -> Optional[float]:
+    """
+    Real momentum: percent star growth per week, from absolute star history.
+
+    `history` is a list of {"recorded_at": datetime, "stars": int|None} in any
+    order. Points without an absolute star count are ignored — a delta cannot be
+    interpreted without knowing its interval, and guessing is fabrication.
+
+    Returns None when momentum is genuinely unknowable (fewer than two usable
+    points, or a span shorter than `min_days`). Callers MUST render that as
+    "building history", never as 0.0% — those mean very different things.
+    """
+    points = sorted(
+        [h for h in history if h.get("stars") is not None and h.get("recorded_at")],
+        key=lambda h: h["recorded_at"],
+    )
+    if len(points) < 2:
+        return None
+
+    first, last = points[0], points[-1]
+    days = (last["recorded_at"] - first["recorded_at"]).total_seconds() / 86400.0
+    if days < min_days or not first["stars"]:
+        return None
+
+    growth = (last["stars"] - first["stars"]) / first["stars"]
+    return round((growth / days) * 7.0 * 100.0, 2)
+
+
 def calculate_all_tool_scores(
     tool_data: List[Dict[str, Any]],
 ) -> List[float]:
     """
-    Calculate scores for ALL tools at once using percentile-based normalization.
+    Score every tool on an ABSOLUTE 0-100 scale.
 
-    Each tool is ranked against every other tool on each signal.
-    This guarantees a natural spread: top tool ≈ 85-95, bottom tool ≈ 10-20.
+    Absolute, not relative: a tool's score depends only on its own signals, so it
+    does not move when unrelated tools move, and a rise genuinely means the tool
+    grew. (An earlier docstring here claimed percentile ranking — it never did;
+    `_percentile_rank` below is unused and kept only for reference.)
 
     Input: list of dicts, each with keys:
         stars, forks, hn_count, devto_count, reddit_count, news_count
 
     Weights:
-        GitHub stars:       20%  (popularity proxy)
-        GitHub forks:        5%  (usage proxy)
-        HackerNews:         20%  (developer buzz)
-        Dev.to:             10%  (tutorial ecosystem)
-        Reddit:             15%  (community discussion)
-        Tech News:          10%  (mainstream coverage)
-        Momentum:           15%  (weighted mention sum — rewards multi-source buzz)
-        Base:                5%  (tracked tool bonus)
+        GitHub stars:       60%  (adoption — the reliable signal)
+        GitHub forks:       15%  (usage; correlates with stars, so kept light)
+        Community activity: 25%  (HN + Dev.to + Reddit + news mentions)
 
     Returns: list of scores (same order as input), each 0-100.
     """
@@ -202,38 +244,31 @@ def calculate_all_tool_scores(
         reddit_count = d.get("reddit_count", 0)
         news_count = d.get("news_count", 0)
 
-        # Logarithmic normalization (maxes out around 250k stars)
-        def normalize_log(val, max_val):
-            if val <= 0: return 0.0
-            return min(100.0, (math.log(val + 1) / math.log(max_val + 1)) * 100.0)
+        # Floor-anchored log normalisation.
+        #
+        # The old form was log(v)/log(max), which has no floor — an 8.5k-star repo
+        # scored 73/100 against React's 99.8, so every tool collapsed into a narrow
+        # 56-76 band and the number told the user nothing. Anchoring to a floor
+        # spreads the scale across its full range.
+        stars_norm = _norm_log(stars, floor=500, ceil=300_000)
+        forks_norm = _norm_log(forks, floor=50, ceil=60_000)
 
-        stars_norm = normalize_log(stars, 250000)
-        forks_norm = normalize_log(forks, 50000)
+        # One combined activity signal. Previously each source saturated at 5
+        # mentions, so a single busy cycle pinned it to 100 and the score lurched
+        # (React swung 85 -> 76 on noise). Saturating on the total, higher up,
+        # makes a handful of mentions register as a handful.
+        total_mentions = hn_count + devto_count + reddit_count + news_count
+        activity_norm = min(100.0, (total_mentions / 25.0) * 100.0)
 
-        # Mentions are hourly/daily, so even 1-2 mentions is huge. We use linear for them.
-        def normalize_lin(val, max_val):
-            return min(100.0, (val / max_val) * 100.0)
-
-        hn_norm = normalize_lin(hn_count, 5)
-        devto_norm = normalize_lin(devto_count, 5)
-        reddit_norm = normalize_lin(reddit_count, 5)
-        news_norm = normalize_lin(news_count, 3)
-
-        momentum = (hn_count * 2) + (devto_count * 1.5) + (reddit_count * 1.5) + (news_count * 2)
-        momentum_norm = normalize_lin(momentum, 15)
-
-        # Weights: GitHub heavily anchors the score so popular tools aren't dragged down by quiet news days.
+        # Weighting: GitHub adoption is the reliable signal and anchors the score;
+        # forks is largely a restatement of stars so it is deliberately light.
+        # No flat base — a tool has to earn its number.
         score = (
-            stars_norm * 0.45 +
-            forks_norm * 0.20 +
-            hn_norm * 0.05 +
-            devto_norm * 0.05 +
-            reddit_norm * 0.05 +
-            news_norm * 0.05 +
-            momentum_norm * 0.05 +
-            10.0  # Base score
+            stars_norm * 0.60 +
+            forks_norm * 0.15 +
+            activity_norm * 0.25
         )
-        scores.append(round(min(score, 100.0), 1))
+        scores.append(round(max(0.0, min(score, 100.0)), 1))
 
     return scores
 
@@ -280,11 +315,13 @@ def classify_growth_stage(score: float) -> str:
     """
     Classify a tool's growth stage based on its trend score.
     """
+    # Thresholds retuned for the absolute scale (scores now span ~25-95 instead
+    # of bunching in 56-76, so the old 45/75 cut-points no longer fit).
     if score < 20:
         return "Declining"
-    elif score < 45:
+    elif score < 40:
         return "Emerging"
-    elif score < 75:
+    elif score < 70:
         return "Growing"
     else:
         return "Mature"
