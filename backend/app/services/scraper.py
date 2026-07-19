@@ -143,7 +143,10 @@ async def fetch_github_repo_stats(
     try:
         for attempt in range(MAX_RETRIES + 1):
             try:
-                response = await client.get(url, headers=headers, timeout=15.0)
+                # follow_redirects: GitHub answers 301 for repos that have been
+                # renamed or transferred (e.g. facebook/react). Without this the
+                # request fails all retries and the tool silently loses its stats.
+                response = await client.get(url, headers=headers, timeout=15.0, follow_redirects=True)
                 _update_rate_budget(response)
 
                 if response.status_code == 304:
@@ -218,14 +221,20 @@ async def fetch_github_repo_stats(
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async def fetch_hackernews() -> List[Dict[str, Any]]:
-    """Fetch top 50 stories from HackerNews Firebase API (concurrent batches)."""
+    """Fetch top 100 stories from HackerNews Firebase API (concurrent batches).
+
+    Volume raised 50 -> 100 and the story body is now surfaced as `description`.
+    Previously only the title was matched (scoring._item_text reads `description`,
+    never `text`), so every self-post body — where tools are usually actually
+    named — was discarded. That was a large part of why mention counts read ~0.
+    """
     url_topstories = "https://hacker-news.firebaseio.com/v0/topstories.json"
 
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url_topstories, timeout=10.0)
             response.raise_for_status()
-            story_ids = response.json()[:50]
+            story_ids = response.json()[:100]
 
             async def fetch_story(story_id: int) -> Optional[Dict[str, Any]]:
                 try:
@@ -234,6 +243,8 @@ async def fetch_hackernews() -> List[Dict[str, Any]]:
                     if story_res.status_code == 200:
                         story_data = story_res.json()
                         if story_data and story_data.get("type") == "story":
+                            # Map the self-post body into `description` so it is matched.
+                            story_data["description"] = story_data.get("text", "") or ""
                             return story_data
                 except Exception:
                     pass
@@ -259,7 +270,7 @@ async def fetch_hackernews() -> List[Dict[str, Any]]:
 async def fetch_devto() -> List[Dict[str, Any]]:
     """Fetch latest articles from Dev.to API."""
     url = "https://dev.to/api/articles"
-    params = {"per_page": 50, "top": 1}
+    params = {"per_page": 100, "top": 1}
 
     async with httpx.AsyncClient() as client:
         try:
@@ -275,23 +286,33 @@ async def fetch_devto() -> List[Dict[str, Any]]:
 # REDDIT — RSS feeds (no OAuth required)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+# Chosen to cover the catalog's domains. Communities where the tracked tools are
+# actually discussed by name beat broad ones — r/LocalLLaMA alone carries far more
+# Ollama/LangChain/HuggingFace mentions than r/artificial.
 REDDIT_SUBREDDITS = [
-    "programming",
-    "MachineLearning",
-    "webdev",
-    "netsec",
-    "devops",
-    "cryptocurrency",
-    "cloudcomputing",
-    "artificial",
-    "reactjs",
-    "rust",
-    "golang",
+    # general
+    "programming", "webdev", "learnprogramming", "ExperiencedDevs", "opensource",
+    # AI / ML
+    "MachineLearning", "LocalLLaMA", "learnmachinelearning", "artificial", "datascience",
+    # web
+    "reactjs", "javascript", "typescript", "node", "sveltejs", "vuejs", "nextjs", "tailwindcss",
+    # systems
+    "rust", "golang", "python",
+    # cloud / devops
+    "devops", "kubernetes", "docker", "aws", "selfhosted", "cloudcomputing",
+    # data
+    "Database", "PostgreSQL",
+    # security
+    "netsec", "cybersecurity", "AskNetsec",
+    # web3
+    "ethdev", "solidity", "cryptocurrency",
 ]
 
 async def fetch_reddit() -> List[Dict[str, Any]]:
     """Fetch hot posts from tech subreddits using RSS feeds (no auth needed)."""
     posts: List[Dict[str, Any]] = []
+    consecutive_429 = 0
+    backoff = 5.0
 
     async with httpx.AsyncClient() as client:
         for subreddit in REDDIT_SUBREDDITS:
@@ -302,21 +323,36 @@ async def fetch_reddit() -> List[Dict[str, Any]]:
 
                 if response.status_code == 200:
                     feed = feedparser.parse(response.text)
-                    for entry in feed.entries[:15]:
+                    for entry in feed.entries[:25]:
                         posts.append({
                             "title": entry.get("title", ""),
                             "url": entry.get("link", ""),
                             "subreddit": subreddit,
+                            # Post body — previously dropped, so only titles were
+                            # ever matched against the tool keywords.
+                            "description": entry.get("summary", "") or "",
                             "source": "reddit",
                         })
-                    logger.info(f"Reddit r/{subreddit}: {len(feed.entries[:15])} posts via RSS")
+                    logger.info(f"Reddit r/{subreddit}: {len(feed.entries[:25])} posts via RSS")
+                    consecutive_429 = 0
+                    backoff = 5.0
                 elif response.status_code == 429:
-                    logger.warning(f"Reddit rate limited on r/{subreddit}, skipping remaining")
-                    break
+                    # Back off and carry on rather than abandoning the run. The old
+                    # `break` here meant one early 429 discarded every remaining
+                    # subreddit — with a wider list that threw away most of the feed.
+                    consecutive_429 += 1
+                    if consecutive_429 >= 3:
+                        logger.warning("Reddit rate limiting persistently; ending Reddit pass")
+                        break
+                    logger.warning(f"Reddit rate limited on r/{subreddit}, backing off {backoff}s")
+                    await asyncio.sleep(backoff)
+                    backoff = min(backoff * 2, 30.0)
+                    continue
                 else:
                     logger.warning(f"Reddit r/{subreddit} returned {response.status_code}")
 
-                await asyncio.sleep(1.0)
+                # Courtesy delay — unauthenticated RSS is rate limited fairly tightly.
+                await asyncio.sleep(2.0)
             except Exception as e:
                 logger.error(f"Reddit r/{subreddit} Error: {e}")
                 continue
@@ -328,11 +364,19 @@ async def fetch_reddit() -> List[Dict[str, Any]]:
 # TECH NEWS (RSS)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+# Mainstream tech press rarely names specific dev tools, so the developer-focused
+# feeds below (InfoQ, The New Stack, GitHub blog, LWN) carry most of the signal.
 RSS_FEEDS = [
     "https://techcrunch.com/feed/",
     "https://feeds.arstechnica.com/arstechnica/technology-lab",
     "https://www.theverge.com/rss/index.xml",
-    "https://hnrss.org/newest?points=100",
+    "https://hnrss.org/newest?points=50",
+    "https://feed.infoq.com/",
+    "https://thenewstack.io/feed/",
+    "https://github.blog/feed/",
+    "https://lwn.net/headlines/rss",
+    "https://dev.to/feed",
+    "https://css-tricks.com/feed/",
 ]
 
 async def fetch_tech_news() -> List[Dict[str, Any]]:
@@ -347,10 +391,13 @@ async def fetch_tech_news() -> List[Dict[str, Any]]:
                     continue
 
                 feed = feedparser.parse(response.text)
-                for entry in feed.entries[:15]:
+                for entry in feed.entries[:25]:
                     articles.append({
                         "title": entry.get("title", ""),
                         "url": entry.get("link", ""),
+                        # Article summary — previously dropped; article blurbs name
+                        # tools far more often than headlines do.
+                        "description": entry.get("summary", "") or "",
                         "source": "news",
                         "feed": feed_url,
                     })
