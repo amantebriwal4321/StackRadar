@@ -344,6 +344,8 @@ async def perform_full_scrape():
                 existing_snapshot.score = new_score
                 # Phase 4.1: Store actual stars delta, not self-referencing subtraction
                 existing_snapshot.github_stars_delta = stars_delta
+                # Absolute star count — the basis for real momentum (stars/week).
+                existing_snapshot.stars = tool.stars
                 # Phase 4.2: Accumulate mentions throughout the day
                 existing_snapshot.mention_count = (existing_snapshot.mention_count or 0) + total_mentions
                 existing_snapshot.sentiment_score = sentiment_score
@@ -352,6 +354,7 @@ async def perform_full_scrape():
                     tool_id=tool.id,
                     recorded_at=datetime.now(timezone.utc),
                     score=new_score,
+                    stars=tool.stars,
                     github_stars_delta=stars_delta,
                     mention_count=total_mentions,
                     sentiment_score=sentiment_score,
