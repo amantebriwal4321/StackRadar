@@ -89,6 +89,12 @@ class ToolSnapshot(Base):
     tool_id         = Column(Integer, ForeignKey("tools.id"), nullable=False, index=True)
     recorded_at     = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     score           = Column(Float)
+    # Absolute star count at capture time. `github_stars_delta` alone can't yield
+    # velocity: it's the change since the previous scrape, and the scrape cadence
+    # is irregular (hours to weeks), so a delta is uninterpretable without knowing
+    # the interval. Storing the absolute lets velocity be derived between ANY two
+    # snapshots — which is what real momentum (stars gained per week) requires.
+    stars           = Column(Integer, nullable=True)
     github_stars_delta = Column(Integer, default=0)
     mention_count   = Column(Integer, default=0)
     sentiment_score = Column(Float, default=0.0)
