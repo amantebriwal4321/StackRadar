@@ -26,6 +26,7 @@ from datetime import date, timedelta, datetime
 from app.db.session import get_db
 from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain
 from app.services.scheduler import scrape_status
+from app.services.scoring import calculate_star_velocity
 
 router = APIRouter()
 
@@ -294,6 +295,13 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
         "open_issues": tool.open_issues,
         "watchers": tool.watchers,
         "growth_pct": tool.growth_pct,
+        # Real momentum: % star growth per week, derived from absolute star
+        # history. null = not enough history yet (render "building history",
+        # NOT 0% — "no data" and "no growth" are different claims).
+        "star_velocity_pct_per_week": calculate_star_velocity([
+            {"recorded_at": s.recorded_at, "stars": s.stars}
+            for s in db.query(ToolSnapshot).filter(ToolSnapshot.tool_id == tool.id).all()
+        ]),
         "total_mentions": total_mentions,
         "hn_count": tool.hn_count,
         "devto_count": tool.devto_count,
