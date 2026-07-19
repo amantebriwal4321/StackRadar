@@ -52,10 +52,11 @@ function GrowthIndicator({ growth }: { growth: number }) {
       </span>
     );
   }
+  // No movement yet — say so plainly rather than showing a meaningless "0.0%".
   return (
     <span className="inline-flex items-center gap-1 text-muted-foreground font-bold text-xs">
       <Minus className="w-3.5 h-3.5" />
-      0.0%
+      Stable
     </span>
   );
 }
@@ -63,10 +64,20 @@ function GrowthIndicator({ growth }: { growth: number }) {
 export default function TrendCard({ tool, variant = "default", index = 0 }: ToolCardProps) {
   // Sparkline Component
   const Sparkline = ({ points, growth, slug }: { points?: number[]; growth: number; slug: string }) => {
-    const chartPoints = points && points.length > 0
-      ? points
-      : [50, 50, 50, 50, 50, 50, 50]; // default fallback
-    
+    // Honest empty state. A synthetic flat line used to be drawn here, which
+    // implied history existed when it didn't. Real history accrues per scrape.
+    if (!points || points.length < 2) {
+      return (
+        <div className="flex items-center justify-center h-full w-full">
+          <span className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wider whitespace-nowrap">
+            building history
+          </span>
+        </div>
+      );
+    }
+
+    const chartPoints = points;
+
     const width = 120;
     const height = 36;
     const min = Math.min(...chartPoints);
