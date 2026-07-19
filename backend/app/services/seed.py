@@ -255,36 +255,14 @@ def run_seed(db: Session) -> None:
         db.add(roadmap)
     logger.info(f"Seed: Created {len(SEED_ROADMAPS)} roadmaps.")
 
-    # 4. Pre-seed 7 days of history snapshots so charts aren't empty on first visit
-    import random
-    from datetime import date, timedelta, datetime, timezone
-
-    today = date.today()
-    snapshot_count = 0
-    for tool in tool_map.values():
-        # Generate a base score range for this tool (randomized but deterministic per slug)
-        random.seed(hash(tool.slug))
-        base_score = random.uniform(15, 60)
-
-        for day_offset in range(7, 0, -1):
-            snapshot_date = today - timedelta(days=day_offset)
-            # Score gradually increases toward present day (simulates natural growth)
-            progress = (7 - day_offset) / 6  # 0.0 → 1.0
-            day_score = round(base_score + (base_score * 0.3 * progress) + random.uniform(-2, 2), 1)
-            day_score = max(5.0, min(95.0, day_score))
-
-            snapshot = ToolSnapshot(
-                tool_id=tool.id,
-                recorded_at=datetime(snapshot_date.year, snapshot_date.month, snapshot_date.day, tzinfo=timezone.utc),
-                score=day_score,
-                github_stars_delta=max(0, int(random.uniform(10, 500))),
-                mention_count=max(0, int(random.uniform(0, 15))),
-                sentiment_score=random.uniform(-0.5, 0.5),
-            )
-            db.add(snapshot)
-            snapshot_count += 1
-
-    logger.info(f"Seed: Created {snapshot_count} history snapshots ({len(tool_map)} tools × 7 days).")
+    # 4. History snapshots are NOT pre-seeded.
+    #
+    # This used to generate 7 days of `random.uniform()` scores per tool so charts
+    # "wouldn't look empty" on first visit. That made every tool render a fake
+    # hockey-stick growth curve — fatal for a product whose entire value is
+    # trustworthy momentum data. Real history now accumulates from the scraper
+    # (one snapshot per tool per cycle); until it does, charts show an honest
+    # "building history" state instead of an invented one.
 
     db.commit()
     logger.info("Seed: Database seeded successfully!")
