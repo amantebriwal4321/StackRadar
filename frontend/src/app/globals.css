@@ -168,6 +168,14 @@ html.dark {
   --ring: #E0577F;
 }
 
+/* overflow-x must be on <html> too, not just <body>.
+   With it on body alone the root element still scrolls, so wide decorative
+   content (marquee tickers, glow orbs) let the whole page drift ~76px
+   sideways. Setting both pins the horizontal axis. */
+html {
+  overflow-x: hidden;
+}
+
 body {
   background-color: var(--c-ground);
   color: var(--c-ink);

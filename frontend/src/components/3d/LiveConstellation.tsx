@@ -216,6 +216,18 @@ export default function LiveConstellation({ tools }: { tools: Tool[] }) {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  // R3F's initial measurement of this container misses on first paint (the hero
+  // is mid GSAP/Framer entrance), leaving the canvas at its 300x150 HTML default
+  // — the constellation rendered as a small patch in the corner until the window
+  // was resized. Nudging a resize once the canvas is up forces a correct measure.
+  useEffect(() => {
+    if (!mounted) return;
+    const nudge = () => window.dispatchEvent(new Event("resize"));
+    const raf = requestAnimationFrame(nudge);
+    const t = setTimeout(nudge, 300);
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); };
+  }, [mounted]);
+
   if (!mounted || tools.length === 0) {
     return <div className="w-full h-full min-h-[350px] md:min-h-[500px]" />;
   }

@@ -57,7 +57,11 @@ export default function DashboardShell({ children, fullWidth = false, theme }: D
       {/* ─── Main Content ─── */}
       <main className="flex-1 relative">
         <div className="bg-dot-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
-        <div className={`relative z-10 mx-auto ${fullWidth ? 'max-w-[1400px]' : 'max-w-6xl'} px-4 md:px-6 lg:px-8 py-6 md:py-8`}>
+        {/* pt clears the fixed 65px navbar. Without it every page's first element
+            renders UNDERNEATH the header — most pages hid this behind large hero
+            padding, but any page whose first element sits high (e.g. the roadmap
+            back-link) collided with the nav links. */}
+        <div className={`relative z-10 mx-auto ${fullWidth ? 'max-w-[1400px]' : 'max-w-6xl'} px-4 md:px-6 lg:px-8 pt-[5.5rem] md:pt-24 pb-6 md:pb-8`}>
           {children}
         </div>
       </main>
