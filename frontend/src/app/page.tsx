@@ -31,6 +31,7 @@ import {
 
 import LiveConstellation from "@/components/3d/LiveConstellation";
 import DashboardShell from "@/components/DashboardShell";
+import ContinueLearning from "@/components/ContinueLearning";
 
 /* ─── Helper for Relative Time ─── */
 function getRelativeTime(isoString: string): string {
@@ -420,6 +421,11 @@ export default function HomePage() {
               — tracked live from GitHub, Reddit, and Hacker News — so you always know what&apos;s worth learning or adopting next.
             </p>
 
+            {/* Continue learning — the daily return hook, given top billing */}
+            <div className="hero-anim-item max-w-2xl">
+              <ContinueLearning />
+            </div>
+
             {/* Decision Engine — framed as a live console window */}
             <div className="hero-anim-item max-w-2xl">
               <div className="terminal-window rounded-2xl">
@@ -483,8 +489,11 @@ export default function HomePage() {
           </div>
 
           {/* Right Column: Interactive 3D Sphere */}
-          <motion.div 
-            className="lg:col-span-5 h-[350px] md:h-[520px] flex items-center justify-center relative sphere-container"
+          {/* self-start + sticky: the copy column is ~1100px tall, so the grid's
+              `items-center` was parking the constellation at y≈543 — below the
+              fold and visually detached from the headline it belongs beside. */}
+          <motion.div
+            className="lg:col-span-5 h-[350px] md:h-[520px] flex items-center justify-center relative sphere-container lg:self-start lg:sticky lg:top-28"
             style={{ x: springX, y: springY }}
           >
             <div className="absolute inset-0 w-full h-full flex items-center justify-center z-0">

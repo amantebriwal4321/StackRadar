@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     # GROQ (for sentiment analysis)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 
+    # YOUTUBE DATA API v3 (for learning-resource discovery).
+    # Optional, like every other key here: with it, /resources returns real
+    # ranked videos with live view/like counts; without it, the endpoint falls
+    # back to curated platform deep-links and the app boots exactly the same.
+    YOUTUBE_API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
+
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:3000",

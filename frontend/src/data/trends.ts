@@ -164,6 +164,69 @@ export async function fetchDomains(): Promise<DomainSummary[]> {
   return res.json();
 }
 
+// ── Learning progress (the retention loop) ─────────────────────────────
+// These are per-user and must never be cached — always fetch fresh.
+
+export interface RoadmapProgress {
+  roadmap_slug: string;
+  completed_steps: number[];
+  total: number;
+  percent: number;
+}
+
+export interface ActiveRoadmap {
+  roadmap_slug: string;
+  title: string;
+  icon: string;
+  completed: number;
+  total: number;
+  percent: number;
+  next_step: RoadmapStep | null;
+  last_active: string | null;
+}
+
+export interface ProgressSummary {
+  streak_days: number;
+  total_completed: number;
+  completed_today: number;
+  active: ActiveRoadmap[];
+  todays_focus: RoadmapStep | null;
+  focus_roadmap: string | null;
+}
+
+export async function fetchProgress(roadmapSlug: string, userId: string): Promise<RoadmapProgress> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/progress/${roadmapSlug}?user_id=${encodeURIComponent(userId)}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) throw new Error("Failed to fetch progress");
+  return res.json();
+}
+
+export async function toggleProgressStep(
+  roadmapSlug: string,
+  userId: string,
+  step: number
+): Promise<RoadmapProgress & { step: number; completed: boolean }> {
+  const res = await fetch(`${API_BASE}/api/v1/progress/toggle`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId, roadmap_slug: roadmapSlug, step }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to update progress");
+  return res.json();
+}
+
+export async function fetchProgressSummary(userId: string): Promise<ProgressSummary> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/progress/summary?user_id=${encodeURIComponent(userId)}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) throw new Error("Failed to fetch progress summary");
+  return res.json();
+}
+
 // Learning path types
 export interface LearningPathTool {
   slug: string;
@@ -270,3 +333,51 @@ export async function fetchToolsByDomain(): Promise<DomainWithTools[]> {
   return data.domains || [];
 }
 
+
+// ─────────────────────────────────────────────────────────────
+// LEARNING RESOURCES
+// ─────────────────────────────────────────────────────────────
+
+export interface LearningResource {
+  kind: "video" | "playlist" | "platform" | "search";
+  source: "youtube" | "curated";
+  title: string;
+  url: string;
+  channel: string | null;
+  thumbnail: string | null;
+  blurb: string | null;
+  views: number | null;
+  likes: number | null;
+  duration_s: number | null;
+  item_count: number | null;
+  published_at: string | null;
+  language: "en" | "hi";
+  rank_score: number;
+  /** Set when the video predates the tool's current major release. */
+  staleness: string | null;
+}
+
+export interface ToolResources {
+  slug: string;
+  name: string;
+  icon: string;
+  language: "en" | "hi";
+  /** false => `videos` holds scoped searches, not a ranked result set. */
+  videos_live: boolean;
+  latest_version: string | null;
+  latest_release_at: string | null;
+  videos: LearningResource[];
+  platforms: LearningResource[];
+}
+
+export async function fetchToolResources(
+  slug: string,
+  language: "en" | "hi" = "en"
+): Promise<ToolResources> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/tools/${slug}/resources?language=${language}`,
+    { next: { revalidate: 3600 } }
+  );
+  if (!res.ok) throw new Error(`Resources for '${slug}' unavailable`);
+  return res.json();
+}

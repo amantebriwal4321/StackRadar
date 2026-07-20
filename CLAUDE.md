@@ -95,4 +95,4 @@ To grow the signal further: add more subreddits/RSS feeds, fetch HN story text (
 - The app runs fine with **empty `GITHUB_TOKEN`/`GROQ_API_KEY`** (degraded: no GitHub stats, no sentiment) — don't make either a hard requirement to boot.
 
 ## Environment variables
-Backend (`backend/.env`): `GITHUB_TOKEN`, `GROQ_API_KEY`, `ADMIN_API_KEY` (optional), `DATABASE_URL` (auto-set by Docker; empty → SQLite). Frontend (`frontend/.env.local`): `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`.
+Backend (`backend/.env`): `GITHUB_TOKEN`, `GROQ_API_KEY`, `YOUTUBE_API_KEY` (optional — enables ranked video results on `/tools/{slug}/resources`; without it the endpoint returns curated platform links and reports `videos_live: false`), `ADMIN_API_KEY` (optional), `DATABASE_URL` (auto-set by Docker; empty → SQLite). Frontend (`frontend/.env.local`): `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`.

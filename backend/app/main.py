@@ -91,6 +91,13 @@ async def startup_event():
     from app.db.session import engine
     Base.metadata.create_all(bind=engine)
 
+    # create_all() creates missing TABLES but never adds columns to a table that
+    # already exists, so a model gaining a field breaks every existing local DB
+    # with "no such column". Alembic is configured for real migrations; this is
+    # the safety net for the auto-create path the app actually boots on.
+    from app.db.migrate import ensure_columns
+    ensure_columns(engine)
+
     # Seed database with tools, domains, and roadmaps if empty
     from app.db.session import SessionLocal
     from app.services.seed import run_seed, reconcile_catalog

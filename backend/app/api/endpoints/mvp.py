@@ -22,11 +22,13 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from app.db.session import get_db
-from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain
+from app.core.config import settings
+from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain, UserProgress, ToolResource
 from app.services.scheduler import scrape_status
 from app.services.scoring import calculate_star_velocity
+from app.services import resources as resources_svc
 
 router = APIRouter()
 
@@ -362,6 +364,120 @@ def get_tool_history(slug: str, days: int = Query(30, ge=1, le=90), db: Session 
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# LEARNING RESOURCES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# YouTube search costs 100 quota units against a 10k/day default, so a tool's
+# video set is refreshed at most this often. Curated links are free and always
+# computed fresh.
+RESOURCE_TTL = timedelta(hours=24)
+
+
+def _serialize_resource(r: ToolResource, tool: Tool) -> dict:
+    return {
+        "kind": r.kind,
+        "source": r.source,
+        "title": r.title,
+        "url": r.url,
+        "channel": r.channel,
+        "thumbnail": r.thumbnail,
+        "blurb": r.blurb,
+        "views": r.views,
+        "likes": r.likes,
+        "duration_s": r.duration_s,
+        "item_count": r.item_count,
+        "published_at": r.published_at.isoformat() if r.published_at else None,
+        "language": r.language,
+        "rank_score": r.rank_score,
+        "staleness": resources_svc.staleness(
+            r.published_at, tool.latest_release_at, tool.latest_version
+        ),
+    }
+
+
+@router.get("/tools/{slug}/resources")
+async def get_tool_resources(
+    slug: str,
+    language: str = Query("en", pattern="^(en|hi)$"),
+    refresh: bool = Query(False),
+    db: Session = Depends(get_db),
+):
+    """Best videos, playlists and platform resources for one technology.
+
+    Video results come from the YouTube Data API with live view/like counts and
+    are ranked by `resources.rank_resource` (reach, engagement, freshness,
+    depth). Nothing is model-generated — see the module docstring for why.
+
+    Without YOUTUBE_API_KEY this still returns the curated platform set plus
+    scoped YouTube searches, and `videos_live` reports false so the UI can say
+    so honestly rather than pretending the list is a ranking.
+    """
+    validate_slug(slug)
+    tool = db.query(Tool).filter(Tool.slug == slug).first()
+    if not tool:
+        raise HTTPException(status_code=404, detail=f"Tool '{slug}' not found")
+
+    cached = (
+        db.query(ToolResource)
+        .filter(ToolResource.tool_slug == slug, ToolResource.language == language)
+        .order_by(ToolResource.rank_score.desc())
+        .all()
+    )
+    now = datetime.now(timezone.utc)
+    stale = (not cached) or any(
+        (now - (c.fetched_at or now).replace(tzinfo=timezone.utc)) > RESOURCE_TTL
+        for c in cached[:1]
+    )
+
+    if (stale or refresh) and settings.YOUTUBE_API_KEY:
+        found = await resources_svc.fetch_youtube(
+            tool.name, language=language, release_at=tool.latest_release_at
+        )
+        if found:
+            for old in cached:
+                db.delete(old)
+            db.flush()
+            for f in found:
+                db.add(ToolResource(
+                    tool_slug=slug, kind=f["kind"], source=f["source"],
+                    title=f["title"], url=f["url"], channel=f.get("channel"),
+                    thumbnail=f.get("thumbnail"), blurb=f.get("blurb"),
+                    views=f.get("views"), likes=f.get("likes"),
+                    duration_s=f.get("duration_s"), item_count=f.get("item_count"),
+                    published_at=f.get("published_at"),
+                    language=f.get("language", language),
+                    rank_score=f.get("rank_score", 0.0), fetched_at=now,
+                ))
+            db.commit()
+            cached = (
+                db.query(ToolResource)
+                .filter(ToolResource.tool_slug == slug, ToolResource.language == language)
+                .order_by(ToolResource.rank_score.desc())
+                .all()
+            )
+
+    videos = [_serialize_resource(r, tool) for r in cached]
+    platforms = resources_svc.curated_platforms(
+        tool.name, tool.slug, homepage=tool.homepage, github_repo=tool.github_repo
+    )
+    for p in platforms:
+        p["published_at"] = None
+
+    return {
+        "slug": tool.slug,
+        "name": tool.name,
+        "icon": tool.icon,
+        "language": language,
+        # False => the "videos" list is scoped searches, not a ranked result set.
+        "videos_live": bool(settings.YOUTUBE_API_KEY) and bool(videos),
+        "latest_version": tool.latest_version,
+        "latest_release_at": tool.latest_release_at.isoformat() if tool.latest_release_at else None,
+        "videos": videos or resources_svc.youtube_search_fallback(tool.name, language),
+        "platforms": platforms,
+    }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ROADMAPS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -430,6 +546,139 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
         "estimated_weeks": roadmap.estimated_weeks,
         "steps": steps,
     }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# LEARNING PROGRESS  (the retention loop)
+#
+# NOTE ON AUTH: `user_id` is the Clerk id passed by the client and is NOT yet
+# verified server-side, so these endpoints trust the caller. That is acceptable
+# for local development but MUST be replaced with Clerk JWT verification before
+# this is exposed publicly — otherwise anyone who learns a user id can read or
+# modify that user's progress.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def _roadmap_steps(db: Session, slug: str) -> list:
+    rm = db.query(ToolRoadmap).filter(ToolRoadmap.slug == slug).first()
+    if not rm:
+        return []
+    return json.loads(rm.steps_json) if rm.steps_json else []
+
+
+def _calculate_streak(dates: list) -> int:
+    """Consecutive days ending today (or yesterday) with at least one completion.
+
+    Yesterday still counts so a streak isn't declared dead before the user has
+    had a chance to study today.
+    """
+    if not dates:
+        return 0
+    days = sorted({d.date() for d in dates}, reverse=True)
+    today = date.today()
+    if (today - days[0]).days > 1:
+        return 0
+    streak, cursor = 0, days[0]
+    for d in days:
+        if d == cursor:
+            streak += 1
+            cursor = cursor - timedelta(days=1)
+        elif d < cursor:
+            break
+    return streak
+
+
+@router.get("/progress/summary")
+def get_progress_summary(user_id: str = Query(...), db: Session = Depends(get_db)):
+    """Everything the 'Continue learning' hero needs in one call."""
+    rows = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
+    streak = _calculate_streak([r.completed_at for r in rows if r.completed_at])
+
+    by_roadmap: dict = {}
+    for r in rows:
+        by_roadmap.setdefault(r.roadmap_slug, []).append(r)
+
+    active = []
+    for slug, entries in by_roadmap.items():
+        rm = db.query(ToolRoadmap).filter(ToolRoadmap.slug == slug).first()
+        if not rm:
+            continue
+        steps = json.loads(rm.steps_json) if rm.steps_json else []
+        done = {e.step for e in entries}
+        remaining = [s for s in steps if s.get("step") not in done]
+        last_touched = max((e.completed_at for e in entries if e.completed_at), default=None)
+        active.append({
+            "roadmap_slug": slug,
+            "title": rm.title,
+            "icon": rm.icon,
+            "completed": len(done),
+            "total": len(steps),
+            "percent": round(len(done) / len(steps) * 100) if steps else 0,
+            "next_step": remaining[0] if remaining else None,
+            "last_active": last_touched.isoformat() if last_touched else None,
+        })
+
+    # Most recently touched first — that's the one to offer resuming.
+    active.sort(key=lambda a: a["last_active"] or "", reverse=True)
+    completed_today = sum(
+        1 for r in rows if r.completed_at and r.completed_at.date() == date.today()
+    )
+
+    return {
+        "streak_days": streak,
+        "total_completed": len(rows),
+        "completed_today": completed_today,
+        "active": active,
+        # The single next thing to do — the daily hook.
+        "todays_focus": active[0]["next_step"] if active and active[0]["next_step"] else None,
+        "focus_roadmap": active[0]["roadmap_slug"] if active else None,
+    }
+
+
+@router.get("/progress/{roadmap_slug}")
+def get_progress(roadmap_slug: str, user_id: str = Query(...), db: Session = Depends(get_db)):
+    """Completed steps for one roadmap."""
+    steps = _roadmap_steps(db, roadmap_slug)
+    rows = (
+        db.query(UserProgress)
+        .filter(UserProgress.user_id == user_id, UserProgress.roadmap_slug == roadmap_slug)
+        .all()
+    )
+    done = sorted({r.step for r in rows})
+    return {
+        "roadmap_slug": roadmap_slug,
+        "completed_steps": done,
+        "total": len(steps),
+        "percent": round(len(done) / len(steps) * 100) if steps else 0,
+    }
+
+
+@router.post("/progress/toggle")
+def toggle_progress(payload: dict, db: Session = Depends(get_db)):
+    """Mark a step done / undone. Idempotent per (user, roadmap, step)."""
+    user_id = (payload or {}).get("user_id")
+    roadmap_slug = (payload or {}).get("roadmap_slug")
+    step = (payload or {}).get("step")
+    if not user_id or not roadmap_slug or step is None:
+        raise HTTPException(status_code=422, detail="user_id, roadmap_slug and step are required")
+
+    existing = (
+        db.query(UserProgress)
+        .filter(
+            UserProgress.user_id == user_id,
+            UserProgress.roadmap_slug == roadmap_slug,
+            UserProgress.step == step,
+        )
+        .first()
+    )
+    if existing:
+        db.delete(existing)
+        completed = False
+    else:
+        db.add(UserProgress(user_id=user_id, roadmap_slug=roadmap_slug, step=step))
+        completed = True
+    db.commit()
+
+    return {**get_progress(roadmap_slug, user_id, db), "step": step, "completed": completed}
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

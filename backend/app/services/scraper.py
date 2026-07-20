@@ -18,6 +18,7 @@ Phase 1 improvements:
 import httpx
 import logging
 import asyncio
+from datetime import datetime
 import feedparser
 from typing import List, Dict, Any, Optional, Tuple
 from app.core.config import settings
@@ -165,6 +166,10 @@ async def fetch_github_repo_stats(
                         "watchers": data.get("subscribers_count", 0),
                         "open_issues": data.get("open_issues_count", 0),
                         "description": data.get("description", ""),
+                        # Powers the official-docs link and the "this tutorial
+                        # predates the current release" warning on /resources.
+                        "homepage": data.get("homepage") or None,
+                        "pushed_at": data.get("pushed_at"),
                     }
                     if etag:
                         _etag_cache[owner_repo] = (etag, result)
@@ -211,6 +216,45 @@ async def fetch_github_repo_stats(
         logger.error(f"GitHub: all {MAX_RETRIES + 1} attempts failed for '{owner_repo}'")
         return None
 
+    finally:
+        if owns_client:
+            await client.aclose()
+
+
+async def fetch_github_latest_release(
+    owner_repo: str,
+    client: Optional[httpx.AsyncClient] = None,
+) -> Optional[Dict[str, Any]]:
+    """Latest published release tag + date for a repo.
+
+    Used by the learning-resource feature: knowing that React is on v19 and a
+    course was recorded in the v17 era is the difference between a useful
+    recommendation and six wasted hours. Returns None for repos that don't cut
+    GitHub releases (many don't) — the UI simply omits the warning then.
+    """
+    owns_client = client is None
+    if owns_client:
+        client = httpx.AsyncClient()
+    try:
+        r = await client.get(
+            f"https://api.github.com/repos/{owner_repo}/releases/latest",
+            headers=_build_github_headers(), timeout=15.0, follow_redirects=True,
+        )
+        _update_rate_budget(r)
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        published = data.get("published_at")
+        return {
+            "version": data.get("tag_name") or data.get("name"),
+            "published_at": (
+                datetime.fromisoformat(published.replace("Z", "+00:00"))
+                if published else None
+            ),
+        }
+    except Exception as e:  # noqa: BLE001
+        logger.debug(f"GitHub releases for '{owner_repo}' unavailable: {e}")
+        return None
     finally:
         if owns_client:
             await client.aclose()

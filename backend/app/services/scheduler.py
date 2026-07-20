@@ -37,6 +37,7 @@ from app.services.scraper import (
     fetch_github_repo_stats, fetch_hackernews, fetch_devto,
     fetch_reddit, fetch_tech_news, batch_sentiment_analysis,
     validate_github_token, _adaptive_delay, _rate_remaining, _rate_limit,
+    fetch_github_latest_release,
 )
 from app.services.scoring import (
     count_mentions, calculate_tool_score, calculate_all_tool_scores,
@@ -193,6 +194,20 @@ async def perform_full_scrape():
                 if stats:
                     github_stats[tool.slug] = stats
 
+                # Release metadata for the learning-resource staleness warning.
+                # Only refreshed when we don't have it or it's a week old —
+                # releases move far slower than stars and this is an extra call
+                # per repo against the same rate budget.
+                rel_age = (
+                    (datetime.now(timezone.utc) - tool.latest_release_at).days
+                    if tool.latest_release_at else 999
+                )
+                if rel_age > 7:
+                    rel = await fetch_github_latest_release(tool.github_repo, client=github_client)
+                    if rel:
+                        tool.latest_version = rel["version"]
+                        tool.latest_release_at = rel["published_at"]
+
                 # Adaptive delay (Phase 1.2)
                 delay = _adaptive_delay()
                 await asyncio.sleep(delay)
@@ -315,6 +330,7 @@ async def perform_full_scrape():
             tool.forks = new_forks
             tool.open_issues = gh.get("open_issues", tool.open_issues)
             tool.watchers = gh.get("watchers", tool.watchers)
+            tool.homepage = gh.get("homepage") or tool.homepage
             tool.hn_count = hn_count
             tool.devto_count = devto_count
             tool.reddit_count = reddit_count

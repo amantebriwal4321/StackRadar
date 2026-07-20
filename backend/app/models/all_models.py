@@ -51,6 +51,12 @@ class Tool(Base):
     sentiment_label = Column(String, default="neutral")  # positive / negative / mixed / neutral
     sentiment_score = Column(Float, default=0.0) # New field
 
+    # Release tracking — powers the "this tutorial predates the current major
+    # version" warning on learning resources. Filled from GitHub /releases/latest.
+    homepage = Column(String, nullable=True)                 # official docs URL
+    latest_version = Column(String, nullable=True)           # "v19.2.0"
+    latest_release_at = Column(DateTime(timezone=True), nullable=True)
+
     # Computed
     score = Column(Float, default=0.0)
     growth_pct = Column(Float, default=0.0)
@@ -100,6 +106,67 @@ class ToolSnapshot(Base):
     sentiment_score = Column(Float, default=0.0)
 
     tool = relationship("Tool", back_populates="snapshots")
+
+
+class UserProgress(Base):
+    """One completed roadmap step for one user.
+
+    Rows are only ever created for COMPLETED steps — a missing row means "not
+    done". Storing this server-side (rather than in localStorage like the
+    watchlist) is deliberate: progress is the product's retention loop, so it has
+    to survive a device change and be queryable for streaks and reminders.
+
+    `user_id` is the Clerk user id, supplied by the client.
+    """
+    __tablename__ = "user_progress"
+    __table_args__ = (
+        UniqueConstraint("user_id", "roadmap_slug", "step", name="uq_user_roadmap_step"),
+    )
+
+    id           = Column(Integer, primary_key=True, index=True)
+    user_id      = Column(String, index=True, nullable=False)
+    roadmap_slug = Column(String, index=True, nullable=False)
+    step         = Column(Integer, nullable=False)
+    completed_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class ToolResource(Base):
+    """A learning resource (video, playlist, course, docs) attached to a tool.
+
+    Rows are only ever written from a source that returned a REAL, resolvable
+    item: the YouTube Data API (with live statistics) or the curated platform
+    list. Nothing here is model-generated — a hallucinated video id would look
+    identical to a real one in the UI and send users to a dead page.
+
+    Cached rather than fetched per request because the YouTube Data API bills
+    100 quota units per search against a 10k/day default.
+    """
+    __tablename__ = "tool_resources"
+    __table_args__ = (
+        UniqueConstraint("tool_slug", "url", name="uq_tool_resource_url"),
+    )
+
+    id         = Column(Integer, primary_key=True, index=True)
+    tool_slug  = Column(String, index=True, nullable=False)
+    kind       = Column(String, default="video")      # video | playlist | platform
+    source     = Column(String, default="youtube")    # youtube | curated
+
+    title      = Column(String, nullable=False)
+    url        = Column(String, nullable=False)
+    channel    = Column(String, nullable=True)
+    thumbnail  = Column(String, nullable=True)
+    blurb      = Column(Text, nullable=True)
+
+    # Live metrics — NULL for curated platform links, which have no such stats.
+    views        = Column(Integer, nullable=True)
+    likes        = Column(Integer, nullable=True)
+    duration_s   = Column(Integer, nullable=True)
+    item_count   = Column(Integer, nullable=True)     # videos in a playlist
+    published_at = Column(DateTime(timezone=True), nullable=True)
+
+    language   = Column(String, default="en")         # "en" | "hi" — Hindi tracks
+    rank_score = Column(Float, default=0.0)           # our transparent ranking
+    fetched_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 class ToolRoadmap(Base):

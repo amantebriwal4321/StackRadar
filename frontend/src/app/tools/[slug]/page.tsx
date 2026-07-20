@@ -12,6 +12,7 @@ import {
 import { fetchToolDetail, fetchToolHistory, type ToolDetail, type ToolHistoryPoint } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
 import WatchlistButton from "@/components/WatchlistButton";
+import LearningResources from "@/components/LearningResources";
 import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -418,6 +419,11 @@ export default function ToolDetailPage() {
           </div>
 
         </div>
+
+        {/* ── Where to learn it ──
+            The score answers "is this worth my time?"; this answers the
+            question every user asks immediately after. */}
+        <LearningResources slug={tool.slug} />
 
         {/* ── Raw Github Repository connection ── */}
         {tool.github_repo && (
