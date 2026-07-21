@@ -391,10 +391,10 @@ export default function HomePage() {
 
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[0.92] font-display" style={{ perspective: "1000px" }}>
-              {/* "Stop guessing" — the pain, stated plainly and muted, so the
-                  bright resolution below is where the eye lands. */}
+              {/* The pain, stated plainly and muted, so the bright resolution
+                  below is where the eye lands. */}
               <span className="block pb-[0.12em]">
-                <span className="hero-line block text-[var(--c-ink-2)]">Stop guessing</span>
+                <span className="hero-line block text-[var(--c-ink-2)]">No more guessing</span>
               </span>
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">
