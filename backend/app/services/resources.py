@@ -447,7 +447,6 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
     "react": [
         ("bMknfKXIFA8", "video", ["react"]),          # freeCodeCamp full course
         ("SqcY0GlETPk", "video", ["react"]),          # Programming with Mosh
-        ("x4rFhThSX04", "playlist", ["react"]),       # Net Ninja modern React
     ],
     "nextjs": [
         ("wm5gMKuwSYk", "video", ["next"]),           # Next.js full course
@@ -455,7 +454,6 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
     ],
     "vuejs": [
         ("VeNfHj6MhgA", "video", ["vue"]),
-        ("FXpIoQ_rT_c", "playlist", ["vue"]),         # Net Ninja Vue 3
     ],
     "svelte": [
         ("UGBJHYpHPvA", "video", ["svelte"]),
@@ -492,7 +490,6 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
         ("mrjq3lFz23s", "video", ["langchain"]),
     ],
     "ollama": [
-        ("Wjrdr0NU4Sk", "video", ["ollama"]),
         ("90ozfdsQOKo", "video", ["ollama"]),
     ],
     "docker": [
@@ -524,6 +521,38 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
     "metasploit": [
         ("8lR27r8Y_ik", "video", ["metasploit"]),
     ],
+    # ── candidates for the remaining catalog tools; the verifier prunes any
+    #    that don't resolve or whose real title is off-topic ──
+    "tailwindcss": [
+        ("lCxcTsOHrjo", "video", ["tailwind"]),
+        ("UBOj6rqRUME", "video", ["tailwind"]),
+        ("mr15Xzb1Ook", "video", ["tailwind"]),
+    ],
+    "astro": [
+        ("Oi9z5gfIHJs", "video", ["astro"]),
+        ("e-hTm5VmofI", "video", ["astro"]),
+        ("gxBkghlglTg", "video", ["astro"]),
+    ],
+    "trpc": [
+        ("UfUbBWIFdJs", "video", ["trpc"]),
+        ("qCLV0Iaq9zU", "video", ["trpc"]),
+        ("Lam0cYOEst8", "video", ["trpc"]),
+    ],
+    "grafana": [
+        ("9TJx7QTrTyo", "video", ["grafana"]),
+    ],
+    "hardhat": [
+        ("9Qpi80dQsGU", "video", ["hardhat"]),
+        ("gyMwXuJrbJQ", "video", ["hardhat", "solidity"]),
+    ],
+    "foundry": [
+        ("uelA2U9TbgM", "video", ["foundry"]),
+    ],
+    "ethersjs": [
+        ("yk7nVp5HTCk", "video", ["ethers"]),
+    ],
+    # No verified curated pick yet — these fall back to search links honestly:
+    # bun, transformers, owasp-zap.
 }
 
 
