@@ -422,13 +422,17 @@ export default function RoadmapPage() {
                                 href={tool.video.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                title={tool.video.title || `Watch a ${tool.name} ${tool.video.kind === "playlist" ? "playlist" : "course"}`}
-                                className="flex items-center gap-1 px-2 border-l border-indigo-500/15 text-[10px] font-mono font-bold text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors"
+                                title={
+                                  tool.video.title
+                                    ? `Our top pick: ${tool.video.title}${tool.video.channel ? ` — ${tool.video.channel}` : ""}`
+                                    : `Our top ${tool.name} ${tool.video.kind === "playlist" ? "series" : "course"}`
+                                }
+                                className="flex items-center gap-1 px-2.5 border-l border-indigo-500/15 bg-[var(--accent-1)]/10 text-[10px] font-mono font-bold text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors whitespace-nowrap"
                               >
                                 {tool.video.kind === "playlist"
                                   ? <ListVideo className="w-3.5 h-3.5" />
                                   : <Play className="w-3.5 h-3.5" />}
-                                Watch
+                                {tool.video.kind === "playlist" ? "Best series" : "Best course"}
                               </a>
                             )}
                           </div>

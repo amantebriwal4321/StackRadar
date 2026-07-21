@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Play, ListVideo, ExternalLink, Eye, ThumbsUp, Clock, AlertTriangle,
-  BookOpen, Languages, Search,
+  BookOpen, Languages, Search, Star,
 } from "lucide-react";
 import { fetchToolResources, type ToolResources, type LearningResource } from "@/data/trends";
 
@@ -29,16 +29,21 @@ function duration(s: number): string {
   return h ? `${h}h ${m}m` : `${m}m`;
 }
 
-function VideoCard({ r }: { r: LearningResource }) {
+function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: boolean }) {
   const isSearch = r.kind === "search";
   return (
     <a
       href={r.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="tech-panel tech-panel-interactive rounded-xl overflow-hidden flex flex-col group"
+      className={`tech-panel tech-panel-interactive rounded-xl overflow-hidden flex flex-col group ${topPick ? "ring-2 ring-[var(--accent-1)]/50" : ""}`}
     >
       <div className="relative aspect-video bg-[var(--c-surface-2)] overflow-hidden">
+        {topPick && (
+          <span className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-[var(--accent-1)] text-[10px] font-mono font-bold text-white uppercase tracking-widest flex items-center gap-1 shadow-lg">
+            <Star className="w-3 h-3 fill-current" /> Top pick
+          </span>
+        )}
         {r.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -228,7 +233,11 @@ export default function LearningResources({ slug }: { slug: string }) {
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.videos.map((r) => <VideoCard key={r.url} r={r} />)}
+            {data.videos.map((r, i) => (
+              // The first card is the highest-ranked real video (curated top
+              // pick, or #1 by live stats) — flag it. Never flag a search link.
+              <VideoCard key={r.url} r={r} topPick={i === 0 && data.videos_source !== "search"} />
+            ))}
           </div>
         </div>
 
