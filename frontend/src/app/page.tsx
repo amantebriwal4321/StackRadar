@@ -690,12 +690,12 @@ export default function HomePage() {
               <Flame className="w-4 h-4" /> Momentum Delta
             </div>
             <h2 className="text-3xl md:text-4xl font-black font-display tracking-tight">
-              Trending Movers
+              Rising — worth learning now
             </h2>
           </div>
           <div className="md:ml-auto">
             <span className="text-[10px] font-mono text-indigo-600/60 uppercase tracking-wider font-semibold">
-              Fastest Growing This Cycle
+              Fastest-rising tools this cycle
             </span>
           </div>
         </div>
@@ -918,14 +918,14 @@ export default function HomePage() {
         
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-4 section-reveal">
           <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
-            <Shield className="w-4 h-4" /> Telemetry Processing Pipeline
+            <Shield className="w-4 h-4" /> Why our roadmaps stay current
           </div>
           <h2 className="text-3xl md:text-5xl font-black font-display leading-tight">
-            How StackRadar Scrapes<br/>
-            <span className="text-shimmer">the Tech Ecosystem</span>
+            A roadmap that updates<br/>
+            <span className="text-shimmer">itself from live data</span>
           </h2>
           <p className="text-sm text-[var(--c-ink-2)] leading-relaxed font-sans font-light max-w-lg mx-auto">
-            We map community trends through recursive cycles of data ingestion, classification, and prediction models.
+            Static roadmaps go stale. Ours re-rank every cycle from what developers are actually building — so the order you learn in tracks the industry, not a snapshot from years ago.
           </p>
         </div>
 
@@ -1006,27 +1006,27 @@ export default function HomePage() {
           </motion.div>
           
           <h3 className="text-3xl md:text-5xl font-black font-display tracking-tight max-w-2xl mx-auto leading-tight mb-4">
-            Dive Deeper Into The<br/>
-            <span className="text-shimmer">Technology Universe</span>
+            Pick a roadmap.<br/>
+            <span className="text-shimmer">Learn one thing a day.</span>
           </h3>
-          
+
           <p className="text-sm md:text-base text-[var(--c-ink-2)] max-w-lg mx-auto leading-relaxed mb-10 font-light">
-            Compare languages, analyze user sentiments, and explore sequential learning roadmaps built from developer behaviors.
+            Sequenced steps, the best free video for each tool, and a streak to keep you going — on a syllabus that updates itself from live momentum data.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 relative z-10">
             <Link
-              href="/explore"
+              href="/roadmaps"
               className="btn-primary text-sm py-3 px-7 rounded-2xl flex items-center gap-2"
             >
-              <Compass className="w-4 h-4" /> Explore Universe
+              <Compass className="w-4 h-4" /> Start a roadmap <ArrowRight className="w-4 h-4" />
             </Link>
-            
+
             <Link
-              href="/roadmaps"
+              href="/trends"
               className="px-7 py-3 rounded-2xl border border-indigo-500/15 bg-[var(--c-surface)]/60 backdrop-blur-sm hover:bg-[var(--c-surface-2)] hover:border-indigo-400/30 text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center gap-2 font-bold font-mono"
             >
-              Start Learning <ArrowRight className="w-4 h-4" />
+              See the live data <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
