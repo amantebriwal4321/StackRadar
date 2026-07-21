@@ -8,12 +8,15 @@ import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 
+// Roadmaps is the product's main attraction, so it sits first after the
+// console; the momentum surfaces (explore/trends/compare) follow as the
+// intelligence that powers those roadmaps.
 const navLinks = [
   { href: "/", label: "console" },
+  { href: "/roadmaps", label: "roadmaps" },
   { href: "/explore", label: "explore" },
   { href: "/trends", label: "trends" },
   { href: "/compare", label: "compare" },
-  { href: "/roadmaps", label: "roadmaps" },
   { href: "/about", label: "about" },
 ];
 

@@ -132,7 +132,7 @@ export default function HomePage() {
   const [compareIdx, setCompareIdx] = useState(0);
 
   // Optimus-style cycling hero word (per-letter char-in animation)
-  const heroWords = useMemo(() => ["talking", "shipping", "trending", "evolving", "building"], []);
+  const heroWords = useMemo(() => ["worth it", "rising", "in demand", "hiring", "next"], []);
   const [wordIndex, setWordIndex] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setWordIndex((p) => (p + 1) % heroWords.length), 2600);
@@ -382,7 +382,7 @@ export default function HomePage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
               </span>
-              LIVE TECH MOMENTUM TRACKER
+              LIVE-DATA LEARNING ROADMAPS
               <span className="w-px h-3 bg-indigo-500/30" />
               <span className="text-indigo-600/60">v2.0</span>
             </motion.div>
@@ -390,7 +390,7 @@ export default function HomePage() {
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[0.92] font-display" style={{ perspective: "1000px" }}>
               <span className="block pb-[0.12em]">
-                <span className="hero-line block">The internet is</span>
+                <span className="hero-line block">Learn what&apos;s</span>
               </span>
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">
@@ -404,22 +404,36 @@ export default function HomePage() {
               </span>
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">
-                  Are you{" "}
-                  <span className="inline-flex" aria-label="listening">
-                    {"listening".split("").map((ch, i) => (
+                  Skip the{" "}
+                  <span className="inline-flex" aria-label="rest">
+                    {"rest".split("").map((ch, i) => (
                       <span key={i} className="letter-spin">{ch}</span>
                     ))}
                   </span>
-                  ?
+                  .
                 </span>
               </span>
             </h1>
 
-            {/* Paragraph Subhead — plain-language value prop */}
+            {/* Paragraph Subhead — roadmap-led; momentum is the engine, not the pitch */}
             <p className="hero-anim-item text-base md:text-lg text-[var(--c-ink-2)] max-w-xl leading-relaxed font-sans font-light">
-              <span className="font-semibold text-[var(--c-ink)]">StackRadar scores every major dev tool 0–100 by real momentum</span>{" "}
-              — tracked live from GitHub, Reddit, and Hacker News — so you always know what&apos;s worth learning or adopting next.
+              <span className="font-semibold text-[var(--c-ink)]">StackRadar turns live momentum data into a step-by-step roadmap for every domain</span>{" "}
+              — the right tools in the right order, each with the single best free video and a tracker to keep your streak.
             </p>
+
+            {/* Primary CTA — roadmap is the main attraction; data is the proof */}
+            <div className="hero-anim-item flex flex-wrap gap-3">
+              <Link href="/roadmaps" prefetch className="btn-primary text-sm py-3 px-6 rounded-xl">
+                <Compass className="w-4 h-4" /> Start a roadmap <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/trends"
+                prefetch
+                className="px-6 py-3 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-sm font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors"
+              >
+                <TrendingUp className="w-4 h-4" /> See the live data
+              </Link>
+            </div>
 
             {/* Continue learning — the daily return hook, given top billing */}
             <div className="hero-anim-item max-w-2xl">
@@ -576,14 +590,14 @@ export default function HomePage() {
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
               <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
-              <Cpu className="w-4 h-4" /> Domains of Intelligence
+              <Compass className="w-4 h-4" /> Choose your path
             </div>
             <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight">
-              Aggregated Tech Domains
+              Pick a domain, get a roadmap
             </h2>
           </div>
           <p className="text-sm text-[var(--c-ink-2)] max-w-md font-sans font-light leading-relaxed">
-            Developer conversations categorized into core segments. We analyze and score each domain recursively.
+            Each domain is a full learning roadmap — sequenced steps, the best free video per tool, and a live momentum score so you learn what actually matters.
           </p>
         </div>
 
