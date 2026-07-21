@@ -551,8 +551,19 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
     "ethersjs": [
         ("yk7nVp5HTCk", "video", ["ethers"]),
     ],
-    # No verified curated pick yet — these fall back to search links honestly:
-    # bun, transformers, owasp-zap.
+    "bun": [
+        ("eTB0UCDnMQo", "video", ["bun"]),             # freeCodeCamp full course
+        ("U4JVw8K19uY", "video", ["bun"]),             # Traversy crash course
+    ],
+    "transformers": [
+        ("R8h_gpSpEVU", "video", ["transformer", "hugging"]),   # freeCodeCamp
+        ("PLc2rvfiptPSTGfTp0nhC71ksTY1p5ooCW", "playlist", ["transformer", "hugging"]),  # KGP Talkie series
+    ],
+    "owasp-zap": [
+        ("D2reRMTihVo", "video", ["zap", "owasp"]),
+        ("ezxBkFhKXhw", "video", ["zap", "owasp"]),
+        ("PLH8n_ayg-60J9i3nsLybper-DR3zJw6Z5", "playlist", ["zap", "owasp"]),
+    ],
 }
 
 
