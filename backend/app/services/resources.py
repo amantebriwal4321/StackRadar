@@ -421,3 +421,184 @@ def youtube_search_fallback(tool_name: str, language: str = "en") -> list[dict[s
         "rank_score": 0.0, "staleness": None, "thumbnail": None, "views": None,
         "likes": None, "duration_s": None, "item_count": None, "published_at": None,
     } for t, s, b in specs]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Curated, verified YouTube videos (real links, no API key required)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Hand-picked flagship courses/playlists for the highest-traffic tools. These
+# give real, watchable video links on a fresh clone with an empty .env — the
+# YouTube Data API path (fetch_youtube) then adds live-ranked results on top
+# once a key is configured.
+#
+# The video ids below are asserted here, but NOTHING reaches a user unverified:
+# `verify_youtube` calls YouTube's public oEmbed endpoint (no key, no quota) for
+# every candidate and drops any that don't resolve, plus any whose real returned
+# title has nothing to do with the tool. So a wrong id fails closed — it never
+# ships as a dead or mislabelled link. Display text (title/author/thumbnail) is
+# taken from oEmbed's response, not from this table, so it's always the real
+# video's metadata.
+#
+# Each entry: (youtube_id, kind, [relevance keywords]). Keyword match is
+# case-insensitive against oEmbed's returned title.
+
+CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
+    "react": [
+        ("bMknfKXIFA8", "video", ["react"]),          # freeCodeCamp full course
+        ("SqcY0GlETPk", "video", ["react"]),          # Programming with Mosh
+        ("x4rFhThSX04", "playlist", ["react"]),       # Net Ninja modern React
+    ],
+    "nextjs": [
+        ("wm5gMKuwSYk", "video", ["next"]),           # Next.js full course
+        ("ZVnjOPwW4ZA", "video", ["next"]),           # Next.js 14
+    ],
+    "vuejs": [
+        ("VeNfHj6MhgA", "video", ["vue"]),
+        ("FXpIoQ_rT_c", "playlist", ["vue"]),         # Net Ninja Vue 3
+    ],
+    "svelte": [
+        ("UGBJHYpHPvA", "video", ["svelte"]),
+        ("3TVy6GdtNuQ", "video", ["svelte"]),
+    ],
+    "vite": [
+        ("VAeRhmpcWEQ", "video", ["vite"]),
+    ],
+    "fastapi": [
+        # freeCodeCamp's canonical course is titled "Python API Development".
+        ("0sOvCWFmrtA", "video", ["fastapi", "fast api", "api development"]),
+        ("7t2alSnE2-I", "video", ["fastapi", "fast api"]),
+    ],
+    "prisma": [
+        ("RebA5J-rlwg", "video", ["prisma"]),
+    ],
+    "supabase": [
+        ("dU7GwCOgvNY", "video", ["supabase"]),
+        ("zBZgdTb-dns", "video", ["supabase"]),
+    ],
+    "deno": [
+        ("TQUy8ENesGY", "video", ["deno"]),
+    ],
+    "pytorch": [
+        ("V_xro1bcAuA", "video", ["pytorch"]),         # freeCodeCamp
+        ("GIsg-ZUy0MY", "video", ["pytorch"]),
+    ],
+    "tensorflow": [
+        ("tPYj3fFJGjk", "video", ["tensorflow"]),      # freeCodeCamp
+        ("qFJeN9V1ZsI", "video", ["tensorflow"]),
+    ],
+    "langchain": [
+        ("lG7Uxts9SXs", "video", ["langchain"]),
+        ("mrjq3lFz23s", "video", ["langchain"]),
+    ],
+    "ollama": [
+        ("Wjrdr0NU4Sk", "video", ["ollama"]),
+        ("90ozfdsQOKo", "video", ["ollama"]),
+    ],
+    "docker": [
+        ("fqMOX6JJhGo", "video", ["docker"]),          # freeCodeCamp
+        ("pg19Z8LL06w", "video", ["docker"]),          # TechWorld with Nana
+    ],
+    "kubernetes": [
+        ("X48VuDVv0do", "video", ["kubernetes"]),      # TechWorld with Nana
+        ("s_o8dwzRlu4", "video", ["kubernetes"]),      # freeCodeCamp
+    ],
+    "terraform": [
+        ("SLB_c_ayRMo", "video", ["terraform"]),       # TechWorld with Nana
+        ("7xngnjfIlK4", "video", ["terraform"]),       # freeCodeCamp
+    ],
+    "prometheus": [
+        ("h4Sl21AKiDg", "video", ["prometheus"]),      # TechWorld with Nana
+    ],
+    "rust": [
+        ("BpPEoZW5IiY", "video", ["rust"]),            # freeCodeCamp
+        ("zF34dRivLOw", "video", ["rust"]),            # Let's Get Rusty intro
+    ],
+    "go": [
+        ("un6ZyFkqFKo", "video", ["go", "golang"]),    # freeCodeCamp Learn Go
+        ("YS4e4q9oBaU", "video", ["go", "golang"]),
+    ],
+    "wireshark": [
+        ("lb1Dw0elw0Q", "video", ["wireshark"]),       # freeCodeCamp
+    ],
+    "metasploit": [
+        ("8lR27r8Y_ik", "video", ["metasploit"]),
+    ],
+}
+
+
+async def verify_youtube(client: httpx.AsyncClient, video_id: str, kind: str,
+                        keywords: list[str]) -> Optional[dict[str, Any]]:
+    """Confirm a curated id points at a real, on-topic video via oEmbed.
+
+    oEmbed needs no API key and no quota. It returns the video's real title,
+    author and thumbnail for a live id, and 404s for a dead or private one — so
+    it's both our existence check and our source of display metadata. We also
+    require the real title to contain one of `keywords`, which catches a
+    mistyped id that happens to resolve to some unrelated real video.
+    """
+    if kind == "playlist":
+        url = f"https://www.youtube.com/playlist?list={video_id}"
+        oembed_url = url
+    else:
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        oembed_url = url
+    try:
+        r = await client.get(
+            "https://www.youtube.com/oembed",
+            params={"url": oembed_url, "format": "json"},
+            timeout=15, follow_redirects=True,
+        )
+        if r.status_code != 200:
+            return None
+        data = r.json()
+    except Exception as e:  # noqa: BLE001
+        logger.debug(f"oEmbed verify failed for {video_id}: {e}")
+        return None
+
+    title = data.get("title") or ""
+    low = title.lower()
+    if keywords and not any(k.lower() in low for k in keywords):
+        logger.debug(f"Curated {video_id} title '{title}' failed relevance {keywords}")
+        return None
+
+    return {
+        "kind": kind,
+        "source": "curated",
+        "title": title,
+        "url": url,
+        "channel": data.get("author_name"),
+        "thumbnail": data.get("thumbnail_url"),
+        "blurb": None,
+        "views": None, "likes": None, "duration_s": None,
+        "item_count": None, "published_at": None,
+        "language": "en",
+        "staleness": None,
+    }
+
+
+async def curated_videos(slug: str, *, limit: int = 6) -> list[dict[str, Any]]:
+    """Verified curated videos for a tool, or [] if none are curated / verify.
+
+    Ranked only by curated order (best first) with a descending synthetic score
+    so ordering is stable in the DB cache. No fabricated view/like counts — the
+    stat fields stay null and the UI simply omits them.
+    """
+    candidates = CURATED_VIDEOS.get(slug, [])
+    if not candidates:
+        return []
+
+    async with httpx.AsyncClient(follow_redirects=True) as client:
+        checked = await asyncio.gather(*[
+            verify_youtube(client, vid, kind, kw) for vid, kind, kw in candidates
+        ])
+
+    out = []
+    for i, res in enumerate(checked):
+        if res:
+            # Descending curated score keeps hand-picked order without inventing
+            # engagement numbers. Kept under 100 so a live-ranked API video with
+            # a genuinely huge audience can still outrank a curated pick.
+            res["rank_score"] = round(90.0 - i * 5.0, 2)
+            out.append(res)
+    return out[:limit]

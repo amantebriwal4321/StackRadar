@@ -180,9 +180,11 @@ export default function LearningResources({ slug }: { slug: string }) {
               Where to actually learn this
             </h3>
             <p className="text-sm text-[var(--c-ink-2)] font-light max-w-xl">
-              {data.videos_live
+              {data.videos_source === "youtube_api"
                 ? "Ranked on real view counts, like ratio, recency and course depth — not on what YouTube wants to show you."
-                : "Scoped searches and reference platforms. Add a YouTube API key to rank actual videos here."}
+                : data.videos_source === "curated"
+                  ? "Hand-picked flagship courses, each checked to be live right now. Add a YouTube API key to auto-rank the full catalog."
+                  : "Scoped searches and reference platforms. Add a YouTube API key to rank actual videos here."}
               {data.latest_version && (
                 <> Currently on <span className="font-mono font-bold text-[var(--c-ink)]">{data.latest_version}</span>.</>
               )}
@@ -213,9 +215,13 @@ export default function LearningResources({ slug }: { slug: string }) {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-4">
             <h4 className="text-[11px] font-mono font-bold text-[var(--c-ink-2)] uppercase tracking-widest">
-              {data.videos_live ? "Top-ranked videos & playlists" : "Video searches"}
+              {data.videos_source === "youtube_api"
+                ? "Top-ranked videos & playlists"
+                : data.videos_source === "curated"
+                  ? "Recommended courses"
+                  : "Video searches"}
             </h4>
-            {data.videos_live && (
+            {data.videos_source === "youtube_api" && (
               <span className="text-[10px] font-mono text-[var(--c-ink-2)]/70 uppercase tracking-wider">
                 Ranked by reach · engagement · freshness · depth
               </span>

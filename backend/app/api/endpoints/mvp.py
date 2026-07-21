@@ -429,10 +429,18 @@ async def get_tool_resources(
         for c in cached[:1]
     )
 
-    if (stale or refresh) and settings.YOUTUBE_API_KEY:
-        found = await resources_svc.fetch_youtube(
-            tool.name, language=language, release_at=tool.latest_release_at
-        )
+    if stale or refresh:
+        # Prefer the live API (ranked on real stats); fall back to the curated,
+        # oEmbed-verified video list so a keyless install still shows real
+        # videos rather than only search links. Curated is English-only for now.
+        found: list = []
+        if settings.YOUTUBE_API_KEY:
+            found = await resources_svc.fetch_youtube(
+                tool.name, language=language, release_at=tool.latest_release_at
+            )
+        if not found and language == "en":
+            found = await resources_svc.curated_videos(tool.slug)
+
         if found:
             for old in cached:
                 db.delete(old)
@@ -463,13 +471,23 @@ async def get_tool_resources(
     for p in platforms:
         p["published_at"] = None
 
+    # Tell the UI exactly what kind of list it's showing so it can label it
+    # honestly — a live ranking, hand-picked real videos, or scoped searches.
+    if any(c.source == "youtube" for c in cached):
+        videos_source = "youtube_api"
+    elif cached:
+        videos_source = "curated"
+    else:
+        videos_source = "search"
+
     return {
         "slug": tool.slug,
         "name": tool.name,
         "icon": tool.icon,
         "language": language,
-        # False => the "videos" list is scoped searches, not a ranked result set.
-        "videos_live": bool(settings.YOUTUBE_API_KEY) and bool(videos),
+        "videos_source": videos_source,
+        # Kept for back-compat: true only when the list is a live-stats ranking.
+        "videos_live": videos_source == "youtube_api",
         "latest_version": tool.latest_version,
         "latest_release_at": tool.latest_release_at.isoformat() if tool.latest_release_at else None,
         "videos": videos or resources_svc.youtube_search_fallback(tool.name, language),

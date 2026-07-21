@@ -362,7 +362,14 @@ export interface ToolResources {
   name: string;
   icon: string;
   language: "en" | "hi";
-  /** false => `videos` holds scoped searches, not a ranked result set. */
+  /**
+   * What the `videos` list actually is:
+   *  - "youtube_api" — live results ranked on real view/like stats
+   *  - "curated"     — hand-picked flagship courses, each verified live
+   *  - "search"      — scoped YouTube searches (no real videos available)
+   */
+  videos_source: "youtube_api" | "curated" | "search";
+  /** true only when `videos` is a live-stats ranking. */
   videos_live: boolean;
   latest_version: string | null;
   latest_release_at: string | null;
