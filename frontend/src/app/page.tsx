@@ -132,15 +132,6 @@ export default function HomePage() {
   const [compareIdx, setCompareIdx] = useState(0);
 
   // Optimus-style cycling hero word (per-letter char-in animation)
-  // Cycling verb in "Stop guessing what to ___ next." — every option must read
-  // naturally in that slot and cover both learners and adopters.
-  const heroWords = useMemo(() => ["learn", "build", "master", "adopt", "ship"], []);
-  const [wordIndex, setWordIndex] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setWordIndex((p) => (p + 1) % heroWords.length), 2600);
-    return () => clearInterval(id);
-  }, [heroWords.length]);
-
   // Mouse parallax for hero
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -391,24 +382,18 @@ export default function HomePage() {
 
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[0.92] font-display" style={{ perspective: "1000px" }}>
-              {/* The pain, stated plainly and muted, so the bright resolution
-                  below is where the eye lands. */}
               <span className="block pb-[0.12em]">
-                <span className="hero-line block text-[var(--c-ink-2)]">No more guessing</span>
+                <span className="hero-line block">Learn the right tech,</span>
               </span>
+              {/* "right order" is the whole thesis — a roadmap's value over a pile
+                  of videos is the sequence — so it carries the accent. */}
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">
-                  what to{" "}
+                  in the{" "}
                   <span className="relative inline-block align-baseline">
-                    <span key={wordIndex} className="inline-block gradient-text animate-word-swap pb-[0.28em] -mb-[0.28em]">
-                      {heroWords[wordIndex]}
-                    </span>
+                    <span className="inline-block gradient-text pb-[0.28em] -mb-[0.28em]">right order</span>
                   </span>
-                </span>
-              </span>
-              <span className="block pb-[0.12em]">
-                <span className="hero-line block">
-                  next<span className="text-[var(--c-ink)]">.</span>
+                  <span className="text-[var(--c-ink)]">.</span>
                   {/* Blinking caret — the app's live-console identity; after the
                       period so it never crosses a descender. */}
                   <span
