@@ -132,9 +132,9 @@ export default function HomePage() {
   const [compareIdx, setCompareIdx] = useState(0);
 
   // Optimus-style cycling hero word (per-letter char-in animation)
-  // Each must read naturally after "Learn what's ___" and hit a distinct angle:
-  // value · momentum · jobs · longevity · future. (No "hiring" — things don't hire.)
-  const heroWords = useMemo(() => ["worth it", "rising", "in demand", "here to stay", "next"], []);
+  // Cycling verb in "Stop guessing what to ___ next." — every option must read
+  // naturally in that slot and cover both learners and adopters.
+  const heroWords = useMemo(() => ["learn", "build", "master", "adopt", "ship"], []);
   const [wordIndex, setWordIndex] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setWordIndex((p) => (p + 1) % heroWords.length), 2600);
@@ -391,37 +391,30 @@ export default function HomePage() {
 
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[0.92] font-display" style={{ perspective: "1000px" }}>
+              {/* "Stop guessing" — the pain, stated plainly and muted, so the
+                  bright resolution below is where the eye lands. */}
               <span className="block pb-[0.12em]">
-                <span className="hero-line block">Learn what&apos;s</span>
+                <span className="hero-line block text-[var(--c-ink-2)]">Stop guessing</span>
               </span>
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">
+                  what to{" "}
                   <span className="relative inline-block align-baseline">
                     <span key={wordIndex} className="inline-block gradient-text animate-word-swap pb-[0.28em] -mb-[0.28em]">
                       {heroWords[wordIndex]}
                     </span>
                   </span>
-                  <span className="text-[var(--c-ink)]">.</span>
-                  {/* Blinking caret — ties the rotating word to the app's live
-                      console identity; sits after the period so it never crosses
-                      a descender. */}
+                </span>
+              </span>
+              <span className="block pb-[0.12em]">
+                <span className="hero-line block">
+                  next<span className="text-[var(--c-ink)]">.</span>
+                  {/* Blinking caret — the app's live-console identity; after the
+                      period so it never crosses a descender. */}
                   <span
                     className="inline-block w-[0.09em] h-[0.72em] ml-[0.22em] align-baseline rounded-[1px] bg-[var(--accent-2)] animate-caret-blink"
                     aria-hidden="true"
                   />
-                </span>
-              </span>
-              {/* "Skip the rest" is the quiet counterpoint — muted so the eye
-                  lands on the bright rotating word first, then reads the kicker. */}
-              <span className="block pb-[0.12em]">
-                <span className="hero-line block text-[var(--c-ink-2)]">
-                  Skip the{" "}
-                  <span className="inline-flex" aria-label="rest">
-                    {"rest".split("").map((ch, i) => (
-                      <span key={i} className="letter-spin">{ch}</span>
-                    ))}
-                  </span>
-                  .
                 </span>
               </span>
             </h1>
