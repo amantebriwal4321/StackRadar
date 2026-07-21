@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     # GROQ (for sentiment analysis)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 
+    # CLERK — auth. The publishable key is public (it ships to the browser), so
+    # it's safe to keep here; the backend needs only this to derive Clerk's
+    # public JWKS and verify session-token signatures. No secret required.
+    # When empty, /progress runs in dev mode: it trusts a client-supplied
+    # user_id (fine locally, NOT for a public deployment).
+    CLERK_PUBLISHABLE_KEY: str = os.getenv("CLERK_PUBLISHABLE_KEY", "")
+
     # YOUTUBE DATA API v3 (for learning-resource discovery).
     # Optional, like every other key here: with it, /resources returns real
     # ranked videos with live view/like counts; without it, the endpoint falls

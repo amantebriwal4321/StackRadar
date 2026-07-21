@@ -19,6 +19,7 @@ import json
 import re
 import os
 import asyncio
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -29,6 +30,7 @@ from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain, UserP
 from app.services.scheduler import scrape_status
 from app.services.scoring import calculate_star_velocity
 from app.services import resources as resources_svc
+from app.core.auth import verified_clerk_user
 
 router = APIRouter()
 
@@ -601,11 +603,11 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # LEARNING PROGRESS  (the retention loop)
 #
-# NOTE ON AUTH: `user_id` is the Clerk id passed by the client and is NOT yet
-# verified server-side, so these endpoints trust the caller. That is acceptable
-# for local development but MUST be replaced with Clerk JWT verification before
-# this is exposed publicly — otherwise anyone who learns a user id can read or
-# modify that user's progress.
+# AUTH: when CLERK_PUBLISHABLE_KEY is set, every endpoint here resolves the user
+# from a Clerk-signed session token (verified in app/core/auth.py) and ignores
+# any client-supplied user_id — so a caller cannot read or modify another
+# account's progress. With no key configured the endpoints fall back to a
+# client-supplied id for local dev. Set the key in any real deployment.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def _roadmap_steps(db: Session, slug: str) -> list:
@@ -637,9 +639,28 @@ def _calculate_streak(dates: list) -> int:
     return streak
 
 
+def _require_user(verified: Optional[str], client_supplied: Optional[str]) -> str:
+    """Resolve the caller's user id.
+
+    When Clerk is enforcing, `verified` is the id proven by a signed token (the
+    dependency already 401'd anyone without one), so it wins and any
+    client-supplied id is ignored. In dev mode `verified` is None and we fall
+    back to the client value. Either way, no id → 401.
+    """
+    uid = verified or client_supplied
+    if not uid:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return uid
+
+
 @router.get("/progress/summary")
-def get_progress_summary(user_id: str = Query(...), db: Session = Depends(get_db)):
+def get_progress_summary(
+    user_id: Optional[str] = Query(None),
+    verified: Optional[str] = Depends(verified_clerk_user),
+    db: Session = Depends(get_db),
+):
     """Everything the 'Continue learning' hero needs in one call."""
+    user_id = _require_user(verified, user_id)
     rows = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
     streak = _calculate_streak([r.completed_at for r in rows if r.completed_at])
 
@@ -685,8 +706,20 @@ def get_progress_summary(user_id: str = Query(...), db: Session = Depends(get_db
 
 
 @router.get("/progress/{roadmap_slug}")
-def get_progress(roadmap_slug: str, user_id: str = Query(...), db: Session = Depends(get_db)):
+def get_progress(
+    roadmap_slug: str,
+    user_id: Optional[str] = Query(None),
+    verified: Optional[str] = Depends(verified_clerk_user),
+    db: Session = Depends(get_db),
+):
     """Completed steps for one roadmap."""
+    user_id = _require_user(verified, user_id)
+    return _progress_for(db, roadmap_slug, user_id)
+
+
+def _progress_for(db: Session, roadmap_slug: str, user_id: str) -> dict:
+    """Completed-steps payload for one (user, roadmap). Shared by the GET
+    endpoint and the toggle response so neither re-derives the shape."""
     steps = _roadmap_steps(db, roadmap_slug)
     rows = (
         db.query(UserProgress)
@@ -703,13 +736,22 @@ def get_progress(roadmap_slug: str, user_id: str = Query(...), db: Session = Dep
 
 
 @router.post("/progress/toggle")
-def toggle_progress(payload: dict, db: Session = Depends(get_db)):
-    """Mark a step done / undone. Idempotent per (user, roadmap, step)."""
-    user_id = (payload or {}).get("user_id")
+def toggle_progress(
+    payload: dict,
+    verified: Optional[str] = Depends(verified_clerk_user),
+    db: Session = Depends(get_db),
+):
+    """Mark a step done / undone. Idempotent per (user, roadmap, step).
+
+    The user id is taken from the verified token when Clerk is enforcing, so a
+    caller cannot toggle progress for an account that isn't theirs by putting a
+    different user_id in the body. The body user_id is only a dev-mode fallback.
+    """
+    user_id = _require_user(verified, (payload or {}).get("user_id"))
     roadmap_slug = (payload or {}).get("roadmap_slug")
     step = (payload or {}).get("step")
-    if not user_id or not roadmap_slug or step is None:
-        raise HTTPException(status_code=422, detail="user_id, roadmap_slug and step are required")
+    if roadmap_slug is None or step is None:
+        raise HTTPException(status_code=422, detail="roadmap_slug and step are required")
 
     existing = (
         db.query(UserProgress)
@@ -728,7 +770,7 @@ def toggle_progress(payload: dict, db: Session = Depends(get_db)):
         completed = True
     db.commit()
 
-    return {**get_progress(roadmap_slug, user_id, db), "step": step, "completed": completed}
+    return {**_progress_for(db, roadmap_slug, user_id), "step": step, "completed": completed}
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

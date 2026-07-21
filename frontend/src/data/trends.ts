@@ -201,10 +201,22 @@ export interface ProgressSummary {
   focus_roadmap: string | null;
 }
 
-export async function fetchProgress(roadmapSlug: string, userId: string): Promise<RoadmapProgress> {
+// The Clerk session token authenticates progress calls. The backend verifies
+// its signature and uses the token's user id, so `userId` is only a fallback
+// for local dev where the backend runs without Clerk configured. Pass the token
+// (from useAuth().getToken()) whenever the user is signed in.
+function authHeaders(token?: string | null): Record<string, string> {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function fetchProgress(
+  roadmapSlug: string,
+  userId: string,
+  token?: string | null
+): Promise<RoadmapProgress> {
   const res = await fetch(
     `${API_BASE}/api/v1/progress/${roadmapSlug}?user_id=${encodeURIComponent(userId)}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: authHeaders(token) }
   );
   if (!res.ok) throw new Error("Failed to fetch progress");
   return res.json();
@@ -213,11 +225,12 @@ export async function fetchProgress(roadmapSlug: string, userId: string): Promis
 export async function toggleProgressStep(
   roadmapSlug: string,
   userId: string,
-  step: number
+  step: number,
+  token?: string | null
 ): Promise<RoadmapProgress & { step: number; completed: boolean }> {
   const res = await fetch(`${API_BASE}/api/v1/progress/toggle`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
     body: JSON.stringify({ user_id: userId, roadmap_slug: roadmapSlug, step }),
     cache: "no-store",
   });
@@ -225,10 +238,13 @@ export async function toggleProgressStep(
   return res.json();
 }
 
-export async function fetchProgressSummary(userId: string): Promise<ProgressSummary> {
+export async function fetchProgressSummary(
+  userId: string,
+  token?: string | null
+): Promise<ProgressSummary> {
   const res = await fetch(
     `${API_BASE}/api/v1/progress/summary?user_id=${encodeURIComponent(userId)}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: authHeaders(token) }
   );
   if (!res.ok) throw new Error("Failed to fetch progress summary");
   return res.json();

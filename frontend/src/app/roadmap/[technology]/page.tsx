@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Star, Sparkles, Check, Flame, Play, ListVideo } from "lucide-react";
-import { useUser, SignInButton } from "@clerk/nextjs";
+import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
 import { fetchRoadmap, fetchProgress, toggleProgressStep, type Roadmap } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
 
@@ -30,6 +30,7 @@ export default function RoadmapPage() {
 
   // ── Learning progress ──
   const { user, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const userId = user?.id || "";
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [percent, setPercent] = useState(0);
@@ -37,10 +38,11 @@ export default function RoadmapPage() {
 
   useEffect(() => {
     if (!userId || !slug) return;
-    fetchProgress(slug, userId)
+    getToken()
+      .then((token) => fetchProgress(slug, userId, token))
       .then((p) => { setCompletedSteps(p.completed_steps); setPercent(p.percent); })
       .catch(() => { /* progress is additive — never block the roadmap itself */ });
-  }, [userId, slug]);
+  }, [userId, slug, getToken]);
 
   const handleToggle = useCallback(async (step: number) => {
     if (!userId) return;
@@ -50,7 +52,8 @@ export default function RoadmapPage() {
     const optimistic = prev.includes(step) ? prev.filter((s) => s !== step) : [...prev, step];
     setCompletedSteps(optimistic);
     try {
-      const res = await toggleProgressStep(slug, userId, step);
+      const token = await getToken();
+      const res = await toggleProgressStep(slug, userId, step, token);
       setCompletedSteps(res.completed_steps);
       setPercent(res.percent);
       window.dispatchEvent(new CustomEvent("progress:changed"));
@@ -59,7 +62,7 @@ export default function RoadmapPage() {
     } finally {
       setSavingStep(null);
     }
-  }, [userId, slug, completedSteps]);
+  }, [userId, slug, completedSteps, getToken]);
 
   // Scroll tracking states
   const timelineRef = useRef<HTMLDivElement>(null);

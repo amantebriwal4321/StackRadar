@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useUser, SignInButton } from "@clerk/nextjs";
+import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
 import { Flame, ArrowRight, Target, Map, CheckCircle2 } from "lucide-react";
 import { fetchProgressSummary, type ProgressSummary } from "@/data/trends";
 
@@ -16,17 +16,19 @@ import { fetchProgressSummary, type ProgressSummary } from "@/data/trends";
  */
 export default function ContinueLearning() {
   const { user, isSignedIn, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const userId = user?.id || "";
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
     if (!userId) return;
-    fetchProgressSummary(userId)
+    getToken()
+      .then((token) => fetchProgressSummary(userId, token))
       .then(setSummary)
       .catch(() => setSummary(null))
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, getToken]);
 
   useEffect(() => {
     if (!isLoaded) return;
