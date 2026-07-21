@@ -114,6 +114,12 @@ async def startup_event():
     if os.getenv("RUN_SCRAPER_INLINE", "1") == "1":
         asyncio.create_task(run_scraper_loop())
 
+    # Warm the learning-resource cache in the background so roadmap steps and
+    # tool pages show real video titles/thumbnails on first visit, not just a
+    # URL. Non-blocking — startup returns immediately.
+    from app.services.resources import warm_resource_cache, CURATED_VIDEOS
+    asyncio.create_task(warm_resource_cache(SessionLocal, list(CURATED_VIDEOS.keys())))
+
 
 # ━━━ CORS ━━━
 if settings.BACKEND_CORS_ORIGINS:

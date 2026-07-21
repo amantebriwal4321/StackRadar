@@ -552,6 +552,38 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
                 "slug": t.slug, "name": t.name, "icon": t.icon,
                 "score": t.score, "stars": t.stars,
             }
+
+        # Attach the single best learning video per tool so a learner can watch
+        # right inside the step. Prefer the cached, oEmbed-verified row (rich:
+        # real title + thumbnail); fall back to a synchronous curated URL so the
+        # link is present the instant the roadmap loads, before the cache warms.
+        top_video: dict[str, dict] = {}
+        vid_rows = (
+            db.query(ToolResource)
+            .filter(
+                ToolResource.tool_slug.in_(needed_slugs),
+                ToolResource.kind.in_(["video", "playlist"]),
+                ToolResource.language == "en",
+            )
+            .order_by(ToolResource.rank_score.desc())
+            .all()
+        )
+        for r in vid_rows:
+            if r.tool_slug not in top_video:
+                top_video[r.tool_slug] = {
+                    "title": r.title, "url": r.url, "channel": r.channel,
+                    "thumbnail": r.thumbnail, "kind": r.kind,
+                }
+        for s, info in tools_by_slug.items():
+            if s not in top_video:
+                fallback = resources_svc.curated_first_url(s)
+                if fallback:
+                    top_video[s] = {
+                        "title": None, "url": fallback["url"], "channel": None,
+                        "thumbnail": None, "kind": fallback["kind"],
+                    }
+            info["video"] = top_video.get(s)
+
     for step in steps:
         slugs = step_tool_map.get(step.get("step"), [])
         step["tools"] = [tools_by_slug[s] for s in slugs if s in tools_by_slug]

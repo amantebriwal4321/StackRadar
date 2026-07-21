@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Star, Sparkles, Check, Flame } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Star, Sparkles, Check, Flame, Play, ListVideo } from "lucide-react";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { fetchRoadmap, fetchProgress, toggleProgressStep, type Roadmap } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
@@ -394,23 +394,44 @@ export default function RoadmapPage() {
                       </span>
                       <div className="flex flex-wrap gap-2">
                         {step.tools.map((tool) => (
-                          <Link
+                          <div
                             key={tool.slug}
-                            href={`/tools/${tool.slug}`}
-                            className="group/tool flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-lg border border-indigo-500/15 bg-[var(--c-surface)]/70 hover:border-indigo-400/40 hover:bg-[var(--c-surface-2)] transition-all"
+                            className="flex items-stretch rounded-lg border border-indigo-500/15 bg-[var(--c-surface)]/70 overflow-hidden"
                           >
-                            <span className="text-base leading-none select-none">{tool.icon}</span>
-                            <span className="text-[11px] font-bold text-[var(--c-ink)] group-hover/tool:text-indigo-600 transition-colors">{tool.name}</span>
-                            <span
-                              className="text-[10px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
-                              style={{
-                                color: tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#7C2D4A",
-                                background: `${tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#7C2D4A"}14`,
-                              }}
+                            <Link
+                              href={`/tools/${tool.slug}`}
+                              className="group/tool flex items-center gap-2 pl-2 pr-2.5 py-1.5 hover:bg-[var(--c-surface-2)] transition-all"
                             >
-                              {Math.round(tool.score)}
-                            </span>
-                          </Link>
+                              <span className="text-base leading-none select-none">{tool.icon}</span>
+                              <span className="text-[11px] font-bold text-[var(--c-ink)] group-hover/tool:text-indigo-600 transition-colors">{tool.name}</span>
+                              <span
+                                className="text-[10px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
+                                style={{
+                                  color: tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#7C2D4A",
+                                  background: `${tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#7C2D4A"}14`,
+                                }}
+                              >
+                                {Math.round(tool.score)}
+                              </span>
+                            </Link>
+                            {/* Watch: jumps straight to the top curated video for
+                                this tool. title is present once the resource cache
+                                has warmed; before that it's still a valid link. */}
+                            {tool.video && (
+                              <a
+                                href={tool.video.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={tool.video.title || `Watch a ${tool.name} ${tool.video.kind === "playlist" ? "playlist" : "course"}`}
+                                className="flex items-center gap-1 px-2 border-l border-indigo-500/15 text-[10px] font-mono font-bold text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors"
+                              >
+                                {tool.video.kind === "playlist"
+                                  ? <ListVideo className="w-3.5 h-3.5" />
+                                  : <Play className="w-3.5 h-3.5" />}
+                                Watch
+                              </a>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>

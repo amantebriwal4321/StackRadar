@@ -642,3 +642,68 @@ async def curated_videos(slug: str, *, limit: int = 6) -> list[dict[str, Any]]:
             res["rank_score"] = round(90.0 - i * 5.0, 2)
             out.append(res)
     return out[:limit]
+
+
+def curated_first_url(slug: str) -> Optional[dict[str, Any]]:
+    """The top curated video's URL for a tool, built synchronously (no network).
+
+    Used to give a roadmap step an inline "watch" link the instant it loads,
+    before the resource cache has been warmed with the rich oEmbed metadata.
+    The id is one that already passed oEmbed verification when it was added to
+    CURATED_VIDEOS, and the tool's own /resources page re-verifies the full
+    list — so this URL is safe to link even without a title/thumbnail yet.
+    """
+    candidates = CURATED_VIDEOS.get(slug)
+    if not candidates:
+        return None
+    vid, kind, _ = candidates[0]
+    url = (f"https://www.youtube.com/playlist?list={vid}" if kind == "playlist"
+           else f"https://www.youtube.com/watch?v={vid}")
+    return {"url": url, "kind": kind}
+
+
+async def warm_resource_cache(session_factory, slugs: list[str]) -> None:
+    """Populate the ToolResource cache with verified curated videos, in the
+    background at startup, for any tool that has none yet.
+
+    This front-loads the oEmbed verification so roadmap steps and tool pages
+    render real titles and thumbnails on first visit instead of the URL-only
+    fallback. Idempotent and gentle — it skips already-cached tools and staggers
+    requests so it never hammers oEmbed.
+    """
+    from app.models.all_models import ToolResource  # local import avoids cycle
+
+    warmed = 0
+    for slug in slugs:
+        db = session_factory()
+        try:
+            has_rows = (
+                db.query(ToolResource)
+                .filter(ToolResource.tool_slug == slug,
+                        ToolResource.kind.in_(["video", "playlist"]))
+                .count()
+            )
+            if has_rows:
+                continue
+            vids = await curated_videos(slug)
+            if not vids:
+                continue
+            now = datetime.now(timezone.utc)
+            for f in vids:
+                db.add(ToolResource(
+                    tool_slug=slug, kind=f["kind"], source=f["source"],
+                    title=f["title"], url=f["url"], channel=f.get("channel"),
+                    thumbnail=f.get("thumbnail"), blurb=f.get("blurb"),
+                    language=f.get("language", "en"),
+                    rank_score=f.get("rank_score", 0.0), fetched_at=now,
+                ))
+            db.commit()
+            warmed += 1
+            await asyncio.sleep(0.3)
+        except Exception as e:  # noqa: BLE001
+            logger.debug(f"warm_resource_cache({slug}) skipped: {e}")
+            db.rollback()
+        finally:
+            db.close()
+    if warmed:
+        logger.info(f"Resource cache warmed for {warmed} tool(s).")

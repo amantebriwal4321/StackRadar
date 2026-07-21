@@ -69,7 +69,14 @@ export interface RoadmapStep {
   description: string;
   level: "Beginner" | "Intermediate" | "Advanced";
   resources: { label: string; url: string }[];
-  tools?: { slug: string; name: string; icon: string; score: number; stars: number }[];
+  tools?: {
+    slug: string; name: string; icon: string; score: number; stars: number;
+    /** Top learning video for this tool, or null if none is curated. */
+    video?: {
+      title: string | null; url: string; channel: string | null;
+      thumbnail: string | null; kind: "video" | "playlist";
+    } | null;
+  }[];
 }
 
 export interface DomainSummary {
