@@ -132,7 +132,9 @@ export default function HomePage() {
   const [compareIdx, setCompareIdx] = useState(0);
 
   // Optimus-style cycling hero word (per-letter char-in animation)
-  const heroWords = useMemo(() => ["worth it", "rising", "in demand", "hiring", "next"], []);
+  // Each must read naturally after "Learn what's ___" and hit a distinct angle:
+  // value · momentum · jobs · longevity · future. (No "hiring" — things don't hire.)
+  const heroWords = useMemo(() => ["worth it", "rising", "in demand", "here to stay", "next"], []);
   const [wordIndex, setWordIndex] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setWordIndex((p) => (p + 1) % heroWords.length), 2600);
