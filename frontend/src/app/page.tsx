@@ -400,10 +400,19 @@ export default function HomePage() {
                     </span>
                   </span>
                   <span className="text-[var(--c-ink)]">.</span>
+                  {/* Blinking caret — ties the rotating word to the app's live
+                      console identity; sits after the period so it never crosses
+                      a descender. */}
+                  <span
+                    className="inline-block w-[0.09em] h-[0.72em] ml-[0.22em] align-baseline rounded-[1px] bg-[var(--accent-2)] animate-caret-blink"
+                    aria-hidden="true"
+                  />
                 </span>
               </span>
+              {/* "Skip the rest" is the quiet counterpoint — muted so the eye
+                  lands on the bright rotating word first, then reads the kicker. */}
               <span className="block pb-[0.12em]">
-                <span className="hero-line block">
+                <span className="hero-line block text-[var(--c-ink-2)]">
                   Skip the{" "}
                   <span className="inline-flex" aria-label="rest">
                     {"rest".split("").map((ch, i) => (
