@@ -32,6 +32,7 @@ import {
 import LiveConstellation from "@/components/3d/LiveConstellation";
 import DashboardShell from "@/components/DashboardShell";
 import ContinueLearning from "@/components/ContinueLearning";
+import FiveMinutePlan from "@/components/FiveMinutePlan";
 
 /* ─── Helper for Relative Time ─── */
 function getRelativeTime(isoString: string): string {
@@ -537,6 +538,13 @@ export default function HomePage() {
           </motion.div>
 
         </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          SECTION 1.5: 5-MINUTE PLAN — the conversion front door
+         ══════════════════════════════════════════ */}
+      <section className="max-w-5xl mx-auto px-6 -mt-6 md:-mt-4 mb-8 relative z-20 section-reveal">
+        <FiveMinutePlan />
       </section>
 
       {/* ══════════════════════════════════════════
