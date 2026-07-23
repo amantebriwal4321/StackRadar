@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Sparkles, CheckCircle2, PlayCircle, Flame } from "lucide-react";
+import { GOALS, type Goal } from "@/data/goals";
+import ShareButton from "@/components/ShareButton";
 
 /**
  * The five-minute front door.
@@ -14,29 +16,6 @@ import { ArrowRight, ArrowLeft, Sparkles, CheckCircle2, PlayCircle, Flame } from
  * plan (a real roadmap: sequenced steps + the best free video per tool +
  * a streak). It's the USP compressed into a single, shareable moment.
  */
-
-type Goal = {
-  icon: string;
-  label: string;
-  slug: string;        // roadmap slug -> /roadmap/{slug}
-  outcome: string;     // what they'll be able to do
-  weeks: string;
-};
-
-const GOALS: Goal[] = [
-  { icon: "💼", label: "Land a developer job", slug: "web-development",
-    outcome: "Ship full-stack apps employers hire for", weeks: "~10 weeks" },
-  { icon: "🧠", label: "Break into AI / ML", slug: "ai-ml",
-    outcome: "Go from Python to training and shipping models", weeks: "~12 weeks" },
-  { icon: "🔐", label: "Get into cybersecurity", slug: "cybersecurity",
-    outcome: "Learn the tools real security teams use daily", weeks: "~10 weeks" },
-  { icon: "☁️", label: "DevOps & cloud", slug: "devops",
-    outcome: "Master Docker, CI/CD and cloud deployment", weeks: "~9 weeks" },
-  { icon: "⛓️", label: "Web3 / blockchain", slug: "web3",
-    outcome: "Build and deploy smart contracts", weeks: "~8 weeks" },
-  { icon: "⚙️", label: "Low-level / systems", slug: "systems",
-    outcome: "Get fluent in Rust and Go", weeks: "~9 weeks" },
-];
 
 export default function FiveMinutePlan() {
   const [picked, setPicked] = useState<Goal | null>(null);
@@ -130,13 +109,21 @@ export default function FiveMinutePlan() {
                 ))}
               </div>
 
-              <Link
-                href={`/roadmap/${picked.slug}`}
-                prefetch
-                className="btn-primary text-sm py-3.5 px-7 rounded-xl w-full sm:w-auto justify-center"
-              >
-                Open my plan <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href={`/roadmap/${picked.slug}`}
+                  prefetch
+                  className="btn-primary text-sm py-3.5 px-7 rounded-xl justify-center"
+                >
+                  Open my plan <ArrowRight className="w-4 h-4" />
+                </Link>
+                <ShareButton
+                  path={`/plan/${picked.slug}`}
+                  title={`My ${picked.label} plan on StackRadar`}
+                  text={`${picked.outcome} — the right tools in the right order, each with the best free video. Free on StackRadar 👇`}
+                  label="Share my plan"
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

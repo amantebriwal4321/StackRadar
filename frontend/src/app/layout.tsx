@@ -23,10 +23,25 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StackRadar — Immersive Real-Time Tech Intelligence",
+  // Absolute base so page-level OG image paths (/api/og?...) resolve when a link
+  // is unfurled off-site. Override via NEXT_PUBLIC_SITE_URL in production.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  title: "StackRadar — Learn the right tech, in the right order",
   description:
-    "AI-powered tech intelligence platform. Track trending technologies, explore learning roadmaps, and discover what to learn next.",
-  keywords: ["tech trends", "AI", "machine learning", "cybersecurity", "cloud native", "roadmap", "developer tools"],
+    "Free, sequenced learning roadmaps ranked by live momentum data — the right tools in the right order, each with the single best free video. Pick your career goal and get your 5-minute plan.",
+  keywords: ["tech trends", "AI", "machine learning", "cybersecurity", "cloud native", "roadmap", "developer tools", "learn to code", "career roadmap"],
+  openGraph: {
+    title: "Learn the right tech, in the right order",
+    description: "Free learning roadmaps ranked by live data — the best free video for every step. Get your 5-minute career plan.",
+    images: [{ url: "/api/og", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Learn the right tech, in the right order",
+    description: "Free learning roadmaps ranked by live data — the best free video for every step.",
+    images: ["/api/og"],
+  },
 };
 
 export default function RootLayout({
