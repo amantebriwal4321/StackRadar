@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Star, Sparkles, Check, Flame, Play, ListVideo } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Star, Sparkles, Check, Flame, Play, ListVideo, Youtube } from "lucide-react";
 import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
 import { fetchRoadmap, fetchProgress, toggleProgressStep, type Roadmap } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
@@ -367,6 +367,21 @@ export default function RoadmapPage() {
                   <p className="text-xs md:text-sm text-[var(--c-ink-2)] leading-relaxed font-light font-mono">
                     {step.description}
                   </p>
+
+                  {/* Every step gets a YouTube suggestion — including the
+                      foundational steps that have no tracked tool — so a learner
+                      always has a "watch this" path. Search deep-link: always
+                      valid, and honest that it's a search, not one hand-picked
+                      video (the per-tool "Best course" buttons below are the
+                      curated picks). */}
+                  <a
+                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(step.title + " full tutorial")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-1 px-3 py-1.5 rounded-lg border border-indigo-500/20 bg-[var(--accent-1)]/10 text-[11px] font-mono font-bold text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors"
+                  >
+                    <Youtube className="w-3.5 h-3.5" /> Watch this on YouTube
+                  </a>
 
                   {/* Connected Resources */}
                   {step.resources && step.resources.length > 0 && (
