@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
 import { Flame, ArrowRight, Target, Map, CheckCircle2 } from "lucide-react";
 import { fetchProgressSummary, type ProgressSummary } from "@/data/trends";
+import NotifyOptIn from "@/components/NotifyOptIn";
 
 /**
  * The daily hook.
@@ -171,6 +172,11 @@ export default function ContinueLearning() {
               <Map className="w-3.5 h-3.5" /> {summary!.active.length} active tracks
             </Link>
           )}
+        </div>
+
+        {/* Retention hook — bring them back tomorrow with their next lesson. */}
+        <div className="pt-4 border-t border-indigo-500/10">
+          <NotifyOptIn />
         </div>
       </div>
     </div>

@@ -250,6 +250,40 @@ export async function fetchProgressSummary(
   return res.json();
 }
 
+// ── Daily nudge opt-in ──
+export interface NotificationStatus { subscribed: boolean; email: string | null }
+
+export async function getNotificationStatus(userId: string, token?: string | null): Promise<NotificationStatus> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/notifications/status?user_id=${encodeURIComponent(userId)}`,
+    { cache: "no-store", headers: authHeaders(token) }
+  );
+  if (!res.ok) throw new Error("Failed to fetch notification status");
+  return res.json();
+}
+
+export async function subscribeNotifications(userId: string, email: string, token?: string | null): Promise<NotificationStatus> {
+  const res = await fetch(`${API_BASE}/api/v1/notifications/subscribe?user_id=${encodeURIComponent(userId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify({ user_id: userId, email }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to subscribe");
+  return res.json();
+}
+
+export async function unsubscribeNotifications(userId: string, token?: string | null): Promise<NotificationStatus> {
+  const res = await fetch(`${API_BASE}/api/v1/notifications/unsubscribe?user_id=${encodeURIComponent(userId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify({ user_id: userId }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to unsubscribe");
+  return res.json();
+}
+
 // Learning path types
 export interface LearningPathTool {
   slug: string;

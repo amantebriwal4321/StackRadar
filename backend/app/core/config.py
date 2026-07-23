@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     # GROQ (for sentiment analysis)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 
+    # DAILY NUDGE — retention loop. When RESEND_API_KEY is set, the daily-digest
+    # job emails opted-in users their next lesson; empty → the job builds the
+    # digests but sends nothing (safe no-op), so nothing is ever emailed until a
+    # provider is deliberately configured. DIGEST_FROM is the sender address.
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    DIGEST_FROM: str = os.getenv("DIGEST_FROM", "StackRadar <onboarding@resend.dev>")
+    SITE_URL: str = os.getenv("SITE_URL", "http://localhost:3000")
+
     # CLERK — auth. The publishable key is public (it ships to the browser), so
     # it's safe to keep here; the backend needs only this to derive Clerk's
     # public JWKS and verify session-token signatures. No secret required.

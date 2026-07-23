@@ -169,6 +169,24 @@ class ToolResource(Base):
     fetched_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
+class NotificationPref(Base):
+    """A user's opt-in for the daily learning nudge.
+
+    Email + opt-in only, keyed by Clerk user id. A row exists only for users who
+    explicitly asked to be reminded; `unsubscribed_at` soft-disables without
+    losing the record. No email is ever sent unless a provider is configured.
+    """
+    __tablename__ = "notification_prefs"
+
+    id             = Column(Integer, primary_key=True, index=True)
+    user_id        = Column(String, unique=True, index=True, nullable=False)
+    email          = Column(String, nullable=False)
+    daily_opt_in   = Column(Boolean, default=True)
+    unsubscribed_at = Column(DateTime(timezone=True), nullable=True)
+    last_sent_at   = Column(DateTime(timezone=True), nullable=True)
+    created_at     = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 class ToolRoadmap(Base):
     """Learning roadmap for a tool or domain."""
     __tablename__ = "tool_roadmaps"

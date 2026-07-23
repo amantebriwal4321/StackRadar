@@ -26,7 +26,7 @@ from sqlalchemy import func
 from datetime import date, timedelta, datetime, timezone
 from app.db.session import get_db
 from app.core.config import settings
-from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain, UserProgress, ToolResource
+from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain, UserProgress, ToolResource, NotificationPref
 from app.services.scheduler import scrape_status
 from app.services.scoring import calculate_star_velocity
 from app.services import resources as resources_svc
@@ -661,6 +661,13 @@ def get_progress_summary(
 ):
     """Everything the 'Continue learning' hero needs in one call."""
     user_id = _require_user(verified, user_id)
+    return build_progress_summary(db, user_id)
+
+
+def build_progress_summary(db: Session, user_id: str) -> dict:
+    """Streak + active roadmaps + today's focus for a user. Shared by the
+    summary endpoint and the daily-digest job so the nudge shows exactly what
+    the in-app hero does."""
     rows = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
     streak = _calculate_streak([r.completed_at for r in rows if r.completed_at])
 
@@ -771,6 +778,92 @@ def toggle_progress(
     db.commit()
 
     return {**_progress_for(db, roadmap_slug, user_id), "step": step, "completed": completed}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DAILY NUDGE  (the retention loop)
+#
+# Opt-in only, auth-gated. No email is ever sent unless RESEND_API_KEY is set;
+# the batch is triggered by an external daily cron hitting the admin endpoint.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+@router.post("/notifications/subscribe")
+def subscribe_notifications(
+    payload: dict,
+    user_id: Optional[str] = Query(None),
+    verified: Optional[str] = Depends(verified_clerk_user),
+    db: Session = Depends(get_db),
+):
+    """Opt the caller into the daily learning nudge (upsert their email)."""
+    uid = _require_user(verified, user_id or (payload or {}).get("user_id"))
+    email = ((payload or {}).get("email") or "").strip().lower()
+    if not _EMAIL_RE.match(email):
+        raise HTTPException(status_code=422, detail="A valid email is required")
+
+    pref = db.query(NotificationPref).filter(NotificationPref.user_id == uid).first()
+    if pref:
+        pref.email = email
+        pref.daily_opt_in = True
+        pref.unsubscribed_at = None
+    else:
+        db.add(NotificationPref(user_id=uid, email=email, daily_opt_in=True))
+    db.commit()
+    return {"subscribed": True, "email": email}
+
+
+@router.get("/notifications/status")
+def notification_status(
+    user_id: Optional[str] = Query(None),
+    verified: Optional[str] = Depends(verified_clerk_user),
+    db: Session = Depends(get_db),
+):
+    """Whether the caller is opted in, and to which email."""
+    uid = _require_user(verified, user_id)
+    pref = db.query(NotificationPref).filter(NotificationPref.user_id == uid).first()
+    subscribed = bool(pref and pref.daily_opt_in and pref.unsubscribed_at is None)
+    return {"subscribed": subscribed, "email": pref.email if pref else None}
+
+
+@router.post("/notifications/unsubscribe")
+def unsubscribe_notifications(
+    payload: dict = None,
+    user_id: Optional[str] = Query(None),
+    verified: Optional[str] = Depends(verified_clerk_user),
+    db: Session = Depends(get_db),
+):
+    """Turn off the daily nudge without deleting the record."""
+    uid = _require_user(verified, user_id or (payload or {}).get("user_id"))
+    pref = db.query(NotificationPref).filter(NotificationPref.user_id == uid).first()
+    if pref:
+        pref.daily_opt_in = False
+        pref.unsubscribed_at = datetime.now(timezone.utc)
+        db.commit()
+    return {"subscribed": False}
+
+
+@router.post("/admin/send-daily-digests")
+async def send_daily_digests(
+    x_admin_key: str = Header(None, alias="X-Admin-Key"),
+    db: Session = Depends(get_db),
+):
+    """Build and send the daily nudge to every opted-in user.
+
+    Point an external daily cron (cron-job.org, a GitHub Action, Vercel cron) at
+    this with the X-Admin-Key header. Sends nothing unless RESEND_API_KEY is set
+    — otherwise it just reports what it *would* have sent.
+    """
+    expected = os.getenv("ADMIN_API_KEY", "")
+    if not expected:
+        raise HTTPException(status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY.")
+    if x_admin_key != expected:
+        raise HTTPException(status_code=403, detail="Invalid admin key.")
+
+    from app.services.notifications import run_daily_digests
+    result = await run_daily_digests(db)
+    return {"status": "ok", "provider_configured": bool(settings.RESEND_API_KEY), **result}
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
