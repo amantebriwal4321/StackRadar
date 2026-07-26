@@ -13,6 +13,10 @@ import { gsap } from "gsap";
 // intelligence that powers those roadmaps.
 const navLinks = [
   { href: "/", label: "console" },
+  // The conversion front door — an anchor into the goal chooser on the landing
+  // page, reachable from anywhere. Never matches the active-state check, which
+  // is fine: it's an action, not a place.
+  { href: "/#five-minute-plan", label: "5-min plan" },
   { href: "/roadmaps", label: "roadmaps" },
   { href: "/explore", label: "explore" },
   { href: "/trends", label: "trends" },

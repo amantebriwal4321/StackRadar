@@ -411,11 +411,12 @@ export default function HomePage() {
               — the right tools in the right order, each with the single best free video and a tracker to keep your streak.
             </p>
 
-            {/* Primary CTA — roadmap is the main attraction; data is the proof */}
+            {/* Primary CTA — the 5-minute plan is the product's front door, but it
+                sits below the 90vh hero; this makes it one click from first paint. */}
             <div className="hero-anim-item flex flex-wrap gap-3">
-              <Link href="/roadmaps" prefetch className="btn-primary text-sm py-3 px-6 rounded-xl">
-                <Compass className="w-4 h-4" /> Start a roadmap <ArrowRight className="w-4 h-4" />
-              </Link>
+              <a href="#five-minute-plan" className="btn-primary text-sm py-3 px-6 rounded-xl">
+                <Compass className="w-4 h-4" /> Get my 5-minute plan <ArrowRight className="w-4 h-4" />
+              </a>
               <Link
                 href="/trends"
                 prefetch
@@ -543,7 +544,9 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 1.5: 5-MINUTE PLAN — the conversion front door
          ══════════════════════════════════════════ */}
-      <section className="max-w-5xl mx-auto px-6 -mt-6 md:-mt-4 mb-8 relative z-20 section-reveal">
+      {/* scroll-mt clears the fixed navbar when arriving via the #five-minute-plan
+          anchor (hero CTA + navbar both point here). */}
+      <section id="five-minute-plan" className="max-w-5xl mx-auto px-6 -mt-6 md:-mt-4 mb-8 relative z-20 section-reveal scroll-mt-24">
         <FiveMinutePlan />
       </section>
 

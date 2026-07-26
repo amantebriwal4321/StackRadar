@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { MapPin, Compass, Search, PackageOpen, Loader2 } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
 import RoadmapCard from "@/components/RoadmapCard";
+import FiveMinutePlan from "@/components/FiveMinutePlan";
 import { type Roadmap, fetchRoadmaps } from "@/data/trends";
 
 export default function RoadmapsIndexPage() {
@@ -73,6 +74,10 @@ export default function RoadmapsIndexPage() {
             </div>
           </div>
         </div>
+
+        {/* Goal-first entry — most visitors know their career goal, not which
+            of eight domains maps to it. The chooser answers that in one tap. */}
+        <FiveMinutePlan />
 
         {/* Results Info */}
         <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 shrink-0">
