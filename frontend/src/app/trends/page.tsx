@@ -360,7 +360,7 @@ export default function TrendsPage() {
                         contentStyle={chartTooltipStyle}
                         itemStyle={chartItemStyle}
                         labelStyle={chartLabelStyle}
-                        formatter={(value: number | string, name: string) => [value, name === "score" ? "Momentum Score" : name]}
+                        formatter={(value: number | string | undefined, name: string | undefined) => [value ?? "", name === "score" ? "Momentum Score" : name ?? ""]}
                         labelFormatter={(label) => {
                           const item = chartData.find(d => d.name === label);
                           return item?.fullName || label;
@@ -387,7 +387,7 @@ export default function TrendsPage() {
                 <div className="col-span-2 text-center">TREND SCORE</div>
                 <div className="col-span-2">GROWTH STAGE</div>
                 <div className="col-span-2 text-center">7D HISTORICAL</div>
-                <div className="col-span-2 text-right">TELEMETRY SCORE</div>
+                <div className="col-span-2 text-right">SCORE</div>
               </div>
 
               {/* Data Rows */}

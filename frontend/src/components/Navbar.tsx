@@ -11,15 +11,17 @@ import { gsap } from "gsap";
 // Roadmaps is the product's main attraction, so it sits first after the
 // console; the momentum surfaces (explore/trends/compare) follow as the
 // intelligence that powers those roadmaps.
+// Student-first labels: a first-time visitor should know where a link goes
+// without learning our vocabulary ("console", "explore" were insider words).
 const navLinks = [
-  { href: "/", label: "console" },
+  { href: "/", label: "home" },
   // The conversion front door — an anchor into the goal chooser on the landing
   // page, reachable from anywhere. Never matches the active-state check, which
   // is fine: it's an action, not a place.
-  { href: "/#five-minute-plan", label: "5-min plan" },
+  { href: "/#five-minute-plan", label: "my plan" },
   { href: "/roadmaps", label: "roadmaps" },
-  { href: "/explore", label: "explore" },
-  { href: "/trends", label: "trends" },
+  { href: "/explore", label: "what to learn" },
+  { href: "/trends", label: "what's rising" },
   { href: "/compare", label: "compare" },
   { href: "/about", label: "about" },
 ];

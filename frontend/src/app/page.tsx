@@ -77,7 +77,7 @@ const decisionPrompts = [
   { icon: "🧠", label: "Is AI/ML worth it right now?", href: "/roadmaps" },
   { icon: "📈", label: "What's trending this week?", href: "/trends" },
   { icon: "⚖️", label: "Compare two technologies", href: "/compare" },
-  { icon: "🚀", label: "Where are the startup gaps?", href: "/trends" },
+  { icon: "💼", label: "Which skills get me hired?", href: "/explore" },
   { icon: "🗺️", label: "Browse learning roadmaps", href: "/roadmaps" },
 ];
 
@@ -85,32 +85,32 @@ const decisionPrompts = [
 const processSteps = [
   {
     num: "01",
-    title: "Ingest Stream",
-    desc: "We crawl GitHub, Reddit, HN, and developer newsletters continuously to capture discussion peaks and code metrics.",
+    title: "We listen to the industry",
+    desc: "GitHub, Reddit and Hacker News, tracked around the clock — what developers actually use, not what ads say.",
     icon: Database,
     gradient: "from-indigo-500 to-indigo-500",
     color: "text-indigo-600",
   },
   {
     num: "02",
-    title: "Analyze & NLP",
-    desc: "Our models parse discussions to assign positive/negative sentiment labels and classify tool relevance.",
+    title: "We separate signal from hype",
+    desc: "Real developer discussions get analyzed so genuine adoption stands out from marketing noise.",
     icon: Brain,
     gradient: "from-indigo-500 to-indigo-500",
     color: "text-indigo-600",
   },
   {
     num: "03",
-    title: "Score Momentum",
-    desc: "Technologies are ranked dynamically by delta change rates, star ratios, and category concentration percentiles.",
+    title: "Every tool gets a live score",
+    desc: "A 0–100 score from real usage and growth — so “worth learning” is measured, not guessed.",
     icon: Activity,
     gradient: "from-indigo-500 to-indigo-500",
     color: "text-indigo-600",
   },
   {
     num: "04",
-    title: "Deliver Roadmap",
-    desc: "We compile sequence learning paths and detailed tech profiles for developers to construct decisions.",
+    title: "Your roadmap stays current",
+    desc: "The learning path re-ranks itself from that data, so you always study what matters right now.",
     icon: Rocket,
     gradient: "from-indigo-500 to-emerald-500",
     color: "text-indigo-600",
@@ -171,7 +171,7 @@ export default function HomePage() {
         setOverview(overviewData);
       } catch (err: any) {
         console.error("Error loading homepage data:", err);
-        setError(err.message || "Failed to fetch StackRadar telemetry.");
+        setError(err.message || "Failed to load live data.");
       } finally {
         setIsLoading(false);
       }
@@ -687,7 +687,7 @@ export default function HomePage() {
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
               <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
-              <Flame className="w-4 h-4" /> Momentum Delta
+              <Flame className="w-4 h-4" /> Rising this week
             </div>
             <h2 className="text-3xl md:text-4xl font-black font-display tracking-tight">
               Rising — worth learning now
@@ -782,7 +782,7 @@ export default function HomePage() {
               <div>
                 <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest mb-3">
                   <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
-                  Interactive Telemetry
+                  Live comparison
                 </div>
                 <h3 className="text-3xl md:text-4xl font-black font-display tracking-tight mb-4">
                   Momentum<br/>
@@ -1045,7 +1045,7 @@ export default function HomePage() {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
             </div>
             <div>
-              <p className="text-xs font-mono text-[var(--c-ink-2)]/50 uppercase tracking-wider">TELEMETRY STREAM</p>
+              <p className="text-xs font-mono text-[var(--c-ink-2)]/50 uppercase tracking-wider">LIVE DATA FEED</p>
               <h3 className="text-sm font-bold text-[var(--c-ink)]">Live Parser Stream Active</h3>
             </div>
           </div>
