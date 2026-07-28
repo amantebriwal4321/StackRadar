@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Sparkles, CheckCircle2, PlayCircle, Flame } from "lucide-react";
 import { GOALS, type Goal } from "@/data/goals";
 import ShareButton from "@/components/ShareButton";
+import { fetchRoadmap, type Roadmap } from "@/data/trends";
 
 /**
  * The five-minute front door.
@@ -13,12 +14,36 @@ import ShareButton from "@/components/ShareButton";
  * A student who lands here shouldn't have to understand "momentum percentiles"
  * to get value — they have one question: "what do I actually learn for the
  * career I want?" This asks exactly that in one tap and hands back a concrete
- * plan (a real roadmap: sequenced steps + the best free video per tool +
- * a streak). It's the USP compressed into a single, shareable moment.
+ * plan. The result screen shows the REAL first steps of the actual roadmap —
+ * live data, not a brochure — because "here is your step 1" converts where
+ * "trust us, there's a plan" doesn't.
+ *
+ * Deep link: /?plan=<roadmap-slug> lands with that goal pre-picked, so shared
+ * links can open straight onto a plan.
  */
 
 export default function FiveMinutePlan() {
   const [picked, setPicked] = useState<Goal | null>(null);
+  const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
+  const cache = useRef<Map<string, Roadmap>>(new Map());
+
+  const pick = useCallback((g: Goal) => {
+    setPicked(g);
+    const hit = cache.current.get(g.slug);
+    setRoadmap(hit ?? null);
+    if (!hit) {
+      fetchRoadmap(g.slug)
+        .then((r) => { cache.current.set(g.slug, r); setRoadmap(r); })
+        .catch(() => { /* preview simply falls back to the generic tiles */ });
+    }
+  }, []);
+
+  // Deep link: ?plan=<slug> pre-picks a goal (used by shared links).
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("plan");
+    const goal = slug && GOALS.find((g) => g.slug === slug);
+    if (goal) pick(goal);
+  }, [pick]);
 
   return (
     <div className="tech-panel rounded-3xl p-6 md:p-10 relative overflow-hidden">
@@ -54,7 +79,7 @@ export default function FiveMinutePlan() {
                 {GOALS.map((g, i) => (
                   <motion.button
                     key={g.slug}
-                    onClick={() => setPicked(g)}
+                    onClick={() => pick(g)}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05, duration: 0.4 }}
@@ -95,19 +120,58 @@ export default function FiveMinutePlan() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-3 gap-3 mb-6">
-                {[
-                  { icon: CheckCircle2, t: "Sequenced steps", d: "The right order, not a random pile" },
-                  { icon: PlayCircle, t: "Best free video each", d: "Hand-picked, checked to be live" },
-                  { icon: Flame, t: "Streak tracking", d: "One thing a day, keep momentum" },
-                ].map((f) => (
-                  <div key={f.t} className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60">
-                    <f.icon className="w-5 h-5 text-indigo-600 mb-2" />
-                    <p className="text-sm font-bold text-[var(--c-ink)]">{f.t}</p>
-                    <p className="text-xs text-[var(--c-ink-2)] font-light mt-0.5">{f.d}</p>
+              {/* The real plan, previewed — live roadmap steps, not a brochure. */}
+              {roadmap?.steps?.length ? (
+                <div className="mb-6">
+                  <p className="text-[11px] font-mono font-bold text-[var(--c-ink-2)] uppercase tracking-widest mb-3">
+                    Your first steps
+                  </p>
+                  <div className="space-y-2">
+                    {roadmap.steps.slice(0, 3).map((s, i) => (
+                      <motion.div
+                        key={s.step}
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.15 + i * 0.12, duration: 0.35 }}
+                        className="flex items-center gap-3 p-3 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60"
+                      >
+                        <span className="w-7 h-7 rounded-lg bg-indigo-600/10 text-indigo-600 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                          {s.step}
+                        </span>
+                        <span className="text-sm font-bold text-[var(--c-ink)] flex-1 leading-tight">{s.title}</span>
+                        <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--c-ink-2)]/60 shrink-0">{s.level}</span>
+                      </motion.div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  {roadmap.steps.length > 3 && (
+                    <p className="text-[11px] font-mono text-[var(--c-ink-2)]/70 mt-2 ml-1">
+                      + {roadmap.steps.length - 3} more steps on the full roadmap
+                    </p>
+                  )}
+                  {/* Trust row — what comes attached to every step */}
+                  <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-4 text-[11px] font-mono text-[var(--c-ink-2)]">
+                    <span className="flex items-center gap-1.5"><PlayCircle className="w-3.5 h-3.5 text-indigo-600" /> best free video each step</span>
+                    <span className="flex items-center gap-1.5"><Flame className="w-3.5 h-3.5 text-[#B54708]" /> streak tracking</span>
+                    <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-[#12B76A]" /> check off as you go</span>
+                  </div>
+                </div>
+              ) : (
+                /* Roadmap still loading (or unreachable) — hold the space with the
+                   generic promise so the layout doesn't jump. */
+                <div className="grid sm:grid-cols-3 gap-3 mb-6">
+                  {[
+                    { icon: CheckCircle2, t: "Sequenced steps", d: "The right order, not a random pile" },
+                    { icon: PlayCircle, t: "Best free video each", d: "Hand-picked, checked to be live" },
+                    { icon: Flame, t: "Streak tracking", d: "One thing a day, keep momentum" },
+                  ].map((f) => (
+                    <div key={f.t} className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60">
+                      <f.icon className="w-5 h-5 text-indigo-600 mb-2" />
+                      <p className="text-sm font-bold text-[var(--c-ink)]">{f.t}</p>
+                      <p className="text-xs text-[var(--c-ink-2)] font-light mt-0.5">{f.d}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
