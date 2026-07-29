@@ -103,8 +103,9 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
   return (
     <div className="pb-20">
       {/* ══════════ HERO ══════════ */}
-      <section className="relative px-5 pt-4 pb-8">
-        {/* soft accent wash */}
+      <section className="relative px-5 pt-4 pb-8 overflow-hidden">
+        {/* soft accent wash + faint HUD grid for depth (Neon Noir identity) */}
+        <div className="hud-grid absolute inset-0 opacity-[0.14] pointer-events-none [mask-image:linear-gradient(to_bottom,black,transparent_92%)]" />
         <div className="absolute -top-10 -right-16 w-64 h-64 rounded-full bg-[var(--accent-2)]/[0.10] blur-3xl pointer-events-none" />
         <div className="absolute top-24 -left-20 w-56 h-56 rounded-full bg-[var(--accent-1)]/[0.08] blur-3xl pointer-events-none" />
 
@@ -152,42 +153,49 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             </Link>
           </motion.div>
 
-          {/* Floating momentum chips — the "alive" visual, cheap on GPU */}
+          {/* Live momentum rail — tappable tool chips in a tidy edge-to-edge
+              scroll strip (was a wrapping cloud). Still animated, still cheap. */}
           {chips.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-7">
-              {chips.map((t, i) => (
-                <motion.span
-                  key={t.slug}
-                  initial={canAnimate ? { opacity: 0, scale: 0.9 } : false}
-                  animate={canAnimate ? { opacity: 1, scale: 1, y: [0, -4, 0] } : { opacity: 1, scale: 1 }}
-                  transition={{
-                    opacity: { delay: 0.25 + i * 0.06, duration: 0.4 },
-                    scale: { delay: 0.25 + i * 0.06, duration: 0.4 },
-                    y: { repeat: Infinity, duration: 3 + i * 0.4, ease: "easeInOut", delay: i * 0.2 },
-                  }}
-                  onClick={() => router.push(`/tools/${t.slug}`)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-indigo-500/15 bg-[var(--c-surface)]/80 text-[11px] font-mono font-bold text-[var(--c-ink)] shadow-sm active:scale-95 transition-transform"
-                >
-                  <span className="text-sm leading-none">{t.icon}</span>
-                  {t.name}
-                  <span className="text-indigo-600">{Math.round(t.score)}</span>
-                </motion.span>
-              ))}
+            <div className="-mx-5 mb-6">
+              <div className="px-5 flex items-center gap-2 mb-2.5">
+                <span className="w-6 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
+                <span className="text-[9px] font-mono font-bold text-indigo-600/70 uppercase tracking-[0.18em]">Live momentum · tap to open</span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto scrollbar-none snap-x px-5 pb-1">
+                {chips.map((t, i) => (
+                  <motion.button
+                    key={t.slug}
+                    initial={canAnimate ? { opacity: 0, scale: 0.92 } : false}
+                    animate={canAnimate ? { opacity: 1, scale: 1, y: [0, -3, 0] } : { opacity: 1, scale: 1 }}
+                    transition={{
+                      opacity: { delay: 0.25 + i * 0.06, duration: 0.4 },
+                      scale: { delay: 0.25 + i * 0.06, duration: 0.4 },
+                      y: { repeat: Infinity, duration: 3 + i * 0.4, ease: "easeInOut", delay: i * 0.2 },
+                    }}
+                    onClick={() => router.push(`/tools/${t.slug}`)}
+                    className="snap-start shrink-0 inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-2 rounded-full border border-indigo-500/15 bg-[var(--c-surface)]/80 text-[12px] font-mono font-bold text-[var(--c-ink)] shadow-sm active:scale-95 transition-transform"
+                  >
+                    <span className="text-sm leading-none">{t.icon}</span>
+                    {t.name}
+                    <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-indigo-600/12 text-indigo-600 text-[10px] leading-none">{Math.round(t.score)}</span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Live stats row */}
-          <div className="grid grid-cols-3 gap-3">
+          {/* Live stats — one cohesive terminal-style bar (was 3 loose boxes) */}
+          <div className="flex items-stretch rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)]/60 overflow-hidden divide-x divide-[var(--c-border)]">
             {[
               { label: "Technologies", value: stats.tools },
               { label: "GitHub stars", value: stats.stars >= 1000 ? `${(stats.stars / 1000).toFixed(0)}k` : stats.stars },
               { label: "Live sources", value: stats.sources },
             ].map((s) => (
-              <div key={s.label} className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface)]/60 px-3 py-3 text-center">
-                <div className="text-xl font-black font-mono text-[var(--c-ink)]">
+              <div key={s.label} className="flex-1 px-3 py-3.5 text-center">
+                <div className="text-xl font-black font-mono text-[var(--c-ink)] leading-none mb-1">
                   {isLoading ? <span className="text-[var(--c-ink-2)]/40">—</span> : s.value}
                 </div>
-                <div className="text-[9px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-wider mt-0.5">{s.label}</div>
+                <div className="text-[9px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-wider">{s.label}</div>
               </div>
             ))}
           </div>
@@ -255,6 +263,8 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           </div>
         )}
       </section>
+
+      <div className="glow-line mx-5 mb-10" />
 
       {/* ══════════ RISING THIS WEEK — horizontal snap carousel ══════════ */}
       <section className="mb-10">
@@ -373,6 +383,8 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           })}
         </div>
       </section>
+
+      <div className="glow-line mx-5 mb-10" />
 
       {/* ══════════ CTA ══════════ */}
       <section className="px-5">
