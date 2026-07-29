@@ -33,6 +33,7 @@ import LiveConstellation from "@/components/3d/LiveConstellation";
 import DashboardShell from "@/components/DashboardShell";
 import ContinueLearning from "@/components/ContinueLearning";
 import FiveMinutePlan from "@/components/FiveMinutePlan";
+import MobileHome from "@/components/MobileHome";
 
 /* ─── Helper for Relative Time ─── */
 function getRelativeTime(isoString: string): string {
@@ -128,6 +129,21 @@ export default function HomePage() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  /* ─── Device split ───
+     Render EITHER the mobile tree OR the desktop tree — never both. A CSS-only
+     `hidden`/`md:block` split would still mount the desktop's R3F WebGL
+     constellation offscreen on phones (janking low-end devices); this keeps the
+     heavy desktop bits from ever mounting on mobile. Starts false so SSR/first
+     paint matches, then corrects post-hydration. */
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   // Interactive Comparison Framework State — index into the real top-3 tools
   const [compareIdx, setCompareIdx] = useState(0);
@@ -292,6 +308,20 @@ export default function HomePage() {
     sources: overview?.source_count || 5,
     domains: overview?.domains || domains.length || 0,
   }), [overview, tools, domains]);
+
+  if (isMobile) {
+    return (
+      <DashboardShell fullWidth flushX>
+        <MobileHome
+          tools={tools}
+          domains={domains}
+          movers={topGainers}
+          overview={overview}
+          isLoading={isLoading}
+        />
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell fullWidth>

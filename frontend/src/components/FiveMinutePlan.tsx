@@ -27,6 +27,20 @@ export default function FiveMinutePlan() {
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const cache = useRef<Map<string, Roadmap>>(new Map());
 
+  /* Fail-safe entrance: the goal buttons must be visible even if the entrance
+     animation never fires (hidden tab, reduced-motion, stalled rAF). Gate the
+     hidden `initial` on a confirmed-visible tab; otherwise paint them visible.
+     This is the conversion centerpiece — it can never be blank. */
+  const [canAnimate, setCanAnimate] = useState(false);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    if (document.visibilityState === "visible") { setCanAnimate(true); return; }
+    const onVis = () => { if (document.visibilityState === "visible") setCanAnimate(true); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   const pick = useCallback((g: Goal) => {
     setPicked(g);
     const hit = cache.current.get(g.slug);
@@ -62,7 +76,7 @@ export default function FiveMinutePlan() {
           {!picked ? (
             <motion.div
               key="chooser"
-              initial={{ opacity: 0, y: 8 }}
+              initial={canAnimate ? { opacity: 0, y: 8 } : false}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.35 }}
@@ -80,7 +94,7 @@ export default function FiveMinutePlan() {
                   <motion.button
                     key={g.slug}
                     onClick={() => pick(g)}
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={canAnimate ? { opacity: 0, y: 12 } : false}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05, duration: 0.4 }}
                     className="group flex items-center gap-3 p-4 rounded-2xl border border-indigo-500/15 bg-[var(--c-surface)]/70 hover:border-indigo-400/50 hover:bg-[var(--c-surface-2)] hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 text-left active:scale-[0.98] cursor-pointer"
@@ -97,7 +111,7 @@ export default function FiveMinutePlan() {
           ) : (
             <motion.div
               key="result"
-              initial={{ opacity: 0, scale: 0.97 }}
+              initial={canAnimate ? { opacity: 0, scale: 0.97 } : false}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
@@ -130,7 +144,7 @@ export default function FiveMinutePlan() {
                     {roadmap.steps.slice(0, 3).map((s, i) => (
                       <motion.div
                         key={s.step}
-                        initial={{ opacity: 0, x: -12 }}
+                        initial={canAnimate ? { opacity: 0, x: -12 } : false}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.15 + i * 0.12, duration: 0.35 }}
                         className="flex items-center gap-3 p-3 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60"

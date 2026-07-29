@@ -7,11 +7,14 @@ interface DashboardShellProps {
   children: React.ReactNode;
   /** Hide the sidebar and use full-width layout */
   fullWidth?: boolean;
+  /** Drop horizontal padding so the child controls all x-spacing (edge-to-edge
+      mobile layouts / full-bleed carousels). Top padding (navbar clearance) stays. */
+  flushX?: boolean;
   /** Per-page accent theme: "teal" | "graphite" | "clay" | "wine" (comparison mode) */
   theme?: "teal" | "graphite" | "clay" | "wine";
 }
 
-export default function DashboardShell({ children, fullWidth = false, theme }: DashboardShellProps) {
+export default function DashboardShell({ children, fullWidth = false, flushX = false, theme }: DashboardShellProps) {
   const spotlightRef = useRef<HTMLDivElement>(null);
 
   // Cursor spotlight tracking (inspired by XR reference)
@@ -61,7 +64,7 @@ export default function DashboardShell({ children, fullWidth = false, theme }: D
             renders UNDERNEATH the header — most pages hid this behind large hero
             padding, but any page whose first element sits high (e.g. the roadmap
             back-link) collided with the nav links. */}
-        <div className={`relative z-10 mx-auto ${fullWidth ? 'max-w-[1400px]' : 'max-w-6xl'} px-4 md:px-6 lg:px-8 pt-[5.5rem] md:pt-24 pb-6 md:pb-8`}>
+        <div className={`relative z-10 mx-auto ${fullWidth ? 'max-w-[1400px]' : 'max-w-6xl'} ${flushX ? 'px-0' : 'px-4 md:px-6 lg:px-8'} pt-[5.5rem] md:pt-24 pb-6 md:pb-8`}>
           {children}
         </div>
       </main>
