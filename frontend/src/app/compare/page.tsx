@@ -166,11 +166,11 @@ export default function ComparePage() {
           
           <div className="space-y-1">
             <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest block">
-              DIFFERENTIAL TELEMETRY VIEW
+              SIDE BY SIDE
             </span>
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-display flex items-center gap-3">
               <GitCompare className="w-8 h-8 text-indigo-600" />
-              <span className="text-text-primary">Compare Matrix</span>
+              <span className="text-text-primary">Compare technologies</span>
             </h1>
             <p className="text-[var(--c-ink-2)] text-sm font-light">
               Select 2 to 5 technologies from the scanner index. Shares links directly containing parameters.
