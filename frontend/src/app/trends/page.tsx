@@ -197,15 +197,21 @@ export default function TrendsPage() {
     }));
   }, [displayedTools]);
 
-  /* ─── GSAP List Stagger Entrance ─── */
+  /* ─── GSAP List Stagger Entrance ───
+     Guarded like the landing: on mobile / reduced-motion the rows are simply
+     visible (no opacity:0 start), so a phone never gets a stuck-hidden list. */
   useGSAP(() => {
-    if (isLoading) return;
-    
-    gsap.fromTo(
-      ".trend-list-row",
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 0.5, stagger: 0.05, ease: "power2.out" }
-    );
+    const mm = gsap.matchMedia();
+    mm.add("(max-width: 767px), (prefers-reduced-motion: reduce)", () => {
+      gsap.set(".trend-list-row", { opacity: 1, y: 0 });
+    });
+    mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
+      if (isLoading) return;
+      gsap.fromTo(".trend-list-row",
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.05, ease: "power2.out" });
+    });
+    return () => mm.revert();
   }, [isLoading, displayedTools]);
 
   // Aggregate stats for the header (fills the empty right side with real provenance)

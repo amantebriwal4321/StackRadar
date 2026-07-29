@@ -179,107 +179,62 @@ export default function HomePage() {
     initHomePage();
   }, []);
 
-  /* ─── GSAP Entrance Animations ─── */
+  /* ─── GSAP Entrance Animations ───
+     Split by device with matchMedia. The scroll-triggered reveals below start
+     content at opacity:0 and only show it when ScrollTrigger fires — which is
+     unreliable on mobile (address-bar resize, stale trigger positions), and was
+     leaving whole sections invisible and dead on phones. So on mobile and for
+     reduced-motion, we skip all of it and force everything visible/interactive.
+     The cinematic reveals stay desktop-only polish. */
+  const ALL_ANIM = ".hero-line, .hero-anim-item, .sphere-container, .section-reveal, .stagger-card, .process-step, .cta-section";
   useGSAP(() => {
-    if (isLoading) return;
+    const mm = gsap.matchMedia();
 
-    const tl = gsap.timeline();
-
-    // Hero title line-by-line reveal
-    tl.fromTo(
-      ".hero-line",
-      { y: 100, opacity: 0, rotateX: -15 },
-      { y: 0, opacity: 1, rotateX: 0, duration: 1.1, stagger: 0.12, ease: "power4.out" },
-      0.3
-    );
-
-    // Hero description & components
-    tl.fromTo(
-      ".hero-anim-item",
-      { y: 40, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.9, stagger: 0.1, ease: "power3.out" },
-      "-=0.6"
-    );
-
-    // 3D sphere area entrance
-    tl.fromTo(
-      ".sphere-container",
-      { scale: 0.8, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 1.2, ease: "power3.out" },
-      "-=0.8"
-    );
-
-    // Scroll-triggered section reveals
-    gsap.utils.toArray<HTMLElement>(".section-reveal").forEach((el) => {
-      gsap.fromTo(el,
-        { y: 60, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: el,
-            start: "top 85%",
-            toggleActions: "play none none none",
-          }
-        }
-      );
+    // ── Mobile / reduced-motion: everything visible immediately, no exceptions.
+    mm.add("(max-width: 767px), (prefers-reduced-motion: reduce)", () => {
+      gsap.set(ALL_ANIM, { opacity: 1, y: 0, x: 0, scale: 1, rotateX: 0, clearProps: "transform" });
     });
 
-    // Stagger card reveals
-    gsap.utils.toArray<HTMLElement>(".stagger-grid-trigger").forEach((trigger) => {
-      gsap.fromTo(
-        trigger.querySelectorAll(".stagger-card"),
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.7,
-          stagger: 0.1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger,
-            start: "top 80%",
-          }
-        }
-      );
+    // ── Desktop: the full cinematic entrance + scroll reveals.
+    mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
+      if (isLoading) return;
+
+      const tl = gsap.timeline();
+      tl.fromTo(".hero-line",
+        { y: 100, opacity: 0, rotateX: -15 },
+        { y: 0, opacity: 1, rotateX: 0, duration: 1.1, stagger: 0.12, ease: "power4.out" }, 0.3);
+      tl.fromTo(".hero-anim-item",
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.9, stagger: 0.1, ease: "power3.out" }, "-=0.6");
+      tl.fromTo(".sphere-container",
+        { scale: 0.8, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 1.2, ease: "power3.out" }, "-=0.8");
+
+      gsap.utils.toArray<HTMLElement>(".section-reveal").forEach((el) => {
+        gsap.fromTo(el, { y: 60, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1, ease: "power3.out",
+            scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play none none none" } });
+      });
+
+      gsap.utils.toArray<HTMLElement>(".stagger-grid-trigger").forEach((trigger) => {
+        gsap.fromTo(trigger.querySelectorAll(".stagger-card"), { y: 50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.7, stagger: 0.1, ease: "power2.out",
+            scrollTrigger: { trigger, start: "top 80%" } });
+      });
+
+      gsap.fromTo(".process-step", { y: 40, opacity: 0, scale: 0.95 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.7, stagger: 0.15, ease: "power3.out",
+          scrollTrigger: { trigger: ".process-section", start: "top 75%" } });
+
+      gsap.fromTo(".cta-section", { y: 60, opacity: 0, scale: 0.96 },
+        { y: 0, opacity: 1, scale: 1, duration: 1, ease: "power3.out",
+          scrollTrigger: { trigger: ".cta-section", start: "top 85%" } });
+
+      // Recompute trigger positions once layout + fonts have settled.
+      ScrollTrigger.refresh();
     });
 
-    // Process steps timeline
-    gsap.fromTo(
-      ".process-step",
-      { y: 40, opacity: 0, scale: 0.95 },
-      {
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        duration: 0.7,
-        stagger: 0.15,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ".process-section",
-          start: "top 75%",
-        }
-      }
-    );
-
-    // CTA section
-    gsap.fromTo(
-      ".cta-section",
-      { y: 60, opacity: 0, scale: 0.96 },
-      {
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        duration: 1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ".cta-section",
-          start: "top 85%",
-        }
-      }
-    );
+    return () => mm.revert();
   }, [isLoading]);
 
   /* ─── Dynamic Signal Tickers Content ─── */
@@ -382,7 +337,7 @@ export default function HomePage() {
             </motion.div>
 
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[0.92] font-display" style={{ perspective: "1000px" }}>
+            <h1 className="text-[2.5rem] sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[1.02] sm:leading-[0.92] font-display" style={{ perspective: "1000px" }}>
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">Learn the right tech,</span>
               </span>
