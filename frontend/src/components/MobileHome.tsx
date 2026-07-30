@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, ArrowRight, Compass, Star, Flame, Database,
   Brain, Activity, Rocket, Sparkles, ChevronRight, Zap,
@@ -100,8 +100,24 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
   // Light, GPU-cheap hero visual: top tools by score as floating momentum chips.
   const chips = [...tools].sort((a, b) => b.score - a.score).slice(0, 6);
 
+  /* Sticky action bar: once the 5-minute-plan section has scrolled ABOVE the
+     viewport, surface a persistent "get my plan" button so a deep-scrolling
+     visitor is always one tap from the conversion — the standard high-intent
+     mobile pattern. Hidden while the plan itself is on screen (no redundancy). */
+  const [showBar, setShowBar] = useState(false);
+  useEffect(() => {
+    const el = document.getElementById("plan-m");
+    if (!el) return;
+    // Scroll listener (not IntersectionObserver) so it fires reliably on every
+    // engine: show the bar once the plan's bottom edge is above the viewport.
+    const onScroll = () => setShowBar(el.getBoundingClientRect().bottom < 0);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isLoading]);
+
   return (
-    <div className="pb-20">
+    <div className="pb-28">
       {/* ══════════ HERO ══════════ */}
       <section className="relative px-5 pt-4 pb-8 overflow-hidden">
         {/* soft accent wash + faint HUD grid for depth (Neon Noir identity) */}
@@ -268,11 +284,16 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
 
       {/* ══════════ RISING THIS WEEK — horizontal snap carousel ══════════ */}
       <section className="mb-10">
-        <motion.div {...reveal} className="px-5 mb-4">
-          <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-bold uppercase tracking-widest mb-2">
-            <Flame className="w-4 h-4" /> Rising this week
+        <motion.div {...reveal} className="px-5 mb-4 flex items-end justify-between gap-3">
+          <div>
+            <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-bold uppercase tracking-widest mb-2">
+              <Flame className="w-4 h-4" /> Rising this week
+            </div>
+            <h2 className="text-2xl font-black font-display tracking-tight">Worth learning now</h2>
           </div>
-          <h2 className="text-2xl font-black font-display tracking-tight">Worth learning now</h2>
+          <Link href="/trends" prefetch className="shrink-0 text-[11px] font-mono font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-0.5 pb-1 active:opacity-70">
+            see all <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </motion.div>
 
         {isLoading ? (
@@ -407,6 +428,26 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           </div>
         </motion.div>
       </section>
+
+      {/* ══════════ STICKY ACTION BAR — persistent conversion CTA ══════════ */}
+      <AnimatePresence>
+        {showBar && (
+          <motion.div
+            initial={canAnimate ? { y: 90, opacity: 0 } : false}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 90, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 34 }}
+            className="fixed bottom-0 inset-x-0 z-40 px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-[var(--c-ground)] via-[var(--c-ground)]/95 to-transparent pointer-events-none"
+          >
+            <a
+              href="#plan-m"
+              className="btn-primary w-full py-4 rounded-2xl justify-center font-bold text-[15px] shadow-xl shadow-[var(--accent-1)]/30 pointer-events-auto"
+            >
+              <Compass className="w-5 h-5" /> Get my 5-minute plan <ArrowRight className="w-5 h-5" />
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
