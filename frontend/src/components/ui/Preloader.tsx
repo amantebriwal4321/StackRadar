@@ -77,11 +77,16 @@ export default function Preloader() {
         className="absolute bottom-0 left-0 w-full h-1/2 bg-[#141726] pointer-events-auto"
       />
 
-      {/* Progress text */}
-      <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
+      {/* Progress text — must exit WITH the split panels at 100%, otherwise it
+          lingers over the revealed page (the "100% floating on the hero" bug). */}
+      <motion.div
+        animate={progress === 100 ? { opacity: 0, scale: 0.96 } : { opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="relative z-10 flex flex-col items-center justify-center space-y-4"
+      >
         <motion.div
           initial={{ opacity: 0, y: 10 }}
-          animate={progress >= 40 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+          animate={progress >= 40 && progress < 100 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
           transition={{ duration: 0.5 }}
           className="text-sm font-bold tracking-[0.4em] font-display text-white/60 uppercase text-center"
         >
@@ -90,7 +95,7 @@ export default function Preloader() {
         <div className="text-7xl md:text-9xl font-black font-display gradient-text tracking-tighter leading-none select-none">
           {progress}%
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
