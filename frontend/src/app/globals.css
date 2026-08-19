@@ -184,6 +184,17 @@ body {
 }
 
 /* ─────────────────────────────────────────────
+   FIRST-VISIT PRELOADER
+   Hidden by default; shown only while <html> carries `sr-preloading`, which an
+   inline <head> script sets BEFORE first paint for first-time visitors. This is
+   what stops the home page from flashing in ahead of the loader.
+   ───────────────────────────────────────────── */
+#sr-preloader { display: none; }
+.sr-preloading #sr-preloader { display: flex; }
+.sr-preloading,
+.sr-preloading body { overflow: hidden; }
+
+/* ─────────────────────────────────────────────
    GLASS / SURFACES — light frosted
    ───────────────────────────────────────────── */
 .glass-panel {

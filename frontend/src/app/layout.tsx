@@ -64,6 +64,14 @@ export default function RootLayout({
                     document.documentElement.classList.remove('dark');
                   }
                 } catch (_) {}
+                // Decide the first-visit loader BEFORE first paint so the home
+                // page never flashes in ahead of it. Returning (same-session)
+                // visitors get no class, so the loader stays hidden.
+                try {
+                  if (!sessionStorage.getItem('stackradar_visited')) {
+                    document.documentElement.classList.add('sr-preloading');
+                  }
+                } catch (_) {}
               `,
             }}
           />
