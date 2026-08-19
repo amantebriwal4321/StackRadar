@@ -41,8 +41,12 @@ export default function DashboardShell({ children, fullWidth = false, flushX = f
     };
   }, []);
 
+  // overflow-x-clip (not hidden): clips ambient orbs/decorations that spill past
+  // the right edge WITHOUT creating a scroll container — `overflow:hidden` here
+  // would break position:sticky on descendants (the hero constellation, which
+  // would otherwise scroll away and leave the column empty).
   return (
-    <div className={`flex flex-col min-h-screen bg-background relative overflow-hidden${theme ? ` theme-${theme}` : ""}`}>
+    <div className={`flex flex-col min-h-screen bg-background relative overflow-x-clip${theme ? ` theme-${theme}` : ""}`}>
       {/* ─── Noise Texture (like XR reference grain) ─── */}
       <div className="noise-overlay" aria-hidden="true" />
       

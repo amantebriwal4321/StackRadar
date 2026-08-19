@@ -478,12 +478,20 @@ export default function HomePage() {
 
           </div>
 
-          {/* Right Column: Interactive 3D Sphere */}
-          {/* self-start + sticky: the copy column is ~1100px tall, so the grid's
-              `items-center` was parking the constellation at y≈543 — below the
-              fold and visually detached from the headline it belongs beside. */}
+          {/* Right Column: Interactive 3D Sphere.
+              Three nested layers on purpose:
+              • outer  — the grid cell; self-stretch makes it as tall as the copy
+                column so the sticky layer has the full hero height to travel
+                (otherwise the constellation scrolled away and left the right side
+                empty).
+              • middle — carries `sticky`. It must NOT have a transform, because a
+                CSS transform breaks position:sticky — which is exactly why the
+                mouse-parallax was killing the stick.
+              • inner  — the motion.div that owns the parallax transform + sizing. */}
+          <div className="lg:col-span-5 lg:self-stretch relative">
+          <div className="lg:sticky lg:top-28">
           <motion.div
-            className="lg:col-span-5 h-[350px] md:h-[520px] flex items-center justify-center relative sphere-container lg:self-start lg:sticky lg:top-28"
+            className="h-[350px] md:h-[520px] flex items-center justify-center relative sphere-container"
             style={{ x: springX, y: springY }}
           >
             <div className="absolute inset-0 w-full h-full flex items-center justify-center z-0">
@@ -522,6 +530,8 @@ export default function HomePage() {
               </span>
             </motion.div>
           </motion.div>
+          </div>
+          </div>
 
         </div>
       </section>

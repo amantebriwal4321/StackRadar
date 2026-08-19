@@ -180,7 +180,10 @@ body {
   background-color: var(--c-ground);
   color: var(--c-ink);
   font-family: var(--font-sans);
-  overflow-x: hidden;
+  /* clip (not hidden) so it doesn't become a scroll container and break
+     position:sticky on descendants (hero constellation). Still prevents any
+     horizontal-scroll from decorative overflow. */
+  overflow-x: clip;
 }
 
 /* ─────────────────────────────────────────────
