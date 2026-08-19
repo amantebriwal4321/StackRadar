@@ -10,9 +10,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build-time env — override via docker-compose or --build-arg
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Backend origin for the /api/v1/* proxy rewrite. next.config.ts evaluates
+# rewrites() at build time, so this is a build arg. Override via docker-compose
+# or --build-arg (compose sets http://backend:8000; a hosted deploy sets its
+# public backend URL).
+ARG BACKEND_ORIGIN=http://localhost:8000
+ENV BACKEND_ORIGIN=$BACKEND_ORIGIN
 
 # Enable Next.js standalone output for minimal Docker image
 ENV NEXT_TELEMETRY_DISABLED=1

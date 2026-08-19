@@ -47,12 +47,16 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8000
+        # The Next server proxies /api/v1/* to the backend (see next.config.ts).
+        # Inside the compose network the backend is the `backend` service, not
+        # localhost. rewrites() is evaluated at build time, so this must be a
+        # build arg, and it's re-set at runtime below.
+        BACKEND_ORIGIN: http://backend:8000
     container_name: stackradar_frontend
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - BACKEND_ORIGIN=http://backend:8000
     depends_on:
       - backend
     restart: unless-stopped
