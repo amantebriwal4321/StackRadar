@@ -120,8 +120,17 @@ export async function fetchCategories(): Promise<string[]> {
   return domains.map(d => d.name);
 }
 
-// API base URL
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// API base URL.
+//  • Client: the page's own origin (localhost:3000, or 192.168.1.8:3000 on a
+//    phone). Requests to `${API_BASE}/api/v1/*` are same-origin and get proxied
+//    to the backend by the rewrite in next.config.ts — so the browser never
+//    needs to reach a separate API port/host directly (no CORS, no second
+//    firewall hole, works identically on desktop and phone).
+//  • Server (SSR/ISR): talk to the backend directly.
+export const API_BASE =
+  typeof window !== "undefined"
+    ? window.location.origin
+    : process.env.BACKEND_ORIGIN || "http://localhost:8000";
 
 // ISR revalidation interval (seconds) — matches the backend scraper loop (30 min)
 const REVALIDATE_SECONDS = 1800;
