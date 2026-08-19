@@ -1,8 +1,8 @@
 import { MetadataRoute } from "next";
 import { fetchTools, fetchRoadmaps } from "@/data/trends";
+import { SITE_URL as baseUrl } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://stackradar.dev";
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [

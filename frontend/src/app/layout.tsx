@@ -5,6 +5,7 @@ import { dark } from "@clerk/themes";
 import SmoothScrollProvider from "@/components/providers/SmoothScroll";
 import Preloader from "@/components/ui/Preloader";
 import CustomCursor from "@/components/ui/CustomCursor";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -25,7 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   // Absolute base so page-level OG image paths (/api/og?...) resolve when a link
   // is unfurled off-site. Override via NEXT_PUBLIC_SITE_URL in production.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  metadataBase: new URL(SITE_URL),
   title: "StackRadar — Learn the right tech, in the right order",
   description:
     "Free, sequenced learning roadmaps ranked by live momentum data — the right tools in the right order, each with the single best free video. Pick your career goal and get your 5-minute plan.",

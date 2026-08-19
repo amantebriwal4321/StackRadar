@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Play, ListVideo, CheckCircle2, Clock, TrendingUp } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
 import { fetchRoadmap, fetchRoadmaps, type Roadmap } from "@/data/trends";
+import { SITE_URL as SITE } from "@/lib/site";
 
 /**
  * SEO guide page — the free-traffic front door.
@@ -20,8 +21,6 @@ import { fetchRoadmap, fetchRoadmaps, type Roadmap } from "@/data/trends";
 
 export const revalidate = 86400; // rebuild daily; content tracks live data slowly
 export const dynamicParams = false; // only real roadmap slugs; others 404
-
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://stackradar.dev";
 
 export async function generateStaticParams() {
   try {
