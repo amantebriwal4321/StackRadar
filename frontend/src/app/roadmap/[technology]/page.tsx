@@ -274,7 +274,7 @@ export default function RoadmapPage() {
             return (
               <div
                 key={idx}
-                className={`glass-panel p-6 rounded-2xl border transition-all duration-300 relative group flex gap-5 items-start slide-up z-10 ${
+                className={`glass-panel p-4 md:p-6 rounded-2xl border transition-all duration-300 relative group flex gap-4 md:gap-5 items-start slide-up z-10 ${
                   isDone
                     // Done modules recede: clearly marked, but visually quieter so
                     // attention lands on what's still ahead.
@@ -368,41 +368,55 @@ export default function RoadmapPage() {
                     {step.description}
                   </p>
 
-                  {/* Every step gets a YouTube suggestion — including the
-                      foundational steps that have no tracked tool — so a learner
-                      always has a "watch this" path. Search deep-link: always
-                      valid, and honest that it's a search, not one hand-picked
-                      video (the per-tool "Best course" buttons below are the
-                      curated picks). */}
-                  <a
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(step.title + " full tutorial")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-1 px-3 py-1.5 rounded-lg border border-indigo-500/20 bg-[var(--accent-1)]/10 text-[11px] font-mono font-bold text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors"
-                  >
-                    <Youtube className="w-3.5 h-3.5" /> Watch this on YouTube
-                  </a>
+                  {/* ─── Ways to learn this step ───
+                      One clear, labelled group of tappable options instead of a
+                      scatter of a button + tiny text links. "Watch" (a video) vs
+                      "Read" (each syllabus doc) — each a big touch target that
+                      stacks full-width on mobile. This is what a learner scans to
+                      decide "how do I actually do this step?". */}
+                  <div className="pt-1 space-y-2">
+                    <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-[var(--c-ink-2)]/70 uppercase tracking-wider">
+                      <BookOpen className="w-3.5 h-3.5 text-indigo-600" /> Ways to learn this
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* Watch — always available (foundational steps have no tool) */}
+                      <a
+                        href={`https://www.youtube.com/results?search_query=${encodeURIComponent(step.title + " full tutorial")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-2.5 rounded-xl border border-[var(--accent-1)]/20 bg-[var(--accent-1)]/[0.06] hover:bg-[var(--accent-1)]/[0.12] hover:border-[var(--accent-1)]/40 active:scale-[0.98] transition-all"
+                      >
+                        <span className="w-9 h-9 shrink-0 rounded-lg bg-[var(--accent-1)]/15 flex items-center justify-center">
+                          <Youtube className="w-4 h-4 text-[var(--accent-1)]" />
+                        </span>
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-[13px] font-bold text-[var(--c-ink)] leading-tight">Watch a video</span>
+                          <span className="block text-[10px] text-[var(--c-ink-2)]/70 font-mono">Full tutorial on YouTube</span>
+                        </span>
+                        <ArrowRight className="w-4 h-4 text-[var(--accent-1)] shrink-0" />
+                      </a>
 
-                  {/* Connected Resources */}
-                  {step.resources && step.resources.length > 0 && (
-                    <div className="pt-3 border-t border-indigo-500/5 flex flex-wrap gap-4 items-center">
-                      <span className="flex items-center gap-1 text-[9px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-wider">
-                        <BookOpen className="w-3.5 h-3.5 text-indigo-600" /> Syllabus Materials:
-                      </span>
-                      {step.resources.map((res, rIdx) => (
+                      {/* Read — one button per syllabus doc */}
+                      {step.resources?.map((res, rIdx) => (
                         <a
                           key={rIdx}
                           href={res.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[10px] font-mono font-bold text-indigo-600 hover:text-[var(--c-ink)] flex items-center gap-0.5 hover:underline"
+                          className="flex items-center gap-3 p-2.5 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/70 hover:bg-[var(--c-surface-2)] hover:border-indigo-400/40 active:scale-[0.98] transition-all"
                         >
-                          {res.label}
-                          <ArrowRight className="w-3 h-3 translate-y-[0.5px] group-hover:translate-x-0.5 transition-transform" />
+                          <span className="w-9 h-9 shrink-0 rounded-lg bg-indigo-600/12 flex items-center justify-center">
+                            <BookOpen className="w-4 h-4 text-indigo-600" />
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-[13px] font-bold text-[var(--c-ink)] leading-tight truncate">{res.label}</span>
+                            <span className="block text-[10px] text-[var(--c-ink-2)]/70 font-mono">Read &amp; follow along</span>
+                          </span>
+                          <ArrowRight className="w-4 h-4 text-indigo-600 shrink-0" />
                         </a>
                       ))}
                     </div>
-                  )}
+                  </div>
 
                   {/* Live-tracked tools you'll use at this stage */}
                   {step.tools && step.tools.length > 0 && (
@@ -459,33 +473,18 @@ export default function RoadmapPage() {
                     </div>
                   )}
 
-                  {/* Actions.
-                      Six identical buttons gave a newcomer no focal point, and
-                      "Mark as done" is the wrong FIRST action anyway — you can't
-                      finish something you haven't opened. So the next module gets
-                      a primary "Start learning" (which opens its first resource)
-                      and every other module's tick-off stays deliberately quiet. */}
+                  {/* Progress action — one clear control, visually separate from
+                      the "learn" options above (this tracks progress, it isn't a
+                      way to learn). Full-width on mobile so it's an easy tap. */}
                   {isSignedIn && (
-                    <div className="pt-3 flex flex-wrap items-center gap-2">
-                      {isNextUp && step.resources?.[0] && (
-                        <a
-                          href={step.resources[0].url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-primary text-[10px] py-2 px-4 rounded-lg"
-                        >
-                          Start learning <ArrowRight className="w-3.5 h-3.5" />
-                        </a>
-                      )}
+                    <div className="pt-3">
                       <button
                         onClick={() => handleToggle(step.step)}
                         disabled={savingStep === step.step}
-                        className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-60 ${
+                        className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-[11px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-[0.98] disabled:opacity-60 ${
                           isDone
                             ? "border-[#12B76A]/40 bg-[#12B76A]/10 text-[#12B76A] hover:bg-[#12B76A]/20"
-                            : isNextUp
-                              ? "border-indigo-500/40 bg-transparent text-indigo-600 hover:bg-indigo-600/10"
-                              : "border-[var(--c-border)] bg-transparent text-[var(--c-ink-2)]/70 hover:text-indigo-600 hover:border-indigo-500/30"
+                            : "border-indigo-500/30 bg-indigo-600/[0.06] text-indigo-600 hover:bg-indigo-600/15"
                         }`}
                       >
                         {savingStep === step.step ? (
@@ -493,7 +492,7 @@ export default function RoadmapPage() {
                         ) : (
                           <Check className="w-3.5 h-3.5" strokeWidth={3} />
                         )}
-                        {isDone ? "Completed — undo" : "Mark as done"}
+                        {isDone ? "Completed — tap to undo" : "Mark as done"}
                       </button>
                     </div>
                   )}
