@@ -153,94 +153,108 @@ export default function RoadmapPage() {
       {/* Page Glow backdrop */}
       <div className="absolute top-0 right-1/4 w-[350px] h-[350px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none z-0" />
 
-      <div className="max-w-4xl mx-auto space-y-8 relative z-10 pb-16">
+      <div className="max-w-5xl mx-auto space-y-8 relative z-10 pb-16">
 
         {/* Back navigation */}
         <Link href="/roadmaps" className="inline-flex items-center text-xs font-mono text-[var(--c-ink-2)] hover:text-[var(--c-ink)] transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> RETURN_TO_ROADMAPS
         </Link>
 
-        {/* Cinematic Header Block */}
-        <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[var(--c-surface)]/80 backdrop-blur-md text-center space-y-4 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none" />
-          
-          <div className="w-16 h-16 bg-[var(--c-surface-2)] border border-indigo-500/10 rounded-2xl mx-auto flex items-center justify-center text-4xl rotate-3 shadow-md shadow-indigo-500/5 select-none">
-            {roadmap.icon}
-          </div>
-          
-          <div className="space-y-2">
-            <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest block">
-              SEQUENTIAL EDUCATION TRACK
+        {/* ─── Premium track hero ───
+            This is the app's centrepiece page, so the header carries real weight:
+            a large glowing domain icon, an oversized gradient title, stat pills,
+            and Neon-Noir depth (HUD grid + accent glows) behind it. */}
+        <header className="relative overflow-hidden rounded-3xl border border-indigo-500/15 bg-[var(--c-surface)]/70 backdrop-blur-md p-8 md:p-14 text-center">
+          <div className="hud-grid absolute inset-0 opacity-[0.12] pointer-events-none [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]" />
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[520px] h-[300px] rounded-full bg-[var(--accent-2)]/[0.14] blur-[110px] pointer-events-none" />
+          <div className="absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-[var(--accent-1)]/[0.10] blur-[100px] pointer-events-none" />
+
+          <div className="relative max-w-3xl mx-auto">
+            {/* Big glowing domain icon */}
+            <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-7">
+              <div className="absolute inset-0 rounded-[1.6rem] bg-gradient-to-br from-[var(--accent-1)] to-[var(--accent-2)] blur-2xl opacity-50" />
+              <div className="relative w-full h-full rounded-[1.6rem] bg-gradient-to-br from-[var(--accent-1)] to-[var(--accent-2)] flex items-center justify-center text-4xl md:text-5xl shadow-xl shadow-[var(--accent-1)]/40 select-none">
+                {roadmap.icon}
+              </div>
+            </div>
+
+            <span className="inline-flex items-center gap-2.5 text-[10px] md:text-[11px] font-mono font-bold text-indigo-600 uppercase tracking-[0.22em] mb-4">
+              <span className="w-7 h-px bg-gradient-to-r from-transparent to-indigo-500/60" />
+              Learning Track
+              <span className="w-7 h-px bg-gradient-to-l from-transparent to-indigo-500/60" />
             </span>
-            <h1 className="text-3xl md:text-5xl font-black font-display text-[var(--c-ink)] tracking-tight">
-              Master {roadmap.title}
+
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black font-display tracking-tight leading-[0.95] mb-5">
+              <span className="text-[var(--c-ink)]">Master </span>
+              <span className="gradient-text">{roadmap.title}</span>
             </h1>
-            <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-xl mx-auto font-light">
-              {roadmap.description || "Guided step-by-step tracks structured directly from monitored technology specifications."}
+
+            <p className="text-base md:text-lg text-[var(--c-ink-2)] leading-relaxed max-w-2xl mx-auto font-light mb-7">
+              {roadmap.description || "Guided, sequenced steps built from live technology momentum — the right things to learn, in the right order."}
             </p>
-            <Link
-              href={`/explore?domain=${slug}`}
-              className="inline-flex items-center gap-1.5 text-[11px] font-mono text-indigo-600 hover:text-[var(--c-ink)] transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              This track is the concepts to master — see which {roadmap.title} tools have live momentum
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
 
-          <div className="flex justify-center gap-6 pt-2 font-mono text-[10px] text-[var(--c-ink-2)] uppercase">
-            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-indigo-600" /> ~{roadmap.estimated_weeks} weeks duration</span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-indigo-600" /> {steps.length} learning modules</span>
-          </div>
+            {/* Stat pills */}
+            <div className="flex flex-wrap items-center justify-center gap-2.5 mb-8">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/15 bg-[var(--c-surface-2)]/70 text-xs font-mono font-semibold text-[var(--c-ink-2)]">
+                <Calendar className="w-4 h-4 text-indigo-600" /> ~{roadmap.estimated_weeks} weeks
+              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/15 bg-[var(--c-surface-2)]/70 text-xs font-mono font-semibold text-[var(--c-ink-2)]">
+                <Award className="w-4 h-4 text-indigo-600" /> {steps.length} modules
+              </span>
+              <Link
+                href={`/explore?domain=${slug}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-xs font-mono font-bold text-indigo-600 transition-colors"
+              >
+                <Sparkles className="w-4 h-4" /> Live tool momentum <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
 
-          {/* ── Your progress ── */}
-          <div className="pt-4 max-w-md mx-auto">
-            {isSignedIn ? (
-              <>
-                <div className="flex items-center justify-between mb-2 font-mono text-[10px] uppercase tracking-wider">
-                  <span className="text-[var(--c-ink-2)]">Your progress</span>
-                  <span className="font-bold text-indigo-600 tabular-nums">
-                    {completedSteps.length}/{steps.length} · {percent}%
-                  </span>
-                </div>
-                <div className="h-2 rounded-full bg-[var(--c-surface-2)] border border-[var(--c-border)] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] transition-[width] duration-500 ease-out"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-                {percent === 100 ? (
-                  <p className="mt-2 text-[11px] font-mono font-bold text-[#12B76A] flex items-center justify-center gap-1.5">
-                    <Flame className="w-3.5 h-3.5" /> Track complete — every module done.
-                  </p>
-                ) : percent === 0 ? (
-                  /* First-run coaching. Someone landing here cold has no idea the
-                     page tracks anything, so spell the loop out once — it hides
-                     itself the moment they complete their first module. */
-                  <div className="mt-3 rounded-xl border border-indigo-500/20 bg-indigo-600/[0.06] px-4 py-3 text-left">
-                    <p className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-wider mb-1.5">
-                      New here? How this works
-                    </p>
-                    <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-light list-decimal list-inside marker:text-indigo-600 marker:font-bold">
-                      <li>Begin with the highlighted <span className="font-bold text-[var(--c-ink)]">Next up</span> module below.</li>
-                      <li>Hit <span className="font-bold text-[var(--c-ink)]">Start learning</span> to open its material.</li>
-                      <li>Come back and <span className="font-bold text-[var(--c-ink)]">Mark as done</span> — the bar fills and your streak grows.</li>
-                    </ol>
+            {/* ── Your progress ── */}
+            <div className="max-w-lg mx-auto">
+              {isSignedIn ? (
+                <>
+                  <div className="flex items-center justify-between mb-2 font-mono text-[10px] uppercase tracking-wider">
+                    <span className="text-[var(--c-ink-2)]">Your progress</span>
+                    <span className="font-bold text-indigo-600 tabular-nums">
+                      {completedSteps.length}/{steps.length} · {percent}%
+                    </span>
                   </div>
-                ) : (
-                  <p className="mt-2 text-[10px] font-mono text-[var(--c-ink-2)]/70 text-center">
-                    Finished a module? Hit <span className="text-indigo-600 font-bold">Mark as done</span> to move the bar.
-                  </p>
-                )}
-              </>
-            ) : (
-              <SignInButton mode="modal">
-                <button className="w-full px-4 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-600 transition-colors cursor-pointer">
-                  Sign in to track your progress
-                </button>
-              </SignInButton>
-            )}
+                  <div className="h-2.5 rounded-full bg-[var(--c-surface-2)] border border-[var(--c-border)] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] shadow-[0_0_12px_var(--accent-2)] transition-[width] duration-500 ease-out"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                  {percent === 100 ? (
+                    <p className="mt-3 text-[11px] font-mono font-bold text-[#12B76A] flex items-center justify-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5" /> Track complete — every module done.
+                    </p>
+                  ) : percent === 0 ? (
+                    /* First-run coaching — hides itself after the first completed module. */
+                    <div className="mt-4 rounded-xl border border-indigo-500/20 bg-indigo-600/[0.06] px-4 py-3 text-left">
+                      <p className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-wider mb-1.5">
+                        New here? How this works
+                      </p>
+                      <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-light list-decimal list-inside marker:text-indigo-600 marker:font-bold">
+                        <li>Begin with the highlighted <span className="font-bold text-[var(--c-ink)]">Next up</span> module below.</li>
+                        <li>Pick a way to learn it — <span className="font-bold text-[var(--c-ink)]">Watch a video</span> or <span className="font-bold text-[var(--c-ink)]">Read the guide</span>.</li>
+                        <li>Come back and <span className="font-bold text-[var(--c-ink)]">Mark as done</span> — the bar fills and your streak grows.</li>
+                      </ol>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-[10px] font-mono text-[var(--c-ink-2)]/70 text-center">
+                      Finished a module? Hit <span className="text-indigo-600 font-bold">Mark as done</span> to move the bar.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <SignInButton mode="modal">
+                  <button className="w-full px-4 py-3 rounded-xl border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-600 transition-colors cursor-pointer">
+                    Sign in to track your progress
+                  </button>
+                </SignInButton>
+              )}
+            </div>
           </div>
         </header>
 
