@@ -84,16 +84,11 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 w-full">
-      {/* Floating island — full-width & transparent at the very top; on scroll it
-          condenses into a detached, rounded, blurred bar with a shadow. */}
-      <div
-        className={`relative transition-all duration-500 ease-out ${
-          scrolled
-            ? "mx-2 md:mx-4 mt-2 rounded-2xl border border-border-subtle backdrop-blur-xl bg-[var(--c-ground)]/80 shadow-[0_10px_40px_-8px_rgba(0,0,0,0.28)]"
-            : "border-b border-transparent bg-transparent"
-        }`}
-      >
-        <div className="flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
+      {/* Soft readability scrim — NOT a box: a full-width gradient that fades to
+          transparent (no border, no edges), so links stay legible over scrolled
+          content. Fades in only once you scroll; invisible at the top. */}
+      <div className={`absolute inset-0 bg-gradient-to-b from-[var(--c-ground)] via-[var(--c-ground)]/70 to-transparent pointer-events-none transition-opacity duration-500 ${scrolled ? "opacity-95" : "opacity-0"}`} />
+      <div className="relative flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
         {/* ─── Logo ───
             A solid wine radar badge with a hand-drawn radar mark (rings + sweep
             + ping) — deliberately not the gradient rounded-square + stock icon
@@ -208,16 +203,15 @@ export default function Navbar() {
             {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
-        </div>
+      </div>
 
-        {/* Scroll-progress bar — a thin accent line that fills across the bottom
-            of the island as you move down the page. */}
-        <div className={`absolute inset-x-0 bottom-0 h-[2px] overflow-hidden ${scrolled ? "rounded-b-2xl" : ""}`}>
-          <div
-            className="h-full bg-gradient-to-r from-[var(--accent-1)] via-[var(--accent-2)] to-[var(--accent-1)] shadow-[0_0_8px_var(--accent-2)] transition-[width] duration-150 ease-out"
-            style={{ width: `${scrollProgress * 100}%` }}
-          />
-        </div>
+      {/* Scroll-progress bar — the loading line that fills across the bottom of
+          the navbar as you move down the page. */}
+      <div className="absolute inset-x-0 bottom-0 h-[2px] overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-[var(--accent-1)] via-[var(--accent-2)] to-[var(--accent-1)] shadow-[0_0_8px_var(--accent-2)] transition-[width] duration-150 ease-out"
+          style={{ width: `${scrollProgress * 100}%` }}
+        />
       </div>
 
       {/* ─── Mobile Fullscreen Overlay ─── */}
