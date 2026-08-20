@@ -347,6 +347,24 @@ export async function unsubscribeNotifications(userId: string, token?: string | 
   return res.json();
 }
 
+// ── Waitlist (public, no auth) ──────────────────────────────────────────
+// Top-of-funnel email capture for the "personalized version". Idempotent on
+// the backend, so a repeat email resolves to { already: true } rather than an
+// error. Throws only on a real failure (bad email → 422, or network down).
+export interface WaitlistResult { ok: boolean; already: boolean }
+
+export async function joinWaitlist(email: string, source = "landing"): Promise<WaitlistResult> {
+  const res = await fetch(`${API_BASE}/api/v1/waitlist`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, source }),
+    cache: "no-store",
+  });
+  if (res.status === 422) throw new Error("Please enter a valid email address.");
+  if (!res.ok) throw new Error("Something went wrong — please try again.");
+  return res.json();
+}
+
 // Learning path types
 export interface LearningPathTool {
   slug: string;

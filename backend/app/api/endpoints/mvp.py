@@ -26,7 +26,7 @@ from sqlalchemy import func
 from datetime import date, timedelta, datetime, timezone
 from app.db.session import get_db
 from app.core.config import settings
-from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain, UserProgress, ToolResource, NotificationPref
+from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain, UserProgress, ToolResource, NotificationPref, WaitlistSignup
 from app.services.scheduler import scrape_status
 from app.services.scoring import calculate_star_velocity
 from app.services import resources as resources_svc
@@ -864,6 +864,64 @@ async def send_daily_digests(
     from app.services.notifications import run_daily_digests
     result = await run_daily_digests(db)
     return {"status": "ok", "provider_configured": bool(settings.RESEND_API_KEY), **result}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# WAITLIST  (public top-of-funnel email capture)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Pragmatic email shape check — not RFC-perfect, just enough to reject junk
+# without pulling in an email-validator dependency.
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+@router.post("/waitlist")
+def join_waitlist(payload: dict = None, db: Session = Depends(get_db)):
+    """Add an email to the 'personalized version' waitlist.
+
+    Public (no auth). Idempotent — re-submitting an existing email succeeds and
+    reports `already: true` rather than erroring, so the UI can always show a
+    friendly confirmation.
+    """
+    data = payload or {}
+    email = str(data.get("email", "")).strip().lower()
+    source = (str(data.get("source", "")).strip() or None)
+    if source:
+        source = source[:64]
+
+    if not email or len(email) > 254 or not EMAIL_RE.match(email):
+        raise HTTPException(status_code=422, detail="Please enter a valid email address.")
+
+    existing = db.query(WaitlistSignup).filter(WaitlistSignup.email == email).first()
+    if existing:
+        return {"ok": True, "already": True}
+
+    db.add(WaitlistSignup(email=email, source=source))
+    db.commit()
+    return {"ok": True, "already": False}
+
+
+@router.get("/admin/waitlist")
+def list_waitlist(
+    x_admin_key: str = Header(None, alias="X-Admin-Key"),
+    db: Session = Depends(get_db),
+):
+    """Export the waitlist (owner only). Gate with the X-Admin-Key header."""
+    expected = os.getenv("ADMIN_API_KEY", "")
+    if not expected:
+        raise HTTPException(status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY.")
+    if x_admin_key != expected:
+        raise HTTPException(status_code=403, detail="Invalid admin key.")
+
+    rows = db.query(WaitlistSignup).order_by(WaitlistSignup.created_at.desc()).all()
+    return {
+        "count": len(rows),
+        "signups": [
+            {"email": r.email, "source": r.source,
+             "created_at": r.created_at.isoformat() if r.created_at else None}
+            for r in rows
+        ],
+    }
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -187,6 +187,22 @@ class NotificationPref(Base):
     created_at     = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
+class WaitlistSignup(Base):
+    """A public email signup for the 'personalized version' waitlist.
+
+    No login required — this is the top-of-funnel vision list captured on the
+    landing page (distinct from NotificationPref, which is the auth-gated daily
+    nudge). Email is unique so re-submits are idempotent; `source` records where
+    the signup came from (e.g. "landing", "roadmap") for later attribution.
+    """
+    __tablename__ = "waitlist_signups"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    email      = Column(String, unique=True, index=True, nullable=False)
+    source     = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 class ToolRoadmap(Base):
     """Learning roadmap for a tool or domain."""
     __tablename__ = "tool_roadmaps"

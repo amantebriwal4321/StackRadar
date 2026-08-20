@@ -34,6 +34,7 @@ import DashboardShell from "@/components/DashboardShell";
 import ContinueLearning from "@/components/ContinueLearning";
 import FiveMinutePlan from "@/components/FiveMinutePlan";
 import MobileHome from "@/components/MobileHome";
+import WaitlistCapture from "@/components/WaitlistCapture";
 
 /* ─── Helper for Relative Time ─── */
 function getRelativeTime(isoString: string): string {
@@ -1026,6 +1027,13 @@ export default function HomePage() {
           </div>
 
         </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          WAITLIST — the vision / personalized version
+         ══════════════════════════════════════════ */}
+      <section className="max-w-5xl mx-auto px-6 pb-16">
+        <WaitlistCapture source="landing" />
       </section>
 
       {/* ══════════════════════════════════════════

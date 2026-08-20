@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { type Tool, type DomainSummary, type Overview } from "@/data/trends";
 import FiveMinutePlan from "@/components/FiveMinutePlan";
+import WaitlistCapture from "@/components/WaitlistCapture";
 import ContinueLearning from "@/components/ContinueLearning";
 
 /**
@@ -427,6 +428,11 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             </a>
           </div>
         </motion.div>
+      </section>
+
+      {/* ══════════ WAITLIST — the vision ══════════ */}
+      <section className="px-5 pt-10 pb-28">
+        <WaitlistCapture source="mobile" />
       </section>
 
       {/* ══════════ STICKY ACTION BAR — persistent conversion CTA ══════════ */}
