@@ -330,7 +330,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 1: HERO & 3D SPHERE CENTERPIECE
          ══════════════════════════════════════════ */}
-      <section className="relative w-full max-w-7xl mx-auto px-6 pt-16 md:pt-24 pb-16 min-h-[90vh] flex items-center">
+      <section className="relative w-full max-w-7xl mx-auto px-6 pt-2 md:pt-4 pb-16 min-h-[70vh] flex items-start">
         
         {/* Hero background — vibrant aurora mesh (multi-color wash) */}
         <div className="absolute inset-0 pointer-events-none aurora-mesh [mask-image:radial-gradient(ellipse_at_center,black,transparent_85%)]" />
