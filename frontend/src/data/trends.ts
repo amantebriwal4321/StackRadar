@@ -109,7 +109,7 @@ export interface Overview {
 }
 
 export async function fetchOverview(): Promise<Overview> {
-  const res = await fetch(`${API_BASE}/api/v1/overview`, { next: { revalidate: 300 } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/overview`, { next: { revalidate: 300 } });
   if (!res.ok) throw new Error("Failed to fetch overview");
   return res.json();
 }
@@ -135,6 +135,60 @@ export const API_BASE =
 // ISR revalidation interval (seconds) — matches the backend scraper loop (30 min)
 const REVALIDATE_SECONDS = 1800;
 
+/**
+ * Cold-start–resilient GET.
+ *
+ * The backend runs on a free tier that sleeps after inactivity, so the FIRST
+ * request after a quiet spell can take ~30–50s to wake — and while it boots it
+ * may reject with 502/503/504 or a dropped connection. A plain `fetch` there
+ * throws and the page is left on empty/zeros. This wrapper keeps retrying (on
+ * the client only) with backoff until the server answers, so pages recover on
+ * their own the moment it wakes — paired with the <BackendWaking> overlay that
+ * gives the visitor friendly feedback during the wait.
+ *
+ * On the SERVER we do a single pass-through (no retry loop): SSR/ISR runs inside
+ * a Vercel function with a hard time budget, so a 45s retry would 504 the whole
+ * page. Server renders fail fast to their existing fallback/throw behaviour.
+ */
+async function resilientFetch(url: string, init?: RequestInit): Promise<Response> {
+  // Server: keep the original single-shot behaviour.
+  if (typeof window === "undefined") {
+    return fetch(url, init);
+  }
+
+  const deadline = Date.now() + 48_000; // stop trying after ~48s (cold start is ~30–50s)
+  let attempt = 0;
+  let lastErr: unknown;
+
+  while (Date.now() < deadline) {
+    attempt++;
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15_000); // a booting request can hang
+      try {
+        const res = await fetch(url, { ...init, signal: ctrl.signal });
+        // 5xx == still booting / transient — worth another try. 4xx is a real
+        // answer (e.g. 404) and must surface immediately, not spin.
+        if (res.status >= 500 && res.status <= 599) {
+          lastErr = new Error(`server ${res.status}`);
+        } else {
+          return res;
+        }
+      } finally {
+        clearTimeout(timer);
+      }
+    } catch (err) {
+      lastErr = err; // network drop / abort while the dyno wakes
+    }
+    // Backoff: 0.6s → 1.2s → 2.4s, capped at 3s.
+    const wait = Math.min(600 * 2 ** (attempt - 1), 3000);
+    if (Date.now() + wait >= deadline) break;
+    await new Promise((r) => setTimeout(r, wait));
+  }
+
+  throw lastErr instanceof Error ? lastErr : new Error("Request failed after retries");
+}
+
 // API helpers
 export async function fetchTools(category?: string): Promise<Tool[]> {
   const url = new URL(`${API_BASE}/api/v1/tools`);
@@ -143,7 +197,7 @@ export async function fetchTools(category?: string): Promise<Tool[]> {
   }
   // Request all tools (per_page=100 covers our current dataset)
   url.searchParams.set("per_page", "100");
-  const res = await fetch(url.toString(), { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(url.toString(), { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch tools");
   const data = await res.json();
   // Backend returns {tools: [...], total, page, per_page, total_pages}
@@ -151,31 +205,31 @@ export async function fetchTools(category?: string): Promise<Tool[]> {
 }
 
 export async function fetchToolDetail(slug: string): Promise<ToolDetail> {
-  const res = await fetch(`${API_BASE}/api/v1/tools/${slug}`, { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/tools/${slug}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error(`Tool '${slug}' not found`);
   return res.json();
 }
 
 export async function fetchToolHistory(slug: string, days = 30): Promise<{ data: ToolHistoryPoint[] }> {
-  const res = await fetch(`${API_BASE}/api/v1/tools/${slug}/history?days=${days}`, { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/tools/${slug}/history?days=${days}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch history");
   return res.json();
 }
 
 export async function fetchRoadmaps(): Promise<Roadmap[]> {
-  const res = await fetch(`${API_BASE}/api/v1/roadmaps`, { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/roadmaps`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch roadmaps");
   return res.json();
 }
 
 export async function fetchRoadmap(slug: string): Promise<Roadmap> {
-  const res = await fetch(`${API_BASE}/api/v1/roadmaps/${slug}`, { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/roadmaps/${slug}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error(`Roadmap '${slug}' not found`);
   return res.json();
 }
 
 export async function fetchDomains(): Promise<DomainSummary[]> {
-  const res = await fetch(`${API_BASE}/api/v1/domains`, { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/domains`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch domains");
   return res.json();
 }
@@ -322,7 +376,7 @@ export interface LearningPath {
 }
 
 export async function fetchLearningPath(domainSlug: string): Promise<LearningPath> {
-  const res = await fetch(`${API_BASE}/api/v1/domains/${domainSlug}/learning-path`, { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/domains/${domainSlug}/learning-path`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch learning path");
   return res.json();
 }
@@ -359,7 +413,7 @@ export interface CompareTool {
 }
 
 export async function fetchCompareTools(slugs: string[]): Promise<{ tools: CompareTool[] }> {
-  const res = await fetch(`${API_BASE}/api/v1/tools/compare?slugs=${slugs.join(",")}`, { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/tools/compare?slugs=${slugs.join(",")}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to compare tools");
   return res.json();
 }
@@ -393,7 +447,7 @@ export interface DomainWithTools {
 }
 
 export async function fetchToolsByDomain(): Promise<DomainWithTools[]> {
-  const res = await fetch(`${API_BASE}/api/v1/tools/by-domain`, { next: { revalidate: REVALIDATE_SECONDS } });
+  const res = await resilientFetch(`${API_BASE}/api/v1/tools/by-domain`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch tools by domain");
   const data = await res.json();
   return data.domains || [];
@@ -447,7 +501,7 @@ export async function fetchToolResources(
   slug: string,
   language: "en" | "hi" = "en"
 ): Promise<ToolResources> {
-  const res = await fetch(
+  const res = await resilientFetch(
     `${API_BASE}/api/v1/tools/${slug}/resources?language=${language}`,
     { next: { revalidate: 3600 } }
   );

@@ -5,6 +5,7 @@ import { dark } from "@clerk/themes";
 import SmoothScrollProvider from "@/components/providers/SmoothScroll";
 import Preloader from "@/components/ui/Preloader";
 import CustomCursor from "@/components/ui/CustomCursor";
+import BackendWaking from "@/components/BackendWaking";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -80,6 +81,7 @@ export default function RootLayout({
         <body className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased bg-bg-primary text-text-primary transition-colors duration-300`}>
           <SmoothScrollProvider>
             <Preloader />
+            <BackendWaking />
             <CustomCursor />
             <div className="noise-overlay" aria-hidden="true" />
             {children}
