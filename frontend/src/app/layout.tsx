@@ -7,6 +7,7 @@ import Preloader from "@/components/ui/Preloader";
 import CustomCursor from "@/components/ui/CustomCursor";
 import BackendWaking from "@/components/BackendWaking";
 import FeedbackButton from "@/components/FeedbackButton";
+import { Analytics } from "@vercel/analytics/next";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -88,6 +89,9 @@ export default function RootLayout({
             <div className="noise-overlay" aria-hidden="true" />
             {children}
           </SmoothScrollProvider>
+          {/* Vercel Web Analytics — pageviews + custom events. No-ops in local
+              dev; only reports once deployed on Vercel. */}
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
