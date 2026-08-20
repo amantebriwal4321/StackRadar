@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Radar, Menu, X, Sun, Moon, Bookmark, Sparkles } from "lucide-react";
+import { Menu, X, Sun, Moon, Bookmark, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -86,14 +86,24 @@ export default function Navbar() {
       }`}
     >
       <div className="flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
-        {/* ─── Logo ─── */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--accent-1)] via-[var(--accent-2)] to-[var(--accent-1)] flex items-center justify-center shadow-lg shadow-[var(--accent-1)]/25 group-hover:scale-105 transition-transform duration-300">
-            <Radar className="w-[18px] h-[18px] text-white" />
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--accent-1)] to-indigo-400 blur-md opacity-30 group-hover:opacity-60 transition-opacity" />
+        {/* ─── Logo ───
+            A solid wine radar badge with a hand-drawn radar mark (rings + sweep
+            + ping) — deliberately not the gradient rounded-square + stock icon
+            that reads as generic. The sweep spins on hover for a live "radar"
+            feel. */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="relative w-9 h-9 rounded-full bg-[var(--accent-1)] flex items-center justify-center shadow-lg shadow-[var(--accent-1)]/30 group-hover:scale-105 group-hover:shadow-[var(--accent-2)]/45 transition-all duration-300 overflow-hidden">
+            {/* radar sweep — resting still, spins on hover */}
+            <span className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_72%,var(--accent-2))] opacity-0 group-hover:opacity-70 group-hover:animate-[spin_2.4s_linear_infinite] transition-opacity duration-300" />
+            <svg viewBox="0 0 24 24" fill="none" className="relative w-[19px] h-[19px]" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="white" strokeWidth="1.4" strokeOpacity="0.45" />
+              <circle cx="12" cy="12" r="4.6" stroke="white" strokeWidth="1.4" strokeOpacity="0.8" />
+              <path d="M12 12 L12 3.4" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+              <circle cx="16.4" cy="7.6" r="1.7" fill="white" />
+            </svg>
           </div>
-          <span className="text-lg font-bold tracking-tight font-display hidden sm:inline text-text-primary">
-            stack<span className="text-accent-primary">radar</span>
+          <span className="text-[17px] font-extrabold -tracking-[0.03em] font-display hidden sm:inline text-text-primary leading-none select-none">
+            Stack<span className="text-accent-primary">Radar</span>
           </span>
         </Link>
 
@@ -109,17 +119,23 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 prefetch
-                className={`relative px-3 py-1.5 text-xs font-semibold tracking-wider transition-colors duration-300 font-mono select-none ${
-                  isActive ? "text-accent-primary" : "text-text-secondary hover:text-text-primary"
+                className={`group/nav relative px-3 py-2 rounded-lg text-xs font-semibold tracking-wider transition-all duration-300 font-mono select-none ${
+                  isActive
+                    ? "text-accent-primary"
+                    : "text-text-secondary hover:text-text-primary hover:bg-[var(--c-surface)]/70"
                 }`}
               >
-                <span className="opacity-40 mr-1 font-light">[</span>
+                <span className={`mr-1 font-light transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>[</span>
                 <span>{link.label}</span>
-                <span className="opacity-40 ml-1 font-light">]</span>
+                <span className={`ml-1 font-light transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>]</span>
+                {/* hover underline for inactive links — grows from the centre */}
+                {!isActive && (
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-[2px] w-0 group-hover/nav:w-[calc(100%-1.5rem)] bg-accent-primary/60 rounded-full transition-[width] duration-300" />
+                )}
                 {isActive && (
                   <motion.div
                     layoutId="nav-underline"
-                    className="absolute bottom-0 left-3 right-3 h-[2px] bg-accent-primary shadow-[0_0_8px_var(--accent-2)]"
+                    className="absolute bottom-1 left-3 right-3 h-[2px] bg-accent-primary shadow-[0_0_8px_var(--accent-2)] rounded-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
