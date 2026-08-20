@@ -493,6 +493,14 @@ body {
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 .animate-fade-in { animation: fadeIn 0.3s ease-in; }
 
+/* Floating-action-button entrance. Transform-ONLY (opacity stays 1) so the
+   button can never be stranded invisible if the animation clock is paused while
+   the tab is backgrounded — a frozen first frame is still fully visible, just
+   slightly offset. The keyframe only adds a subtle rise-and-settle pop. */
+@keyframes fab-in { from{transform:translateY(14px) scale(0.85)} to{transform:translateY(0) scale(1)} }
+.animate-fab-in { animation: fab-in 0.5s var(--ease-standard, cubic-bezier(0.22,1,0.36,1)) 0.8s both; }
+@media (prefers-reduced-motion: reduce) { .animate-fab-in { animation: none; } }
+
 /* ─────────────────────────────────────────────
    MOTION — purposeful, restrained
    ───────────────────────────────────────────── */

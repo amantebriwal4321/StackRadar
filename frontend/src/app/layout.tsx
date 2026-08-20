@@ -6,6 +6,7 @@ import SmoothScrollProvider from "@/components/providers/SmoothScroll";
 import Preloader from "@/components/ui/Preloader";
 import CustomCursor from "@/components/ui/CustomCursor";
 import BackendWaking from "@/components/BackendWaking";
+import FeedbackButton from "@/components/FeedbackButton";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -82,6 +83,7 @@ export default function RootLayout({
           <SmoothScrollProvider>
             <Preloader />
             <BackendWaking />
+            <FeedbackButton />
             <CustomCursor />
             <div className="noise-overlay" aria-hidden="true" />
             {children}
