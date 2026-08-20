@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { Analytics } from "@vercel/analytics/next";
 import SmoothScrollProvider from "@/components/providers/SmoothScroll";
 import Preloader from "@/components/ui/Preloader";
 import CustomCursor from "@/components/ui/CustomCursor";
@@ -84,6 +85,7 @@ export default function RootLayout({
             <div className="noise-overlay" aria-hidden="true" />
             {children}
           </SmoothScrollProvider>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
