@@ -95,14 +95,18 @@ export default function Navbar() {
             that reads as generic. The sweep spins on hover for a live "radar"
             feel. */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-9 h-9 rounded-full bg-[var(--accent-1)] flex items-center justify-center shadow-lg shadow-[var(--accent-1)]/30 group-hover:scale-105 group-hover:shadow-[var(--accent-2)]/45 transition-all duration-300 overflow-hidden">
-            {/* radar sweep — resting still, spins on hover */}
-            <span className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_72%,var(--accent-2))] opacity-0 group-hover:opacity-70 group-hover:animate-[spin_2.4s_linear_infinite] transition-opacity duration-300" />
-            <svg viewBox="0 0 24 24" fill="none" className="relative w-[19px] h-[19px]" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="white" strokeWidth="1.4" strokeOpacity="0.45" />
-              <circle cx="12" cy="12" r="4.6" stroke="white" strokeWidth="1.4" strokeOpacity="0.8" />
-              <path d="M12 12 L12 3.4" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
-              <circle cx="16.4" cy="7.6" r="1.7" fill="white" />
+          {/* Squircle badge + a clean radar TARGET (concentric rings + an
+              off-centre blip). Deliberately no centre-to-top needle — with the
+              inner ring that read as a power-button ⏻. A gentle sweep fans out
+              on hover. */}
+          <div className="relative w-9 h-9 rounded-[11px] bg-[var(--accent-1)] flex items-center justify-center shadow-sm shadow-[var(--accent-1)]/20 ring-1 ring-inset ring-white/10 group-hover:shadow-md group-hover:shadow-[var(--accent-2)]/35 transition-all duration-300 overflow-hidden">
+            {/* radar sweep — invisible at rest, fans + spins on hover */}
+            <span className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_68%,rgba(255,255,255,0.34)_90%,transparent)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_2.6s_linear_infinite] transition-opacity duration-300" />
+            <svg viewBox="0 0 24 24" fill="none" className="relative w-[20px] h-[20px]" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.2" stroke="white" strokeWidth="1.5" strokeOpacity="0.38" />
+              <circle cx="12" cy="12" r="4.3" stroke="white" strokeWidth="1.5" strokeOpacity="0.7" />
+              <circle cx="12" cy="12" r="1.5" fill="white" />
+              <circle cx="16.9" cy="7.5" r="1.9" fill="white" />
             </svg>
           </div>
           <span className="text-[17px] font-extrabold -tracking-[0.03em] font-display hidden sm:inline text-text-primary leading-none select-none">
