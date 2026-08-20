@@ -33,6 +33,7 @@ export default function Navbar() {
   const [theme, setTheme] = useState<"dark" | "light">("light");
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -46,12 +47,16 @@ export default function Navbar() {
     }
   }, []);
 
-  // Handle scroll trigger background classes
+  // Scroll → condense the navbar into a floating island + drive the progress bar
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const y = window.scrollY;
+      setScrolled(y > 20);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(max > 0 ? Math.min(y / max, 1) : 0);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -78,14 +83,17 @@ export default function Navbar() {
   }, [mobileOpen]);
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 border-b ${
-        scrolled
-          ? "backdrop-blur-xl bg-[var(--c-ground)]/80 border-border-subtle shadow-[0_4px_30px_rgba(37,64,255,0.10)]"
-          : "bg-transparent border-transparent"
-      }`}
-    >
-      <div className="flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
+    <header className="fixed top-0 inset-x-0 z-50 w-full">
+      {/* Floating island — full-width & transparent at the very top; on scroll it
+          condenses into a detached, rounded, blurred bar with a shadow. */}
+      <div
+        className={`relative transition-all duration-500 ease-out ${
+          scrolled
+            ? "mx-2 md:mx-4 mt-2 rounded-2xl border border-border-subtle backdrop-blur-xl bg-[var(--c-ground)]/80 shadow-[0_10px_40px_-8px_rgba(0,0,0,0.28)]"
+            : "border-b border-transparent bg-transparent"
+        }`}
+      >
+        <div className="flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
         {/* ─── Logo ───
             A solid wine radar badge with a hand-drawn radar mark (rings + sweep
             + ping) — deliberately not the gradient rounded-square + stock icon
@@ -199,6 +207,16 @@ export default function Navbar() {
           >
             {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
+        </div>
+        </div>
+
+        {/* Scroll-progress bar — a thin accent line that fills across the bottom
+            of the island as you move down the page. */}
+        <div className={`absolute inset-x-0 bottom-0 h-[2px] overflow-hidden ${scrolled ? "rounded-b-2xl" : ""}`}>
+          <div
+            className="h-full bg-gradient-to-r from-[var(--accent-1)] via-[var(--accent-2)] to-[var(--accent-1)] shadow-[0_0_8px_var(--accent-2)] transition-[width] duration-150 ease-out"
+            style={{ width: `${scrollProgress * 100}%` }}
+          />
         </div>
       </div>
 
