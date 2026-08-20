@@ -156,9 +156,10 @@ async function resilientFetch(url: string, init?: RequestInit): Promise<Response
     return fetch(url, init);
   }
 
-  const deadline = Date.now() + 48_000; // stop trying after ~48s (cold start is ~30–50s)
+  const deadline = Date.now() + 60_000; // cold start after a redeploy can run ~60–90s
   let attempt = 0;
   let lastErr: unknown;
+  let retryAfterMs = 0; // honoured when the edge sends a Retry-After
 
   while (Date.now() < deadline) {
     attempt++;
@@ -167,10 +168,13 @@ async function resilientFetch(url: string, init?: RequestInit): Promise<Response
       const timer = setTimeout(() => ctrl.abort(), 15_000); // a booting request can hang
       try {
         const res = await fetch(url, { ...init, signal: ctrl.signal });
-        // 5xx == still booting / transient — worth another try. 4xx is a real
-        // answer (e.g. 404) and must surface immediately, not spin.
-        if (res.status >= 500 && res.status <= 599) {
+        // Retryable-while-waking: 5xx (still booting) and 429 (Cloudflare rate-
+        // limiting the wake burst). Anything else is a real answer (e.g. 404)
+        // and must surface immediately, not spin.
+        if ((res.status >= 500 && res.status <= 599) || res.status === 429) {
           lastErr = new Error(`server ${res.status}`);
+          const ra = Number(res.headers.get("retry-after"));
+          retryAfterMs = Number.isFinite(ra) && ra > 0 ? Math.min(ra * 1000, 8000) : 0;
         } else {
           return res;
         }
@@ -179,9 +183,13 @@ async function resilientFetch(url: string, init?: RequestInit): Promise<Response
       }
     } catch (err) {
       lastErr = err; // network drop / abort while the dyno wakes
+      retryAfterMs = 0;
     }
-    // Backoff: 0.6s → 1.2s → 2.4s, capped at 3s.
-    const wait = Math.min(600 * 2 ** (attempt - 1), 3000);
+    // Gentle backoff with jitter so parallel fetches don't hammer in lockstep
+    // (tight synchronised retries are what trip the rate limiter): 0.8s → 1.6s →
+    // 3.2s, capped at 6s, ± jitter — or the server's Retry-After if it sent one.
+    const base = Math.min(800 * 2 ** (attempt - 1), 6000);
+    const wait = Math.max(retryAfterMs, base) * (0.7 + Math.random() * 0.6);
     if (Date.now() + wait >= deadline) break;
     await new Promise((r) => setTimeout(r, wait));
   }

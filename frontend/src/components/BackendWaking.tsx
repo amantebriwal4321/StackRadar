@@ -54,7 +54,11 @@ export default function BackendWaking() {
     };
   }, []);
 
-  // While cold: poll until it wakes, and count the elapsed wait for the UI.
+  // While cold: poll GENTLY until it wakes, then hard-reload so the page's data
+  // fetches (which may have given up during a long wake) re-run against the now-
+  // warm server. Polling is spaced out + jittered on purpose: the backend sits
+  // behind Cloudflare, and tight polling during a slow wake can trip rate-
+  // limiting (429), which would keep the curtain up even once the server is fine.
   useEffect(() => {
     if (status !== "cold") return;
     let cancelled = false;
@@ -63,12 +67,15 @@ export default function BackendWaking() {
 
     const poll = async () => {
       while (!cancelled) {
-        await new Promise((r) => setTimeout(r, 2200));
+        // 3.5s base + up to ~1.5s jitter, so many tabs don't hammer in lockstep.
+        await new Promise((r) => setTimeout(r, 3500 + Math.random() * 1500));
         if (cancelled) return;
-        const ok = await pingOk(6000);
+        const ok = await pingOk(7000);
         if (cancelled) return;
         if (ok) {
-          setStatus("warm");
+          // We showed the curtain, so the page likely rendered empty / gave up.
+          // A single reload into the warm server is the clean recovery.
+          window.location.reload();
           return;
         }
       }
