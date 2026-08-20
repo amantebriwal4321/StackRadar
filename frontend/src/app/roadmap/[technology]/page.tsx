@@ -212,41 +212,60 @@ export default function RoadmapPage() {
             {/* ── Your progress ── */}
             <div className="max-w-lg mx-auto">
               {isSignedIn ? (
-                <>
-                  <div className="flex items-center justify-between mb-2 font-mono text-[10px] uppercase tracking-wider">
-                    <span className="text-[var(--c-ink-2)]">Your progress</span>
-                    <span className="font-bold text-indigo-600 tabular-nums">
-                      {completedSteps.length}/{steps.length} · {percent}%
-                    </span>
+                <div className="rounded-2xl border border-indigo-500/15 bg-[var(--c-surface-2)]/40 p-5 text-left">
+                  {/* Label + count, with a big gradient percentage */}
+                  <div className="flex items-end justify-between mb-3.5">
+                    <div>
+                      <div className="text-[10px] font-mono font-bold text-[var(--c-ink-2)] uppercase tracking-wider">Your progress</div>
+                      <div className="text-[11px] font-mono text-[var(--c-ink-2)]/70 mt-1">
+                        <span className="font-bold text-[var(--c-ink)] tabular-nums">{completedSteps.length}</span> of {steps.length} modules complete
+                      </div>
+                    </div>
+                    <div className="text-3xl md:text-4xl font-black font-mono gradient-text tabular-nums leading-none">{percent}%</div>
                   </div>
-                  <div className="h-2.5 rounded-full bg-[var(--c-surface-2)] border border-[var(--c-border)] overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] shadow-[0_0_12px_var(--accent-2)] transition-[width] duration-500 ease-out"
-                      style={{ width: `${percent}%` }}
-                    />
+
+                  {/* Segmented module tracker — one segment per module, so a glance
+                      shows exactly which are done (and which aren't), not just a
+                      single fill level. Completed segments glow with the accent. */}
+                  <div className="flex gap-1.5">
+                    {steps.map((s) => {
+                      const done = completedSteps.includes(s.step);
+                      return (
+                        <div
+                          key={s.step}
+                          title={`Module ${s.step}${done ? " — done" : ""}`}
+                          className={`h-2.5 flex-1 rounded-full transition-all duration-500 ${
+                            done
+                              ? "bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] shadow-[0_0_8px_var(--accent-2)]"
+                              : "bg-[var(--c-surface)] border border-[var(--c-border)]"
+                          }`}
+                        />
+                      );
+                    })}
                   </div>
+
                   {percent === 100 ? (
-                    <p className="mt-3 text-[11px] font-mono font-bold text-[#12B76A] flex items-center justify-center gap-1.5">
+                    <p className="mt-3.5 text-[11px] font-mono font-bold text-[#12B76A] flex items-center gap-1.5">
                       <Flame className="w-3.5 h-3.5" /> Track complete — every module done.
                     </p>
                   ) : percent === 0 ? (
                     /* First-run coaching — hides itself after the first completed module. */
-                    <div className="mt-4 rounded-xl border border-indigo-500/20 bg-indigo-600/[0.06] px-4 py-3 text-left">
+                    <div className="mt-3.5 rounded-xl border border-indigo-500/20 bg-indigo-600/[0.06] px-4 py-3">
                       <p className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-wider mb-1.5">
                         New here? How this works
                       </p>
                       <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-light list-decimal list-inside marker:text-indigo-600 marker:font-bold">
                         <li>Begin with the highlighted <span className="font-bold text-[var(--c-ink)]">Next up</span> module below.</li>
                         <li>Pick a way to learn it — <span className="font-bold text-[var(--c-ink)]">Watch a video</span> or <span className="font-bold text-[var(--c-ink)]">Read the guide</span>.</li>
-                        <li>Come back and <span className="font-bold text-[var(--c-ink)]">Mark as done</span> — the bar fills and your streak grows.</li>
+                        <li>Come back and <span className="font-bold text-[var(--c-ink)]">Mark as done</span> — a segment lights up and your streak grows.</li>
                       </ol>
                     </div>
                   ) : (
-                    <p className="mt-3 text-[10px] font-mono text-[var(--c-ink-2)]/70 text-center">
-                      Finished a module? Hit <span className="text-indigo-600 font-bold">Mark as done</span> to move the bar.
+                    <p className="mt-3.5 text-[10px] font-mono text-[var(--c-ink-2)]/70">
+                      Finished a module? Hit <span className="text-indigo-600 font-bold">Mark as done</span> to light up its segment.
                     </p>
                   )}
-                </>
+                </div>
               ) : (
                 <SignInButton mode="modal">
                   <button className="w-full px-4 py-3 rounded-xl border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-600 transition-colors cursor-pointer">
