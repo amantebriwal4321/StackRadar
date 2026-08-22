@@ -91,6 +91,33 @@ export default function BackendWaking() {
   // A very long wait (server having a bad day) — offer a manual reload.
   const stalled = seconds >= 70;
 
+  // Rolling status line — makes a long wake read as real work in progress, not a
+  // frozen spinner. Tied to elapsed time; the later lines just hold if the wake
+  // runs long. (StackRadar really does aggregate these sources + score momentum.)
+  const PHASES = [
+    { t: 0, label: "Waking the live server…" },
+    { t: 6, label: "Tuning in to GitHub, Hacker News, Reddit & Dev.to…" },
+    { t: 14, label: "Reading this week's developer signals…" },
+    { t: 24, label: "Scoring 31 technologies by momentum…" },
+    { t: 35, label: "Ranking what's rising fastest…" },
+    { t: 47, label: "Assembling your radar…" },
+  ];
+  const phase = PHASES.reduce((acc, p) => (seconds >= p.t ? p : acc), PHASES[0]);
+
+  // Estimated progress — a decelerating curve that eases toward ~96% and never
+  // fakes completion; the actual 100% is the reload once the server answers.
+  const progress = Math.min(96, Math.round(96 * (1 - Math.exp(-seconds / 15))));
+
+  // Radar "contacts" that twinkle in around the dish, like signals being picked
+  // up. Purely decorative; the text below always carries the real state.
+  const BLIPS = [
+    { x: "22%", y: "30%", d: 0.2 },
+    { x: "72%", y: "24%", d: 1.2 },
+    { x: "80%", y: "60%", d: 0.6 },
+    { x: "34%", y: "72%", d: 1.7 },
+    { x: "58%", y: "48%", d: 2.1 },
+  ];
+
   return (
     <AnimatePresence>
       {status === "cold" && (
@@ -116,11 +143,14 @@ export default function BackendWaking() {
 
           <div className="relative flex w-full max-w-md flex-col items-center text-center">
             {/* ─── Radar dish, echoing the logo ─── */}
-            <div className="relative mb-8 h-28 w-28">
+            <div className="relative mb-8 h-32 w-32">
               {/* concentric rings */}
               <div className="absolute inset-0 rounded-full border border-[color-mix(in_srgb,var(--accent-1)_28%,transparent)]" />
               <div className="absolute inset-[18%] rounded-full border border-[color-mix(in_srgb,var(--accent-1)_36%,transparent)]" />
               <div className="absolute inset-[38%] rounded-full border border-[color-mix(in_srgb,var(--accent-1)_50%,transparent)]" />
+              {/* crosshair */}
+              <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-[color-mix(in_srgb,var(--accent-1)_18%,transparent)]" />
+              <div className="absolute top-1/2 left-0 w-full h-px -translate-y-1/2 bg-[color-mix(in_srgb,var(--accent-1)_18%,transparent)]" />
               {/* expanding ping */}
               <div className="absolute inset-0 rounded-full border border-[var(--accent-2)]/50 motion-safe:animate-ping" />
               {/* sweep */}
@@ -135,6 +165,18 @@ export default function BackendWaking() {
                 }}
                 aria-hidden="true"
               />
+              {/* contact blips */}
+              {BLIPS.map((b, i) => (
+                <motion.span
+                  key={i}
+                  className="absolute h-1.5 w-1.5 rounded-full bg-[var(--accent-2)] shadow-[0_0_8px_var(--accent-2)]"
+                  style={{ left: b.x, top: b.y }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: [0, 1, 0], scale: [0, 1, 0.4] }}
+                  transition={{ duration: 2.6, repeat: Infinity, delay: b.d, ease: "easeInOut" }}
+                  aria-hidden="true"
+                />
+              ))}
               {/* core dot */}
               <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-1)] shadow-[0_0_16px_var(--accent-2)]" />
             </div>
@@ -145,28 +187,47 @@ export default function BackendWaking() {
             <h2 className="mt-3 font-display text-2xl font-extrabold -tracking-[0.02em] text-[var(--c-ink)] sm:text-3xl">
               Warming up the live data
             </h2>
-            <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--c-ink-2)]">
-              StackRadar runs on a free-tier server that sleeps when it&apos;s
-              quiet. The first visit wakes it — usually about{" "}
-              <span className="font-semibold text-[var(--c-ink)]">30–50 seconds</span>,
-              just this once. Real momentum data is loading now.
-            </p>
 
-            {/* shimmer progress rail */}
-            <div className="mt-7 h-1 w-56 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--accent-1)_14%,transparent)]">
-              <motion.div
-                className="h-full w-1/3 rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(90deg, transparent, var(--accent-2), transparent)",
-                }}
-                animate={{ x: ["-120%", "360%"] }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-              />
+            {/* rolling status line — keyed so it re-mounts per phase; the entrance
+                is transform-only (opacity stays 1) so a backgrounded tab can never
+                strand it invisible. */}
+            <div className="mt-3 h-6 w-full overflow-hidden">
+              <motion.p
+                key={phase.label}
+                initial={{ y: 8 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="font-mono text-[13px] text-[var(--c-ink-2)]"
+              >
+                {phase.label}
+              </motion.p>
             </div>
 
-            <p className="mt-4 font-mono text-xs text-[var(--c-ink-2)]/70">
-              waking… {seconds}s
+            {/* determinate progress rail with a moving sheen. Width is driven by a
+                CSS transition (not a JS animation), so it advances even if the tab
+                is briefly backgrounded. */}
+            <div className="mt-6 w-64 max-w-full">
+              <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--accent-1)_14%,transparent)]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] transition-[width] duration-700 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+                <motion.div
+                  className="absolute inset-y-0 w-16 rounded-full"
+                  style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)" }}
+                  animate={{ x: ["-64px", "256px"] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between font-mono text-[11px] text-[var(--c-ink-2)]/70">
+                <span>free-tier server · first visit only</span>
+                <span className="tabular-nums text-[var(--accent-1)]">{progress}%</span>
+              </div>
+            </div>
+
+            <p className="mt-4 font-mono text-[11px] text-[var(--c-ink-2)]/50">
+              this only happens once · {seconds}s
             </p>
 
             {stalled && (
