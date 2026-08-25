@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, Loader2, Check, ArrowRight } from "lucide-react";
 import { joinWaitlist } from "@/data/trends";
@@ -12,6 +12,25 @@ import { joinWaitlist } from "@/data/trends";
  *
  * `source` is stored with the signup for attribution (e.g. "landing", "mobile").
  */
+/** 16 pieces on an even fan, alternating accent tints. Fixed values (not
+ *  random) so SSR and client render identical markup. */
+const CONFETTI = Array.from({ length: 16 }, (_, i) => {
+  const angle = (i / 16) * Math.PI * 2;
+  const spread = 120 + (i % 4) * 26;
+  return {
+    dx: Math.round(Math.cos(angle) * spread),
+    dy: Math.round(Math.sin(angle) * spread * 0.7) - 30, // bias upward
+    rot: 180 + (i % 5) * 72,
+    delay: (i % 6) * 45,
+    color:
+      i % 3 === 0
+        ? "var(--accent-1)"
+        : i % 3 === 1
+          ? "var(--accent-2)"
+          : "var(--color-score-high, #12B76A)",
+  };
+});
+
 export default function WaitlistCapture({
   source = "landing",
   className = "",
@@ -23,6 +42,14 @@ export default function WaitlistCapture({
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [already, setAlready] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [burst, setBurst] = useState(false);
+
+  // Clear the confetti nodes once they've played out.
+  useEffect(() => {
+    if (!burst) return;
+    const t = setTimeout(() => setBurst(false), 1600);
+    return () => clearTimeout(t);
+  }, [burst]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -33,6 +60,8 @@ export default function WaitlistCapture({
       const res = await joinWaitlist(email.trim(), source);
       setAlready(res.already);
       setState("done");
+      // Celebrate a real new signup — not a repeat submit of a known address.
+      if (!res.already) setBurst(true);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
       setState("error");
@@ -53,6 +82,29 @@ export default function WaitlistCapture({
         aria-hidden="true"
       />
       <div className="hud-grid pointer-events-none absolute inset-0 opacity-[0.15]" aria-hidden="true" />
+
+      {/* Confetti burst — 16 accent-tinted pieces thrown from the card centre.
+          Deterministic angles (no Math.random at render time) so server and
+          client markup agree. */}
+      {burst && (
+        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden="true">
+          {CONFETTI.map((c, i) => (
+            <span
+              key={i}
+              className="confetti-piece"
+              style={
+                {
+                  background: c.color,
+                  "--dx": `${c.dx}px`,
+                  "--dy": `${c.dy}px`,
+                  "--rot": `${c.rot}deg`,
+                  "--cd": `${c.delay}ms`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
+      )}
 
       <div className="relative">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--c-border)] bg-[var(--c-surface-2)] px-3 py-1">
