@@ -17,7 +17,7 @@ import {
 
 // Series colors for up to 5 tracked tools — anchored on the indigo accent,
 // distinguishable via the system's own data tokens (no off-brand pink/teal).
-const COMPARE_COLORS = ["#7C2D4A", "#12B76A", "#B54708", "#F04438", "#8f9cf5"];
+const COMPARE_COLORS = ["#5266eb", "#12B76A", "#B54708", "#F04438", "#8f9cf5"];
 
 export default function ComparePage() {
   const [allTools, setAllTools] = useState<Tool[]>([]);

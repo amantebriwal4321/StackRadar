@@ -296,7 +296,7 @@ export default function RoadmapPage() {
             className={`absolute left-[2.35rem] md:left-[4.35rem] top-10 w-0.5 z-0 transition-all duration-500 ease-out ${
               isSignedIn
                 ? "bg-gradient-to-b from-[#12B76A] to-[#12B76A]/70 shadow-[0_0_10px_rgba(18,183,106,0.45)]"
-                : "bg-gradient-to-b from-indigo-500 via-indigo-500 to-indigo-400 shadow-[0_0_10px_rgba(124,45,74,0.4)]"
+                : "bg-gradient-to-b from-indigo-500 via-indigo-500 to-indigo-400 shadow-[0_0_10px_rgba(82,102,235,0.4)]"
             }`}
             style={{ height: `${isSignedIn ? percent : scrollFillHeight}%` }}
           />
@@ -492,8 +492,8 @@ export default function RoadmapPage() {
                               <span
                                 className="text-[10px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
                                 style={{
-                                  color: tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#7C2D4A",
-                                  background: `${tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#7C2D4A"}14`,
+                                  color: tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#5266eb",
+                                  background: `${tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#5266eb"}14`,
                                 }}
                               >
                                 {Math.round(tool.score)}

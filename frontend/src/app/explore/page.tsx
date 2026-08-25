@@ -112,7 +112,7 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
 const TIER_META: Record<string, { label: string; color: string; ring: string; num: string }> = {
   beginner: { label: "Foundational Tools", color: "#12B76A", ring: "shadow-[0_0_16px_rgba(18,183,106,0.4)]", num: "01" },
   intermediate: { label: "Core Tools", color: "#B54708", ring: "shadow-[0_0_16px_rgba(181,71,8,0.35)]", num: "02" },
-  advanced: { label: "Advanced Tools", color: "#7C2D4A", ring: "shadow-[0_0_16px_rgba(124,45,74,0.45)]", num: "03" },
+  advanced: { label: "Advanced Tools", color: "#5266eb", ring: "shadow-[0_0_16px_rgba(82,102,235,0.45)]", num: "03" },
 };
 
 export default function ExplorePage() {
