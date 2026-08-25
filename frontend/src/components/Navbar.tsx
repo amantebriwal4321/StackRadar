@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
+import SplitReveal from "@/components/ui/SplitReveal";
 
 // Roadmaps is the product's main attraction, so it sits first after the
 // console; the momentum surfaces (explore/trends/compare) follow as the
@@ -133,7 +134,7 @@ export default function Navbar() {
                 }`}
               >
                 <span className={`mr-1 font-extralight transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>[</span>
-                <span>{link.label}</span>
+                <SplitReveal text={link.label} by="char" stagger={18} delay={60} />
                 <span className={`ml-1 font-extralight transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>]</span>
                 {/* hover underline for inactive links — grows from the centre */}
                 {!isActive && (
@@ -176,7 +177,7 @@ export default function Navbar() {
             </>
           ) : isLoaded ? (
             <SignInButton mode="modal">
-              <button className="btn-primary text-xs py-1.5 px-4 hidden sm:flex items-center gap-1.5 cursor-pointer select-none">
+              <button className="btn-primary hidden sm:flex items-center gap-1.5 cursor-pointer select-none">
                 <Sparkles className="w-3.5 h-3.5" />
                 start console
               </button>

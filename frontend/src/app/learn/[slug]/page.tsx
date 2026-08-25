@@ -148,7 +148,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mt-8">
-            <Link href={`/roadmap/${slug}`} prefetch className="btn-primary text-sm py-3.5 px-7 rounded-xl justify-center">
+            <Link href={`/roadmap/${slug}`} prefetch className="btn-primary justify-center">
               Start the interactive roadmap <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href={`/plan/${slug}`} prefetch className="px-7 py-3.5 rounded-xl border border-indigo-500/25 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-sm font-bold font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors text-[var(--c-ink)]">
@@ -219,7 +219,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
             Ready to start learning {subj}?
           </h2>
           <p className="text-sm text-[var(--c-ink-2)] font-extralight mb-6">Free, no sign-up to begin. Track your streak, one lesson at a time.</p>
-          <Link href={`/roadmap/${slug}`} prefetch className="btn-primary text-sm py-3.5 px-7 rounded-xl inline-flex">
+          <Link href={`/roadmap/${slug}`} prefetch className="btn-primary inline-flex">
             Open the {subj} roadmap <ArrowRight className="w-4 h-4" />
           </Link>
         </section>

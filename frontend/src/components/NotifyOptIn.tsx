@@ -70,7 +70,7 @@ export default function NotifyOptIn() {
       <button
         onClick={onSubscribe}
         disabled={saving}
-        className="btn-primary text-xs py-2 px-4 rounded-lg shrink-0 justify-center disabled:opacity-60"
+        className="btn-primary shrink-0 justify-center disabled:opacity-60"
       >
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> Remind me</>}
       </button>

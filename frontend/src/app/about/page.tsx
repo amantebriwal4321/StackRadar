@@ -84,7 +84,7 @@ export default function AboutPage() {
             transition={{ ...reveal.transition, delay: 0.15 }}
             className="flex flex-wrap gap-3.5 mt-8"
           >
-            <Link href="/trends" className="btn-primary text-xs py-3 px-6 flex items-center gap-2">
+            <Link href="/trends" className="btn-primary flex items-center gap-2">
               <Radar className="w-4 h-4" /> Explore the radar
             </Link>
             <Link
@@ -362,7 +362,7 @@ export default function AboutPage() {
             : "See today’s movers, then jump straight into learning."}
         </p>
         <div className="flex flex-wrap gap-3.5 justify-center mt-8">
-          <Link href="/trends" className="btn-primary text-xs py-3 px-6 flex items-center gap-2">
+          <Link href="/trends" className="btn-primary flex items-center gap-2">
             <Radar className="w-4 h-4" /> See the live board
           </Link>
           <Link

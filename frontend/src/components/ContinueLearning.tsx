@@ -60,7 +60,7 @@ export default function ContinueLearning() {
             </p>
           </div>
           <SignInButton mode="modal">
-            <button className="btn-primary text-xs py-3 px-6 rounded-xl shrink-0 cursor-pointer">
+            <button className="btn-primary shrink-0 cursor-pointer">
               Start tracking <ArrowRight className="w-4 h-4" />
             </button>
           </SignInButton>
@@ -88,7 +88,7 @@ export default function ContinueLearning() {
               Choose a track and check off your first module — takes about an hour.
             </p>
           </div>
-          <Link href="/roadmaps" prefetch className="btn-primary text-xs py-3 px-6 rounded-xl shrink-0">
+          <Link href="/roadmaps" prefetch className="btn-primary shrink-0">
             <Map className="w-4 h-4" /> Browse roadmaps
           </Link>
         </div>
@@ -160,7 +160,7 @@ export default function ContinueLearning() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Link href={`/roadmap/${primary.roadmap_slug}`} prefetch className="btn-primary text-xs py-2.5 px-5 rounded-xl">
+          <Link href={`/roadmap/${primary.roadmap_slug}`} prefetch className="btn-primary">
             {focus ? "Resume track" : "Review track"} <ArrowRight className="w-4 h-4" />
           </Link>
           {summary!.active.length > 1 && (

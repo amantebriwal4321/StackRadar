@@ -30,6 +30,7 @@ import {
 } from "@/data/trends";
 
 import LiveConstellation from "@/components/3d/LiveConstellation";
+import SplitReveal from "@/components/ui/SplitReveal";
 import DashboardShell from "@/components/DashboardShell";
 import ContinueLearning from "@/components/ContinueLearning";
 import FiveMinutePlan from "@/components/FiveMinutePlan";
@@ -326,12 +327,16 @@ export default function HomePage() {
 
   return (
     <DashboardShell fullWidth>
+      {/* Dala's architecture: ONE fixed, full-viewport, negative-z particle
+          canvas that every section scrolls over, morphing between formations
+          (scattered cloud -> constellation -> ordered path) as you go. */}
+      <LiveConstellation tools={tools} variant="background" />
       <div ref={containerRef} className="relative pb-24">
 
       {/* ══════════════════════════════════════════
           SECTION 1: HERO & 3D SPHERE CENTERPIECE
          ══════════════════════════════════════════ */}
-      <section className="relative w-full max-w-7xl mx-auto px-6 pt-2 md:pt-4 pb-16 min-h-[70vh] flex items-start">
+      <section className="relative w-full max-w-7xl mx-auto px-6 pt-[92px] md:pt-[144px] pb-12 min-h-[86vh] flex items-start">
         
         {/* Hero background — vibrant aurora mesh (multi-color wash) */}
         <div className="absolute inset-0 pointer-events-none aurora-mesh [mask-image:radial-gradient(ellipse_at_center,black,transparent_85%)]" />
@@ -376,29 +381,23 @@ export default function HomePage() {
                 <span className="hero-line block">
                   in the{" "}
                   <span className="relative inline-block align-baseline">
-                    <span className="inline-block gradient-text pb-[0.28em] -mb-[0.28em]">right order</span>
+                    <span className="inline-block pb-[0.28em] -mb-[0.28em] text-[var(--c-ink)]">right order</span>
                   </span>
                   <span className="text-[var(--c-ink)]">.</span>
-                  {/* Blinking caret — the app's live-console identity; after the
-                      period so it never crosses a descender. */}
-                  <span
-                    className="inline-block w-[0.09em] h-[0.72em] ml-[0.22em] align-baseline rounded-[1px] bg-[var(--accent-2)] animate-caret-blink"
-                    aria-hidden="true"
-                  />
                 </span>
               </span>
             </h1>
 
             {/* Paragraph Subhead — roadmap-led; momentum is the engine, not the pitch */}
             <p className="hero-anim-item text-base md:text-lg text-[var(--c-ink-2)] max-w-xl leading-relaxed font-sans font-extralight">
-              <span className="font-semibold text-[var(--c-ink)]">StackRadar turns live momentum data into a step-by-step roadmap for every domain</span>{" "}
+              <span>StackRadar turns live momentum data into a step-by-step roadmap for every domain</span>{" "}
               — the right tools in the right order, each with the single best free video and a tracker to keep your streak.
             </p>
 
             {/* Primary CTA — the 5-minute plan is the product's front door, but it
                 sits below the 90vh hero; this makes it one click from first paint. */}
             <div className="hero-anim-item flex flex-wrap gap-3">
-              <a href="#five-minute-plan" className="btn-primary text-sm py-3 px-6 rounded-xl">
+              <a href="#five-minute-plan" className="btn-primary">
                 <Compass className="w-4 h-4" /> Get my 5-minute plan <ArrowRight className="w-4 h-4" />
               </a>
               <Link
@@ -493,9 +492,6 @@ export default function HomePage() {
             className="h-[350px] md:h-[520px] flex items-center justify-center relative sphere-container"
             style={{ x: springX, y: springY }}
           >
-            <div className="absolute inset-0 w-full h-full flex items-center justify-center z-0">
-              <LiveConstellation tools={tools} />
-            </div>
             
             {/* Visual Floating Telemetry Tags around sphere */}
             <motion.div
@@ -540,6 +536,32 @@ export default function HomePage() {
          ══════════════════════════════════════════ */}
       {/* scroll-mt clears the fixed navbar when arriving via the #five-minute-plan
           anchor (hero CTA + navbar both point here). */}
+      {/* ══════════════════════════════════════════
+          NARRATIVE — Dala's signature editorial passage.
+          One thought per line at 36px/400 on the void, naming the problem the
+          product exists for. SplitReveal carries the wipe-up so it inherits the
+          fail-safe (the words render readable if the animation never runs).
+         ══════════════════════════════════════════ */}
+      <section className="relative z-10 max-w-4xl mx-auto px-6 section-rhythm">
+        <div className="space-y-5 md:space-y-7">
+          {[
+            "There has never been more to learn, and never less clarity about what is worth learning.",
+            "You lose months on a framework that was already fading before you opened the first tutorial.",
+            "The advice is loud, confident, and two years out of date.",
+            "StackRadar reads what developers are actually building with — right now — and turns it into an order you can follow.",
+          ].map((line, i) => (
+            <SplitReveal
+              key={i}
+              as="p"
+              text={line}
+              delay={i * 90}
+              stagger={18}
+              className={`t-narrative block ${i === 3 ? "text-[var(--c-ink)]" : "text-[var(--c-ink-2)]"}`}
+            />
+          ))}
+        </div>
+      </section>
+
       <section id="five-minute-plan" className="max-w-5xl mx-auto px-6 -mt-6 md:-mt-4 mb-8 relative z-20 section-reveal scroll-mt-24">
         <FiveMinutePlan />
       </section>
@@ -600,7 +622,7 @@ export default function HomePage() {
               <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
               <Compass className="w-4 h-4" /> Choose your path
             </div>
-            <h2 className="text-3xl md:text-5xl font-normal font-display tracking-[-0.04em]">
+            <h2 className="t-statement font-display">
               Pick a domain, get a roadmap
             </h2>
           </div>
@@ -922,13 +944,13 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 6: HOW-IT-WORKS / PROCESS FLOW
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-24 process-section">
+      <section className="max-w-7xl mx-auto px-6 section-rhythm min-h-screen flex flex-col justify-center process-section">
         
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-4 section-reveal">
           <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
             <Shield className="w-4 h-4" /> Why our roadmaps stay current
           </div>
-          <h2 className="text-3xl md:text-5xl font-normal font-display leading-tight">
+          <h2 className="t-statement font-display">
             A roadmap that updates<br/>
             <span className="text-shimmer">itself from live data</span>
           </h2>
@@ -978,7 +1000,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 7: CTA FOOTER WITH RADAR
          ══════════════════════════════════════════ */}
-      <section className="max-w-5xl mx-auto px-6 py-24 cta-section">
+      <section className="max-w-5xl mx-auto px-6 section-rhythm min-h-screen flex flex-col justify-center cta-section">
         <div className="glass-panel-glow rounded-3xl p-10 md:p-14 text-center relative overflow-hidden border border-indigo-500/15 bg-[var(--c-surface-2)]/70">
           
           {/* Radar SVG Overlay */}
@@ -1013,7 +1035,7 @@ export default function HomePage() {
             <Sparkles className="w-10 h-10 mx-auto text-indigo-600 mb-6" />
           </motion.div>
           
-          <h3 className="text-3xl md:text-5xl font-normal font-display tracking-[-0.04em] max-w-2xl mx-auto leading-tight mb-4">
+          <h3 className="t-cta font-display max-w-2xl mx-auto mb-6">
             Pick a roadmap.<br/>
             <span className="text-shimmer">Learn one thing a day.</span>
           </h3>
@@ -1025,7 +1047,7 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-4 relative z-10">
             <Link
               href="/roadmaps"
-              className="btn-primary text-sm py-3 px-7 rounded-2xl flex items-center gap-2"
+              className="btn-primary flex items-center gap-2"
             >
               <Compass className="w-4 h-4" /> Start a roadmap <ArrowRight className="w-4 h-4" />
             </Link>

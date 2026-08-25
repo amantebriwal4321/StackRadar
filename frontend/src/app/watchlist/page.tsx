@@ -89,7 +89,7 @@ export default function WatchlistPage() {
             Save the tools you&apos;re tracking and jump back to their live scores any time.
           </p>
           <SignInButton mode="modal">
-            <button className="btn-primary text-xs py-3 px-6 cursor-pointer">Sign in</button>
+            <button className="btn-primary cursor-pointer">Sign in</button>
           </SignInButton>
         </div>
       </DashboardShell>

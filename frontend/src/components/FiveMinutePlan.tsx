@@ -191,7 +191,7 @@ export default function FiveMinutePlan() {
                 <Link
                   href={`/roadmap/${picked.slug}`}
                   prefetch
-                  className="btn-primary text-sm py-3.5 px-7 rounded-xl justify-center"
+                  className="btn-primary justify-center"
                 >
                   Open my plan <ArrowRight className="w-4 h-4" />
                 </Link>

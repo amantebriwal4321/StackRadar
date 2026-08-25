@@ -308,7 +308,7 @@ export default function ExplorePage() {
                             {entryTool.recommendation || `${entryTool.name} is the highest-leverage place to begin in ${currentDomain.name}. Follow the path below from here.`}
                           </p>
                           <div className="flex flex-wrap gap-3 pt-2">
-                            <Link href={`/roadmap/${currentDomain.slug}`} className="btn-primary text-xs py-2.5 px-5 rounded-xl">
+                            <Link href={`/roadmap/${currentDomain.slug}`} className="btn-primary">
                               <Map className="w-4 h-4" /> Start the {currentDomain.name} roadmap
                             </Link>
                             <Link href={`/tools/${entryTool.slug}`} className="px-5 py-2.5 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors">

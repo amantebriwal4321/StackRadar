@@ -47,15 +47,74 @@ function fibonacciSphere(n: number, radius: number): THREE.Vector3[] {
   return pts;
 }
 
+/* ── Scroll ratio, read imperatively ──
+   Dala's canvas is one fixed background whose particle cloud MORPHS between
+   baked shapes as you scroll. We can't ship their .glb models, so formations
+   are generated procedurally instead — and unlike theirs, ours mean something:
+   a scattered cloud (noise), the connected constellation (signal), and an
+   ordered helix path (the roadmap).
+
+   The ratio lives in a module ref updated by ONE passive listener. Never React
+   state: a per-frame setState in SmoothScroll was already removed for
+   re-rendering the whole app on every scroll frame. */
+const scrollRatio = { current: 0 };
+let scrollBound = false;
+function bindScroll() {
+  if (scrollBound || typeof window === "undefined") return;
+  scrollBound = true;
+  const update = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    scrollRatio.current = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
+  };
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update, { passive: true });
+}
+
+/** Loose spherical cloud — "scattered noise", the problem state. */
+function cloudFormation(n: number, radius: number): THREE.Vector3[] {
+  const pts: THREE.Vector3[] = [];
+  for (let i = 0; i < n; i++) {
+    // deterministic pseudo-random so SSR/CSR and every frame agree
+    const a = Math.sin(i * 12.9898) * 43758.5453;
+    const b = Math.sin(i * 78.233) * 12345.6789;
+    const c = Math.sin(i * 39.425) * 24634.6345;
+    const f = (x: number) => (x - Math.floor(x)) * 2 - 1;
+    pts.push(new THREE.Vector3(f(a), f(b), f(c)).normalize()
+      .multiplyScalar(radius * (1.15 + 0.75 * Math.abs(f(a)))));
+  }
+  return pts;
+}
+
+/** Ordered helix — "the right things in the right order", the roadmap state. */
+function pathFormation(n: number, radius: number): THREE.Vector3[] {
+  const pts: THREE.Vector3[] = [];
+  for (let i = 0; i < n; i++) {
+    const t = n > 1 ? i / (n - 1) : 0;
+    const angle = t * Math.PI * 3.2;
+    pts.push(new THREE.Vector3(
+      Math.cos(angle) * radius * 0.62,
+      (t - 0.5) * radius * 3.1,
+      Math.sin(angle) * radius * 0.62
+    ));
+  }
+  return pts;
+}
+
 function ConstellationScene({
   tools,
   reducedMotion,
+  background = false,
 }: {
   tools: Tool[];
   reducedMotion: boolean;
+  background?: boolean;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const shellRef = useRef<THREE.Mesh>(null);
+  const nodeRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const lineRef = useRef<THREE.LineSegments>(null);
+  const tmp = useRef(new THREE.Vector3());
   const mouse = useRef({ x: 0, y: 0 });
   const target = useRef({ x: 0, y: 0 });
 
@@ -65,6 +124,7 @@ function ConstellationScene({
       target.current.y = e.clientY / window.innerHeight - 0.5;
     };
     window.addEventListener("mousemove", onMove);
+    bindScroll();
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
@@ -94,26 +154,71 @@ function ConstellationScene({
     return chosen;
   }, [nodes]);
 
-  // Constellation lines: connect each labelled node to its 2 nearest neighbours
-  const lineGeometry = useMemo(() => {
-    const verts: number[] = [];
-    for (const node of nodes) {
-      const neighbours = nodes
-        .filter((n) => n !== node)
-        .map((n) => ({ n, d: node.pos.distanceTo(n.pos) }))
+  /* The three morph targets. Index 1 IS the existing sphere, so the hero looks
+     exactly as before and the morph only happens further down the page. */
+  const formations = useMemo(() => [
+    cloudFormation(nodes.length, RADIUS),
+    nodes.map((n) => n.pos.clone()),
+    pathFormation(nodes.length, RADIUS),
+  ], [nodes]);
+
+  // Neighbour PAIRS (indices, not baked vertices) so the lines can follow the
+  // nodes as they morph instead of being frozen to the sphere.
+  const pairs = useMemo(() => {
+    const out: [number, number][] = [];
+    nodes.forEach((node, i) => {
+      nodes
+        .map((n, j) => ({ j, d: node.pos.distanceTo(n.pos) }))
+        .filter((x) => x.j !== i)
         .sort((a, b) => a.d - b.d)
-        .slice(0, 2);
-      for (const { n } of neighbours) {
-        verts.push(node.pos.x, node.pos.y, node.pos.z, n.pos.x, n.pos.y, n.pos.z);
-      }
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-    return geo;
+        .slice(0, 2)
+        .forEach(({ j }) => out.push([i, j]));
+    });
+    return out;
   }, [nodes]);
+
+  const lineGeometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(pairs.length * 6), 3));
+    return geo;
+  }, [pairs]);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
+
+    /* ── Morph on scroll ──
+       Blend across the three formations by scroll position: cloud (top) ->
+       constellation (middle) -> ordered path (bottom). Positions are lerped
+       so the shape eases rather than snapping, and the connecting lines are
+       rebuilt from the live positions so they travel with the nodes. */
+    if (!reducedMotion && formations.length === 3) {
+      const seg = scrollRatio.current * 2;          // 0..2 across three targets
+      const i0 = Math.min(Math.floor(seg), 1);
+      const blend = seg - i0;
+      const from = formations[i0];
+      const to = formations[i0 + 1];
+      for (let i = 0; i < nodeRefs.current.length; i++) {
+        const mesh = nodeRefs.current[i];
+        if (!mesh || !from[i] || !to[i]) continue;
+        tmp.current.copy(from[i]).lerp(to[i], blend);
+        // gentle breathing so the field never looks frozen
+        tmp.current.multiplyScalar(1 + Math.sin(t * 0.6 + i) * 0.012);
+        mesh.position.lerp(tmp.current, 0.08);
+      }
+      const line = lineRef.current;
+      if (line) {
+        const attr = line.geometry.getAttribute("position") as THREE.BufferAttribute;
+        for (let p = 0; p < pairs.length; p++) {
+          const a = nodeRefs.current[pairs[p][0]];
+          const b = nodeRefs.current[pairs[p][1]];
+          if (!a || !b) continue;
+          attr.setXYZ(p * 2, a.position.x, a.position.y, a.position.z);
+          attr.setXYZ(p * 2 + 1, b.position.x, b.position.y, b.position.z);
+        }
+        attr.needsUpdate = true;
+      }
+    }
+
     if (groupRef.current) {
       if (!reducedMotion) {
         mouse.current.x += (target.current.x - mouse.current.x) * 0.04;
@@ -130,7 +235,9 @@ function ConstellationScene({
   });
 
   return (
-    <group ref={groupRef}>
+    /* As a background, sit the mass right-of-centre so the hero copy reads on
+       the left — the same composition as Dala's brain. */
+    <group ref={groupRef} position={background ? [1.85, 0, 0] : [0, 0, 0]}>
       {/* faint outer wireframe shell for depth */}
       <mesh ref={shellRef}>
         <icosahedronGeometry args={[RADIUS + 0.35, 1]} />
@@ -144,7 +251,7 @@ function ConstellationScene({
       </mesh>
 
       {/* constellation lines */}
-      <lineSegments geometry={lineGeometry}>
+      <lineSegments ref={lineRef} geometry={lineGeometry}>
         <lineBasicMaterial
           color="#8052ff"
           transparent
@@ -154,8 +261,12 @@ function ConstellationScene({
       </lineSegments>
 
       {/* nodes */}
-      {nodes.map((node) => (
-        <mesh key={node.tool.slug} position={node.pos}>
+      {nodes.map((node, i) => (
+        <mesh
+          key={node.tool.slug}
+          position={node.pos}
+          ref={(el) => { nodeRefs.current[i] = el; }}
+        >
           <sphereGeometry args={[node.size, 16, 16]} />
           <meshBasicMaterial color={node.color} transparent opacity={0.9} />
         </mesh>
@@ -203,7 +314,16 @@ function ConstellationScene({
   );
 }
 
-export default function LiveConstellation({ tools }: { tools: Tool[] }) {
+export default function LiveConstellation({
+  tools,
+  variant = "inline",
+}: {
+  tools: Tool[];
+  /** "background" reproduces Dala's architecture: ONE fixed, full-viewport,
+   *  negative-z canvas that every section scrolls over, rather than a visual
+   *  boxed inside the hero. */
+  variant?: "inline" | "background";
+}) {
   const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -228,20 +348,30 @@ export default function LiveConstellation({ tools }: { tools: Tool[] }) {
     return () => { cancelAnimationFrame(raf); clearTimeout(t); };
   }, [mounted]);
 
+  const isBg = variant === "background";
+
+  // Fail-safe: with no data (or before mount) render nothing but the void — the
+  // page must never show a gap where the canvas would be.
   if (!mounted || tools.length === 0) {
-    return <div className="w-full h-full min-h-[350px] md:min-h-[500px]" />;
+    return isBg ? null : <div className="w-full h-full min-h-[350px] md:min-h-[500px]" />;
   }
 
   return (
-    <div className="w-full h-full min-h-[350px] md:min-h-[500px] relative select-none">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(82,102,235,0.10),transparent_70%)] pointer-events-none" />
+    <div
+      className={
+        isBg
+          ? "fixed inset-0 -z-10 pointer-events-none select-none"
+          : "w-full h-full min-h-[350px] md:min-h-[500px] relative select-none"
+      }
+      aria-hidden={isBg ? true : undefined}
+    >
       <Canvas
-        camera={{ position: [0, 0, 5.4], fov: 55 }}
+        camera={{ position: [0, 0, isBg ? 6.4 : 5.4], fov: 55 }}
         gl={{ antialias: true, alpha: true }}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       >
         <ambientLight intensity={1.4} />
-        <ConstellationScene tools={tools} reducedMotion={reducedMotion} />
+        <ConstellationScene tools={tools} reducedMotion={reducedMotion} background={isBg} />
       </Canvas>
     </div>
   );

@@ -100,7 +100,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
               <Link
                 href={`/roadmap/${goal.slug}`}
                 prefetch
-                className="btn-primary text-sm py-3.5 px-7 rounded-xl justify-center"
+                className="btn-primary justify-center"
               >
                 Open the roadmap <ArrowRight className="w-4 h-4" />
               </Link>

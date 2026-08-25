@@ -830,21 +830,23 @@ body,
   inset: -10%;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.55;
-  /* Outlined triangles — the screenshot of the real site shows hollow,
-     sharp-edged 1-2px triangles scattered across the void, not round dots.
-     Three layers at different scales/colours give the low-density scatter. */
+  /* Dala's ambient triangles are TINY and barely-there. The previous version
+     had a scale bug — a 60px SVG tile drawn at background-size 210px scaled
+     each triangle 3.5x, turning ambient scatter into wallpaper. Tile size now
+     EQUALS background-size, so a ~9px triangle renders at ~9px, spaced far
+     apart, at low opacity. */
+  opacity: 0.16;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M30 16 L41 38 L19 38 Z' fill='none' stroke='%238052ff' stroke-width='1.5'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cpath d='M45 30 L56 52 L34 52 Z' fill='none' stroke='%23ffb829' stroke-width='1.5' transform='rotate(24 45 41)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3Cpath d='M65 48 L76 70 L54 70 Z' fill='none' stroke='%2315846e' stroke-width='1.5' transform='rotate(-18 65 59)'/%3E%3C/svg%3E");
-  background-size: 210px 190px, 330px 290px, 470px 410px;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='240'%3E%3Cpath d='M40 30 L45 40 L35 40 Z' fill='none' stroke='%238052ff' stroke-width='1'/%3E%3Cpath d='M190 150 L196 162 L184 162 Z' fill='none' stroke='%238052ff' stroke-width='1' transform='rotate(18 190 156)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='320'%3E%3Cpath d='M120 80 L126 92 L114 92 Z' fill='none' stroke='%23ffb829' stroke-width='1' transform='rotate(24 120 86)'/%3E%3Cpath d='M280 240 L285 250 L275 250 Z' fill='none' stroke='%23ffb829' stroke-width='1'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='400'%3E%3Cpath d='M60 300 L66 312 L54 312 Z' fill='none' stroke='%2315846e' stroke-width='1' transform='rotate(-18 60 306)'/%3E%3Cpath d='M330 90 L335 100 L325 100 Z' fill='none' stroke='%23bdbdbd' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 260px 240px, 340px 320px, 420px 400px;
   background-position: 0 0, 90px 60px, 200px 150px;
-  animation: particle-drift 90s linear infinite;
+  animation: particle-drift 120s linear infinite;
 }
 @keyframes particle-drift {
   from { background-position: 0 0, 90px 60px, 200px 150px; }
-  to   { background-position: 210px 190px, 420px 350px, 670px 560px; }
+  to   { background-position: 260px 240px, 430px 380px, 620px 550px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ambient-particles { animation: none; }
@@ -867,3 +869,19 @@ body,
 
 /* Hover/colour transitions site-wide, on the measured curves. */
 .glow-hover { transition: border-color 0.5s var(--ease-colour), box-shadow 0.5s var(--ease-colour), transform 0.3s var(--ease-hover); }
+
+
+/* ─────────────────────────────────────────────
+   DALA TYPE STEPS
+   The measured heading sizes from dala.craftedbygc.com. All weight 400 —
+   hierarchy comes from scale and tracking, never weight — with -0.04em
+   above 42px. Responsive floors so phones don't get 112px headlines.
+   ───────────────────────────────────────────── */
+.t-display   { font-size: clamp(2.75rem, 8vw, 7rem);    font-weight: 400; letter-spacing: -0.04em; line-height: 1.1; }
+.t-section-lg{ font-size: clamp(2.25rem, 6vw, 4.875rem); font-weight: 400; letter-spacing: -0.04em; line-height: 1.1; }
+.t-cta       { font-size: clamp(1.875rem, 4.5vw, 3rem);  font-weight: 400; letter-spacing: -0.04em; line-height: 1.1; }
+.t-statement { font-size: clamp(1.75rem, 4vw, 2.625rem); font-weight: 400; letter-spacing: -0.04em; line-height: 1.2; }
+.t-narrative { font-size: clamp(1.35rem, 3vw, 2.25rem);  font-weight: 400; letter-spacing: -0.02em; line-height: 1.35; }
+
+/* Dala's body measure is a narrow ~360px column, not a full-width paragraph. */
+.measure { max-width: 26rem; }

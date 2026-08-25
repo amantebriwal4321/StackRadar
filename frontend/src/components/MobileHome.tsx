@@ -159,7 +159,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             initial={canAnimate ? { opacity: 0, y: 16 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.18 }}
             className="flex flex-col gap-3 mb-7"
           >
-            <a href="#plan-m" className="btn-primary text-[15px] py-4 rounded-2xl justify-center font-bold">
+            <a href="#plan-m" className="btn-primary text-[15px] justify-center font-bold">
               <Compass className="w-5 h-5" /> Get my 5-minute plan <ArrowRight className="w-5 h-5" />
             </a>
             <Link
@@ -420,7 +420,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             Sequenced steps, the best free video for each tool, and a streak to keep you going.
           </p>
           <div className="flex flex-col gap-3 relative">
-            <Link href="/roadmaps" className="btn-primary text-[15px] py-4 rounded-2xl justify-center font-bold">
+            <Link href="/roadmaps" className="btn-primary text-[15px] justify-center font-bold">
               <Compass className="w-5 h-5" /> Start a roadmap <ArrowRight className="w-5 h-5" />
             </Link>
             <a href="#plan-m" className="py-3.5 rounded-2xl border border-indigo-500/20 bg-[var(--c-surface)]/60 text-sm font-bold font-mono uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
@@ -447,7 +447,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           >
             <a
               href="#plan-m"
-              className="btn-primary w-full py-4 rounded-2xl justify-center font-bold text-[15px] shadow-xl shadow-[var(--accent-1)]/30 pointer-events-auto"
+              className="btn-primary w-full justify-center font-bold text-[15px] shadow-xl shadow-[var(--accent-1)]/30 pointer-events-auto"
             >
               <Compass className="w-5 h-5" /> Get my 5-minute plan <ArrowRight className="w-5 h-5" />
             </a>

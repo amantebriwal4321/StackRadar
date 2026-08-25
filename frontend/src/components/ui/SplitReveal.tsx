@@ -21,14 +21,18 @@ export default function SplitReveal({
   delay = 0,
   stagger = 70,
   as: Tag = "span",
+  by = "word",
 }: {
   text: string;
   className?: string;
-  /** Delay before the first word rises, in ms. */
+  /** Delay before the first unit rises, in ms. */
   delay?: number;
-  /** Gap between consecutive words, in ms. */
+  /** Gap between consecutive units, in ms. */
   stagger?: number;
   as?: "span" | "h1" | "h2" | "h3" | "p";
+  /** Dala splits nav labels per CHARACTER (charWipeUpIn) and headings per line;
+   *  "word" stays the default for body copy. */
+  by?: "word" | "char";
 }) {
   const [armed, setArmed] = useState(false);
   const ref = useRef<HTMLElement>(null);
