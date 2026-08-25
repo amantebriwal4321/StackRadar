@@ -25,46 +25,58 @@
   --color-ring: var(--ring);
 
   /* ══════════════════════════════════════════════
-     DESIGN SYSTEM: "Mercury" — monochrome + one accent
-     Onyx canvas · graphite cards · ivory text · cobalt as the SOLE
-     chromatic punctuation · green/amber/red reserved strictly for
-     data meaning. Dark is the default; html.light carries the
-     light variant. (Values here are the LIGHT variant.)
+     DESIGN SYSTEM: "Dala" — the void + one electric accent
+     Pure #000000 canvas (never dark grey), bone-white type, a single
+     vivid violet for filled actions, saffron for highlights. Hierarchy
+     comes from SCALE and TRACKING, never weight: headlines sit at 400,
+     body at 200. Elements float on the void — no card fills/shadows.
+     Dark is the default; :root carries the inverted light variant.
      ══════════════════════════════════════════════ */
+  /* Named Dala tokens, kept verbatim from the spec for fidelity. */
+  --color-void: #000000;
+  --color-bone-white: #ffffff;
+  --color-ash-gray: #9a9a9a;
+  --color-silver-mist: #bdbdbd;
+  --color-electric-iris: #8052ff;
+  --color-saffron-spark: #ffb829;
+  --color-deep-verdant: #15846e;
+
   /* Follows --c-ground so the canvas has ONE source of truth. The class-based
      utilities (bg-bg-primary on <body>, bg-background on the shell root) beat
-     the `body {}` element rule on specificity, so if these duplicated a literal
-     hex instead, animating --c-ground would visibly do nothing. */
+     the `body {}` element rule on specificity, so a duplicated literal here
+     would silently win over the token. */
   --color-bg-primary: var(--c-ground);
-  --color-bg-secondary: #eceef5;   /* raised surface */
-  --color-bg-card: #FFFFFF;        /* cards */
-  --color-ink: #171721;
+  --color-bg-secondary: var(--c-surface-2);
+  --color-bg-card: var(--c-surface);
+  --color-ink: #000000;
 
-  --color-accent-primary: #5266eb; /* the one accent — cobalt */
-  --color-accent-glow: #7b8bf2;    /* lighter cobalt for glows/gradients */
-  --color-accent-deep: #3a4bc4;    /* hover / pressed */
+  --color-accent-primary: #8052ff; /* Electric Iris — filled actions ONLY */
+  --color-accent-glow: #ffb829;    /* Saffron Spark — highlight text/links */
+  --color-accent-deep: #6a3fd6;    /* pressed */
   /* Aliases kept so existing token references resolve to the SINGLE accent. */
-  --color-accent-hot: #5266eb;
-  --color-accent-cyan: #5266eb;
-  --color-accent-violet: #5266eb;
-  --color-accent-lime: #5266eb;
+  --color-accent-hot: #8052ff;
+  --color-accent-cyan: #8052ff;
+  --color-accent-violet: #8052ff;
+  --color-accent-lime: #8052ff;
 
-  --color-text-primary: #171721;
-  --color-text-secondary: #5c5c6b;
-  --color-text-faint: #8f8f9c;
-  --color-text-accent: #5266eb;
+  --color-text-primary: #000000;
+  --color-text-secondary: #6b6b6b;
+  --color-text-faint: #9a9a9a;
+  --color-text-accent: #8052ff;
 
   /* Data-only semantics — used ONLY to encode momentum/trend, never decoration */
   --color-score-high: #12B76A;     /* rising / strong */
   --color-score-mid: #B54708;      /* watch */
   --color-score-low: #F04438;      /* cooling / weak */
 
-  --color-border-subtle: rgba(112, 112, 125, 0.28);
-  --color-glow-violet: rgba(82, 102, 235, 0.14);
-  --color-glow-cyan: rgba(82, 102, 235, 0.10);
+  --color-border-subtle: rgba(0, 0, 0, 0.12);
+  --color-glow-violet: rgba(128, 82, 255, 0.14);
+  --color-glow-cyan: rgba(128, 82, 255, 0.10);
 
   /* Typography */
-  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  /* Dala is a SINGLE-typeface system; Inter is the spec's own named
+     substitute for PPNeueMontreal. Mono is retained for tabular figures only. */
+  --font-display: var(--font-inter), "Inter", sans-serif;
   --font-sans: var(--font-inter), "Inter", sans-serif;
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 
@@ -75,12 +87,29 @@
   --duration-base: 400ms;
   --duration-slow: 800ms;
   --duration-cinematic: 1200ms;
+
+  /* ── Dala type scale (Inter). -0.04em tracking at 42px and above. ── */
+  --text-caption: 12px;
+  --text-nav-label: 14px;
+  --text-body: 18px;
+  --text-heading-2xs: 24px;
+  --text-heading-xs: 27px;
+  --text-subheading: 36px;
+  --text-heading-sm: 42px;
+  --text-heading: 48px;
+  --text-heading-lg: 78px;
+  --text-display: 113px;
+
+  /* ── Dala spacing: 6px base unit ── */
+  --spacing-6: 6px;   --spacing-12: 12px;  --spacing-18: 18px;
+  --spacing-24: 24px; --spacing-30: 30px;  --spacing-36: 36px;
+  --spacing-60: 60px; --spacing-96: 96px;  --spacing-120: 120px;
 }
 
 :root {
   /* Mercury radii: cards 12px, pills for controls. */
   --radius: 0.75rem;
-  --radius-card: 12px;
+  --radius-card: 24px;
   --radius-pill: 999px;
   --background: var(--c-ground);
   --foreground: #171721;
@@ -88,44 +117,47 @@
   --card-foreground: #171721;
   --popover: #FFFFFF;
   --popover-foreground: #171721;
-  --primary: #5266eb;
+  --primary: #8052ff;
   --primary-foreground: #FFFFFF;
-  --secondary: #eceef5;
+  --secondary: #ffffff;
   --secondary-foreground: #171721;
-  --muted: #e4e6ef;
+  --muted: #f2f2f2;
   --muted-foreground: #5c5c6b;
-  --accent: #5266eb;
+  --accent: #8052ff;
   --accent-foreground: #FFFFFF;
   --destructive: #F04438;
-  --border: rgba(112, 112, 125, 0.28);
-  --input: rgba(112, 112, 125, 0.28);
-  --ring: #5266eb;
+  --border: rgba(0, 0, 0, 0.12);
+  --input: rgba(0, 0, 0, 0.12);
+  --ring: #8052ff;
 
   /* ── PALETTE: Mercury — monochrome ground + cobalt as the sole accent ── */
-  --accent-1: #5266eb;   /* cobalt — solid fills, text, borders */
-  --accent-2: #7b8bf2;   /* lighter cobalt — gradients/glows (a TINT, not a 2nd hue) */
-  --accent-3: #3a4bc4;   /* deep cobalt — pressed */
+  --accent-1: #8052ff;   /* Electric Iris — filled actions only */
+  --accent-2: #ffb829;   /* Saffron Spark — highlight text/links */
+  --accent-3: #6a3fd6;   /* pressed */
   --ground: #f4f5f9;
 
   /* Remap Tailwind's whole indigo scale to cobalt so every `*-indigo-*` follows */
-  --color-indigo-400: #8b9af4;
-  --color-indigo-500: #5266eb;
-  --color-indigo-600: #5266eb;
-  --color-indigo-700: #3a4bc4;
+  --color-indigo-400: #a488ff;
+  --color-indigo-500: #8052ff;
+  --color-indigo-600: #8052ff;
+  --color-indigo-700: #6a3fd6;
 
   /* Themeable surface/text vars — flip under html.dark. (LIGHT values here.) */
   /* Scroll-canvas endpoints — ScrollCanvas.tsx interpolates --c-ground between
      these two as you scroll. Theme-scoped, so light mode needs no JS branch.
      Both are Mercury surface values; the shift never introduces a third hue. */
-  --canvas-a: #f4f5f9;             /* page canvas */
-  --canvas-b: #eceef5;             /* deepened canvas at mid-scroll */
+  --canvas-a: #ffffff;             /* page canvas (inverted void) */
+  --canvas-b: #ffffff;             /* Dala has no section colour shift */
   --c-ground: var(--canvas-a);
-  --c-surface: #FFFFFF;            /* cards / panels */
-  --c-surface-2: #eceef5;          /* raised chips / insets */
-  --c-ink: #171721;                /* primary text */
-  --c-ink-2: #5c5c6b;              /* secondary text */
-  --c-border: rgba(112, 112, 125, 0.28);
-  --c-scrim: #171721;            /* full-bleed dark chrome (preloader panels) — onyx in both themes */
+  /* There is no card SURFACE in Dala — panels are the canvas. Separation
+     comes from whitespace, and on data routes from a hairline border. */
+  --c-surface: #ffffff;
+  --c-surface-2: #ffffff;
+  --c-ink: #000000;                /* primary text */
+  --c-ink-2: #6b6b6b;              /* secondary text */
+  --c-ink-3: #8a8a8a;              /* tertiary / caption */
+  --c-border: rgba(0, 0, 0, 0.12); /* hairline (data routes only) */
+  --c-scrim: #000000;            /* full-bleed void chrome (preloader panels) — black in both themes */
 }
 
 /* ══════════════════════════════════════════════
@@ -136,55 +168,53 @@
    a first-time visitor sees. Data colours stay constant.
    ══════════════════════════════════════════════ */
 html.dark {
-  /* surfaces / text */
-  --canvas-a: #171721;             /* onyx canvas */
-  --canvas-b: #1e1e2a;             /* graphite at mid-scroll */
+  /* ── DALA, the default look: the void ── */
+  --canvas-a: #000000;             /* pure black — never dark grey */
+  --canvas-b: #000000;             /* no section colour shift in Dala */
   --c-ground: var(--canvas-a);
-  --c-surface: #1e1e2a;            /* graphite card */
-  --c-surface-2: #272735;          /* obsidian inset / secondary fill */
-  --c-ink: #ededf3;                /* ivory — never pure white */
-  --c-ink-2: #c3c3cc;              /* ash */
-  --c-border: rgba(226, 227, 237, 0.14);
-  --ground: #171721;
+  /* Panels ARE the void. No fill, no shadow; data routes add a hairline. */
+  --c-surface: #000000;
+  --c-surface-2: #000000;
+  --c-ink: #ffffff;                /* Bone White — the only typographic colour */
+  --c-ink-2: #9a9a9a;              /* Ash Gray */
+  --c-ink-3: #bdbdbd;              /* Silver Mist — quietest readable grey */
+  --c-border: rgba(255, 255, 255, 0.12);
+  --ground: #000000;
 
-  /* accent — cobalt, lifted just enough to stay legible on onyx while
-     still passing with white text on a filled button */
-  --accent-1: #6478ee;
-  --accent-2: #8f9cf5;
-  --accent-3: #4055d4;
-  --color-indigo-400: #8f9cf5;
-  --color-indigo-500: #6478ee;
-  --color-indigo-600: #6478ee;
-  --color-indigo-700: #4055d4;
-  --color-accent-primary: #6478ee;
-  --color-accent-glow: #8f9cf5;
-  --color-accent-deep: #4055d4;
-  --color-text-accent: #8f9cf5;
+  /* Electric Iris is a BUTTON/accent colour, never a large surface. */
+  --accent-1: #8052ff;
+  --accent-2: #ffb829;             /* Saffron Spark — highlight, not a gradient partner */
+  --accent-3: #6a3fd6;
+  --color-indigo-400: #a488ff;
+  --color-indigo-500: #8052ff;
+  --color-indigo-600: #8052ff;
+  --color-indigo-700: #6a3fd6;
+  --color-accent-primary: #8052ff;
+  --color-accent-glow: #ffb829;
+  --color-accent-deep: #6a3fd6;
+  --color-text-accent: #8052ff;
 
   /* design tokens */
-  /* --color-bg-primary and --background intentionally NOT redefined here:
-     both follow --c-ground, which already flips above. */
-  --color-bg-secondary: #272735;
-  --color-bg-card: #1e1e2a;
-  --color-text-primary: #ededf3;
-  --color-text-secondary: #c3c3cc;
-  --color-text-faint: #70707d;
-  --color-border-subtle: rgba(226, 227, 237, 0.14);
+  --color-ink: #ffffff;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #9a9a9a;
+  --color-text-faint: #6b6b6b;
+  --color-border-subtle: rgba(255, 255, 255, 0.12);
 
-  --foreground: #ededf3;
-  --card: #1e1e2a;
-  --card-foreground: #ededf3;
-  --popover: #1e1e2a;
-  --popover-foreground: #ededf3;
-  --primary: #5266eb;
-  --secondary: #272735;
-  --secondary-foreground: #ededf3;
-  --muted: #272735;
-  --muted-foreground: #c3c3cc;
-  --accent: #6478ee;
-  --border: rgba(226, 227, 237, 0.14);
-  --input: rgba(226, 227, 237, 0.16);
-  --ring: #6478ee;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --popover: #000000;
+  --popover-foreground: #ffffff;
+  --primary: #8052ff;
+  --secondary: #000000;
+  --secondary-foreground: #ffffff;
+  --muted: #0a0a0a;
+  --muted-foreground: #9a9a9a;
+  --accent: #8052ff;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: #8052ff;
 }
 
 /* overflow-x must be on <html> too, not just <body>.
@@ -744,3 +774,27 @@ body {
 
 /* Mercury vertical rhythm — 72px between major sections. */
 .section-rhythm { padding-top: 72px; padding-bottom: 72px; }
+
+
+/* ─────────────────────────────────────────────
+   TYPEFACE BINDING  (fixes a long-standing bug)
+   The @theme --font-sans/--font-display entries were being beaten by
+   Tailwind's own defaults, so the app had silently been rendering in
+   ui-sans-serif/system-ui this whole time — neither Inter nor the
+   Space Grotesk that the docs claimed. These plain-class rules sit at the
+   end of the sheet, so they win on source order and actually bind the
+   next/font faces. Dala is a single-typeface system: Inter everywhere,
+   with mono retained ONLY for tabular figures.
+   ───────────────────────────────────────────── */
+body,
+.font-sans {
+  font-family: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+.font-display {
+  font-family: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01" on;   /* per the Dala spec */
+}
+.font-mono {
+  font-family: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums; /* figures must line up in columns */
+}

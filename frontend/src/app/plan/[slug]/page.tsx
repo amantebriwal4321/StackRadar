@@ -77,10 +77,10 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
             <div className="flex items-start gap-4 mt-3 mb-6">
               <span className="text-5xl md:text-6xl leading-none select-none">{goal.icon}</span>
               <div>
-                <h1 className="text-3xl md:text-5xl font-black font-display text-[var(--c-ink)] leading-tight">
+                <h1 className="text-3xl md:text-5xl font-normal font-display text-[var(--c-ink)] leading-tight">
                   {goal.label}
                 </h1>
-                <p className="text-sm md:text-base text-[var(--c-ink-2)] font-light mt-1.5">
+                <p className="text-sm md:text-base text-[var(--c-ink-2)] font-extralight mt-1.5">
                   {goal.outcome} · {goal.weeks}
                 </p>
               </div>
@@ -91,7 +91,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
                 <div key={f.t} className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60">
                   <f.icon className="w-5 h-5 text-indigo-600 mb-2" />
                   <p className="text-sm font-bold text-[var(--c-ink)]">{f.t}</p>
-                  <p className="text-xs text-[var(--c-ink-2)] font-light mt-0.5">{f.d}</p>
+                  <p className="text-xs text-[var(--c-ink-2)] font-extralight mt-0.5">{f.d}</p>
                 </div>
               ))}
             </div>

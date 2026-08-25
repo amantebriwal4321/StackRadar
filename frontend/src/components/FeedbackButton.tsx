@@ -100,7 +100,7 @@ export default function FeedbackButton() {
                   <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--accent-1)]">
                     beta · 45 seconds
                   </p>
-                  <h2 className="mt-0.5 font-display text-lg font-extrabold -tracking-[0.02em] text-[var(--c-ink)]">
+                  <h2 className="mt-0.5 font-display text-lg font-normal -tracking-[0.02em] text-[var(--c-ink)]">
                     Shape StackRadar 🛰️
                   </h2>
                 </div>

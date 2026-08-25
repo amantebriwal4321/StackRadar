@@ -86,7 +86,7 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
         <ScoreRing score={tool.score} />
       </div>
 
-      <p className="text-[11px] text-[var(--c-ink-2)] leading-relaxed mt-4 line-clamp-2 font-light relative">
+      <p className="text-[11px] text-[var(--c-ink-2)] leading-relaxed mt-4 line-clamp-2 font-extralight relative">
         {tool.description || "Tracked live across developer signal sources."}
       </p>
 
@@ -207,10 +207,10 @@ export default function ExplorePage() {
               <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
                 <Route className="w-3.5 h-3.5" /> The tool radar
               </span>
-              <h1 className="text-3xl md:text-5xl font-black tracking-tight font-display flex items-center gap-3">
+              <h1 className="text-3xl md:text-5xl font-normal tracking-[-0.04em] font-display flex items-center gap-3">
                 <span className="text-text-primary">Explore Universe</span>
               </h1>
-              <p className="text-[var(--c-ink-2)] text-sm max-w-xl font-light">
+              <p className="text-[var(--c-ink-2)] text-sm max-w-xl font-extralight">
                 Pick a domain to see its <span className="text-indigo-600">tools</span> — foundational to advanced — each scored by
                 live momentum. Want the concepts to study in order? Open that domain&apos;s roadmap.
               </p>
@@ -301,10 +301,10 @@ export default function ExplorePage() {
                           <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5" /> Recommended first tool · {currentDomain.name}
                           </span>
-                          <h2 className="text-2xl md:text-3xl font-black font-display">
+                          <h2 className="text-2xl md:text-3xl font-normal font-display">
                             Start with <span className="text-[var(--c-ink)]">{entryTool.name}</span>
                           </h2>
-                          <p className="text-sm text-[var(--c-ink-2)] font-light max-w-xl leading-relaxed">
+                          <p className="text-sm text-[var(--c-ink-2)] font-extralight max-w-xl leading-relaxed">
                             {entryTool.recommendation || `${entryTool.name} is the highest-leverage place to begin in ${currentDomain.name}. Follow the path below from here.`}
                           </p>
                           <div className="flex flex-wrap gap-3 pt-2">
@@ -348,7 +348,7 @@ export default function ExplorePage() {
                               <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: meta.color, background: `${meta.color}18` }}>
                                 STEP {meta.num}
                               </span>
-                              <h3 className="text-lg md:text-xl font-black font-display uppercase tracking-wide">{meta.label}</h3>
+                              <h3 className="text-lg md:text-xl font-normal font-display uppercase tracking-wide">{meta.label}</h3>
                               <span className="text-[10px] font-mono text-[var(--c-ink-2)]/50 border border-indigo-500/10 rounded px-2 py-0.5">
                                 {tier.tools.length} {tier.tools.length === 1 ? "tool" : "tools"}
                               </span>

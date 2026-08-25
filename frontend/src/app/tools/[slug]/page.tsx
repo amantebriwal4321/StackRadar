@@ -131,10 +131,10 @@ export default function ToolDetailPage() {
                 <span className="text-[9px] font-mono text-indigo-600 tracking-widest uppercase">
                   CLASSIFIED NODE PROFILE
                 </span>
-                <h1 className="text-3xl md:text-5xl font-black font-display tracking-tight text-[var(--c-ink)] leading-tight">
+                <h1 className="text-3xl md:text-5xl font-normal font-display tracking-[-0.04em] text-[var(--c-ink)] leading-tight">
                   {tool.name}
                 </h1>
-                <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-2xl font-light">
+                <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-2xl font-extralight">
                   {tool.description || "Continuous scans are ongoing for this technology index. Real-time mentions are captured below."}
                 </p>
               </div>
@@ -181,7 +181,7 @@ export default function ToolDetailPage() {
             <h4 className="text-[10px] font-mono font-bold uppercase tracking-widest text-indigo-600 mb-2 flex items-center gap-2">
               <Info className="w-4 h-4" /> Decision Matrix Analysis
             </h4>
-            <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-4xl font-light pr-10">
+            <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-4xl font-extralight pr-10">
               {tool.recommendation}
             </p>
           </div>
@@ -315,7 +315,7 @@ export default function ToolDetailPage() {
                 <h4 className="text-sm font-bold text-[var(--c-ink)] flex items-center gap-1.5">
                   Prerequisite: <Link href={`/tools/${tool.parent_slug}`} className="text-indigo-600 hover:underline">{tool.parent_name}</Link>
                 </h4>
-                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light">
+                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
                   We highly recommend mapping out the concepts of {tool.parent_name} before indexing {tool.name}.
                 </p>
               </div>
@@ -327,7 +327,7 @@ export default function ToolDetailPage() {
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-[var(--c-ink)]">No Prerequisite Nodes</h4>
-                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light">
+                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
                   This technology is an entry-level root index. You can learn this directly without prior dependencies.
                 </p>
               </div>
@@ -341,7 +341,7 @@ export default function ToolDetailPage() {
                 <h4 className="text-sm font-bold flex items-center gap-2">
                   <GraduationCap className="w-5 h-5" /> Master {tool.name} Sequence
                 </h4>
-                <p className="text-indigo-100 text-xs leading-relaxed font-light">
+                <p className="text-indigo-100 text-xs leading-relaxed font-extralight">
                   Explore the curated learning sequence layout maps designed for {tool.category}.
                 </p>
               </div>
@@ -358,7 +358,7 @@ export default function ToolDetailPage() {
                 <h4 className="text-sm font-bold text-[var(--c-ink)] flex items-center gap-1.5">
                   Custom Roadmap Scrapers
                 </h4>
-                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light">
+                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
                   No dedicated roadmap created yet. Use explore sidebar to learn similar tools.
                 </p>
               </div>

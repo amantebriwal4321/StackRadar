@@ -114,7 +114,7 @@ export default function WaitlistCapture({
           </span>
         </div>
 
-        <h3 className="max-w-xl font-display text-2xl font-extrabold -tracking-[0.02em] text-[var(--c-ink)] sm:text-3xl">
+        <h3 className="max-w-xl font-display text-2xl font-normal tracking-[-0.04em] text-[var(--c-ink)] sm:text-3xl">
           Get the personalized version first
         </h3>
         <p className="mt-2 max-w-lg text-sm leading-relaxed text-[var(--c-ink-2)] sm:text-base">

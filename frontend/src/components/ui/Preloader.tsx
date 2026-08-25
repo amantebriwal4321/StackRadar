@@ -96,14 +96,14 @@ export default function Preloader() {
           text="Know what to learn next."
           delay={140}
           stagger={85}
-          className="max-w-3xl text-4xl md:text-6xl font-black font-display tracking-tight leading-[1.05] text-white"
+          className="max-w-3xl text-4xl md:text-6xl font-normal font-display tracking-[-0.04em] leading-[1.05] text-white"
         />
 
         <SplitReveal
           text="Live momentum from GitHub, Hacker News, Reddit and Dev.to — turned into a roadmap."
           delay={520}
           stagger={26}
-          className="max-w-md text-[13px] md:text-sm font-light leading-relaxed text-white/55"
+          className="max-w-md text-[13px] md:text-sm font-extralight leading-relaxed text-white/55"
         />
 
         {/* Uiverse loader (bociKond), themed to the accent token */}

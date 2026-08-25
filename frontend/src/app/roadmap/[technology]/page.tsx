@@ -188,12 +188,12 @@ export default function RoadmapPage() {
               <span className="w-7 h-px bg-gradient-to-l from-transparent to-indigo-500/60" />
             </span>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black font-display tracking-tight leading-[0.95] mb-5">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-normal font-display tracking-[-0.04em] leading-[0.95] mb-5">
               <span className="text-[var(--c-ink)]">Master </span>
               <span className="gradient-text">{roadmap.title}</span>
             </h1>
 
-            <p className="text-base md:text-lg text-[var(--c-ink-2)] leading-relaxed max-w-2xl mx-auto font-light mb-7">
+            <p className="text-base md:text-lg text-[var(--c-ink-2)] leading-relaxed max-w-2xl mx-auto font-extralight mb-7">
               {roadmap.description || "Guided, sequenced steps built from live technology momentum — the right things to learn, in the right order."}
             </p>
 
@@ -258,7 +258,7 @@ export default function RoadmapPage() {
                       <p className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-wider mb-1.5">
                         New here? How this works
                       </p>
-                      <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-light list-decimal list-inside marker:text-indigo-600 marker:font-bold">
+                      <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-extralight list-decimal list-inside marker:text-indigo-600 marker:font-bold">
                         <li>Begin with the highlighted <span className="font-bold text-[var(--c-ink)]">Next up</span> module below.</li>
                         <li>Pick a way to learn it — <span className="font-bold text-[var(--c-ink)]">Watch a video</span> or <span className="font-bold text-[var(--c-ink)]">Read the guide</span>.</li>
                         <li>Come back and <span className="font-bold text-[var(--c-ink)]">Mark as done</span> — a segment lights up and your streak grows.</li>
@@ -399,7 +399,7 @@ export default function RoadmapPage() {
                   icon="chevron"
                   header={
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h3 className={`text-base font-extrabold font-display transition-colors ${
+                    <h3 className={`text-base font-normal font-display transition-colors ${
                       isDone ? "text-[var(--c-ink-2)] line-through decoration-[#12B76A]/50" : "text-[var(--c-ink)] group-hover:text-indigo-600"
                     }`}>
                       {step.title}
@@ -417,7 +417,7 @@ export default function RoadmapPage() {
                 >
                   <div className="space-y-3 pt-3">
 
-                  <p className="text-xs md:text-sm text-[var(--c-ink-2)] leading-relaxed font-light font-mono">
+                  <p className="text-xs md:text-sm text-[var(--c-ink-2)] leading-relaxed font-extralight font-mono">
                     {step.description}
                   </p>
 

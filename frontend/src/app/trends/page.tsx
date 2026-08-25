@@ -242,7 +242,7 @@ export default function TrendsPage() {
                 </span>
                 Live momentum index
               </span>
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-display flex items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] font-display flex items-center gap-3">
                 <TrendingUp className="w-8 h-8 text-indigo-600" />
                 <span className="text-text-primary">Trends Intelligence</span>
               </h1>
@@ -275,7 +275,7 @@ export default function TrendsPage() {
               </button>
             </div>
           </div>
-          <p className="text-sm text-[var(--c-ink-2)] max-w-xl font-light">
+          <p className="text-sm text-[var(--c-ink-2)] max-w-xl font-extralight">
             Every tracked technology, scored 0–100 by live momentum from GitHub stars and developer conversation. Sort by what&apos;s rising, most-starred, or most-discussed.
           </p>
         </header>

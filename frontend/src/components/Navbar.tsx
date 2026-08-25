@@ -120,7 +120,7 @@ export default function Navbar() {
               <circle cx="16.9" cy="7.5" r="1.9" fill="white" />
             </svg>
           </div>
-          <span className="text-[17px] font-extrabold -tracking-[0.03em] font-display hidden sm:inline text-text-primary leading-none select-none">
+          <span className="text-[17px] font-normal -tracking-[0.03em] font-display hidden sm:inline text-text-primary leading-none select-none">
             Stack<span className="text-accent-primary">Radar</span>
           </span>
         </Link>
@@ -143,9 +143,9 @@ export default function Navbar() {
                     : "text-text-secondary hover:text-text-primary hover:bg-[var(--c-surface)]/70"
                 }`}
               >
-                <span className={`mr-1 font-light transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>[</span>
+                <span className={`mr-1 font-extralight transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>[</span>
                 <span>{link.label}</span>
-                <span className={`ml-1 font-light transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>]</span>
+                <span className={`ml-1 font-extralight transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>]</span>
                 {/* hover underline for inactive links — grows from the centre */}
                 {!isActive && (
                   <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-[2px] w-0 group-hover/nav:w-[calc(100%-1.5rem)] bg-accent-primary/60 rounded-full transition-[width] duration-300" />
@@ -250,7 +250,7 @@ export default function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="mobile-nav-link text-3xl font-bold font-display tracking-tight text-left flex items-center"
+                    className="mobile-nav-link text-3xl font-bold font-display tracking-[-0.04em] text-left flex items-center"
                   >
                     <span className={`transition-colors duration-300 ${
                       isActive ? "text-accent-primary" : "text-text-secondary hover:text-text-primary"

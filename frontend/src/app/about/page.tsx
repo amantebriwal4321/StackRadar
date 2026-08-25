@@ -65,7 +65,7 @@ export default function AboutPage() {
           <motion.h1
             {...reveal}
             transition={{ ...reveal.transition, delay: 0.05 }}
-            className="font-display font-extrabold tracking-tight leading-[0.98] text-[clamp(2.5rem,6vw,4.5rem)] mt-5 mb-5 text-balance"
+            className="font-display font-normal tracking-tight leading-[0.98] text-[clamp(2.5rem,6vw,4.5rem)] mt-5 mb-5 text-balance"
           >
             The <span className="text-text-primary">Bloomberg Terminal</span> for your tech stack.
           </motion.h1>
@@ -353,7 +353,7 @@ export default function AboutPage() {
         className="my-6 rounded-3xl glass-panel-glow border border-accent-primary/15 px-6 md:px-12 py-12 md:py-16 text-center relative overflow-hidden"
       >
         <div className="ambient-orb ambient-orb-1" aria-hidden="true" />
-        <h2 className="font-display font-extrabold tracking-tight text-[clamp(1.75rem,3.5vw,2.75rem)] text-balance">
+        <h2 className="font-display font-normal tracking-tight text-[clamp(1.75rem,3.5vw,2.75rem)] text-balance">
           Start with what&apos;s <span className="gradient-text">actually rising</span>.
         </h2>
         <p className="text-text-secondary max-w-[46ch] mx-auto mt-4">

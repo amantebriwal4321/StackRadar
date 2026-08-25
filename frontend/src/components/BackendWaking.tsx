@@ -190,7 +190,7 @@ export default function BackendWaking() {
               text="Warming up the live data"
               delay={80}
               stagger={80}
-              className="mt-3 block font-display text-2xl font-extrabold -tracking-[0.02em] text-[var(--c-ink)] sm:text-3xl"
+              className="mt-3 block font-display text-2xl font-normal tracking-[-0.04em] text-[var(--c-ink)] sm:text-3xl"
             />
 
             {/* rolling status line — keyed so it re-mounts per phase; the entrance

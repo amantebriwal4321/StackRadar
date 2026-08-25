@@ -108,7 +108,7 @@ function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: bool
         )}
 
         {isSearch && r.blurb && (
-          <p className="text-[11px] text-[var(--c-ink-2)] font-light leading-relaxed">{r.blurb}</p>
+          <p className="text-[11px] text-[var(--c-ink-2)] font-extralight leading-relaxed">{r.blurb}</p>
         )}
 
         {/* The differentiator: we know the tool's live release data, so we can
@@ -163,7 +163,7 @@ export default function LearningResources({ slug }: { slug: string }) {
   if (failed || !data) {
     return (
       <div className="tech-panel rounded-2xl p-6 md:p-8">
-        <p className="text-sm text-[var(--c-ink-2)] font-light">
+        <p className="text-sm text-[var(--c-ink-2)] font-extralight">
           Couldn&apos;t load learning resources right now.
         </p>
       </div>
@@ -181,10 +181,10 @@ export default function LearningResources({ slug }: { slug: string }) {
             <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5" /> Learn {data.name}
             </span>
-            <h3 className="text-xl md:text-2xl font-black font-display text-[var(--c-ink)]">
+            <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
               Where to actually learn this
             </h3>
-            <p className="text-sm text-[var(--c-ink-2)] font-light max-w-xl">
+            <p className="text-sm text-[var(--c-ink-2)] font-extralight max-w-xl">
               {data.videos_source === "youtube_api"
                 ? "Ranked on real view counts, like ratio, recency and course depth — not on what YouTube wants to show you."
                 : data.videos_source === "curated"
@@ -265,7 +265,7 @@ export default function LearningResources({ slug }: { slug: string }) {
                     {p.title}
                   </p>
                   {p.blurb && (
-                    <p className="text-xs text-[var(--c-ink-2)] font-light leading-relaxed">{p.blurb}</p>
+                    <p className="text-xs text-[var(--c-ink-2)] font-extralight leading-relaxed">{p.blurb}</p>
                   )}
                 </div>
                 <ExternalLink className="w-4 h-4 text-[var(--c-ink-2)] shrink-0 mt-0.5 group-hover:text-indigo-600 transition-colors" />

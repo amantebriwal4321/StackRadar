@@ -51,10 +51,10 @@ export default function ContinueLearning() {
             <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
               <Target className="w-3.5 h-3.5" /> Your learning track
             </span>
-            <h3 className="text-xl md:text-2xl font-black font-display text-[var(--c-ink)]">
+            <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
               Pick a roadmap. Learn one thing a day.
             </h3>
-            <p className="text-sm text-[var(--c-ink-2)] font-light max-w-lg">
+            <p className="text-sm text-[var(--c-ink-2)] font-extralight max-w-lg">
               Track every module you finish, keep a streak, and get told exactly what to study
               next — on a syllabus that updates itself from live momentum data.
             </p>
@@ -81,10 +81,10 @@ export default function ContinueLearning() {
             <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
               <Target className="w-3.5 h-3.5" /> Your learning track
             </span>
-            <h3 className="text-xl md:text-2xl font-black font-display text-[var(--c-ink)]">
+            <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
               You haven&apos;t started a roadmap yet.
             </h3>
-            <p className="text-sm text-[var(--c-ink-2)] font-light max-w-lg">
+            <p className="text-sm text-[var(--c-ink-2)] font-extralight max-w-lg">
               Choose a track and check off your first module — takes about an hour.
             </p>
           </div>
@@ -130,15 +130,15 @@ export default function ContinueLearning() {
             <p className="text-[11px] font-mono text-[var(--c-ink-2)]/70 uppercase tracking-wider mb-1">
               {primary.icon} {primary.title} · today&apos;s focus
             </p>
-            <h3 className="text-xl md:text-2xl font-black font-display text-[var(--c-ink)] leading-tight">
+            <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)] leading-tight">
               {focus.title}
             </h3>
-            <p className="text-sm text-[var(--c-ink-2)] font-light mt-1.5 line-clamp-2 max-w-2xl">
+            <p className="text-sm text-[var(--c-ink-2)] font-extralight mt-1.5 line-clamp-2 max-w-2xl">
               {focus.description}
             </p>
           </div>
         ) : (
-          <h3 className="text-xl md:text-2xl font-black font-display text-[#12B76A]">
+          <h3 className="text-xl md:text-2xl font-normal font-display text-[#12B76A]">
             {primary.title} complete — every module done. 🎉
           </h3>
         )}

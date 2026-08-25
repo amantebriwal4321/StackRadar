@@ -133,10 +133,10 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
             <span className="text-[var(--c-ink-2)]">{subj}</span>
           </div>
           <div className="text-5xl mb-4">{r.icon || "🧭"}</div>
-          <h1 className="text-3xl md:text-5xl font-black font-display text-[var(--c-ink)] leading-tight mb-4">
+          <h1 className="text-3xl md:text-5xl font-normal font-display text-[var(--c-ink)] leading-tight mb-4">
             How to Learn {subj} in 2026
           </h1>
-          <p className="text-base md:text-lg text-[var(--c-ink-2)] font-light leading-relaxed">
+          <p className="text-base md:text-lg text-[var(--c-ink-2)] font-extralight leading-relaxed">
             A complete, free roadmap — the exact tools in the right order, the single best free video for each,
             and a plan you can actually track. Ranked by live industry momentum, so you learn what teams use today.
           </p>
@@ -159,7 +159,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
 
         {/* The path */}
         <section className="mb-12">
-          <h2 className="text-2xl md:text-3xl font-black font-display text-[var(--c-ink)] mb-6">
+          <h2 className="text-2xl md:text-3xl font-normal font-display text-[var(--c-ink)] mb-6">
             The step-by-step path
           </h2>
           <ol className="space-y-5">
@@ -172,7 +172,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
                   <h3 className="text-lg md:text-xl font-bold font-display text-[var(--c-ink)]">{s.title}</h3>
                   <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-[var(--c-ink-2)]/70 shrink-0">{s.level}</span>
                 </div>
-                <p className="text-sm text-[var(--c-ink-2)] font-light leading-relaxed mb-3">{s.description}</p>
+                <p className="text-sm text-[var(--c-ink-2)] font-extralight leading-relaxed mb-3">{s.description}</p>
 
                 {s.tools && s.tools.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -207,7 +207,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
 
         {/* FAQ */}
         <section className="mb-12">
-          <h2 className="text-2xl md:text-3xl font-black font-display text-[var(--c-ink)] mb-6">
+          <h2 className="text-2xl md:text-3xl font-normal font-display text-[var(--c-ink)] mb-6">
             Frequently asked questions
           </h2>
           <FaqAccordion faqs={faqs} />
@@ -215,10 +215,10 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
 
         {/* Closing CTA */}
         <section className="tech-panel rounded-2xl p-6 md:p-8 text-center">
-          <h2 className="text-xl md:text-2xl font-black font-display text-[var(--c-ink)] mb-2">
+          <h2 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)] mb-2">
             Ready to start learning {subj}?
           </h2>
-          <p className="text-sm text-[var(--c-ink-2)] font-light mb-6">Free, no sign-up to begin. Track your streak, one lesson at a time.</p>
+          <p className="text-sm text-[var(--c-ink-2)] font-extralight mb-6">Free, no sign-up to begin. Track your streak, one lesson at a time.</p>
           <Link href={`/roadmap/${slug}`} prefetch className="btn-primary text-sm py-3.5 px-7 rounded-xl inline-flex">
             Open the {subj} roadmap <ArrowRight className="w-4 h-4" />
           </Link>

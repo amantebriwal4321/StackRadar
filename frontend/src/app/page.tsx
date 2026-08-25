@@ -371,7 +371,7 @@ export default function HomePage() {
             </motion.div>
 
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
-            <h1 className="text-[2.5rem] sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight leading-[1.02] sm:leading-[0.92] font-display" style={{ perspective: "1000px" }}>
+            <h1 className="text-[2.5rem] sm:text-6xl md:text-7xl lg:text-[5.5rem] font-normal tracking-[-0.04em] leading-[1.02] sm:leading-[0.92] font-display" style={{ perspective: "1000px" }}>
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">Learn the right tech,</span>
               </span>
@@ -395,7 +395,7 @@ export default function HomePage() {
             </h1>
 
             {/* Paragraph Subhead — roadmap-led; momentum is the engine, not the pitch */}
-            <p className="hero-anim-item text-base md:text-lg text-[var(--c-ink-2)] max-w-xl leading-relaxed font-sans font-light">
+            <p className="hero-anim-item text-base md:text-lg text-[var(--c-ink-2)] max-w-xl leading-relaxed font-sans font-extralight">
               <span className="font-semibold text-[var(--c-ink)]">StackRadar turns live momentum data into a step-by-step roadmap for every domain</span>{" "}
               — the right tools in the right order, each with the single best free video and a tracker to keep your streak.
             </p>
@@ -605,11 +605,11 @@ export default function HomePage() {
               <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
               <Compass className="w-4 h-4" /> Choose your path
             </div>
-            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-normal font-display tracking-[-0.04em]">
               Pick a domain, get a roadmap
             </h2>
           </div>
-          <p className="text-sm text-[var(--c-ink-2)] max-w-md font-sans font-light leading-relaxed">
+          <p className="text-sm text-[var(--c-ink-2)] max-w-md font-sans font-extralight leading-relaxed">
             Each domain is a full learning roadmap — sequenced steps, the best free video per tool, and a live momentum score so you learn what actually matters.
           </p>
         </div>
@@ -656,7 +656,7 @@ export default function HomePage() {
                   <h3 className="text-lg font-bold font-display group-hover:text-indigo-600 transition-colors duration-300 mb-2">
                     {domain.name}
                   </h3>
-                  <p className="text-xs text-[var(--c-ink-2)] line-clamp-2 leading-relaxed mb-6 font-light">
+                  <p className="text-xs text-[var(--c-ink-2)] line-clamp-2 leading-relaxed mb-6 font-extralight">
                     {domain.summary}
                   </p>
 
@@ -702,7 +702,7 @@ export default function HomePage() {
               <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
               <Flame className="w-4 h-4" /> Rising this week
             </div>
-            <h2 className="text-3xl md:text-4xl font-black font-display tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-normal font-display tracking-[-0.04em]">
               Rising — worth learning now
             </h2>
           </div>
@@ -797,11 +797,11 @@ export default function HomePage() {
                   <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
                   Live comparison
                 </div>
-                <h3 className="text-3xl md:text-4xl font-black font-display tracking-tight mb-4">
+                <h3 className="text-3xl md:text-4xl font-normal font-display tracking-[-0.04em] mb-4">
                   Momentum<br/>
                   <span className="text-shimmer">Head-to-Head</span>
                 </h3>
-                <p className="text-sm text-[var(--c-ink-2)] leading-relaxed font-sans font-light">
+                <p className="text-sm text-[var(--c-ink-2)] leading-relaxed font-sans font-extralight">
                   The three highest-momentum technologies on StackRadar right now, scored live on GitHub presence, global percentile, and category standing — straight from the index.
                 </p>
               </div>
@@ -892,7 +892,7 @@ export default function HomePage() {
                   className="mt-8 p-4 rounded-xl bg-[var(--c-surface-2)]/40 border border-indigo-500/5"
                 >
                   <span className="text-[10px] font-mono text-indigo-600/70 block mb-1.5">SIGNAL ANALYSIS</span>
-                  <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light font-mono">
+                  <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight font-mono">
                     {activeCompare?.recommendation || `${activeCompare?.name} is tracked live across ${heroStats.sources} developer signal sources.`}
                   </p>
                 </motion.div>
@@ -933,11 +933,11 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
             <Shield className="w-4 h-4" /> Why our roadmaps stay current
           </div>
-          <h2 className="text-3xl md:text-5xl font-black font-display leading-tight">
+          <h2 className="text-3xl md:text-5xl font-normal font-display leading-tight">
             A roadmap that updates<br/>
             <span className="text-shimmer">itself from live data</span>
           </h2>
-          <p className="text-sm text-[var(--c-ink-2)] leading-relaxed font-sans font-light max-w-lg mx-auto">
+          <p className="text-sm text-[var(--c-ink-2)] leading-relaxed font-sans font-extralight max-w-lg mx-auto">
             Static roadmaps go stale. Ours re-rank every cycle from what developers are actually building — so the order you learn in tracks the industry, not a snapshot from years ago.
           </p>
         </div>
@@ -967,7 +967,7 @@ export default function HomePage() {
                 <h3 className="text-lg font-bold font-display group-hover:text-indigo-600 transition-colors duration-300 mb-3">
                   {step.title}
                 </h3>
-                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light">
+                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
                   {step.desc}
                 </p>
               </motion.div>
@@ -1018,12 +1018,12 @@ export default function HomePage() {
             <Sparkles className="w-10 h-10 mx-auto text-indigo-600 mb-6" />
           </motion.div>
           
-          <h3 className="text-3xl md:text-5xl font-black font-display tracking-tight max-w-2xl mx-auto leading-tight mb-4">
+          <h3 className="text-3xl md:text-5xl font-normal font-display tracking-[-0.04em] max-w-2xl mx-auto leading-tight mb-4">
             Pick a roadmap.<br/>
             <span className="text-shimmer">Learn one thing a day.</span>
           </h3>
 
-          <p className="text-sm md:text-base text-[var(--c-ink-2)] max-w-lg mx-auto leading-relaxed mb-10 font-light">
+          <p className="text-sm md:text-base text-[var(--c-ink-2)] max-w-lg mx-auto leading-relaxed mb-10 font-extralight">
             Sequenced steps, the best free video for each tool, and a streak to keep you going — on a syllabus that updates itself from live momentum data.
           </p>
 

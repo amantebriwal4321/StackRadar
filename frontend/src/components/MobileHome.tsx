@@ -140,7 +140,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
 
           <motion.h1
             initial={canAnimate ? { opacity: 0, y: 16 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}
-            className="text-[2.6rem] leading-[1.05] font-black tracking-tight font-display mb-4"
+            className="text-[2.6rem] leading-[1.05] font-normal tracking-tight font-display mb-4"
           >
             Learn the right tech,{" "}
             <span className="gradient-text">in the right order</span>
@@ -149,7 +149,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
 
           <motion.p
             initial={canAnimate ? { opacity: 0, y: 16 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }}
-            className="text-[15px] text-[var(--c-ink-2)] leading-relaxed font-light mb-6"
+            className="text-[15px] text-[var(--c-ink-2)] leading-relaxed font-extralight mb-6"
           >
             <span className="font-semibold text-[var(--c-ink)]">Live momentum data, turned into a step-by-step roadmap</span> — the right tools in the right order, each with the single best free video.
           </motion.p>
@@ -235,7 +235,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-bold uppercase tracking-widest mb-2">
             <Compass className="w-4 h-4" /> Choose your path
           </div>
-          <h2 className="text-2xl font-black font-display tracking-tight leading-tight">
+          <h2 className="text-2xl font-normal font-display tracking-tight leading-tight">
             Pick a domain, get a roadmap
           </h2>
         </motion.div>
@@ -290,7 +290,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-bold uppercase tracking-widest mb-2">
               <Flame className="w-4 h-4" /> Rising this week
             </div>
-            <h2 className="text-2xl font-black font-display tracking-tight">Worth learning now</h2>
+            <h2 className="text-2xl font-normal font-display tracking-tight">Worth learning now</h2>
           </div>
           <Link href="/trends" prefetch className="shrink-0 text-[11px] font-mono font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-0.5 pb-1 active:opacity-70">
             see all <ArrowRight className="w-3.5 h-3.5" />
@@ -377,7 +377,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-bold uppercase tracking-widest mb-2">
             <Zap className="w-4 h-4" /> Why it stays current
           </div>
-          <h2 className="text-2xl font-black font-display leading-tight">
+          <h2 className="text-2xl font-normal font-display leading-tight">
             A roadmap that updates <span className="text-shimmer">itself from live data</span>
           </h2>
         </motion.div>
@@ -398,7 +398,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
                 <div>
                   <div className="text-[9px] font-mono text-indigo-600/50 tracking-widest mb-1">STEP 0{i + 1}</div>
                   <h3 className="text-[15px] font-bold font-display leading-tight mb-1">{s.title}</h3>
-                  <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-light">{s.desc}</p>
+                  <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">{s.desc}</p>
                 </div>
               </motion.div>
             );
@@ -413,10 +413,10 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
         <motion.div {...reveal} className="glass-panel-glow rounded-3xl p-7 text-center border border-indigo-500/15 bg-[var(--c-surface-2)]/70 relative overflow-hidden">
           <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-56 h-56 rounded-full bg-[var(--accent-2)]/[0.10] blur-3xl pointer-events-none" />
           <Sparkles className="w-8 h-8 mx-auto text-indigo-600 mb-4 relative" />
-          <h3 className="text-2xl font-black font-display tracking-tight leading-tight mb-3 relative">
+          <h3 className="text-2xl font-normal font-display tracking-tight leading-tight mb-3 relative">
             Pick a roadmap.<br /><span className="text-shimmer">Learn one thing a day.</span>
           </h3>
-          <p className="text-sm text-[var(--c-ink-2)] leading-relaxed mb-6 font-light relative">
+          <p className="text-sm text-[var(--c-ink-2)] leading-relaxed mb-6 font-extralight relative">
             Sequenced steps, the best free video for each tool, and a streak to keep you going.
           </p>
           <div className="flex flex-col gap-3 relative">
