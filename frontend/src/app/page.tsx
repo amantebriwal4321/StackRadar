@@ -568,8 +568,12 @@ export default function HomePage() {
         </div>
       </ScrollExpand>
 
+      {/* The zoom sits INSIDE the section so the #five-minute-plan anchor (the
+          navbar's "my plan" link) keeps its scroll target. */}
       <section id="five-minute-plan" className="max-w-5xl mx-auto px-6 -mt-6 md:-mt-4 mb-8 relative z-20 section-reveal scroll-mt-24">
-        <FiveMinutePlan />
+        <ScrollExpand useWindowScroll fit="content" mediaZoom={1.1}>
+          <FiveMinutePlan />
+        </ScrollExpand>
       </section>
 
       {/* ══════════════════════════════════════════
