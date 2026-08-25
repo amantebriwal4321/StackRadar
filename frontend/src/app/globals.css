@@ -695,3 +695,41 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .confetti-piece { animation: none; opacity: 0; }
 }
+
+
+/* ─────────────────────────────────────────────
+   SHARED REVEAL + HOVER
+   `slide-up`, `fade-in` and `glow-hover` were used across TrendCard,
+   RoadmapCard, StatCard, the roadmaps list, the watchlist and the roadmap
+   detail page but were never defined anywhere — so those cards had NO entrance
+   animation at all. Defined here once so every card reveals identically.
+
+   TRANSFORM-ONLY, and opacity is deliberately left alone. An earlier version
+   faded from opacity:0 with fill-mode:backwards — but `backwards` still holds
+   the from-state while the clock sits at t=0, so on a tab that never composites
+   all 8 cards rendered fully invisible. Animating only the transform means a
+   frozen animation shows the card in place, merely un-drifted. Same fix as
+   `.animate-fab-in`.
+   ───────────────────────────────────────────── */
+@keyframes reveal-rise { from { transform: translateY(16px); } to { transform: none; } }
+@keyframes reveal-fade { from { transform: translateY(8px) scale(0.995); } to { transform: none; } }
+
+.slide-up { animation: reveal-rise 0.6s var(--ease-standard) both; }
+.fade-in  { animation: reveal-fade 0.5s var(--ease-standard) both; }
+
+/* Cobalt lift on hover — the shared interactive affordance. CustomCursor also
+   keys off `.glow-hover` to grow the cursor, so the class had a job already. */
+.glow-hover { transition: border-color 0.3s var(--ease-standard), box-shadow 0.3s var(--ease-standard), transform 0.3s var(--ease-spring); }
+.glow-hover:hover {
+  border-color: color-mix(in srgb, var(--accent-1) 50%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-1) 16%, transparent);
+  transform: translateY(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-up, .fade-in { animation: none; }
+  .glow-hover:hover { transform: none; }
+}
+
+/* Mercury vertical rhythm — 72px between major sections. */
+.section-rhythm { padding-top: 72px; padding-bottom: 72px; }
