@@ -63,6 +63,7 @@ export default function DashboardShell({ children, fullWidth = false, flushX = f
       <div ref={spotlightRef} className="cursor-spotlight" style={{ opacity: 0 }} aria-hidden="true" />
       
       {/* ─── Ambient Orbs ─── */}
+      <div className="ambient-particles" aria-hidden="true" />
       <div className="ambient-orb ambient-orb-1" aria-hidden="true" />
       <div className="ambient-orb ambient-orb-2" aria-hidden="true" />
       <div className="ambient-orb ambient-orb-3" aria-hidden="true" />

@@ -22,9 +22,9 @@ interface NodeDatum {
 }
 
 // Neon Noir — deep wine nodes with a magenta glow at the high end (bolder = higher score)
-const COLOR_HIGH = new THREE.Color("#8f9cf5"); // score >= 75 (magenta glow)
-const COLOR_MID = new THREE.Color("#5266eb"); // 45–75 (wine)
-const COLOR_LOW = new THREE.Color("#70707d"); // < 45 (faint)
+const COLOR_HIGH = new THREE.Color("#8052ff"); // >= 75 — Electric Iris
+const COLOR_MID = new THREE.Color("#15846e"); // 45–75 — Deep Verdant
+const COLOR_LOW = new THREE.Color("#9a9a9a"); // < 45 — Ash Gray
 
 function colorForScore(score: number): THREE.Color {
   if (score >= 75) return COLOR_HIGH;
@@ -135,7 +135,7 @@ function ConstellationScene({
       <mesh ref={shellRef}>
         <icosahedronGeometry args={[RADIUS + 0.35, 1]} />
         <meshBasicMaterial
-          color="#2c3aa8"
+          color="#15846e"
           wireframe
           transparent
           opacity={0.07}
@@ -146,7 +146,7 @@ function ConstellationScene({
       {/* constellation lines */}
       <lineSegments geometry={lineGeometry}>
         <lineBasicMaterial
-          color="#5266eb"
+          color="#8052ff"
           transparent
           opacity={0.12}
           blending={THREE.AdditiveBlending}
@@ -164,9 +164,9 @@ function ConstellationScene({
       {/* glowing core */}
       <mesh>
         <sphereGeometry args={[0.13, 24, 24]} />
-        <meshBasicMaterial color="#8f9cf5" />
+        <meshBasicMaterial color="#8052ff" />
       </mesh>
-      <pointLight color="#8f9cf5" intensity={2} distance={6} />
+      <pointLight color="#8052ff" intensity={2} distance={6} />
 
       {/* floating labels for the top tools */}
       {labelled.map((node) => (
@@ -188,10 +188,10 @@ function ConstellationScene({
               style={{
                 color:
                   node.tool.score >= 75
-                    ? "#8f9cf5"
+                    ? "#8052ff"
                     : node.tool.score >= 45
-                    ? "#5266eb"
-                    : "#70707d",
+                    ? "#8052ff"
+                    : "#9a9a9a",
               }}
             >
               {Math.round(node.tool.score)}

@@ -802,3 +802,34 @@ body,
 .route-data .tech-panel-interactive:hover {
   border-color: color-mix(in srgb, var(--accent-1) 55%, transparent);
 }
+
+
+/* ─────────────────────────────────────────────
+   AMBIENT PARTICLE FIELD
+   Dala: "Ambient particles scatter at lower density across page backgrounds."
+   Replaces the blurred colour orbs, which were gradient washes rather than
+   particles. Uses `position: fixed`, so the field holds still while content
+   scrolls — parallax for free, with NO scroll listener and nothing that can
+   stall on a backgrounded tab. A slow drift keeps it alive.
+   ───────────────────────────────────────────── */
+.ambient-particles {
+  position: fixed;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(circle, color-mix(in srgb, var(--accent-1) 85%, transparent) 0 1.1px, transparent 1.6px),
+    radial-gradient(circle, color-mix(in srgb, var(--accent-2) 70%, transparent) 0 1px,   transparent 1.5px),
+    radial-gradient(circle, #15846e 0 1px, transparent 1.5px);
+  background-size: 210px 190px, 330px 290px, 470px 410px;
+  background-position: 0 0, 90px 60px, 200px 150px;
+  animation: particle-drift 90s linear infinite;
+}
+@keyframes particle-drift {
+  from { background-position: 0 0, 90px 60px, 200px 150px; }
+  to   { background-position: 210px 190px, 420px 350px, 670px 560px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ambient-particles { animation: none; }
+}

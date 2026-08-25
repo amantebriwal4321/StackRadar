@@ -32,7 +32,6 @@ export default function Navbar() {
   const { isSignedIn, isLoaded } = useUser();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [mounted, setMounted] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
@@ -48,11 +47,11 @@ export default function Navbar() {
     }
   }, []);
 
-  // Scroll → condense the navbar into a floating island + drive the progress bar
+  // Scroll → drive the reading-progress bar. The nav itself never gains a
+  // surface in Dala, so there is no `scrolled` fill state any more.
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
-      setScrolled(y > 20);
       const max = document.documentElement.scrollHeight - window.innerHeight;
       setScrollProgress(max > 0 ? Math.min(y / max, 1) : 0);
     };
@@ -85,20 +84,10 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 w-full">
-      {/* Mercury's frosted nav: fully transparent over the hero, then a solid
-          canvas fill with backdrop-blur and a hairline edge once you scroll past
-          it. The fill uses var(--c-ground), so it tracks the scroll-driven
-          canvas colour automatically instead of drifting away from it. */}
-      <div
-        className={`absolute inset-0 pointer-events-none transition-opacity duration-500 border-b ${
-          scrolled ? "opacity-100 border-[var(--c-border)]" : "opacity-0 border-transparent"
-        }`}
-        style={{
-          background: "color-mix(in srgb, var(--c-ground) 85%, transparent)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-        }}
-      />
+      {/* DALA: "Transparent background sitting directly on black canvas.
+          No border, no backdrop blur on the nav itself." The frosted fill that
+          Mercury called for is deliberately gone — the nav never gains a
+          surface, at any scroll position. */}
       <div className="relative flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
         {/* ─── Logo ───
             A solid wine radar badge with a hand-drawn radar mark (rings + sweep
