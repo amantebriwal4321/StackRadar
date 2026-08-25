@@ -257,22 +257,22 @@ export default function HomePage() {
   /* ─── Dynamic Signal Tickers Content ─── */
   // Left ticker — highest momentum scores (real, no fabricated "+0.0%")
   const dynamicSignalsLeft = useMemo(() => {
-    if (tools.length === 0) return ["◈ Syncing live developer signals…"];
+    if (tools.length === 0) return [{ icon: "◈", name: "Syncing live developer signals…", meta: "" }];
     return [...tools]
       .sort((a, b) => b.score - a.score)
       .slice(0, 12)
-      .map((t) => `${t.icon} ${t.name} · momentum ${Math.round(t.score)}/100`);
+      .map((t) => ({ icon: t.icon, name: t.name, meta: `${Math.round(t.score)}/100` }));
   }, [tools]);
 
   // Right ticker — most-starred tracked repos (real GitHub data)
   const dynamicSignalsRight = useMemo(() => {
-    if (tools.length === 0) return ["◈ Indexing GitHub + community sources…"];
+    if (tools.length === 0) return [{ icon: "◈", name: "Indexing GitHub + community sources…", meta: "" }];
     return [...tools]
       .sort((a, b) => b.stars - a.stars)
       .slice(0, 12)
       .map((t) => {
         const s = t.stars >= 1000 ? `${Math.round(t.stars / 1000)}k` : `${t.stars}`;
-        return `${t.icon} ${t.name} · ${s}★ on GitHub`;
+        return { icon: t.icon, name: t.name, meta: `${s}★` };
       });
   }, [tools]);
 
@@ -551,25 +551,39 @@ export default function HomePage() {
          ══════════════════════════════════════════ */}
       <section className="w-full py-5 border-y border-indigo-500/8 bg-[var(--c-surface)]/30 overflow-hidden space-y-3">
         
-        {/* Track 1: Scrolls Left */}
-        <div className="w-full flex whitespace-nowrap overflow-hidden">
-          <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
+        {/* Track 1: Scrolls Left — highest momentum */}
+        <div className="ticker-rail w-full flex whitespace-nowrap">
+          <div className="ticker-scroll-left flex items-center gap-10 shrink-0">
             {dynamicSignalsLeft.concat(dynamicSignalsLeft).map((signal, idx) => (
-              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-[var(--c-ink-2)]/80 tracking-wider uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/60" />
-                {signal}
+              <span key={idx} className="inline-flex items-center gap-2.5 shrink-0">
+                <span className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-2)] text-sm leading-none">
+                  {signal.icon}
+                </span>
+                <span className="font-mono text-xs tracking-wider uppercase text-[var(--c-ink-2)]/85">
+                  {signal.name}
+                </span>
+                {signal.meta && (
+                  <span className="font-mono text-[10px] tracking-wider text-indigo-600/70">{signal.meta}</span>
+                )}
               </span>
             ))}
           </div>
         </div>
 
-        {/* Track 2: Scrolls Right */}
-        <div className="w-full flex whitespace-nowrap overflow-hidden">
-          <div className="ticker-scroll-right flex items-center gap-16 shrink-0">
+        {/* Track 2: Scrolls Right — most starred */}
+        <div className="ticker-rail w-full flex whitespace-nowrap">
+          <div className="ticker-scroll-right flex items-center gap-10 shrink-0">
             {dynamicSignalsRight.concat(dynamicSignalsRight).map((signal, idx) => (
-              <span key={idx} className="inline-flex items-center gap-3 font-mono text-xs text-indigo-600/60 tracking-wider uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/60" />
-                {signal}
+              <span key={idx} className="inline-flex items-center gap-2.5 shrink-0">
+                <span className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--c-border)] bg-[var(--c-surface-2)] text-sm leading-none">
+                  {signal.icon}
+                </span>
+                <span className="font-mono text-xs tracking-wider uppercase text-[var(--c-ink-2)]/85">
+                  {signal.name}
+                </span>
+                {signal.meta && (
+                  <span className="font-mono text-[10px] tracking-wider text-indigo-600/70">{signal.meta}</span>
+                )}
               </span>
             ))}
           </div>
@@ -890,7 +904,7 @@ export default function HomePage() {
 
       {/* ─── Divider Ticker ─── */}
       <section className="w-full py-4 border-y border-indigo-500/5 bg-[var(--c-surface)]/20 overflow-hidden">
-        <div className="w-full flex whitespace-nowrap overflow-hidden">
+        <div className="ticker-rail w-full flex whitespace-nowrap">
           <div className="ticker-scroll-left flex items-center gap-16 shrink-0">
             {[1, 2, 3, 4].map((i) => (
               <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[var(--c-ink-2)]/30 tracking-widest uppercase">

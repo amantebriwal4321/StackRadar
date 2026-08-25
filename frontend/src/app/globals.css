@@ -334,8 +334,28 @@ body {
    ───────────────────────────────────────────── */
 @keyframes ticker-scroll-left { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-50%,0,0)} }
 @keyframes ticker-scroll-right { 0%{transform:translate3d(-50%,0,0)} 100%{transform:translate3d(0,0,0)} }
-.ticker-scroll-left { animation: ticker-scroll-left 48s linear infinite; }
-.ticker-scroll-right { animation: ticker-scroll-right 48s linear infinite; }
+.ticker-scroll-left { animation: ticker-scroll-left var(--ticker-duration, 48s) linear infinite; }
+.ticker-scroll-right { animation: ticker-scroll-right var(--ticker-duration, 48s) linear infinite; }
+
+/* Rail wrapper: edge fade masks so signals dissolve at both ends instead of
+   being guillotined by the viewport edge. */
+.ticker-rail {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+}
+/* Hover holds the rail so a signal can actually be read.
+   NOTE: this deliberately pauses rather than slows. Changing animation-duration
+   mid-flight makes the track JUMP — the browser recomputes progress as
+   elapsed/newDuration — which on a 48s loop can skip a third of the track. On a
+   data rail "hover to read the ticker" is the useful behaviour anyway. */
+.ticker-rail:hover .ticker-scroll-left,
+.ticker-rail:hover .ticker-scroll-right { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-scroll-left,
+  .ticker-scroll-right { animation: none; }
+}
 
 /* ─────────────────────────────────────────────
    CURSOR FOLLOWER HOVER
