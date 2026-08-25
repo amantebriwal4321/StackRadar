@@ -91,27 +91,45 @@ export default function Navbar() {
           surface, at any scroll position. */}
       <div className="relative flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
         {/* ─── Logo ───
-            A solid wine radar badge with a hand-drawn radar mark (rings + sweep
-            + ping) — deliberately not the gradient rounded-square + stock icon
-            that reads as generic. The sweep spins on hover for a live "radar"
-            feel. */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          {/* Squircle badge + a clean radar TARGET (concentric rings + an
-              off-centre blip). Deliberately no centre-to-top needle — with the
-              inner ring that read as a power-button ⏻. A gentle sweep fans out
-              on hover. */}
-          <div className="relative w-9 h-9 rounded-[11px] bg-[var(--accent-1)] flex items-center justify-center shadow-sm shadow-[var(--accent-1)]/20 ring-1 ring-inset ring-white/10 group-hover:shadow-md group-hover:shadow-[var(--accent-2)]/35 transition-all duration-300 overflow-hidden">
-            {/* radar sweep — invisible at rest, fans + spins on hover */}
-            <span className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_68%,rgba(255,255,255,0.34)_90%,transparent)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_2.6s_linear_infinite] transition-opacity duration-300" />
-            <svg viewBox="0 0 24 24" fill="none" className="relative w-[20px] h-[20px]" aria-hidden="true">
-              <circle cx="12" cy="12" r="8.2" stroke="white" strokeWidth="1.5" strokeOpacity="0.38" />
-              <circle cx="12" cy="12" r="4.3" stroke="white" strokeWidth="1.5" strokeOpacity="0.7" />
-              <circle cx="12" cy="12" r="1.5" fill="white" />
-              <circle cx="16.9" cy="7.5" r="1.9" fill="white" />
-            </svg>
-          </div>
-          <span className="text-[17px] font-normal -tracking-[0.03em] font-display hidden sm:inline text-text-primary leading-none select-none">
-            Stack<span className="text-accent-primary">Radar</span>
+            Built on Dala's construction: an abstract letterform assembled from
+            flat geometric primitives on a grid — a large quarter-circle, a solid
+            square, a smaller quarter-circle — gradient-filled across the brand
+            spectrum, with NO container badge (the mark floats on the void).
+            Ours makes those primitives mean something: the quarter-circles are
+            radar sweeps, the square is the stack. The wordmark stays monochrome
+            white so the mark carries all the colour, exactly as Dala does. */}
+        <Link href="/" className="flex items-center gap-3 group" aria-label="StackRadar home">
+          <svg
+            viewBox="0 0 39 48"
+            className="h-7 w-[22px] shrink-0 overflow-visible"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="sr-sweep" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#15846e" />
+                <stop offset="52%" stopColor="#8052ff" />
+                <stop offset="100%" stopColor="#c9a6ff" />
+              </linearGradient>
+              <linearGradient id="sr-blip" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#8052ff" />
+                <stop offset="100%" stopColor="#ffb829" />
+              </linearGradient>
+              <linearGradient id="sr-stack" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#6a3fd6" />
+                <stop offset="100%" stopColor="#8052ff" />
+              </linearGradient>
+            </defs>
+
+            {/* outer radar sweep — the wide quarter arc */}
+            <path d="M15 0 A24 24 0 0 1 39 24 L15 24 Z" fill="url(#sr-sweep)" />
+            {/* the stack — solid block held in the negative space */}
+            <rect x="0" y="24" width="15" height="15" fill="url(#sr-stack)" />
+            {/* inner sweep / signal returning */}
+            <path d="M15 36 L33 36 A18 18 0 0 1 15 48 Z" fill="url(#sr-blip)" />
+          </svg>
+
+          <span className="text-[19px] font-normal -tracking-[0.03em] font-display hidden sm:inline text-[var(--c-ink)] leading-none select-none">
+            StackRadar
           </span>
         </Link>
 
