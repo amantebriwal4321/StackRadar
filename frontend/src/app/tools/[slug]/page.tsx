@@ -374,7 +374,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">GITHUB STARS</span>
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.stars.toLocaleString()}</span>
+              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.stars.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -382,7 +382,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">FORKS</span>
             <div className="flex items-center gap-2">
               <GitFork className="w-4 h-4 text-indigo-600" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.forks.toLocaleString()}</span>
+              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.forks.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -390,7 +390,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">HN DISCUSSIONS</span>
             <div className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-orange-500" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.hn_count.toLocaleString()}</span>
+              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.hn_count.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -398,7 +398,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">DEV.TO ARTICLES</span>
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-indigo-600" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.devto_count.toLocaleString()}</span>
+              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.devto_count.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -406,7 +406,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">REDDIT POSTS</span>
             <div className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-rose-500" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.reddit_count.toLocaleString()}</span>
+              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.reddit_count.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -414,7 +414,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">TECH NEWS SCAN</span>
             <div className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4 text-indigo-600" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.news_count.toLocaleString()}</span>
+              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.news_count.toLocaleString('en-US')}</span>
             </div>
           </div>
 

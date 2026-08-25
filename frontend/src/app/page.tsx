@@ -72,7 +72,7 @@ function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; s
     requestAnimationFrame(animate);
   }, [value]);
 
-  return <span ref={ref}>{prefix}{display.toLocaleString()}{suffix}</span>;
+  return <span ref={ref}>{prefix}{display.toLocaleString('en-US')}{suffix}</span>;
 }
 
 /* ─── Console questions ─── each one routes to the page that answers it ─── */
@@ -543,7 +543,12 @@ export default function HomePage() {
           product exists for. SplitReveal carries the wipe-up so it inherits the
           fail-safe (the words render readable if the animation never runs).
          ══════════════════════════════════════════ */}
-      <section className="relative z-10 max-w-4xl mx-auto px-6 section-rhythm">
+      <ScrollExpand
+        useWindowScroll
+        fit="content"
+        mediaZoom={1.14}
+        className="relative z-10 max-w-4xl mx-auto px-6 section-rhythm"
+      >
         <div className="space-y-5 md:space-y-7">
           {[
             "There has never been more to learn, and never less clarity about what is worth learning.",
@@ -561,7 +566,7 @@ export default function HomePage() {
             />
           ))}
         </div>
-      </section>
+      </ScrollExpand>
 
       <section id="five-minute-plan" className="max-w-5xl mx-auto px-6 -mt-6 md:-mt-4 mb-8 relative z-20 section-reveal scroll-mt-24">
         <FiveMinutePlan />
@@ -799,12 +804,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 5: REACT VS VUE VS BUN SPLIT
          ══════════════════════════════════════════ */}
-      <ScrollExpand
-        useWindowScroll
-        fit="content"
-        mediaZoom={1.06}
-        className="max-w-7xl mx-auto px-6 py-24 section-reveal"
-      >
+      <section className="max-w-7xl mx-auto px-6 py-24 section-reveal">
         <div className="glass-panel rounded-3xl p-8 md:p-10 border border-indigo-500/8 relative overflow-hidden">
           
           {/* Ambient background mesh */}
@@ -926,7 +926,7 @@ export default function HomePage() {
           </div>
 
         </div>
-      </ScrollExpand>
+      </section>
 
       {/* ─── Divider Ticker ─── */}
       <section className="w-full py-4 border-y border-indigo-500/5 bg-[var(--c-surface)]/20 overflow-hidden">
@@ -936,7 +936,7 @@ export default function HomePage() {
               <span key={i} className="inline-flex items-center gap-4 font-mono text-[10px] text-[var(--c-ink-2)]/30 tracking-widest uppercase">
                 <span>{heroStats.tools} TECHNOLOGIES TRACKED</span>
                 <span>•</span>
-                <span>{heroStats.stars.toLocaleString()} GITHUB STARS INDEXED</span>
+                <span>{heroStats.stars.toLocaleString('en-US')} GITHUB STARS INDEXED</span>
                 <span>•</span>
                 <span>{heroStats.domains} INTELLIGENCE DOMAINS</span>
                 <span>•</span>

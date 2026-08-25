@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       twitter: {
         card: "summary_large_image",
         title: `${tool.name} — ${tool.score}/100 on StackRadar`,
-        description: `${tool.name} momentum: ${tool.score}/100. ${tool.stage} stage. ${tool.stars.toLocaleString()} GitHub stars.`,
+        description: `${tool.name} momentum: ${tool.score}/100. ${tool.stage} stage. ${tool.stars.toLocaleString('en-US')} GitHub stars.`,
       },
     };
   } catch {
