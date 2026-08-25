@@ -885,3 +885,98 @@ body,
 
 /* Dala's body measure is a narrow ~360px column, not a full-width paragraph. */
 .measure { max-width: 26rem; }
+
+
+/* ─────────────────────────────────────────────
+   SCROLL EXPAND
+   A frame that opens toward full-bleed as you scroll through it, counter-
+   zooming its media so the subject holds still while the window grows.
+
+   --expand defaults to 1 (fully OPEN). The listener only animates toward that
+   value, so if it never runs — backgrounded tab, reduced motion, JS error —
+   the frame renders open and readable instead of stuck shut. Same fail-safe
+   rule as .slide-up and SplitReveal.
+   ───────────────────────────────────────────── */
+.scroll-expand {
+  --expand: 1;
+  position: relative;
+  width: 100%;
+}
+.scroll-expand__frame {
+  position: relative;
+  /* closed: inset to 62% of the container; open: full width */
+  width: calc((62% + 38% * var(--expand)));
+  margin-inline: auto;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  /* 24px is the Dala radius; it eases open along with the frame */
+  border-radius: calc(24px + 16px * (1 - var(--expand)));
+  background: #000;
+  transition: width 120ms linear, border-radius 120ms linear;
+}
+.scroll-expand__media {
+  position: absolute;
+  inset: 0;
+  /* counter-zoom: tight while closed, settling to 1 as the frame opens */
+  transform: scale(calc(1 + (var(--media-zoom, 1.2) - 1) * (1 - var(--expand))));
+  transform-origin: center;
+  transition: transform 120ms linear;
+}
+.scroll-expand__media > * { width: 100%; height: 100%; }
+.scroll-expand__media img { width: 100%; height: 100%; object-fit: cover; }
+
+.scroll-expand__title {
+  position: absolute;
+  left: 24px;
+  bottom: 20px;
+  margin: 0;
+  color: var(--c-ink);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  opacity: var(--expand);
+  transition: opacity 200ms var(--ease-colour, ease);
+}
+.scroll-expand__hint {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  color: var(--c-ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  /* the cue is only useful before the frame starts moving */
+  opacity: calc(1 - var(--expand));
+  transition: opacity 200ms var(--ease-colour, ease);
+}
+.scroll-expand__body {
+  max-width: 26rem;
+  margin: 36px auto 0;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-expand { --expand: 1; }
+  .scroll-expand__frame,
+  .scroll-expand__media,
+  .scroll-expand__title,
+  .scroll-expand__hint { transition: none; }
+}
+
+
+/* Content mode: wrap existing markup with the expand + zoom only — no forced
+   aspect ratio, no clipping of the content, no overlays. */
+.scroll-expand--content .scroll-expand__frame {
+  aspect-ratio: auto;
+  overflow: visible;
+  background: transparent;
+  border-radius: 0;
+}
+.scroll-expand--content .scroll-expand__media {
+  position: static;
+  /* zoom is subtler for content than for media — it must stay readable */
+  transform: scale(calc(1 - (var(--media-zoom, 1.06) - 1) * (1 - var(--expand))));
+  transform-origin: center top;
+}

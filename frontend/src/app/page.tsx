@@ -31,6 +31,7 @@ import {
 
 import LiveConstellation from "@/components/3d/LiveConstellation";
 import SplitReveal from "@/components/ui/SplitReveal";
+import ScrollExpand from "@/components/ui/ScrollExpand";
 import DashboardShell from "@/components/DashboardShell";
 import ContinueLearning from "@/components/ContinueLearning";
 import FiveMinutePlan from "@/components/FiveMinutePlan";
@@ -798,7 +799,12 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 5: REACT VS VUE VS BUN SPLIT
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-24 section-reveal">
+      <ScrollExpand
+        useWindowScroll
+        fit="content"
+        mediaZoom={1.06}
+        className="max-w-7xl mx-auto px-6 py-24 section-reveal"
+      >
         <div className="glass-panel rounded-3xl p-8 md:p-10 border border-indigo-500/8 relative overflow-hidden">
           
           {/* Ambient background mesh */}
@@ -920,7 +926,7 @@ export default function HomePage() {
           </div>
 
         </div>
-      </section>
+      </ScrollExpand>
 
       {/* ─── Divider Ticker ─── */}
       <section className="w-full py-4 border-y border-indigo-500/5 bg-[var(--c-surface)]/20 overflow-hidden">
