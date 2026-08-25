@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 
 interface DashboardShellProps {
@@ -14,8 +15,16 @@ interface DashboardShellProps {
   theme?: "teal" | "graphite" | "clay" | "wine";
 }
 
+/** Routes whose content is dense/tabular enough to need row separation.
+ *  Dala forbids card borders, but 31 rows of scores on pure black are
+ *  unreadable without them, so these routes get a hairline (no fill, no
+ *  shadow). Everything else floats in the void as the spec intends. */
+const DATA_ROUTES = /^\/(explore|trends|compare|tools|roadmap|roadmaps|watchlist)(\/|$)/;
+
 export default function DashboardShell({ children, fullWidth = false, flushX = false, theme }: DashboardShellProps) {
   const spotlightRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const isDataRoute = DATA_ROUTES.test(pathname || "");
 
   // Cursor spotlight tracking (inspired by XR reference)
   useEffect(() => {
@@ -46,7 +55,7 @@ export default function DashboardShell({ children, fullWidth = false, flushX = f
   // would break position:sticky on descendants (the hero constellation, which
   // would otherwise scroll away and leave the column empty).
   return (
-    <div className={`flex flex-col min-h-screen bg-background relative overflow-x-clip${theme ? ` theme-${theme}` : ""}`}>
+    <div className={`flex flex-col min-h-screen bg-background relative overflow-x-clip${isDataRoute ? " route-data" : ""}${theme ? ` theme-${theme}` : ""}`}>
       {/* ─── Noise Texture (like XR reference grain) ─── */}
       <div className="noise-overlay" aria-hidden="true" />
       
