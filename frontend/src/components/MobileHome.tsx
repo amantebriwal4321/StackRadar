@@ -266,7 +266,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
                       <h3 className="text-base font-bold font-display truncate">{d.name}</h3>
                       <span className={`ml-auto shrink-0 text-sm font-mono font-black ${c.text}`}>{d.score}</span>
                     </div>
-                    <div className="h-1.5 w-full bg-[var(--c-ground)] rounded-full overflow-hidden mb-1.5">
+                    <div className="h-1.5 w-full bg-[var(--c-surface-2)] rounded-full overflow-hidden mb-1.5">
                       <div className={`h-full ${c.bar} rounded-full`} style={{ width: `${d.score}%` }} />
                     </div>
                     <div className="flex items-center justify-between font-mono text-[10px] text-[var(--c-ink-2)]/60">

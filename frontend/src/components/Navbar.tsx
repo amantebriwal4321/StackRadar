@@ -85,10 +85,20 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 w-full">
-      {/* Soft readability scrim — NOT a box: a full-width gradient that fades to
-          transparent (no border, no edges), so links stay legible over scrolled
-          content. Fades in only once you scroll; invisible at the top. */}
-      <div className={`absolute inset-0 bg-gradient-to-b from-[var(--c-ground)] via-[var(--c-ground)]/70 to-transparent pointer-events-none transition-opacity duration-500 ${scrolled ? "opacity-95" : "opacity-0"}`} />
+      {/* Mercury's frosted nav: fully transparent over the hero, then a solid
+          canvas fill with backdrop-blur and a hairline edge once you scroll past
+          it. The fill uses var(--c-ground), so it tracks the scroll-driven
+          canvas colour automatically instead of drifting away from it. */}
+      <div
+        className={`absolute inset-0 pointer-events-none transition-opacity duration-500 border-b ${
+          scrolled ? "opacity-100 border-[var(--c-border)]" : "opacity-0 border-transparent"
+        }`}
+        style={{
+          background: "color-mix(in srgb, var(--c-ground) 85%, transparent)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+        }}
+      />
       <div className="relative flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
         {/* ─── Logo ───
             A solid wine radar badge with a hand-drawn radar mark (rings + sweep

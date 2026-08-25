@@ -31,7 +31,11 @@
      data meaning. Dark is the default; html.light carries the
      light variant. (Values here are the LIGHT variant.)
      ══════════════════════════════════════════════ */
-  --color-bg-primary: #f4f5f9;     /* light canvas */
+  /* Follows --c-ground so the canvas has ONE source of truth. The class-based
+     utilities (bg-bg-primary on <body>, bg-background on the shell root) beat
+     the `body {}` element rule on specificity, so if these duplicated a literal
+     hex instead, animating --c-ground would visibly do nothing. */
+  --color-bg-primary: var(--c-ground);
   --color-bg-secondary: #eceef5;   /* raised surface */
   --color-bg-card: #FFFFFF;        /* cards */
   --color-ink: #171721;
@@ -78,7 +82,7 @@
   --radius: 0.75rem;
   --radius-card: 12px;
   --radius-pill: 999px;
-  --background: #f4f5f9;
+  --background: var(--c-ground);
   --foreground: #171721;
   --card: #FFFFFF;
   --card-foreground: #171721;
@@ -110,7 +114,12 @@
   --color-indigo-700: #3a4bc4;
 
   /* Themeable surface/text vars — flip under html.dark. (LIGHT values here.) */
-  --c-ground: #f4f5f9;             /* page canvas */
+  /* Scroll-canvas endpoints — ScrollCanvas.tsx interpolates --c-ground between
+     these two as you scroll. Theme-scoped, so light mode needs no JS branch.
+     Both are Mercury surface values; the shift never introduces a third hue. */
+  --canvas-a: #f4f5f9;             /* page canvas */
+  --canvas-b: #eceef5;             /* deepened canvas at mid-scroll */
+  --c-ground: var(--canvas-a);
   --c-surface: #FFFFFF;            /* cards / panels */
   --c-surface-2: #eceef5;          /* raised chips / insets */
   --c-ink: #171721;                /* primary text */
@@ -128,7 +137,9 @@
    ══════════════════════════════════════════════ */
 html.dark {
   /* surfaces / text */
-  --c-ground: #171721;             /* onyx canvas */
+  --canvas-a: #171721;             /* onyx canvas */
+  --canvas-b: #1e1e2a;             /* graphite at mid-scroll */
+  --c-ground: var(--canvas-a);
   --c-surface: #1e1e2a;            /* graphite card */
   --c-surface-2: #272735;          /* obsidian inset / secondary fill */
   --c-ink: #ededf3;                /* ivory — never pure white */
@@ -151,7 +162,8 @@ html.dark {
   --color-text-accent: #8f9cf5;
 
   /* design tokens */
-  --color-bg-primary: #171721;
+  /* --color-bg-primary and --background intentionally NOT redefined here:
+     both follow --c-ground, which already flips above. */
   --color-bg-secondary: #272735;
   --color-bg-card: #1e1e2a;
   --color-text-primary: #ededf3;
@@ -159,7 +171,6 @@ html.dark {
   --color-text-faint: #70707d;
   --color-border-subtle: rgba(226, 227, 237, 0.14);
 
-  --background: #171721;
   --foreground: #ededf3;
   --card: #1e1e2a;
   --card-foreground: #ededf3;

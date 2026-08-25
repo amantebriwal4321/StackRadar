@@ -35,6 +35,7 @@ import ContinueLearning from "@/components/ContinueLearning";
 import FiveMinutePlan from "@/components/FiveMinutePlan";
 import MobileHome from "@/components/MobileHome";
 import WaitlistCapture from "@/components/WaitlistCapture";
+import ScrollCanvas from "@/components/ScrollCanvas";
 
 /* ─── Helper for Relative Time ─── */
 function getRelativeTime(isoString: string): string {
@@ -313,6 +314,7 @@ export default function HomePage() {
   if (isMobile) {
     return (
       <DashboardShell fullWidth flushX>
+        <ScrollCanvas />
         <MobileHome
           tools={tools}
           domains={domains}
@@ -326,6 +328,7 @@ export default function HomePage() {
 
   return (
     <DashboardShell fullWidth>
+      <ScrollCanvas />
       <div ref={containerRef} className="relative pb-24">
 
       {/* ══════════════════════════════════════════
@@ -659,7 +662,7 @@ export default function HomePage() {
 
                   {/* Score progress bar */}
                   <div className="mb-4">
-                    <div className="h-1 w-full bg-[var(--c-ground)] rounded-full overflow-hidden">
+                    <div className="h-1 w-full bg-[var(--c-surface-2)] rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full ${scoreBarColor} rounded-full`}
                         initial={{ width: 0 }}
