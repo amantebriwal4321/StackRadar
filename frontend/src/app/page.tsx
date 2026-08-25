@@ -356,19 +356,17 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.6 }}
-              className="hero-anim-item inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-indigo-500/20 bg-indigo-500/[0.06] text-xs font-mono font-bold text-indigo-600 tracking-wider"
+              className="hero-anim-item eyebrow inline-flex items-center gap-2.5"
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-2)] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-2)]" />
               </span>
               LIVE-DATA LEARNING ROADMAPS
-              <span className="w-px h-3 bg-indigo-500/30" />
-              <span className="text-indigo-600/60">v2.0</span>
             </motion.div>
 
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
-            <h1 className="text-[2.5rem] sm:text-6xl md:text-7xl lg:text-[5.5rem] font-normal tracking-[-0.04em] leading-[1.02] sm:leading-[0.92] font-display" style={{ perspective: "1000px" }}>
+            <h1 className="text-[2.5rem] sm:text-6xl md:text-7xl lg:text-[7rem] font-normal tracking-[-0.04em] leading-[1.02] sm:leading-[0.92] font-display" style={{ perspective: "1000px" }}>
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">Learn the right tech,</span>
               </span>

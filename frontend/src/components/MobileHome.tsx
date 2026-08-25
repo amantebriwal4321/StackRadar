@@ -129,11 +129,11 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
         <div className="relative">
           <motion.div
             initial={canAnimate ? { opacity: 0, y: 12 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/[0.06] text-[10px] font-mono font-bold text-indigo-600 tracking-wider mb-5"
+            className="eyebrow inline-flex items-center gap-2 mb-5"
           >
             <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-2)] opacity-75" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[var(--accent-2)]" />
             </span>
             LIVE-DATA LEARNING ROADMAPS
           </motion.div>
