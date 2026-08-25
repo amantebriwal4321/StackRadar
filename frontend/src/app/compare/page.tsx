@@ -17,7 +17,7 @@ import {
 
 // Series colors for up to 5 tracked tools — anchored on the indigo accent,
 // distinguishable via the system's own data tokens (no off-brand pink/teal).
-const COMPARE_COLORS = ["#7C2D4A", "#12B76A", "#B54708", "#F04438", "#C23E6E"];
+const COMPARE_COLORS = ["#7C2D4A", "#12B76A", "#B54708", "#F04438", "#8f9cf5"];
 
 export default function ComparePage() {
   const [allTools, setAllTools] = useState<Tool[]>([]);
@@ -485,9 +485,9 @@ export default function ComparePage() {
                 
                 <ChartContainer height={300}>
                   <LineChart data={chartData} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(37, 99, 235, 0.05)" vertical={false} />
-                    <XAxis dataKey="date" stroke="#5A6072" fontSize={10} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#5A6072" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(82, 102, 235, 0.05)" vertical={false} />
+                    <XAxis dataKey="date" stroke="#c3c3cc" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#c3c3cc" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} />
                     <Tooltip contentStyle={chartTooltipStyle} itemStyle={chartItemStyle} labelStyle={chartLabelStyle} />
                     <Legend wrapperStyle={{ fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-mono)", paddingTop: 12 }} />
                     {compareData.map((t, idx) => (

@@ -86,7 +86,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
       <mesh ref={sphereRef}>
         <icosahedronGeometry args={[1.4, 2]} />
         <meshBasicMaterial
-          color="#4338CA"
+          color="#3a4bc4"
           wireframe
           transparent
           opacity={0.35}
@@ -98,7 +98,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
       <mesh ref={outerSphereRef}>
         <icosahedronGeometry args={[1.7, 1]} />
         <meshBasicMaterial
-          color="#3730A3"
+          color="#2c3aa8"
           wireframe
           transparent
           opacity={0.12}
@@ -115,7 +115,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
           />
         </bufferGeometry>
         <pointsMaterial
-          color="#6366F1"
+          color="#6478ee"
           size={0.035}
           sizeAttenuation
           transparent
@@ -127,7 +127,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
       {/* Glowing core dot */}
       <mesh>
         <sphereGeometry args={[0.12, 16, 16]} />
-        <meshBasicMaterial color="#6366F1" />
+        <meshBasicMaterial color="#6478ee" />
       </mesh>
     </group>
   );
@@ -175,7 +175,7 @@ export default function TechSphere() {
 
   return (
     <div className="w-full h-full min-h-[350px] md:min-h-[500px] relative select-none">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(67,56,202,0.06),transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(82,102,235,0.08),transparent_70%)] pointer-events-none" />
       <Canvas
         camera={{ position: [0, 0, 4.5], fov: 55 }}
         gl={{ antialias: true, alpha: true }}

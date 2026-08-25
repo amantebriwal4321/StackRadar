@@ -25,37 +25,39 @@
   --color-ring: var(--ring);
 
   /* ══════════════════════════════════════════════
-     DESIGN SYSTEM: Terminal Light — disciplined
-     Calm paper canvas · ink text · ONE indigo accent ·
-     green/red reserved strictly for data meaning.
+     DESIGN SYSTEM: "Mercury" — monochrome + one accent
+     Onyx canvas · graphite cards · ivory text · cobalt as the SOLE
+     chromatic punctuation · green/amber/red reserved strictly for
+     data meaning. Dark is the default; html.light carries the
+     light variant. (Values here are the LIGHT variant.)
      ══════════════════════════════════════════════ */
-  --color-bg-primary: #E8E6EC;     /* cool light canvas */
-  --color-bg-secondary: #F4F2F6;   /* raised surface */
+  --color-bg-primary: #f4f5f9;     /* light canvas */
+  --color-bg-secondary: #eceef5;   /* raised surface */
   --color-bg-card: #FFFFFF;        /* cards */
-  --color-ink: #141726;
+  --color-ink: #171721;
 
-  --color-accent-primary: #7C2D4A; /* the one accent — deep wine */
-  --color-accent-glow: #C23E6E;    /* magenta glow */
-  --color-accent-deep: #4E1E32;    /* hover / pressed */
+  --color-accent-primary: #5266eb; /* the one accent — cobalt */
+  --color-accent-glow: #7b8bf2;    /* lighter cobalt for glows/gradients */
+  --color-accent-deep: #3a4bc4;    /* hover / pressed */
   /* Aliases kept so existing token references resolve to the SINGLE accent. */
-  --color-accent-hot: #7C2D4A;
-  --color-accent-cyan: #7C2D4A;
-  --color-accent-violet: #7C2D4A;
-  --color-accent-lime: #7C2D4A;
+  --color-accent-hot: #5266eb;
+  --color-accent-cyan: #5266eb;
+  --color-accent-violet: #5266eb;
+  --color-accent-lime: #5266eb;
 
-  --color-text-primary: #141726;
-  --color-text-secondary: #5A6072;
-  --color-text-faint: #9BA0AE;
-  --color-text-accent: #7C2D4A;
+  --color-text-primary: #171721;
+  --color-text-secondary: #5c5c6b;
+  --color-text-faint: #8f8f9c;
+  --color-text-accent: #5266eb;
 
   /* Data-only semantics — used ONLY to encode momentum/trend, never decoration */
   --color-score-high: #12B76A;     /* rising / strong */
   --color-score-mid: #B54708;      /* watch */
   --color-score-low: #F04438;      /* cooling / weak */
 
-  --color-border-subtle: rgba(20, 23, 38, 0.10);
-  --color-glow-violet: rgba(67, 56, 202, 0.14);
-  --color-glow-cyan: rgba(67, 56, 202, 0.10);
+  --color-border-subtle: rgba(112, 112, 125, 0.28);
+  --color-glow-violet: rgba(82, 102, 235, 0.14);
+  --color-glow-cyan: rgba(82, 102, 235, 0.10);
 
   /* Typography */
   --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
@@ -72,101 +74,106 @@
 }
 
 :root {
-  --radius: 0.85rem;
-  --background: #E8E6EC;
-  --foreground: #141726;
+  /* Mercury radii: cards 12px, pills for controls. */
+  --radius: 0.75rem;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+  --background: #f4f5f9;
+  --foreground: #171721;
   --card: #FFFFFF;
-  --card-foreground: #141726;
+  --card-foreground: #171721;
   --popover: #FFFFFF;
-  --popover-foreground: #141726;
-  --primary: #7C2D4A;
+  --popover-foreground: #171721;
+  --primary: #5266eb;
   --primary-foreground: #FFFFFF;
-  --secondary: #F4F2F6;
-  --secondary-foreground: #141726;
-  --muted: #E1DEE6;
-  --muted-foreground: #5A6072;
-  --accent: #7C2D4A;
+  --secondary: #eceef5;
+  --secondary-foreground: #171721;
+  --muted: #e4e6ef;
+  --muted-foreground: #5c5c6b;
+  --accent: #5266eb;
   --accent-foreground: #FFFFFF;
   --destructive: #F04438;
-  --border: rgba(20, 23, 38, 0.10);
-  --input: rgba(20, 23, 38, 0.10);
-  --ring: #7C2D4A;
+  --border: rgba(112, 112, 125, 0.28);
+  --input: rgba(112, 112, 125, 0.28);
+  --ring: #5266eb;
 
-  /* ── FINAL PALETTE: Neon Noir — deep wine + controlled magenta glow ── */
-  --accent-1: #7C2D4A;   /* wine — solid fills, text, borders */
-  --accent-2: #C23E6E;   /* magenta glow — gradients, glows, hover pop (sparingly) */
-  --accent-3: #4E1E32;   /* deep wine — pressed */
-  --ground: #E8E6EC;     /* cool light canvas (not warm — kills the "cafe" feel) */
+  /* ── PALETTE: Mercury — monochrome ground + cobalt as the sole accent ── */
+  --accent-1: #5266eb;   /* cobalt — solid fills, text, borders */
+  --accent-2: #7b8bf2;   /* lighter cobalt — gradients/glows (a TINT, not a 2nd hue) */
+  --accent-3: #3a4bc4;   /* deep cobalt — pressed */
+  --ground: #f4f5f9;
 
-  /* Remap Tailwind's whole indigo scale to wine so every `*-indigo-*` class follows */
-  --color-indigo-400: #B0567A;
-  --color-indigo-500: #8A3357;
-  --color-indigo-600: #7C2D4A;
-  --color-indigo-700: #5C2138;
+  /* Remap Tailwind's whole indigo scale to cobalt so every `*-indigo-*` follows */
+  --color-indigo-400: #8b9af4;
+  --color-indigo-500: #5266eb;
+  --color-indigo-600: #5266eb;
+  --color-indigo-700: #3a4bc4;
 
-  /* Themeable surface/text vars — hardcoded light hexes were migrated to these
-     so they flip under html.dark. (LIGHT values here.) */
-  --c-ground: #E8E6EC;             /* page canvas */
+  /* Themeable surface/text vars — flip under html.dark. (LIGHT values here.) */
+  --c-ground: #f4f5f9;             /* page canvas */
   --c-surface: #FFFFFF;            /* cards / panels */
-  --c-surface-2: #F7F8FC;          /* raised chips / insets */
-  --c-ink: #141726;                /* primary text */
-  --c-ink-2: #5A6072;              /* secondary text */
-  --c-border: rgba(20, 23, 38, 0.10);
-  --c-scrim: #141726;            /* full-bleed dark chrome (preloader panels) */
+  --c-surface-2: #eceef5;          /* raised chips / insets */
+  --c-ink: #171721;                /* primary text */
+  --c-ink-2: #5c5c6b;              /* secondary text */
+  --c-border: rgba(112, 112, 125, 0.28);
+  --c-scrim: #171721;            /* full-bleed dark chrome (preloader panels) — onyx in both themes */
 }
 
 /* ══════════════════════════════════════════════
-   DARK MODE — "Neon Noir" after dark: near-black wine ground,
-   luminous wine-rose accent + neon magenta glow (cyberpunk).
-   Flips every themeable var; data colours stay constant.
+   DARK MODE — "Mercury", and the DEFAULT look.
+   Onyx canvas, graphite cards, ivory text, cobalt as the only
+   chromatic punctuation. The pre-paint script in layout.tsx adds
+   .dark unless the visitor explicitly chose light, so this is what
+   a first-time visitor sees. Data colours stay constant.
    ══════════════════════════════════════════════ */
 html.dark {
   /* surfaces / text */
-  --c-ground: #0E0B12;
-  --c-surface: #17121D;
-  --c-surface-2: #201A29;
-  --c-ink: #ECE7F1;
-  --c-ink-2: #A79FB4;
-  --c-border: rgba(236, 230, 242, 0.12);
-  --ground: #0E0B12;
+  --c-ground: #171721;             /* onyx canvas */
+  --c-surface: #1e1e2a;            /* graphite card */
+  --c-surface-2: #272735;          /* obsidian inset / secondary fill */
+  --c-ink: #ededf3;                /* ivory — never pure white */
+  --c-ink-2: #c3c3cc;              /* ash */
+  --c-border: rgba(226, 227, 237, 0.14);
+  --ground: #171721;
 
-  /* accent — brighter so it glows on black */
-  --accent-1: #E0577F;
-  --accent-2: #FF5C93;
-  --accent-3: #B23A62;
-  --color-indigo-400: #F090AE;
-  --color-indigo-500: #E0577F;
-  --color-indigo-600: #E0577F;
-  --color-indigo-700: #B23A62;
-  --color-accent-primary: #E0577F;
-  --color-accent-glow: #FF5C93;
-  --color-accent-deep: #B23A62;
-  --color-text-accent: #E0577F;
+  /* accent — cobalt, lifted just enough to stay legible on onyx while
+     still passing with white text on a filled button */
+  --accent-1: #6478ee;
+  --accent-2: #8f9cf5;
+  --accent-3: #4055d4;
+  --color-indigo-400: #8f9cf5;
+  --color-indigo-500: #6478ee;
+  --color-indigo-600: #6478ee;
+  --color-indigo-700: #4055d4;
+  --color-accent-primary: #6478ee;
+  --color-accent-glow: #8f9cf5;
+  --color-accent-deep: #4055d4;
+  --color-text-accent: #8f9cf5;
 
   /* design tokens */
-  --color-bg-primary: #0E0B12;
-  --color-bg-secondary: #201A29;
-  --color-bg-card: #17121D;
-  --color-text-primary: #ECE7F1;
-  --color-text-secondary: #A79FB4;
-  --color-text-faint: #6E6678;
-  --color-border-subtle: rgba(236, 230, 242, 0.12);
+  --color-bg-primary: #171721;
+  --color-bg-secondary: #272735;
+  --color-bg-card: #1e1e2a;
+  --color-text-primary: #ededf3;
+  --color-text-secondary: #c3c3cc;
+  --color-text-faint: #70707d;
+  --color-border-subtle: rgba(226, 227, 237, 0.14);
 
-  --background: #0E0B12;
-  --foreground: #ECE7F1;
-  --card: #17121D;
-  --card-foreground: #ECE7F1;
-  --popover: #17121D;
-  --popover-foreground: #ECE7F1;
-  --primary: #E0577F;
-  --secondary: #201A29;
-  --secondary-foreground: #ECE7F1;
-  --muted: #201A29;
-  --muted-foreground: #A79FB4;
-  --accent: #E0577F;
-  --border: rgba(236, 230, 242, 0.12);
-  --input: rgba(236, 230, 242, 0.14);
-  --ring: #E0577F;
+  --background: #171721;
+  --foreground: #ededf3;
+  --card: #1e1e2a;
+  --card-foreground: #ededf3;
+  --popover: #1e1e2a;
+  --popover-foreground: #ededf3;
+  --primary: #5266eb;
+  --secondary: #272735;
+  --secondary-foreground: #ededf3;
+  --muted: #272735;
+  --muted-foreground: #c3c3cc;
+  --accent: #6478ee;
+  --border: rgba(226, 227, 237, 0.14);
+  --input: rgba(226, 227, 237, 0.16);
+  --ring: #6478ee;
 }
 
 /* overflow-x must be on <html> too, not just <body>.
@@ -206,7 +213,7 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--c-border);
-  box-shadow: 0 10px 34px -20px rgba(20, 23, 38, 0.35);
+  box-shadow: 0 10px 34px -24px rgba(0, 0, 0, 0.55);
 }
 
 .glass-panel-glow {
@@ -233,7 +240,7 @@ body {
   z-index: 999999;
   pointer-events: none;
   opacity: 0.02;
-  mix-blend-mode: multiply;
+  mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
 }
 
@@ -294,7 +301,7 @@ body {
    DOT GRID — ink-tinted hairlines
    ───────────────────────────────────────────── */
 .bg-dot-grid {
-  background-image: radial-gradient(rgba(20, 23, 38, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(color-mix(in srgb, var(--c-ink) 7%, transparent) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 .dot-grid-decor {
@@ -397,7 +404,7 @@ body {
   opacity: 0; transition: opacity 0.4s ease; z-index: -1;
 }
 .card-hover-glow:hover::before { opacity: 1; }
-.card-hover-glow:hover { transform: translateY(-4px); box-shadow: 0 18px 44px -22px rgba(20, 23, 38, 0.30); }
+.card-hover-glow:hover { transform: translateY(-4px); box-shadow: 0 18px 44px -22px rgba(0, 0, 0, 0.55); }
 
 /* ─────────────────────────────────────────────
    TECH PANELS — crisp separation from the paper canvas.
@@ -408,22 +415,24 @@ body {
 .tech-panel {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 18px 40px -26px rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-card);
+  /* Mercury: flat cards. Elevation reads from value contrast between the
+     graphite surface and the onyx canvas, not from a drop shadow. */
+  box-shadow: none;
   transition: border-color 0.35s var(--ease-standard),
               box-shadow 0.35s var(--ease-standard),
+              background-color 0.35s var(--ease-standard),
               transform 0.35s var(--ease-spring);
 }
 /* interactive surfaces: border lights up indigo + lifts on hover */
 .tech-panel-interactive { cursor: pointer; }
 .tech-panel-interactive:hover {
-  border-color: color-mix(in srgb, var(--accent-1) 45%, transparent);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
-    0 0 0 1px color-mix(in srgb, var(--accent-1) 14%, transparent),
-    0 24px 50px -24px color-mix(in srgb, var(--accent-1) 40%, transparent);
-  transform: translateY(-4px);
+  /* The old inset white highlight assumed a light ground and read as a seam
+     on onyx. Hover now lifts the surface value + rings it in cobalt. */
+  border-color: color-mix(in srgb, var(--accent-1) 55%, transparent);
+  background: color-mix(in srgb, var(--c-surface) 88%, var(--c-ink));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-1) 18%, transparent);
+  transform: translateY(-3px);
 }
 
 /* Animated conic border — a subtle "scanning" edge on the console */
@@ -449,13 +458,13 @@ body {
   border: 1px solid var(--c-border);
   overflow: hidden;
   box-shadow:
-    0 1px 2px rgba(20, 23, 38, 0.05),
-    0 28px 55px -28px rgba(20, 23, 38, 0.55);
+    0 1px 2px rgba(0, 0, 0, 0.20),
+    0 28px 55px -28px rgba(0, 0, 0, 0.70);
 }
 .terminal-bar {
   display: flex; align-items: center; gap: 0.55rem;
   padding: 0.62rem 0.95rem;
-  background: #141726;                         /* dark ink chrome — the "techy dark" accent */
+  background: var(--c-scrim);                         /* dark ink chrome — the "techy dark" accent */
   border-bottom: 1px solid color-mix(in srgb, var(--accent-2) 30%, transparent);
 }
 .terminal-dot { width: 11px; height: 11px; border-radius: 50%; }

@@ -344,10 +344,10 @@ export default function TrendsPage() {
                 <div style={{ minWidth: `${Math.max(displayedTools.length * 60, 450)}px` }}>
                   <ChartContainer height={300}>
                     <BarChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(37, 99, 235, 0.06)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(82, 102, 235, 0.06)" vertical={false} />
                       <XAxis
                         dataKey="name"
-                        stroke="#5A6072"
+                        stroke="#c3c3cc"
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
@@ -355,7 +355,7 @@ export default function TrendsPage() {
                         height={40}
                       />
                       <YAxis
-                        stroke="#5A6072"
+                        stroke="#c3c3cc"
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
@@ -374,7 +374,7 @@ export default function TrendsPage() {
                       />
                       <Bar
                         dataKey="score"
-                        fill="#8A3357"
+                        fill="#5266eb"
                         radius={[6, 6, 0, 0]}
                         animationDuration={1000}
                       />

@@ -125,7 +125,7 @@ export default function FeedbackButton() {
               </div>
 
               {/* body — embedded form with a loading shim */}
-              <div className="relative flex-1 bg-white">
+              <div className="relative flex-1 bg-[var(--c-surface)]">
                 {!iframeLoaded && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[var(--c-surface)]">
                     <Loader2 className="h-6 w-6 animate-spin text-[var(--accent-1)]" />

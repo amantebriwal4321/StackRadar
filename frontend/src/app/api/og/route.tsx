@@ -9,8 +9,10 @@ import { ImageResponse } from "next/og";
  */
 export const runtime = "nodejs";
 
-const WINE = "#7C2D4A";
-const MAGENTA = "#C23E6E";
+// Mercury palette, duplicated by hand: this route renders server-side with
+// no CSS, so it cannot read the design tokens in globals.css.
+const COBALT = "#5266eb";
+const COBALT_LIGHT = "#8f9cf5";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -28,7 +30,7 @@ export async function GET(req: Request) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px",
-          background: `linear-gradient(135deg, #0E0A10 0%, #1A0E16 55%, ${WINE} 160%)`,
+          background: `linear-gradient(135deg, #141420 0%, #1e1e2a 55%, ${COBALT} 160%)`,
           color: "#FFFFFF",
           fontFamily: "sans-serif",
         }}
@@ -39,7 +41,7 @@ export async function GET(req: Request) {
             <div
               style={{
                 width: "44px", height: "44px", borderRadius: "12px",
-                background: `linear-gradient(135deg, ${WINE}, ${MAGENTA})`,
+                background: `linear-gradient(135deg, ${COBALT}, ${COBALT_LIGHT})`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: "26px", fontWeight: 800,
               }}
@@ -52,8 +54,8 @@ export async function GET(req: Request) {
             style={{
               display: "flex", alignItems: "center", gap: "10px",
               padding: "8px 18px", borderRadius: "999px",
-              border: `1px solid ${MAGENTA}66`, background: `${MAGENTA}22`,
-              fontSize: "20px", fontFamily: "monospace", color: "#FF9EC0",
+              border: `1px solid ${COBALT_LIGHT}66`, background: `${COBALT_LIGHT}22`,
+              fontSize: "20px", fontFamily: "monospace", color: "#8f9cf5",
             }}
           >
             <div style={{ width: "10px", height: "10px", borderRadius: "999px", background: "#12B76A" }} />
@@ -67,7 +69,7 @@ export async function GET(req: Request) {
           <div style={{ fontSize: "70px", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-1.5px", maxWidth: "1000px", display: "flex" }}>
             {title}
           </div>
-          <div style={{ fontSize: "30px", color: "#C9C4D6", maxWidth: "900px", display: "flex" }}>
+          <div style={{ fontSize: "30px", color: "#c3c3cc", maxWidth: "900px", display: "flex" }}>
             {subtitle}
           </div>
         </div>
@@ -77,13 +79,13 @@ export async function GET(req: Request) {
           <div
             style={{
               padding: "14px 30px", borderRadius: "14px",
-              background: `linear-gradient(135deg, ${WINE}, ${MAGENTA})`,
+              background: `linear-gradient(135deg, ${COBALT}, ${COBALT_LIGHT})`,
               fontSize: "26px", fontWeight: 700, color: "#fff", display: "flex",
             }}
           >
             Start free →
           </div>
-          <div style={{ fontSize: "24px", color: "#8A8398", fontFamily: "monospace", display: "flex" }}>
+          <div style={{ fontSize: "24px", color: "#70707d", fontFamily: "monospace", display: "flex" }}>
             no sign-up to start
           </div>
         </div>
@@ -93,7 +95,7 @@ export async function GET(req: Request) {
           style={{
             position: "absolute", top: "-160px", right: "-160px",
             width: "480px", height: "480px", borderRadius: "999px",
-            background: `${MAGENTA}22`,
+            background: `${COBALT_LIGHT}22`,
           }}
         />
       </div>

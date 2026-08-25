@@ -204,23 +204,23 @@ export default function ToolDetailPage() {
                 <AreaChart data={history} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="areaGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#C23E6E" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#C23E6E" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#8f9cf5" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#8f9cf5" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(37, 99, 235, 0.05)" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(82, 102, 235, 0.05)" vertical={false} />
                   
                   <XAxis
                     dataKey="date"
-                    stroke="#5A6072"
+                    stroke="#c3c3cc"
                     fontSize={10}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(v: string) => v.slice(5)}
                   />
                   <YAxis
-                    stroke="#5A6072"
+                    stroke="#c3c3cc"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
@@ -234,7 +234,7 @@ export default function ToolDetailPage() {
                   <Area
                     type="monotone"
                     dataKey="score"
-                    stroke="#B03A63"
+                    stroke="#4055d4"
                     strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#areaGlow)"
@@ -347,7 +347,7 @@ export default function ToolDetailPage() {
               </div>
               <Link
                 href={`/roadmap/${tool.roadmap_slug}`}
-                className="bg-[var(--c-surface)] hover:bg-slate-100 text-indigo-600 px-4 py-2.5 rounded-xl font-mono text-xs font-bold shrink-0 shadow transition-all active:scale-95"
+                className="bg-[var(--c-surface)] hover:bg-[var(--c-surface-2)] text-indigo-600 px-4 py-2.5 rounded-xl font-mono text-xs font-bold shrink-0 shadow transition-all active:scale-95"
               >
                 GO_TO_ROADMAP
               </Link>

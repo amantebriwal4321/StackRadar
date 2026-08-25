@@ -782,8 +782,8 @@ export default function HomePage() {
         <div className="glass-panel rounded-3xl p-8 md:p-10 border border-indigo-500/8 relative overflow-hidden">
           
           {/* Ambient background mesh */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(99,102,241,0.04),transparent_60%)] pointer-events-none" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,rgba(37,99,235,0.04),transparent_60%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(100, 120, 238,0.04),transparent_60%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,rgba(82, 102, 235,0.04),transparent_60%)] pointer-events-none" />
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
             

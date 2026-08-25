@@ -22,9 +22,9 @@ interface NodeDatum {
 }
 
 // Neon Noir — deep wine nodes with a magenta glow at the high end (bolder = higher score)
-const COLOR_HIGH = new THREE.Color("#C23E6E"); // score >= 75 (magenta glow)
-const COLOR_MID = new THREE.Color("#7C2D4A"); // 45–75 (wine)
-const COLOR_LOW = new THREE.Color("#9BA0AE"); // < 45 (faint)
+const COLOR_HIGH = new THREE.Color("#8f9cf5"); // score >= 75 (magenta glow)
+const COLOR_MID = new THREE.Color("#5266eb"); // 45–75 (wine)
+const COLOR_LOW = new THREE.Color("#70707d"); // < 45 (faint)
 
 function colorForScore(score: number): THREE.Color {
   if (score >= 75) return COLOR_HIGH;
@@ -135,7 +135,7 @@ function ConstellationScene({
       <mesh ref={shellRef}>
         <icosahedronGeometry args={[RADIUS + 0.35, 1]} />
         <meshBasicMaterial
-          color="#4E1E32"
+          color="#2c3aa8"
           wireframe
           transparent
           opacity={0.07}
@@ -146,7 +146,7 @@ function ConstellationScene({
       {/* constellation lines */}
       <lineSegments geometry={lineGeometry}>
         <lineBasicMaterial
-          color="#7C2D4A"
+          color="#5266eb"
           transparent
           opacity={0.12}
           blending={THREE.AdditiveBlending}
@@ -164,9 +164,9 @@ function ConstellationScene({
       {/* glowing core */}
       <mesh>
         <sphereGeometry args={[0.13, 24, 24]} />
-        <meshBasicMaterial color="#C23E6E" />
+        <meshBasicMaterial color="#8f9cf5" />
       </mesh>
-      <pointLight color="#C23E6E" intensity={2} distance={6} />
+      <pointLight color="#8f9cf5" intensity={2} distance={6} />
 
       {/* floating labels for the top tools */}
       {labelled.map((node) => (
@@ -188,10 +188,10 @@ function ConstellationScene({
               style={{
                 color:
                   node.tool.score >= 75
-                    ? "#C23E6E"
+                    ? "#8f9cf5"
                     : node.tool.score >= 45
-                    ? "#7C2D4A"
-                    : "#9BA0AE",
+                    ? "#5266eb"
+                    : "#70707d",
               }}
             >
               {Math.round(node.tool.score)}
@@ -234,7 +234,7 @@ export default function LiveConstellation({ tools }: { tools: Tool[] }) {
 
   return (
     <div className="w-full h-full min-h-[350px] md:min-h-[500px] relative select-none">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(67,56,202,0.08),transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(82,102,235,0.10),transparent_70%)] pointer-events-none" />
       <Canvas
         camera={{ position: [0, 0, 5.4], fov: 55 }}
         gl={{ antialias: true, alpha: true }}

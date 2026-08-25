@@ -201,7 +201,7 @@ export default function ExplorePage() {
 
         {/* ─── Cinematic Header ─── */}
         <header className="p-6 md:p-8 rounded-3xl border border-indigo-500/10 bg-[var(--c-surface)]/80 backdrop-blur-md relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(67,56,202,0.08),transparent_55%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(82, 102, 235,0.08),transparent_55%)] pointer-events-none" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 relative">
             <div className="space-y-2">
               <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
@@ -291,7 +291,7 @@ export default function ExplorePage() {
                       exit={{ opacity: 0, y: -10 }}
                       className="relative rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-[var(--c-surface-2)]/80 to-[var(--c-surface)]/60 p-6 md:p-8 overflow-hidden glass-panel-glow"
                     >
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(67,56,202,0.12),transparent_55%)] pointer-events-none" />
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(82, 102, 235,0.12),transparent_55%)] pointer-events-none" />
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative">
                         <div className="flex items-center gap-5">
                           <span className="text-5xl p-4 bg-[var(--c-surface)] border border-indigo-500/20 rounded-2xl">{entryTool.icon}</span>
