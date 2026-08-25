@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import SplitReveal from "@/components/ui/SplitReveal";
 
 /**
  * Cold-start curtain.
@@ -184,9 +185,13 @@ export default function BackendWaking() {
             <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--accent-1)]">
               live intelligence
             </p>
-            <h2 className="mt-3 font-display text-2xl font-extrabold -tracking-[0.02em] text-[var(--c-ink)] sm:text-3xl">
-              Warming up the live data
-            </h2>
+            <SplitReveal
+              as="h2"
+              text="Warming up the live data"
+              delay={80}
+              stagger={80}
+              className="mt-3 block font-display text-2xl font-extrabold -tracking-[0.02em] text-[var(--c-ink)] sm:text-3xl"
+            />
 
             {/* rolling status line — keyed so it re-mounts per phase; the entrance
                 is transform-only (opacity stays 1) so a backgrounded tab can never

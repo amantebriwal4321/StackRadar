@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import SplitReveal from "@/components/ui/SplitReveal";
 
 /**
  * Cinematic first-visit loader.
@@ -66,7 +67,7 @@ export default function Preloader() {
         initial={{ y: 0 }}
         animate={progress === 100 ? { y: "-100%" } : { y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute top-0 left-0 w-full h-1/2 bg-[#141726] border-b border-[var(--accent-1)]/20 pointer-events-auto"
+        className="absolute top-0 left-0 w-full h-1/2 bg-[var(--c-scrim)] border-b border-[var(--accent-1)]/20 pointer-events-auto"
       />
 
       {/* Bottom half */}
@@ -74,27 +75,40 @@ export default function Preloader() {
         initial={{ y: 0 }}
         animate={progress === 100 ? { y: "100%" } : { y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-0 left-0 w-full h-1/2 bg-[#141726] pointer-events-auto"
+        className="absolute bottom-0 left-0 w-full h-1/2 bg-[var(--c-scrim)] pointer-events-auto"
       />
 
-      {/* Progress text — must exit WITH the split panels at 100%, otherwise it
+      {/* The wait now SAYS something. A bare percentage taught a first-time
+          visitor nothing; a split-text line tells them what StackRadar is while
+          the page loads. Must exit WITH the split panels at 100%, otherwise it
           lingers over the revealed page (the "100% floating on the hero" bug). */}
       <motion.div
         animate={progress === 100 ? { opacity: 0, scale: 0.96 } : { opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="relative z-10 flex flex-col items-center justify-center space-y-4"
+        className="relative z-10 flex flex-col items-center justify-center gap-6 px-6 text-center"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={progress >= 40 && progress < 100 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-          transition={{ duration: 0.5 }}
-          className="text-sm font-bold tracking-[0.4em] font-display text-white/60 uppercase text-center"
-        >
-          STACKRADAR
-        </motion.div>
-        <div className="text-7xl md:text-9xl font-black font-display gradient-text tracking-tighter leading-none select-none">
-          {progress}%
+        <div className="text-[11px] font-bold tracking-[0.4em] font-display text-white/50 uppercase">
+          StackRadar
         </div>
+
+        <SplitReveal
+          as="h1"
+          text="Know what to learn next."
+          delay={140}
+          stagger={85}
+          className="max-w-3xl text-4xl md:text-6xl font-black font-display tracking-tight leading-[1.05] text-white"
+        />
+
+        <SplitReveal
+          text="Live momentum from GitHub, Hacker News, Reddit and Dev.to — turned into a roadmap."
+          delay={520}
+          stagger={26}
+          className="max-w-md text-[13px] md:text-sm font-light leading-relaxed text-white/55"
+        />
+
+        {/* Uiverse loader (bociKond), themed to the accent token */}
+        <div className="sr-loader mt-2" aria-hidden="true" />
+        <span className="sr-only">Loading StackRadar</span>
       </motion.div>
     </div>
   );

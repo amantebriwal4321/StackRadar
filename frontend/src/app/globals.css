@@ -112,6 +112,7 @@
   --c-ink: #141726;                /* primary text */
   --c-ink-2: #5A6072;              /* secondary text */
   --c-border: rgba(20, 23, 38, 0.10);
+  --c-scrim: #141726;            /* full-bleed dark chrome (preloader panels) */
 }
 
 /* ══════════════════════════════════════════════
@@ -573,4 +574,63 @@ body {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--accent-2), transparent);
   box-shadow: 0 0 8px color-mix(in srgb, var(--accent-2) 60%, transparent);
+}
+
+
+/* ─────────────────────────────────────────────
+   SPLIT TEXT REVEAL  (motion.dev "text split reveal")
+   Words rise out of an overflow-hidden mask on a stagger.
+   The animation only applies under `.is-armed`, which SplitReveal adds after
+   confirming a visible tab + no reduced-motion preference — so the resting
+   state is plain, readable text that can never be stranded invisible.
+   ───────────────────────────────────────────── */
+.split-reveal-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.08em;   /* room for descenders inside the mask */
+}
+.split-reveal-word > span { display: inline-block; will-change: transform; }
+.split-reveal.is-armed .split-reveal-word > span {
+  animation: word-rise 0.75s var(--ease-standard) both;
+}
+@keyframes word-rise {
+  from { transform: translateY(110%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .split-reveal.is-armed .split-reveal-word > span { animation: none; }
+}
+
+/* ─────────────────────────────────────────────
+   LOADER  (Uiverse.io by bociKond, recoloured to the accent token)
+   ───────────────────────────────────────────── */
+.sr-loader {
+  width: 44.8px;
+  height: 44.8px;
+  color: var(--accent-1);
+  position: relative;
+  background: radial-gradient(11.2px, currentColor 94%, #0000);
+}
+.sr-loader:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(10.08px at bottom right, #0000 94%, currentColor) top left,
+    radial-gradient(10.08px at bottom left,  #0000 94%, currentColor) top right,
+    radial-gradient(10.08px at top right,    #0000 94%, currentColor) bottom left,
+    radial-gradient(10.08px at top left,     #0000 94%, currentColor) bottom right;
+  background-size: 22.4px 22.4px;
+  background-repeat: no-repeat;
+  animation: sr-loader 1.5s infinite cubic-bezier(0.3, 1, 0, 1);
+}
+@keyframes sr-loader {
+  33%  { inset: -11.2px; transform: rotate(0deg); }
+  66%  { inset: -11.2px; transform: rotate(90deg); }
+  100% { inset: 0;       transform: rotate(90deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-loader:before { animation-duration: 3s; }
 }
