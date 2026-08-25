@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Play, ListVideo, CheckCircle2, Clock, TrendingUp } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
+import FaqAccordion from "@/components/FaqAccordion";
 import { fetchRoadmap, fetchRoadmaps, type Roadmap } from "@/data/trends";
 import { SITE_URL as SITE } from "@/lib/site";
 
@@ -209,17 +210,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
           <h2 className="text-2xl md:text-3xl font-black font-display text-[var(--c-ink)] mb-6">
             Frequently asked questions
           </h2>
-          <div className="space-y-3">
-            {faqs.map((f) => (
-              <details key={f.q} className="tech-panel rounded-xl p-5 group">
-                <summary className="font-bold text-[var(--c-ink)] cursor-pointer list-none flex items-center justify-between gap-4">
-                  {f.q}
-                  <span className="text-indigo-600 group-open:rotate-45 transition-transform text-xl leading-none shrink-0">+</span>
-                </summary>
-                <p className="text-sm text-[var(--c-ink-2)] font-light leading-relaxed mt-3">{f.a}</p>
-              </details>
-            ))}
-          </div>
+          <FaqAccordion faqs={faqs} />
         </section>
 
         {/* Closing CTA */}

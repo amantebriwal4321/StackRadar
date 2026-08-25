@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Star, Sparkl
 import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
 import { fetchRoadmap, fetchProgress, toggleProgressStep, type Roadmap } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
+import { Accordion, AccordionItem } from "@/components/ui/accordion";
 
 const levelColors: Record<string, string> = {
   Beginner: "bg-emerald-500 border-emerald-400/30 text-emerald-600",
@@ -146,6 +147,9 @@ export default function RoadmapPage() {
   }
 
   const steps = roadmap.steps || [];
+  // The first unfinished module — drives both the "Next up" badge below and
+  // which accordion panel is open on arrival.
+  const nextUpStep = steps.filter((st) => !completedSteps.includes(st.step))[0]?.step;
 
   return (
     <DashboardShell>
@@ -297,12 +301,19 @@ export default function RoadmapPage() {
             style={{ height: `${isSignedIn ? percent : scrollFillHeight}%` }}
           />
 
+          {/* Steps as accordion panels. `key` includes the next-up step so that
+              finishing a module remounts with the FOLLOWING one already open —
+              the page always shows exactly one next thing to do. */}
+          <Accordion
+            key={`acc-${nextUpStep ?? "none"}`}
+            className="space-y-6"
+            defaultOpen={nextUpStep != null ? `step-${nextUpStep}` : null}
+          >
           {steps.map((step, idx) => {
             const levelStyle = levelBadgeColors[step.level] || "bg-indigo-500/10 text-indigo-600 border border-indigo-500/20";
             const levelDotClass = levelColors[step.level] || "bg-indigo-500";
             const isDone = completedSteps.includes(step.step);
-            // The first unfinished module — the one thing to do next.
-            const isNextUp = !isDone && steps.filter((s) => !completedSteps.includes(s.step))[0]?.step === step.step;
+            const isNextUp = !isDone && nextUpStep === step.step;
 
             return (
               <div
@@ -378,9 +389,15 @@ export default function RoadmapPage() {
                   )}
                 </div>
 
-                {/* Content body */}
-                <div className="flex-1 space-y-3">
-
+                {/* Content body — folded into an accordion panel so a 10-step
+                    path stays scannable. The header keeps title + status badges
+                    visible while collapsed; the number circle stays OUTSIDE the
+                    trigger so it still marks the step complete. */}
+                <AccordionItem
+                  id={`step-${step.step}`}
+                  className="flex-1 min-w-0"
+                  icon="chevron"
+                  header={
                   <div className="flex items-center gap-3 flex-wrap">
                     <h3 className={`text-base font-extrabold font-display transition-colors ${
                       isDone ? "text-[var(--c-ink-2)] line-through decoration-[#12B76A]/50" : "text-[var(--c-ink)] group-hover:text-indigo-600"
@@ -396,6 +413,9 @@ export default function RoadmapPage() {
                       {step.level}
                     </span>
                   </div>
+                  }
+                >
+                  <div className="space-y-3 pt-3">
 
                   <p className="text-xs md:text-sm text-[var(--c-ink-2)] leading-relaxed font-light font-mono">
                     {step.description}
@@ -530,11 +550,13 @@ export default function RoadmapPage() {
                     </div>
                   )}
 
-                </div>
+                  </div>
+                </AccordionItem>
 
               </div>
             );
           })}
+          </Accordion>
 
         </div>
 
