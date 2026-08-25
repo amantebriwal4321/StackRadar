@@ -191,7 +191,10 @@ function ConstellationScene({
        constellation (middle) -> ordered path (bottom). Positions are lerped
        so the shape eases rather than snapping, and the connecting lines are
        rebuilt from the live positions so they travel with the nodes. */
-    if (!reducedMotion && formations.length === 3) {
+    /* Scroll-morphing is a BACKGROUND behaviour only. In the hero the
+       constellation is a contained figure — a labelled data object — and a
+       figure that deforms as you scroll past reads as a glitch, not motion. */
+    if (background && !reducedMotion && formations.length === 3) {
       const seg = scrollRatio.current * 2;          // 0..2 across three targets
       const i0 = Math.min(Math.floor(seg), 1);
       const blend = seg - i0;

@@ -327,10 +327,6 @@ export default function HomePage() {
 
   return (
     <DashboardShell fullWidth>
-      {/* Dala's architecture: ONE fixed, full-viewport, negative-z particle
-          canvas that every section scrolls over, morphing between formations
-          (scattered cloud -> constellation -> ordered path) as you go. */}
-      <LiveConstellation tools={tools} variant="background" />
       <div ref={containerRef} className="relative pb-24">
 
       {/* ══════════════════════════════════════════
@@ -493,6 +489,10 @@ export default function HomePage() {
             style={{ x: springX, y: springY }}
           >
             
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center z-0">
+              <LiveConstellation tools={tools} />
+            </div>
+
             {/* Visual Floating Telemetry Tags around sphere */}
             <motion.div
               className="absolute top-8 left-8 px-3 py-1.5 bg-[var(--c-surface)]/80 border border-indigo-500/15 backdrop-blur-md rounded-lg text-[10px] font-mono text-indigo-600 select-none"
