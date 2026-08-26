@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Zap, TrendingUp, Loader2, RefreshCw,
-  Sparkles, ArrowRight, Brain, Compass, Star,
-  Shield, Globe, Database, Cpu, MessageSquare, Terminal, Eye,
-  Layers, Code2, ChevronRight, Activity, BarChart3, Rocket,
-  Users, BookOpen, GitBranch, Flame
+  TrendingUp, Sparkles, ArrowRight, Brain, Compass, Star,
+  Shield, Globe, Database, MessageSquare, Terminal, Eye,
+  ChevronRight, Activity, Rocket, Flame
 } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -38,41 +36,37 @@ import FiveMinutePlan from "@/components/FiveMinutePlan";
 import MobileHome from "@/components/MobileHome";
 import WaitlistCapture from "@/components/WaitlistCapture";
 
-/* ─── Helper for Relative Time ─── */
-function getRelativeTime(isoString: string): string {
-  const diffMs = Date.now() - new Date(isoString).getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
-  return `${Math.floor(diffHr / 24)}d ago`;
-}
-
-/* ─── Animated Counter ─── */
+/* ─── Animated Counter ───
+   The count-up is decoration; the NUMBER is the content. So reduced motion skips
+   straight to the final value, and the rAF chain is cancelled on unmount and on
+   every `value` change — without that, a changing value stacked overlapping
+   chains that fought each other over the same state. */
 function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; suffix?: string; prefix?: string }) {
-  const [display, setDisplay] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
+  // Progress rests at 1 — the FINAL value — and the animation walks it up from 0.
+  // That ordering is the point: the resting state is the readable one, so reduced
+  // motion, a backgrounded tab or a dead rAF all leave the real number on screen
+  // rather than a zero. Rendering `value * progress` also means a changing `value`
+  // is picked up without any state sync.
+  const [progress, setProgress] = useState(1);
 
   useEffect(() => {
-    let start = 0;
-    const end = value;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let frame = 0;
     const duration = 2000;
     const startTime = performance.now();
 
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 4);
-      const current = Math.floor(start + (end - start) * eased);
-      setDisplay(current);
-      if (progress < 1) requestAnimationFrame(animate);
+    const animate = (now: number) => {
+      const t = Math.min((now - startTime) / duration, 1);
+      setProgress(1 - Math.pow(1 - t, 4));
+      if (t < 1) frame = requestAnimationFrame(animate);
     };
 
-    requestAnimationFrame(animate);
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
   }, [value]);
 
-  return <span ref={ref}>{prefix}{display.toLocaleString('en-US')}{suffix}</span>;
+  return <span>{prefix}{Math.floor(value * progress).toLocaleString('en-US')}{suffix}</span>;
 }
 
 /* ─── Console questions ─── each one routes to the page that answers it ─── */
@@ -85,39 +79,35 @@ const decisionPrompts = [
   { icon: "🗺️", label: "Browse learning roadmaps", href: "/roadmaps" },
 ];
 
-/* ─── Process Steps ─── */
+/* ─── Process Steps ───
+   The numbering is real: this is a pipeline, and each step consumes the previous
+   one's output — so 01–04 encodes order the reader needs, not decoration.
+   The `gradient`/`color` fields are gone; three of the four were no-ops
+   (`from-indigo-500 to-indigo-500` is a flat fill written as a gradient). */
 const processSteps = [
   {
     num: "01",
     title: "We listen to the industry",
     desc: "GitHub, Reddit and Hacker News, tracked around the clock — what developers actually use, not what ads say.",
     icon: Database,
-    gradient: "from-indigo-500 to-indigo-500",
-    color: "text-indigo-600",
   },
   {
     num: "02",
     title: "We separate signal from hype",
     desc: "Real developer discussions get analyzed so genuine adoption stands out from marketing noise.",
     icon: Brain,
-    gradient: "from-indigo-500 to-indigo-500",
-    color: "text-indigo-600",
   },
   {
     num: "03",
     title: "Every tool gets a live score",
     desc: "A 0–100 score from real usage and growth — so “worth learning” is measured, not guessed.",
     icon: Activity,
-    gradient: "from-indigo-500 to-indigo-500",
-    color: "text-indigo-600",
   },
   {
     num: "04",
     title: "Your roadmap stays current",
     desc: "The learning path re-ranks itself from that data, so you always study what matters right now.",
     icon: Rocket,
-    gradient: "from-indigo-500 to-emerald-500",
-    color: "text-indigo-600",
   },
 ];
 
@@ -159,44 +149,68 @@ export default function HomePage() {
   const springY = useSpring(mouseY, { stiffness: 50, damping: 30 });
 
   useEffect(() => {
+    // Reduced motion: never bind at all. The constellation stays centred, which
+    // is its resting state anyway, so nothing is lost but the drift.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth - 0.5) * 30;
       const y = (e.clientY / window.innerHeight - 0.5) * 30;
       mouseX.set(x);
       mouseY.set(y);
     };
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [mouseX, mouseY]);
 
   /* ─── Fetch Home Page Data ─── */
-  useEffect(() => {
-    async function initHomePage() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Parallel fetching
-        const [allTools, domainList, movers, overviewData] = await Promise.all([
-          fetchTools(),
-          fetchDomains(),
-          fetchTopMovers(6),
-          fetchOverview()
-        ]);
+  const loadHomePage = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        setTools(allTools);
-        setDomains(domainList);
-        setTopGainers(movers);
-        setOverview(overviewData);
-      } catch (err: any) {
-        console.error("Error loading homepage data:", err);
-        setError(err.message || "Failed to load live data.");
-      } finally {
-        setIsLoading(false);
-      }
+      // Parallel fetching
+      const [allTools, domainList, movers, overviewData] = await Promise.all([
+        fetchTools(),
+        fetchDomains(),
+        fetchTopMovers(6),
+        fetchOverview()
+      ]);
+
+      setTools(allTools);
+      setDomains(domainList);
+      setTopGainers(movers);
+      setOverview(overviewData);
+    } catch (err: any) {
+      console.error("Error loading homepage data:", err);
+      setError(err.message || "Failed to load live data.");
+    } finally {
+      setIsLoading(false);
     }
-    initHomePage();
   }, []);
+
+  useEffect(() => { loadHomePage(); }, [loadHomePage]);
+
+  /* Every live section on this page reads from that one fetch, so when it fails
+     the page renders as a set of empty shells with no explanation. This says what
+     happened and offers the one action that helps. Rendered in BOTH the mobile
+     and desktop trees — the mobile branch returns early. */
+  const errorBanner = error ? (
+    <div className="max-w-7xl mx-auto px-6 pt-24 md:pt-32">
+      <div className="tech-panel rounded-3xl border border-[var(--c-border)] p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex-1">
+          <p className="eyebrow mb-1">No live data</p>
+          <p className="text-sm text-[var(--c-ink-2)] font-extralight">
+            The momentum index did not respond, so scores and roadmap rankings are
+            missing from this page. Everything else still works.
+          </p>
+        </div>
+        <button onClick={loadHomePage} className="btn-secondary shrink-0">
+          Try again
+        </button>
+      </div>
+    </div>
+  ) : null;
 
   /* ─── GSAP Entrance Animations ───
      Split by device with matchMedia. The scroll-triggered reveals below start
@@ -295,12 +309,13 @@ export default function HomePage() {
     const categoryStrength = t.category_size > 1
       ? Math.round((1 - (t.rank_in_category - 1) / (t.category_size - 1)) * 100)
       : 100;
-    const growthMetric = Math.max(0, Math.min(100, 50 + t.growth_pct));
+    // These are neutral 0–100 indices, not momentum bands, so they take the flat
+    // accent rather than the score green/amber/red — those carry meaning only.
     return [
-      { label: "MOMENTUM SCORE", value: Math.round(t.score), suffix: "/100", gradient: "from-indigo-500 to-indigo-500" },
-      { label: "GLOBAL PERCENTILE", value: Math.round(t.percentile), suffix: "%", gradient: "from-indigo-500 to-indigo-500" },
-      { label: "GITHUB STAR INDEX", value: Math.round(starIndex), suffix: "/100", gradient: "from-indigo-500 to-emerald-500" },
-      { label: "CATEGORY STANDING", value: categoryStrength, suffix: "%", gradient: "from-emerald-500 to-indigo-500" },
+      { label: "MOMENTUM SCORE", value: Math.round(t.score), suffix: "/100" },
+      { label: "GLOBAL PERCENTILE", value: Math.round(t.percentile), suffix: "%" },
+      { label: "GITHUB STAR INDEX", value: Math.round(starIndex), suffix: "/100" },
+      { label: "CATEGORY STANDING", value: categoryStrength, suffix: "%" },
     ];
   }, [activeCompare]);
 
@@ -315,6 +330,7 @@ export default function HomePage() {
   if (isMobile) {
     return (
       <DashboardShell fullWidth flushX>
+        {errorBanner}
         <MobileHome
           tools={tools}
           domains={domains}
@@ -329,20 +345,20 @@ export default function HomePage() {
   return (
     <DashboardShell fullWidth>
       <div ref={containerRef} className="relative pb-24">
+      {errorBanner}
 
       {/* ══════════════════════════════════════════
           SECTION 1: HERO & 3D SPHERE CENTERPIECE
          ══════════════════════════════════════════ */}
       <section className="relative w-full max-w-7xl mx-auto px-6 pt-[92px] md:pt-[144px] pb-12 min-h-[86vh] flex items-start">
         
-        {/* Hero background — vibrant aurora mesh (multi-color wash) */}
-        <div className="absolute inset-0 pointer-events-none aurora-mesh [mask-image:radial-gradient(ellipse_at_center,black,transparent_85%)]" />
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/[0.08] rounded-full blur-[100px]" />
-        </div>
+        {/* No colour wash here. Two blurred Iris orbs used to sit on this spot —
+            the same treatment `.ambient-orb` is switched off for, hand-rolled in
+            Tailwind so the CSS kill never reached them. Iris is a button colour,
+            "never a large surface", and the global `.ambient-particles` field is
+            the ambient layer Dala actually specifies. */}
 
-        {/* Editorial grid lines (Optimus reference) */}
+        {/* Editorial grid lines — hairline structure, not colour */}
         <div
           className="absolute inset-0 pointer-events-none editorial-grid opacity-60 [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]"
           aria-hidden="true"
@@ -368,7 +384,10 @@ export default function HomePage() {
             </motion.div>
 
             {/* Split Header Titles — cycling word (char-in) + letter-spin "screw" */}
-            <h1 className="text-[2.5rem] sm:text-6xl md:text-7xl lg:text-[7rem] font-normal tracking-[-0.04em] leading-[1.02] sm:leading-[0.92] font-display" style={{ perspective: "1000px" }}>
+            {/* `.t-display` is the measured Dala step — clamp(2.75rem, 8vw, 7rem)
+                at weight 400 and -0.04em. The four hand-rolled breakpoints it
+                replaces resolved to the same sizes, one scale in two places. */}
+            <h1 className="t-display font-display leading-[1.02] sm:leading-[0.92]" style={{ perspective: "1000px" }}>
               <span className="block pb-[0.12em]">
                 <span className="hero-line block">Learn the right tech,</span>
               </span>
@@ -397,11 +416,7 @@ export default function HomePage() {
               <a href="#five-minute-plan" className="btn-primary">
                 <Compass className="w-4 h-4" /> Get my 5-minute plan <ArrowRight className="w-4 h-4" />
               </a>
-              <Link
-                href="/trends"
-                prefetch
-                className="px-6 py-3 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-sm font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors"
-              >
+              <Link href="/trends" prefetch className="btn-secondary">
                 <TrendingUp className="w-4 h-4" /> See the live data
               </Link>
             </div>
@@ -416,20 +431,24 @@ export default function HomePage() {
               <div className="terminal-window rounded-2xl">
 
                 {/* Dark chrome title bar (the "techy" dark accent, on-palette ink) */}
+                {/* The window dots were #F04438 / #12B76A — the score red and green.
+                    Those encode momentum and nothing else, so as decoration here they
+                    made a window control look like a reading. Neutral inks keep the
+                    traffic-light FORM without borrowing the meaning. */}
                 <div className="terminal-bar">
-                  <span className="terminal-dot bg-[#F04438]/85" />
-                  <span className="terminal-dot bg-[#E0A82E]/85" />
-                  <span className="terminal-dot bg-[#12B76A]/85" />
+                  <span className="terminal-dot bg-white/30" />
+                  <span className="terminal-dot bg-white/20" />
+                  <span className="terminal-dot bg-white/10" />
                   <span className="terminal-path ml-2 hidden sm:inline">stackradar://console</span>
-                  <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-emerald-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> live
+                  <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-white/55">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-1)] animate-pulse" /> live
                   </span>
                 </div>
 
                 {/* Console body — pick a question, we route you to the answer */}
                 <div className="p-4 sm:p-5 bg-[var(--c-surface)]">
                   <div className="flex items-center gap-2 mb-3.5">
-                    <span className="text-indigo-500 font-mono text-sm font-bold select-none">&gt;</span>
+                    <span className="text-indigo-500 font-mono text-sm font-semibold select-none">&gt;</span>
                     <span className="font-mono text-[11px] text-[var(--c-ink-2)] uppercase tracking-[0.14em] select-none">
                       what do you want to figure out?
                     </span>
@@ -442,7 +461,7 @@ export default function HomePage() {
                         key={prompt.href + prompt.label}
                         href={prompt.href}
                         prefetch
-                        className="group flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-2)] hover:bg-[var(--c-surface)] hover:border-indigo-500/50 hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-300 active:scale-[0.98] cursor-pointer"
+                        className="group flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-[var(--c-border)] hover:border-indigo-500/50 transition-colors duration-300 active:scale-[0.98] cursor-pointer"
                       >
                         <span className="text-base leading-none">{prompt.icon}</span>
                         <span className="text-sm font-medium text-[var(--c-ink)] flex-1 leading-tight">{prompt.label}</span>
@@ -462,11 +481,12 @@ export default function HomePage() {
                 { label: "Live Signal Sources", value: heroStats.sources, suffix: "" },
               ].map((stat) => (
                 <div key={stat.label} className="space-y-1">
-                  <div className="text-2xl font-black font-mono text-[var(--c-ink)]">
+                  {/* Figures at 400: scale and tabular-nums carry a stat, not weight. */}
+                  <div className="text-2xl font-normal font-mono text-[var(--c-ink)]">
                     {!isLoading && <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} />}
                     {isLoading && <span className="text-[var(--c-ink-2)]/40">—</span>}
                   </div>
-                  <div className="text-[10px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-widest">{stat.label}</div>
+                  <div className="text-[10px] font-mono font-semibold text-[var(--c-ink-2)]/60 uppercase tracking-widest">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -624,12 +644,11 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 3: DOMAIN CATEGORIES GRID
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-24 stagger-grid-trigger section-reveal">
+      <section className="max-w-7xl mx-auto px-6 section-rhythm-lg stagger-grid-trigger section-reveal">
         
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
-              <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
+            <div className="eyebrow inline-flex items-center gap-2">
               <Compass className="w-4 h-4" /> Choose your path
             </div>
             <h2 className="t-statement font-display">
@@ -661,12 +680,13 @@ export default function HomePage() {
                   role="link"
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter") router.push(`/explore?domain=${domain.slug}`); }}
-                  className="stagger-card group block p-6 rounded-2xl relative overflow-hidden tech-panel tech-panel-interactive"
+                  className="stagger-card group block p-6 rounded-3xl relative overflow-hidden tech-panel tech-panel-interactive"
                   whileHover={{ y: -4 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
-                  {/* Inner gradient reveal */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  {/* No hover wash: `.tech-panel-interactive:hover` already gives the
+                      Dala response (Iris hairline + lift). The gradient overlay that
+                      sat here was a second, competing hover system. */}
 
                   {/* Header */}
                   <div className="flex items-start justify-between relative mb-5">
@@ -674,13 +694,13 @@ export default function HomePage() {
                       <span className="text-2xl">{domain.icon || "📂"}</span>
                     </div>
                     
-                    <div className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold ${scoreBg} ${scoreColor}`}>
+                    <div className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-semibold ${scoreBg} ${scoreColor}`}>
                       {domain.score}
                     </div>
                   </div>
 
                   {/* Body */}
-                  <h3 className="text-lg font-bold font-display group-hover:text-indigo-600 transition-colors duration-300 mb-2">
+                  <h3 className="text-lg font-normal font-display group-hover:text-indigo-600 transition-colors duration-300 mb-2">
                     {domain.name}
                   </h3>
                   <p className="text-xs text-[var(--c-ink-2)] line-clamp-2 leading-relaxed mb-6 font-extralight">
@@ -689,7 +709,7 @@ export default function HomePage() {
 
                   {/* Score progress bar */}
                   <div className="mb-4">
-                    <div className="h-1 w-full bg-[var(--c-surface-2)] rounded-full overflow-hidden">
+                    <div className="h-1 w-full rounded-full overflow-hidden bg-[color-mix(in_srgb,var(--c-ink)_10%,transparent)]">
                       <motion.div
                         className={`h-full ${scoreBarColor} rounded-full`}
                         initial={{ width: 0 }}
@@ -719,24 +739,21 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 4: HORIZONTAL TRENDING MOVERS
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-24 relative section-reveal">
+      <section className="max-w-7xl mx-auto px-6 section-rhythm-lg relative section-reveal">
         <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[var(--c-ground)] to-transparent pointer-events-none z-10 hidden md:block" />
         <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[var(--c-ground)] to-transparent pointer-events-none z-10 hidden md:block" />
         
         <div className="flex flex-col md:flex-row md:items-end gap-4 mb-10">
+          {/* This header used to say the same thing three times — an eyebrow
+              ("Rising this week"), a heading ("Rising — worth learning now") and
+              an aside ("Fastest-rising tools this cycle"). The heading carries it. */}
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
-              <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
+            <div className="eyebrow inline-flex items-center gap-2">
               <Flame className="w-4 h-4" /> Rising this week
             </div>
-            <h2 className="text-3xl md:text-4xl font-normal font-display tracking-[-0.04em]">
-              Rising — worth learning now
+            <h2 className="t-statement font-display">
+              Worth learning now
             </h2>
-          </div>
-          <div className="md:ml-auto">
-            <span className="text-[10px] font-mono text-indigo-600/60 uppercase tracking-wider font-semibold">
-              Fastest-rising tools this cycle
-            </span>
           </div>
         </div>
 
@@ -752,40 +769,48 @@ export default function HomePage() {
               <motion.div
                 key={tool.slug}
                 onClick={() => router.push(`/tools/${tool.slug}`)}
-                className="tool-score-card snap-start shrink-0 w-full sm:w-[340px] p-6 rounded-2xl relative group tech-panel tech-panel-interactive"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                role="link"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter") router.push(`/tools/${tool.slug}`); }}
+                aria-label={`${tool.name} — momentum score ${tool.score}`}
+                className="tool-score-card snap-start shrink-0 w-full sm:w-[340px] p-6 rounded-3xl relative group cursor-pointer tech-panel tech-panel-interactive"
+                /* Transform-only entrance. This previously animated opacity 0→1 on
+                   whileInView, which strands every card invisible if the tab is
+                   backgrounded when they scroll in — the failure CLAUDE.md records
+                   hitting four times. A frozen transform is merely un-drifted. */
+                initial={{ y: 30 }}
+                whileInView={{ y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.6 }}
               >
-                {/* Gradient inner */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl" />
-
                 <div className="flex items-center gap-4 mb-5 relative">
                   <span className="text-3xl p-2.5 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl group-hover:border-indigo-500/40 group-hover:scale-105 transition-all duration-300">
                     {tool.icon}
                   </span>
                   <div>
-                    <h3 className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors duration-300">
+                    <h3 className="font-normal text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors duration-300">
                       {tool.name}
                     </h3>
                     <p className="text-[10px] text-[var(--c-ink-2)]/60 font-mono">{tool.category}</p>
                   </div>
-                  
+
                   <div className="ml-auto text-right">
-                    <span className="text-2xl font-black font-mono text-[var(--c-ink)]">{tool.score}</span>
+                    <span className="text-2xl font-normal font-mono text-[var(--c-ink)]">{tool.score}</span>
                     <p className="text-[8px] font-mono text-[var(--c-ink-2)]/50 uppercase tracking-wider">score</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-indigo-500/5 pt-4 font-mono text-xs relative">
-                  <div className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                <div className="flex items-center justify-between border-t border-[var(--c-border)] pt-4 font-mono text-xs relative">
+                  {/* Green stays: this IS momentum, the one thing it may encode. */}
+                  <div className="flex items-center gap-1.5 text-emerald-600 font-semibold">
                     <TrendingUp className="w-3.5 h-3.5" />
                     +{tool.growth_pct.toFixed(1)}%
                   </div>
-                  
+
                   <div className="flex items-center gap-1 text-[var(--c-ink-2)]/60 text-[10px]">
-                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    {/* Saffron, the highlight role — amber-500 is the score-mid
+                        data colour and a star glyph carries no momentum meaning. */}
+                    <Star className="w-3 h-3 text-[var(--accent-2)] fill-[var(--accent-2)]" />
                     {tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}
                   </div>
 
@@ -808,25 +833,23 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 5: REACT VS VUE VS BUN SPLIT
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-24 section-reveal">
-        <div className="glass-panel rounded-3xl p-8 md:p-10 border border-indigo-500/8 relative overflow-hidden">
-          
-          {/* Ambient background mesh */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(100, 120, 238,0.04),transparent_60%)] pointer-events-none" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,rgba(82, 102, 235,0.04),transparent_60%)] pointer-events-none" />
-          
+      <section className="max-w-7xl mx-auto px-6 section-rhythm-lg section-reveal">
+        <div className="glass-panel rounded-3xl p-8 md:p-10 relative overflow-hidden">
+
+          {/* Two radial washes sat here and rendered NOTHING: their Tailwind
+              arbitrary values contained raw spaces (`rgba(100, 120, 238,0.04)`),
+              which the compiler cannot parse. The colour was #5266EB, a retired
+              palette. Removed rather than repaired — Dala has no colour washes. */}
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
             
             {/* Description column */}
             <div className="lg:col-span-5 space-y-8 flex flex-col justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest mb-3">
-                  <div className="w-8 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
-                  Live comparison
-                </div>
-                <h3 className="text-3xl md:text-4xl font-normal font-display tracking-[-0.04em] mb-4">
+                <div className="eyebrow mb-3">Live comparison</div>
+                <h3 className="t-statement font-display mb-4">
                   Momentum<br/>
-                  <span className="text-shimmer">Head-to-Head</span>
+                  <span className="text-shimmer">head to head</span>
                 </h3>
                 <p className="text-sm text-[var(--c-ink-2)] leading-relaxed font-sans font-extralight">
                   The three highest-momentum technologies on StackRadar right now, scored live on GitHub presence, global percentile, and category standing — straight from the index.
@@ -839,10 +862,11 @@ export default function HomePage() {
                   <button
                     key={tech.slug}
                     onClick={() => setCompareIdx(idx)}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl border font-mono text-xs uppercase tracking-wider text-left transition-all duration-400 cursor-pointer ${
+                    aria-pressed={compareIdx === idx}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border font-mono text-xs uppercase tracking-wider text-left transition-colors duration-300 cursor-pointer ${
                       compareIdx === idx
-                        ? "bg-indigo-600/12 border-indigo-500/40 text-[var(--c-ink)] shadow-lg shadow-indigo-500/5 font-bold"
-                        : "bg-[var(--c-surface)]/40 border-indigo-500/5 text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:border-indigo-500/15"
+                        ? "border-indigo-500/40 text-[var(--c-ink)] font-semibold"
+                        : "border-[var(--c-border)] text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:border-indigo-500/15"
                     }`}
                   >
                     <span className="flex items-center gap-2">
@@ -860,18 +884,19 @@ export default function HomePage() {
               
               <div className="space-y-6">
                 
-                <div className="flex items-center justify-between pb-4 border-b border-indigo-500/5">
+                <div className="flex items-center justify-between pb-4 border-b border-[var(--c-border)]">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono text-[var(--c-ink-2)]/50">ACTIVE TRACKING</span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {/* Iris, not emerald — green is reserved for momentum meaning. */}
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-1)] animate-pulse" />
                   </div>
                   <AnimatePresence mode="wait">
                     <motion.span
                       key={activeCompare?.slug}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="text-xl font-bold font-mono text-indigo-600 flex items-center gap-2"
+                      initial={{ y: -10 }}
+                      animate={{ y: 0 }}
+                      exit={{ y: 10 }}
+                      className="text-xl font-normal font-mono text-indigo-600 flex items-center gap-2"
                     >
                       <span className="text-2xl">{activeCompare?.icon}</span>
                       {activeCompare?.name}
@@ -885,18 +910,17 @@ export default function HomePage() {
                     <div key={metric.label} className="space-y-2">
                       <div className="flex justify-between font-mono text-[10px] text-[var(--c-ink-2)]/70">
                         <span>{metric.label}</span>
-                        <motion.span
-                          className="font-bold text-[var(--c-ink)]"
-                          key={`${activeCompare?.slug}-${metric.label}`}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                        >
+                        <span className="font-semibold text-[var(--c-ink)]">
                           {metric.value}{metric.suffix}
-                        </motion.span>
+                        </span>
                       </div>
-                      <div className="h-2 w-full bg-[var(--c-surface-2)] rounded-full overflow-hidden border border-indigo-500/5">
+                      {/* Track was --c-surface-2, which equals the canvas — an
+                          invisible track. A faint ink tint makes the bar readable
+                          on both themes. Fill is flat Iris: these are neutral
+                          indices, so no data colour applies. */}
+                      <div className="h-2 w-full rounded-full overflow-hidden bg-[color-mix(in_srgb,var(--c-ink)_10%,transparent)]">
                         <motion.div
-                          className={`h-full bg-gradient-to-r ${metric.gradient} rounded-full`}
+                          className="h-full rounded-full bg-[var(--accent-1)]"
                           key={`bar-${activeCompare?.slug}-${metric.label}`}
                           initial={{ width: 0 }}
                           animate={{ width: `${metric.value}%` }}
@@ -954,10 +978,12 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 6: HOW-IT-WORKS / PROCESS FLOW
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 section-rhythm min-h-screen flex flex-col justify-center process-section">
+      {/* `min-h-screen` was here fighting the section padding — it forced a full
+          viewport regardless of content, so the rhythm never applied. */}
+      <section className="max-w-7xl mx-auto px-6 section-rhythm-lg process-section">
         
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-4 section-reveal">
-          <div className="inline-flex items-center gap-2 font-mono text-xs text-indigo-600 font-bold uppercase tracking-widest">
+          <div className="eyebrow inline-flex items-center gap-2 justify-center">
             <Shield className="w-4 h-4" /> Why our roadmaps stay current
           </div>
           <h2 className="t-statement font-display">
@@ -971,27 +997,29 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
           
-          {/* Desktop connector line */}
-          <div className="absolute top-20 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-indigo-500/15 to-transparent z-0 hidden lg:block" />
+          {/* Connector hairline — flat, at the ends only where it would otherwise
+              butt into the cards. A gradient is not needed to fade a 1px rule. */}
+          <div className="absolute top-14 left-[10%] right-[10%] h-[1px] bg-[var(--c-border)] z-0 hidden lg:block" />
 
-          {processSteps.map((step, i) => {
+          {processSteps.map((step) => {
             const Icon = step.icon;
             return (
               <motion.div
                 key={step.num}
-                className="process-step relative z-10 p-6 rounded-2xl group tech-panel tech-panel-interactive"
+                className="process-step relative z-10 p-6 rounded-3xl group tech-panel tech-panel-interactive"
                 whileHover={{ y: -6 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
-                {/* Step number badge */}
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center shadow-lg shadow-indigo-500/25 mb-5`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                
-                {/* Step number */}
-                <div className="text-[10px] font-mono text-indigo-600/40 mb-2 tracking-widest">STEP {step.num}</div>
-                
-                <h3 className="text-lg font-bold font-display group-hover:text-indigo-600 transition-colors duration-300 mb-3">
+                {/* The icon floats — no badge. A 56px filled square was a card
+                    surface, which Dala's defining rule forbids, and Iris is
+                    specified for filled ACTIONS; a step marker is not an action.
+                    The icon alone, in Iris, carries the same job on the void. */}
+                <Icon className="w-7 h-7 text-indigo-500 mb-5" strokeWidth={1.5} />
+
+                {/* Step number — the sequence is real: each step consumes the last */}
+                <div className="text-[10px] font-mono font-semibold text-indigo-600/40 mb-2 tracking-widest">STEP {step.num}</div>
+
+                <h3 className="text-lg font-normal font-display group-hover:text-indigo-600 transition-colors duration-300 mb-3">
                   {step.title}
                 </h3>
                 <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
@@ -1010,8 +1038,8 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SECTION 7: CTA FOOTER WITH RADAR
          ══════════════════════════════════════════ */}
-      <section className="max-w-5xl mx-auto px-6 section-rhythm min-h-screen flex flex-col justify-center cta-section">
-        <div className="glass-panel-glow rounded-3xl p-10 md:p-14 text-center relative overflow-hidden border border-indigo-500/15 bg-[var(--c-surface-2)]/70">
+      <section className="max-w-5xl mx-auto px-6 section-rhythm-lg cta-section">
+        <div className="glass-panel-glow rounded-3xl p-10 md:p-14 text-center relative overflow-hidden">
           
           {/* Radar SVG Overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-[0.1] pointer-events-none select-none">
@@ -1036,13 +1064,14 @@ export default function HomePage() {
           </div>
 
           {/* Content */}
+          {/* Transform-only: an opacity fade here could strand the mark invisible. */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
+            initial={{ scale: 0.8 }}
+            whileInView={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Sparkles className="w-10 h-10 mx-auto text-indigo-600 mb-6" />
+            <Sparkles className="w-10 h-10 mx-auto text-indigo-600 mb-6" strokeWidth={1.5} />
           </motion.div>
           
           <h3 className="t-cta font-display max-w-2xl mx-auto mb-6">
@@ -1055,17 +1084,11 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 relative z-10">
-            <Link
-              href="/roadmaps"
-              className="btn-primary flex items-center gap-2"
-            >
+            <Link href="/roadmaps" className="btn-primary">
               <Compass className="w-4 h-4" /> Start a roadmap <ArrowRight className="w-4 h-4" />
             </Link>
 
-            <Link
-              href="/trends"
-              className="px-7 py-3 rounded-2xl border border-indigo-500/15 bg-[var(--c-surface)]/60 backdrop-blur-sm hover:bg-[var(--c-surface-2)] hover:border-indigo-400/30 text-sm tracking-wider uppercase transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center gap-2 font-bold font-mono"
-            >
+            <Link href="/trends" className="btn-secondary">
               See the live data <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -1083,17 +1106,21 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           LIVE INTEGRATION FEED FOOTER
          ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 py-10 border-t border-indigo-500/5">
+      <section className="max-w-7xl mx-auto px-6 py-10 border-t border-[var(--c-border)]">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          
+
           <div className="flex items-center gap-4">
+            {/* Iris, not emerald — green means momentum, not "online". */}
             <div className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-1)] opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--accent-1)]" />
             </div>
             <div>
+              {/* The label and the line below it used to say the same thing, and
+                  "Live Parser Stream Active" named an internal component. Now the
+                  label names the thing and the line says what it is watching. */}
               <p className="text-xs font-mono text-[var(--c-ink-2)]/50 uppercase tracking-wider">LIVE DATA FEED</p>
-              <h3 className="text-sm font-bold text-[var(--c-ink)]">Live Parser Stream Active</h3>
+              <h3 className="text-sm font-normal text-[var(--c-ink)]">Rescanning every 30 minutes</h3>
             </div>
           </div>
 
@@ -1101,7 +1128,7 @@ export default function HomePage() {
             <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-indigo-600/60" /> RSS NEWS</span>
             <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-indigo-600/60" /> REDDIT</span>
             <span className="flex items-center gap-1.5"><Terminal className="w-3.5 h-3.5 text-indigo-600/60" /> GITHUB</span>
-            <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-emerald-600/60" /> HACKERNEWS</span>
+            <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-indigo-600/60" /> HACKERNEWS</span>
           </div>
 
         </div>
