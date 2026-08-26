@@ -87,7 +87,7 @@ export default function Preloader() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="relative z-10 flex flex-col items-center justify-center gap-6 px-6 text-center"
       >
-        <div className="text-[11px] font-bold tracking-[0.4em] font-display text-white/50 uppercase">
+        <div className="text-[11px] font-normal tracking-[0.4em] font-display text-white/50 uppercase">
           StackRadar
         </div>
 

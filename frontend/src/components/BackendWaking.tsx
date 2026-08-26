@@ -174,7 +174,7 @@ export default function BackendWaking() {
               {BLIPS.map((b, i) => (
                 <motion.span
                   key={i}
-                  className="absolute h-1.5 w-1.5 rounded-full bg-[var(--accent-2)] shadow-[0_0_8px_var(--accent-2)]"
+                  className="absolute h-1.5 w-1.5 rounded-full bg-[var(--accent-2)]"
                   style={{ left: b.x, top: b.y }}
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: [0, 1, 0], scale: [0, 1, 0.4] }}
@@ -183,7 +183,7 @@ export default function BackendWaking() {
                 />
               ))}
               {/* core dot */}
-              <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-1)] shadow-[0_0_16px_var(--accent-2)]" />
+              <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent-1)]" />
             </div>
 
             <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--accent-1)]">
@@ -221,7 +221,7 @@ export default function BackendWaking() {
             <div className="mt-6 w-64 max-w-full">
               <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--accent-1)_14%,transparent)]">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] transition-[width] duration-700 ease-out"
+                  className="h-full rounded-full bg-[var(--accent-1)] transition-[width] duration-700 ease-out"
                   style={{ width: `${progress}%` }}
                 />
                 <motion.div

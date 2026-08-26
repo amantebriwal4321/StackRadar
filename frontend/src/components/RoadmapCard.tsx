@@ -20,7 +20,6 @@ export default function RoadmapCard({ roadmap, index }: RoadmapCardProps) {
       style={{ animationDelay: `${index * 50}ms` }}
     >
       {/* Subtle background glow on hover */}
-      <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] bg-primary/0 transition-all duration-500 group-hover:bg-primary/20" />
 
       <div className="relative z-10 flex flex-col h-full">
         {/* Header */}
@@ -32,7 +31,7 @@ export default function RoadmapCard({ roadmap, index }: RoadmapCardProps) {
 
         {/* Title & Description */}
         <div className="mb-6 flex-grow">
-          <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+          <h3 className="text-xl font-normal mb-2 group-hover:text-primary transition-colors">
             {roadmap.title}
           </h3>
           <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">

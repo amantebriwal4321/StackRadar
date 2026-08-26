@@ -22,7 +22,7 @@ export default function FaqAccordion({
           key={f.q}
           id={`faq-${i}`}
           className="tech-panel tech-panel-interactive rounded-xl p-5"
-          headerClassName="font-bold text-[var(--c-ink)]"
+          headerClassName="font-semibold text-[var(--c-ink)]"
           header={f.q}
           icon="plus"
         >

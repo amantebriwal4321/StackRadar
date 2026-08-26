@@ -159,12 +159,12 @@ export default function WaitlistCapture({
                   }}
                   placeholder="you@email.com"
                   aria-label="Email address"
-                  className="flex-1 rounded-full border border-[var(--c-border)] bg-[var(--c-surface-2)] px-5 py-3.5 text-sm text-[var(--c-ink)] outline-none transition-colors placeholder:text-[var(--c-ink-2)]/60 focus:border-[color-mix(in_srgb,var(--accent-1)_50%,transparent)]"
+                  className="flex-1 rounded-full border border-[var(--c-border)] bg-[var(--c-surface-2)] px-5 py-3.5 text-sm text-[var(--c-ink)] transition-colors placeholder:text-[var(--c-ink-2)]/60 focus:border-[color-mix(in_srgb,var(--accent-1)_50%,transparent)]"
                 />
                 <button
                   type="submit"
                   disabled={state === "loading"}
-                  className="group flex shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--accent-1)] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--accent-1)]/25 transition-all duration-300 hover:shadow-[var(--accent-2)]/40 disabled:opacity-70"
+                  className="group flex shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--accent-1)] px-6 py-3.5 text-sm font-semibold text-white transition-colors duration-300 disabled:opacity-70"
                 >
                   {state === "loading" ? (
                     <>

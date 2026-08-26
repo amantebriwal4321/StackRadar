@@ -48,7 +48,7 @@ export default function ContinueLearning() {
         <div className="hud-grid absolute inset-0 opacity-[0.35] pointer-events-none" />
         <div className="relative flex flex-col md:flex-row md:items-center gap-5 justify-between">
           <div className="space-y-1.5">
-            <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
+            <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
               <Target className="w-3.5 h-3.5" /> Your learning track
             </span>
             <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
@@ -78,7 +78,7 @@ export default function ContinueLearning() {
         <div className="hud-grid absolute inset-0 opacity-[0.35] pointer-events-none" />
         <div className="relative flex flex-col md:flex-row md:items-center gap-5 justify-between">
           <div className="space-y-1.5">
-            <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
+            <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
               <Target className="w-3.5 h-3.5" /> Your learning track
             </span>
             <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
@@ -106,18 +106,18 @@ export default function ContinueLearning() {
       <div className="relative space-y-5">
         {/* Header: streak + today's tally */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
             <Target className="w-3.5 h-3.5" /> Continue learning
           </span>
           <div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-wider">
             {summary!.streak_days > 0 && (
-              <span className="flex items-center gap-1.5 font-bold text-[#B54708]">
+              <span className="flex items-center gap-1.5 font-semibold text-[#B54708]">
                 <Flame className="w-3.5 h-3.5" />
                 {summary!.streak_days} day{summary!.streak_days === 1 ? "" : "s"} streak
               </span>
             )}
             {summary!.completed_today > 0 && (
-              <span className="flex items-center gap-1.5 font-bold text-[#12B76A]">
+              <span className="flex items-center gap-1.5 font-semibold text-[#12B76A]">
                 <CheckCircle2 className="w-3.5 h-3.5" /> {summary!.completed_today} done today
               </span>
             )}
@@ -147,13 +147,13 @@ export default function ContinueLearning() {
         <div>
           <div className="flex items-center justify-between mb-2 font-mono text-[10px] uppercase tracking-wider">
             <span className="text-[var(--c-ink-2)]">{primary.title}</span>
-            <span className="font-bold text-indigo-600 tabular-nums">
+            <span className="font-semibold text-indigo-600 tabular-nums">
               {primary.completed}/{primary.total} · {primary.percent}%
             </span>
           </div>
           <div className="h-2 rounded-full bg-[var(--c-surface-2)] border border-[var(--c-border)] overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] transition-[width] duration-500 ease-out"
+              className="h-full rounded-full bg-[var(--accent-1)] transition-[width] duration-500 ease-out"
               style={{ width: `${primary.percent}%` }}
             />
           </div>
@@ -167,7 +167,7 @@ export default function ContinueLearning() {
             <Link
               href="/roadmaps"
               prefetch
-              className="px-5 py-2.5 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors"
+              className="px-5 py-2.5 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-xs font-semibold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors"
             >
               <Map className="w-3.5 h-3.5" /> {summary!.active.length} active tracks
             </Link>

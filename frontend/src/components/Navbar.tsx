@@ -161,7 +161,7 @@ export default function Navbar() {
                 {isActive && (
                   <motion.div
                     layoutId="nav-underline"
-                    className="absolute bottom-1 left-3 right-3 h-[2px] bg-accent-primary shadow-[0_0_8px_var(--accent-2)] rounded-full"
+                    className="absolute bottom-1 left-3 right-3 h-[2px] bg-accent-primary rounded-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -173,7 +173,7 @@ export default function Navbar() {
         {/* ─── Right Actions ─── */}
         <div className="flex items-center gap-3">
           {/* Live indicator */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold text-text-secondary border border-border-subtle bg-[var(--c-surface)]/50 font-mono">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-normal text-text-secondary border border-border-subtle bg-[var(--c-surface)]/50 font-mono">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
@@ -186,7 +186,7 @@ export default function Navbar() {
             <>
               <Link
                 href="/watchlist"
-                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-accent-primary bg-accent-primary/10 border border-accent-primary/20 hover:bg-accent-primary/20 transition-colors duration-300 font-mono"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-normal text-accent-primary bg-accent-primary/10 border border-accent-primary/20 hover:bg-accent-primary/20 transition-colors duration-300 font-mono"
               >
                 <Bookmark className="w-3.5 h-3.5" />
                 watchlist
@@ -232,7 +232,7 @@ export default function Navbar() {
           the navbar as you move down the page. */}
       <div className="absolute inset-x-0 bottom-0 h-[2px] overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-[var(--accent-1)] via-[var(--accent-2)] to-[var(--accent-1)] shadow-[0_0_8px_var(--accent-2)] transition-[width] duration-150 ease-out"
+          className="h-full bg-[var(--accent-1)] transition-[width] duration-150 ease-out"
           style={{ width: `${scrollProgress * 100}%` }}
         />
       </div>
@@ -258,7 +258,7 @@ export default function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="mobile-nav-link text-3xl font-bold font-display tracking-[-0.04em] text-left flex items-center"
+                    className="mobile-nav-link text-3xl font-normal font-display tracking-[-0.04em] text-left flex items-center"
                   >
                     <span className={`transition-colors duration-300 ${
                       isActive ? "text-accent-primary" : "text-text-secondary hover:text-text-primary"
@@ -275,7 +275,7 @@ export default function Navbar() {
                 <Link
                   href="/watchlist"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary font-bold text-sm"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary font-semibold text-sm"
                 >
                   <Bookmark className="w-4 h-4" />
                   My Watchlist

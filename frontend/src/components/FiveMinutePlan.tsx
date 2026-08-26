@@ -67,7 +67,7 @@ export default function FiveMinutePlan() {
 
       <div className="relative">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" /> Free · no sign-up to start
           </span>
         </div>
@@ -97,10 +97,10 @@ export default function FiveMinutePlan() {
                     initial={canAnimate ? { opacity: 0, y: 12 } : false}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05, duration: 0.4 }}
-                    className="group flex items-center gap-3 p-4 rounded-2xl border border-indigo-500/15 bg-[var(--c-surface)]/70 hover:border-indigo-400/50 hover:bg-[var(--c-surface-2)] hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 text-left active:scale-[0.98] cursor-pointer"
+                    className="group flex items-center gap-3 p-4 rounded-2xl border border-indigo-500/15 bg-[var(--c-surface)]/70 hover:border-indigo-400/50 transition-colors duration-300 text-left active:scale-[0.98] cursor-pointer"
                   >
                     <span className="text-2xl leading-none select-none group-hover:scale-110 transition-transform">{g.icon}</span>
-                    <span className="text-sm font-bold text-[var(--c-ink)] flex-1 leading-tight group-hover:text-indigo-600 transition-colors">
+                    <span className="text-sm font-semibold text-[var(--c-ink)] flex-1 leading-tight group-hover:text-indigo-600 transition-colors">
                       {g.label}
                     </span>
                     <ArrowRight className="w-4 h-4 text-indigo-500 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all shrink-0" />
@@ -137,7 +137,7 @@ export default function FiveMinutePlan() {
               {/* The real plan, previewed — live roadmap steps, not a brochure. */}
               {roadmap?.steps?.length ? (
                 <div className="mb-6">
-                  <p className="text-[11px] font-mono font-bold text-[var(--c-ink-2)] uppercase tracking-widest mb-3">
+                  <p className="text-[11px] font-mono font-semibold text-[var(--c-ink-2)] uppercase tracking-widest mb-3">
                     Your first steps
                   </p>
                   <div className="space-y-2">
@@ -149,10 +149,10 @@ export default function FiveMinutePlan() {
                         transition={{ delay: 0.15 + i * 0.12, duration: 0.35 }}
                         className="flex items-center gap-3 p-3 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60"
                       >
-                        <span className="w-7 h-7 rounded-lg bg-indigo-600/10 text-indigo-600 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                        <span className="w-7 h-7 rounded-lg bg-indigo-600/10 text-indigo-600 font-mono font-normal text-xs flex items-center justify-center shrink-0">
                           {s.step}
                         </span>
-                        <span className="text-sm font-bold text-[var(--c-ink)] flex-1 leading-tight">{s.title}</span>
+                        <span className="text-sm font-semibold text-[var(--c-ink)] flex-1 leading-tight">{s.title}</span>
                         <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--c-ink-2)]/60 shrink-0">{s.level}</span>
                       </motion.div>
                     ))}
@@ -180,7 +180,7 @@ export default function FiveMinutePlan() {
                   ].map((f) => (
                     <div key={f.t} className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60">
                       <f.icon className="w-5 h-5 text-indigo-600 mb-2" />
-                      <p className="text-sm font-bold text-[var(--c-ink)]">{f.t}</p>
+                      <p className="text-sm font-semibold text-[var(--c-ink)]">{f.t}</p>
                       <p className="text-xs text-[var(--c-ink-2)] font-extralight mt-0.5">{f.d}</p>
                     </div>
                   ))}
