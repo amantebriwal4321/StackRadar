@@ -107,7 +107,11 @@ export default function BackendWaking() {
 
   // Estimated progress — a decelerating curve that eases toward ~96% and never
   // fakes completion; the actual 100% is the reload once the server answers.
-  const progress = Math.min(96, Math.round(96 * (1 - Math.exp(-seconds / 15))));
+  // Front-loaded: ~27% at 2s, ~53% at 5s, ~78% at 10s, easing to a 96% ceiling.
+  // The old /15 constant sat at 27% after FIVE seconds, which reads as stalled —
+  // perceived speed is set in the first couple of seconds. Still never reaches
+  // 100: the real completion is the reload when the server answers.
+  const progress = Math.min(96, Math.round(96 * (1 - Math.exp(-seconds / 6))));
 
   // Radar "contacts" that twinkle in around the dish, like signals being picked
   // up. Purely decorative; the text below always carries the real state.
@@ -196,12 +200,15 @@ export default function BackendWaking() {
             {/* rolling status line — keyed so it re-mounts per phase; the entrance
                 is transform-only (opacity stays 1) so a backgrounded tab can never
                 strand it invisible. */}
-            <div className="mt-3 h-6 w-full overflow-hidden">
+            {/* min-h, not a fixed clipped box: at h-6 with a y:8 entrance the
+                13px line overflowed 24px and was cut off for the first 350ms of
+                every phase change, colliding with the bar below it. */}
+            <div className="mt-3 flex min-h-[30px] w-full items-center justify-center">
               <motion.p
                 key={phase.label}
-                initial={{ y: 8 }}
+                initial={{ y: 5 }}
                 animate={{ y: 0 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 className="font-mono text-[13px] text-[var(--c-ink-2)]"
               >
                 {phase.label}
