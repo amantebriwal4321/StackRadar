@@ -2,12 +2,12 @@ import { type ReactNode } from "react";
 import { ResponsiveContainer } from "recharts";
 
 export const chartColors = [
-  "#5266eb", // wine (accent)
-  "#8f9cf5", // cyan
-  "#3a4bc4", // violet
-  "#a9b3f8", // rose
-  "#12B76A", // emerald
-  "#70707d", // amber
+  "#8052ff", // Electric Iris
+  "#a488ff", // Iris light
+  "#6a3fd6", // Iris deep
+  "#c9b8ff", // Iris pale
+  "#bdbdbd", // Silver Mist
+  "#9a9a9a", // Ash Gray
 ];
 
 export const chartTooltipStyle = {
@@ -15,7 +15,6 @@ export const chartTooltipStyle = {
   borderColor: "var(--border)",
   borderRadius: "0.5rem",
   color: "var(--foreground)",
-  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
 };
 
 export const chartItemStyle = { 
