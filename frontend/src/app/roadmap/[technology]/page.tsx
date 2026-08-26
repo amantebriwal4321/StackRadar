@@ -155,7 +155,6 @@ export default function RoadmapPage() {
     <DashboardShell>
       
       {/* Page Glow backdrop */}
-      <div className="absolute top-0 right-1/4 w-[350px] h-[350px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none z-0" />
 
       <div className="max-w-5xl mx-auto space-y-8 relative z-10 pb-16">
 
@@ -170,22 +169,20 @@ export default function RoadmapPage() {
             and Neon-Noir depth (HUD grid + accent glows) behind it. */}
         <header className="relative overflow-hidden rounded-3xl border border-indigo-500/15 bg-[var(--c-surface)]/70 backdrop-blur-md p-8 md:p-14 text-center">
           <div className="hud-grid absolute inset-0 opacity-[0.12] pointer-events-none [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]" />
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[520px] h-[300px] rounded-full bg-[var(--accent-2)]/[0.14] blur-[110px] pointer-events-none" />
-          <div className="absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-[var(--accent-1)]/[0.10] blur-[100px] pointer-events-none" />
 
           <div className="relative max-w-3xl mx-auto">
-            {/* Big glowing domain icon */}
-            <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-7">
-              <div className="absolute inset-0 rounded-[1.6rem] bg-gradient-to-br from-[var(--accent-1)] to-[var(--accent-2)] blur-2xl opacity-50" />
-              <div className="relative w-full h-full rounded-[1.6rem] bg-gradient-to-br from-[var(--accent-1)] to-[var(--accent-2)] flex items-center justify-center text-4xl md:text-5xl shadow-xl shadow-[var(--accent-1)]/40 select-none">
-                {roadmap.icon}
-              </div>
+            {/* Domain icon. Was an Iris→Saffron gradient tile with a blurred glow
+                behind it — the one colour pairing the spec rules out ("Saffron is
+                a highlight role, NOT a gradient partner"), plus a shadow and a
+                colour wash. The glyph carries it alone on the void. */}
+            <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-7 flex items-center justify-center text-5xl md:text-6xl select-none">
+              {roadmap.icon}
             </div>
 
-            <span className="inline-flex items-center gap-2.5 text-[10px] md:text-[11px] font-mono font-bold text-indigo-600 uppercase tracking-[0.22em] mb-4">
-              <span className="w-7 h-px bg-gradient-to-r from-transparent to-indigo-500/60" />
+            <span className="inline-flex items-center gap-2.5 text-[10px] md:text-[11px] font-mono font-semibold text-indigo-600 uppercase tracking-[0.22em] mb-4">
+              <span className="w-7 h-px bg-[var(--c-border)]" />
               Learning Track
-              <span className="w-7 h-px bg-gradient-to-l from-transparent to-indigo-500/60" />
+              <span className="w-7 h-px bg-[var(--c-border)]" />
             </span>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-normal font-display tracking-[-0.04em] leading-[0.95] mb-5">
@@ -207,7 +204,7 @@ export default function RoadmapPage() {
               </span>
               <Link
                 href={`/explore?domain=${slug}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-xs font-mono font-bold text-indigo-600 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-xs font-mono font-normal text-indigo-600 transition-colors"
               >
                 <Sparkles className="w-4 h-4" /> Live tool momentum <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -220,12 +217,12 @@ export default function RoadmapPage() {
                   {/* Label + count, with a big gradient percentage */}
                   <div className="flex items-end justify-between mb-3.5">
                     <div>
-                      <div className="text-[10px] font-mono font-bold text-[var(--c-ink-2)] uppercase tracking-wider">Your progress</div>
+                      <div className="text-[10px] font-mono font-semibold text-[var(--c-ink-2)] uppercase tracking-wider">Your progress</div>
                       <div className="text-[11px] font-mono text-[var(--c-ink-2)]/70 mt-1">
-                        <span className="font-bold text-[var(--c-ink)] tabular-nums">{completedSteps.length}</span> of {steps.length} modules complete
+                        <span className="font-semibold text-[var(--c-ink)] tabular-nums">{completedSteps.length}</span> of {steps.length} modules complete
                       </div>
                     </div>
-                    <div className="text-3xl md:text-4xl font-black font-mono gradient-text tabular-nums leading-none">{percent}%</div>
+                    <div className="text-3xl md:text-4xl font-normal font-mono gradient-text tabular-nums leading-none">{percent}%</div>
                   </div>
 
                   {/* Segmented module tracker — one segment per module, so a glance
@@ -240,8 +237,8 @@ export default function RoadmapPage() {
                           title={`Module ${s.step}${done ? " — done" : ""}`}
                           className={`h-2.5 flex-1 rounded-full transition-all duration-500 ${
                             done
-                              ? "bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] shadow-[0_0_8px_var(--accent-2)]"
-                              : "bg-[var(--c-surface)] border border-[var(--c-border)]"
+                              ? "bg-[var(--accent-1)]"
+                              : "bg-[color-mix(in_srgb,var(--c-ink)_10%,transparent)]"
                           }`}
                         />
                       );
@@ -249,30 +246,30 @@ export default function RoadmapPage() {
                   </div>
 
                   {percent === 100 ? (
-                    <p className="mt-3.5 text-[11px] font-mono font-bold text-[#12B76A] flex items-center gap-1.5">
+                    <p className="mt-3.5 text-[11px] font-mono font-normal text-[#12B76A] flex items-center gap-1.5">
                       <Flame className="w-3.5 h-3.5" /> Track complete — every module done.
                     </p>
                   ) : percent === 0 ? (
                     /* First-run coaching — hides itself after the first completed module. */
                     <div className="mt-3.5 rounded-xl border border-indigo-500/20 bg-indigo-600/[0.06] px-4 py-3">
-                      <p className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-wider mb-1.5">
+                      <p className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-wider mb-1.5">
                         New here? How this works
                       </p>
-                      <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-extralight list-decimal list-inside marker:text-indigo-600 marker:font-bold">
-                        <li>Begin with the highlighted <span className="font-bold text-[var(--c-ink)]">Next up</span> module below.</li>
-                        <li>Pick a way to learn it — <span className="font-bold text-[var(--c-ink)]">Watch a video</span> or <span className="font-bold text-[var(--c-ink)]">Read the guide</span>.</li>
-                        <li>Come back and <span className="font-bold text-[var(--c-ink)]">Mark as done</span> — a segment lights up and your streak grows.</li>
+                      <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-extralight list-decimal list-inside marker:text-indigo-600 marker:font-semibold">
+                        <li>Begin with the highlighted <span className="font-semibold text-[var(--c-ink)]">Next up</span> module below.</li>
+                        <li>Pick a way to learn it — <span className="font-semibold text-[var(--c-ink)]">Watch a video</span> or <span className="font-semibold text-[var(--c-ink)]">Read the guide</span>.</li>
+                        <li>Come back and <span className="font-semibold text-[var(--c-ink)]">Mark as done</span> — a segment lights up and your streak grows.</li>
                       </ol>
                     </div>
                   ) : (
                     <p className="mt-3.5 text-[10px] font-mono text-[var(--c-ink-2)]/70">
-                      Finished a module? Hit <span className="text-indigo-600 font-bold">Mark as done</span> to light up its segment.
+                      Finished a module? Hit <span className="text-indigo-600 font-semibold">Mark as done</span> to light up its segment.
                     </p>
                   )}
                 </div>
               ) : (
                 <SignInButton mode="modal">
-                  <button className="w-full px-4 py-3 rounded-xl border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-600 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-3 rounded-xl border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-[11px] font-mono font-semibold uppercase tracking-wider text-indigo-600 transition-colors cursor-pointer">
                     Sign in to track your progress
                   </button>
                 </SignInButton>
@@ -295,8 +292,8 @@ export default function RoadmapPage() {
           <div
             className={`absolute left-[2.35rem] md:left-[4.35rem] top-10 w-0.5 z-0 transition-all duration-500 ease-out ${
               isSignedIn
-                ? "bg-gradient-to-b from-[#12B76A] to-[#12B76A]/70 shadow-[0_0_10px_rgba(18,183,106,0.45)]"
-                : "bg-gradient-to-b from-indigo-500 via-indigo-500 to-indigo-400 shadow-[0_0_10px_rgba(82,102,235,0.4)]"
+                ? "bg-[#12B76A]"
+                : "bg-indigo-500"
             }`}
             style={{ height: `${isSignedIn ? percent : scrollFillHeight}%` }}
           />
@@ -336,9 +333,9 @@ export default function RoadmapPage() {
                 <div
                   className={`absolute -left-12 md:-left-20 top-7 font-mono text-[9px] uppercase tracking-widest text-right w-8 md:w-14 select-none transition-colors ${
                     isDone
-                      ? "text-[#12B76A] font-bold"
+                      ? "text-[#12B76A] font-semibold"
                       : isNextUp
-                        ? "text-indigo-600 font-bold"
+                        ? "text-indigo-600 font-semibold"
                         : "text-[var(--c-ink-2)]/50"
                   }`}
                 >
@@ -366,7 +363,7 @@ export default function RoadmapPage() {
                          BEGINNER/INTERMEDIATE badge next to the title. Unchecked renders
                          as a dashed outline so it reads as an empty checkbox, not a
                          decorative step number. */
-                      className={`group/check w-8 h-8 rounded-full flex items-center justify-center font-mono font-bold text-xs transition-all ${
+                      className={`group/check w-8 h-8 rounded-full flex items-center justify-center font-mono font-normal text-xs transition-all ${
                         isDone
                           // Locked, but must still read as "achieved", not "greyed out".
                           ? "bg-[#12B76A] border-2 border-[#12B76A] text-white cursor-default"
@@ -383,7 +380,7 @@ export default function RoadmapPage() {
                       )}
                     </button>
                   ) : (
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono font-bold text-xs border text-[var(--c-ink)] ${levelDotClass}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono font-normal text-xs border text-[var(--c-ink)] ${levelDotClass}`}>
                       {step.step}
                     </div>
                   )}
@@ -405,11 +402,11 @@ export default function RoadmapPage() {
                       {step.title}
                     </h3>
                     {isNextUp && (
-                      <span className="px-2 py-0.5 rounded bg-indigo-600 text-white text-[8px] font-mono font-bold uppercase tracking-wider">
+                      <span className="px-2 py-0.5 rounded bg-indigo-600 text-white text-[8px] font-mono font-semibold uppercase tracking-wider">
                         Next up
                       </span>
                     )}
-                    <span className={`px-2 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-wider ${levelStyle}`}>
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-mono font-semibold uppercase tracking-wider ${levelStyle}`}>
                       {step.level}
                     </span>
                   </div>
@@ -428,7 +425,7 @@ export default function RoadmapPage() {
                       stacks full-width on mobile. This is what a learner scans to
                       decide "how do I actually do this step?". */}
                   <div className="pt-1 space-y-2">
-                    <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-[var(--c-ink-2)]/70 uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5 text-[10px] font-mono font-semibold text-[var(--c-ink-2)]/70 uppercase tracking-wider">
                       <BookOpen className="w-3.5 h-3.5 text-indigo-600" /> Ways to learn this
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -443,7 +440,7 @@ export default function RoadmapPage() {
                           <Youtube className="w-4 h-4 text-[var(--accent-1)]" />
                         </span>
                         <span className="flex-1 min-w-0">
-                          <span className="block text-[13px] font-bold text-[var(--c-ink)] leading-tight">Watch a video</span>
+                          <span className="block text-[13px] font-semibold text-[var(--c-ink)] leading-tight">Watch a video</span>
                           <span className="block text-[10px] text-[var(--c-ink-2)]/70 font-mono">Full tutorial on YouTube</span>
                         </span>
                         <ArrowRight className="w-4 h-4 text-[var(--accent-1)] shrink-0" />
@@ -462,7 +459,7 @@ export default function RoadmapPage() {
                             <BookOpen className="w-4 h-4 text-indigo-600" />
                           </span>
                           <span className="flex-1 min-w-0">
-                            <span className="block text-[13px] font-bold text-[var(--c-ink)] leading-tight truncate">{res.label}</span>
+                            <span className="block text-[13px] font-semibold text-[var(--c-ink)] leading-tight truncate">{res.label}</span>
                             <span className="block text-[10px] text-[var(--c-ink-2)]/70 font-mono">Read &amp; follow along</span>
                           </span>
                           <ArrowRight className="w-4 h-4 text-indigo-600 shrink-0" />
@@ -488,12 +485,12 @@ export default function RoadmapPage() {
                               className="group/tool flex items-center gap-2 pl-2 pr-2.5 py-1.5 hover:bg-[var(--c-surface-2)] transition-all"
                             >
                               <span className="text-base leading-none select-none">{tool.icon}</span>
-                              <span className="text-[11px] font-bold text-[var(--c-ink)] group-hover/tool:text-indigo-600 transition-colors">{tool.name}</span>
+                              <span className="text-[11px] font-semibold text-[var(--c-ink)] group-hover/tool:text-indigo-600 transition-colors">{tool.name}</span>
                               <span
-                                className="text-[10px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
+                                className="text-[10px] font-mono font-normal tabular-nums px-1.5 py-0.5 rounded"
                                 style={{
-                                  color: tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#5266eb",
-                                  background: `${tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#5266eb"}14`,
+                                  color: tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#F04438",
+                                  background: `${tool.score >= 70 ? "#12B76A" : tool.score >= 45 ? "#B54708" : "#F04438"}14`,
                                 }}
                               >
                                 {Math.round(tool.score)}
@@ -512,7 +509,7 @@ export default function RoadmapPage() {
                                     ? `Our top pick: ${tool.video.title}${tool.video.channel ? ` — ${tool.video.channel}` : ""}`
                                     : `Our top ${tool.name} ${tool.video.kind === "playlist" ? "series" : "course"}`
                                 }
-                                className="flex items-center gap-1 px-2.5 border-l border-indigo-500/15 bg-[var(--accent-1)]/10 text-[10px] font-mono font-bold text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors whitespace-nowrap"
+                                className="flex items-center gap-1 px-2.5 border-l border-indigo-500/15 bg-[var(--accent-1)]/10 text-[10px] font-mono font-normal text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors whitespace-nowrap"
                               >
                                 {tool.video.kind === "playlist"
                                   ? <ListVideo className="w-3.5 h-3.5" />
@@ -534,7 +531,7 @@ export default function RoadmapPage() {
                       <button
                         onClick={() => handleToggle(step.step)}
                         disabled={savingStep === step.step}
-                        className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-[11px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-[0.98] disabled:opacity-60 ${
+                        className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-[11px] font-mono font-semibold uppercase tracking-wider transition-all cursor-pointer active:scale-[0.98] disabled:opacity-60 ${
                           isDone
                             ? "border-[#12B76A]/40 bg-[#12B76A]/10 text-[#12B76A] hover:bg-[#12B76A]/20"
                             : "border-indigo-500/30 bg-indigo-600/[0.06] text-indigo-600 hover:bg-indigo-600/15"

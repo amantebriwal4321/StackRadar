@@ -111,7 +111,6 @@ export default function ToolDetailPage() {
     <DashboardShell>
       
       {/* Cinematic Hero Backdrop glows */}
-      <div className="absolute top-0 left-[10%] w-[500px] h-[300px] rounded-full bg-gradient-to-r from-indigo-500/10 to-indigo-500/5 blur-[120px] pointer-events-none z-0" />
 
       <div className="space-y-8 relative z-10 pb-16">
 
@@ -142,16 +141,16 @@ export default function ToolDetailPage() {
 
             {/* Badges block */}
             <div className="flex gap-2 flex-wrap">
-              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider ${stageBadge[tool.stage] || "bg-indigo-500/10 text-indigo-600 border border-indigo-500/20"}`}>
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wider ${stageBadge[tool.stage] || "bg-indigo-500/10 text-indigo-600 border border-indigo-500/20"}`}>
                 {tool.stage} ADOPTION
               </span>
-              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider ${priorityColors[tool.learning_priority] || "bg-amber-500/10 text-amber-600"}`}>
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wider ${priorityColors[tool.learning_priority] || "bg-amber-500/10 text-amber-600"}`}>
                 LEARNING PRIORITY: {tool.learning_priority}
               </span>
-              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider border ${levelBadge[tool.level] || "border-indigo-500/10 text-[var(--c-ink-2)]"}`}>
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wider border ${levelBadge[tool.level] || "border-indigo-500/10 text-[var(--c-ink-2)]"}`}>
                 STAGE: {tool.level?.toUpperCase()}
               </span>
-              <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-[var(--c-surface-2)] text-[var(--c-ink-2)] border border-indigo-500/5">
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wider bg-[var(--c-surface-2)] text-[var(--c-ink-2)] border border-indigo-500/5">
                 {tool.category}
               </span>
             </div>
@@ -161,9 +160,9 @@ export default function ToolDetailPage() {
           <div className="flex flex-col items-stretch gap-3 shrink-0 min-w-[170px]">
             <div className="tech-panel p-6 rounded-2xl text-center relative overflow-hidden">
               <span className="block text-[9px] text-[var(--c-ink-2)]/60 uppercase font-mono tracking-widest mb-1">MOMENTUM SCORE</span>
-              <span className="text-5xl font-black text-[var(--c-ink)] font-mono">{tool.score}</span>
+              <span className="text-5xl font-normal text-[var(--c-ink)] font-mono">{tool.score}</span>
               <span className="text-xs text-[var(--c-ink-2)]/60 font-mono">/100</span>
-              <div className={`flex items-center justify-center gap-1 mt-2.5 font-bold font-mono text-xs ${growthColor}`}>
+              <div className={`flex items-center justify-center gap-1 mt-2.5 font-normal font-mono text-xs ${growthColor}`}>
                 <GrowthIcon className="w-4 h-4" />
                 {tool.growth_pct >= 0 ? "+" : ""}{tool.growth_pct.toFixed(1)}% GROWTH
               </div>
@@ -178,7 +177,7 @@ export default function ToolDetailPage() {
             <div className="absolute top-4 right-4 p-2 bg-indigo-600/10 border border-indigo-500/20 rounded-xl text-indigo-600">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
-            <h4 className="text-[10px] font-mono font-bold uppercase tracking-widest text-indigo-600 mb-2 flex items-center gap-2">
+            <h4 className="text-[10px] font-mono font-semibold uppercase tracking-widest text-indigo-600 mb-2 flex items-center gap-2">
               <Info className="w-4 h-4" /> Decision Matrix Analysis
             </h4>
             <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-4xl font-extralight pr-10">
@@ -193,7 +192,7 @@ export default function ToolDetailPage() {
           {/* A. Recharts Area Chart (lg:col-span-8) */}
           <div className="lg:col-span-8 tech-panel p-6 rounded-2xl flex flex-col justify-between">
             <div>
-              <h2 className="text-base font-bold font-display mb-4 flex items-center gap-2 text-[var(--c-ink)]">
+              <h2 className="text-base font-normal font-display mb-4 flex items-center gap-2 text-[var(--c-ink)]">
                 <BarChart3 className="w-5 h-5 text-indigo-600" />
                 Score Trend Analysis (30d History)
               </h2>
@@ -204,12 +203,12 @@ export default function ToolDetailPage() {
                 <AreaChart data={history} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="areaGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8f9cf5" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#8f9cf5" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#8052ff" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#8052ff" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(82, 102, 235, 0.05)" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 82, 255, 0.10)" vertical={false} />
                   
                   <XAxis
                     dataKey="date"
@@ -254,7 +253,7 @@ export default function ToolDetailPage() {
           <div className="lg:col-span-4 tech-panel p-6 rounded-2xl flex flex-col justify-between items-center text-center relative">
             <div className="w-full flex items-center justify-between border-b border-indigo-500/5 pb-2 mb-4">
               <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase">SENTIMENT PROFILE</span>
-              <span className="text-xs font-mono font-bold text-indigo-600 uppercase">{tool.sentiment_label ?? "POSITIVE"}</span>
+              <span className="text-xs font-mono font-semibold text-indigo-600 uppercase">{tool.sentiment_label ?? "POSITIVE"}</span>
             </div>
 
             {/* Radar Dial Svg representation */}
@@ -284,12 +283,12 @@ export default function ToolDetailPage() {
                 className="absolute inset-0 flex items-center justify-center origin-center transition-transform duration-1000"
                 style={{ transform: `rotate(${(positivePct / 100) * 360 - 90}deg)` }}
               >
-                <div className="w-[70px] h-[2px] bg-gradient-to-r from-transparent to-indigo-400 translate-x-[35px]" />
+                <div className="w-[70px] h-px bg-[var(--c-border)] translate-x-[35px]" />
               </div>
 
               {/* Central Text */}
               <div className="absolute flex flex-col items-center justify-center bg-[var(--c-surface)] w-24 h-24 rounded-full border border-indigo-500/10">
-                <span className="text-3xl font-mono font-black text-[var(--c-ink)]">{positivePct}%</span>
+                <span className="text-3xl font-mono font-normal text-[var(--c-ink)]">{positivePct}%</span>
                 <span className="text-[8px] font-mono text-[var(--c-ink-2)] uppercase tracking-wider">POSITIVE</span>
               </div>
             </div>
@@ -312,7 +311,7 @@ export default function ToolDetailPage() {
                 <MapPin className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-[var(--c-ink)] flex items-center gap-1.5">
+                <h4 className="text-sm font-normal text-[var(--c-ink)] flex items-center gap-1.5">
                   Prerequisite: <Link href={`/tools/${tool.parent_slug}`} className="text-indigo-600 hover:underline">{tool.parent_name}</Link>
                 </h4>
                 <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
@@ -326,7 +325,7 @@ export default function ToolDetailPage() {
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-[var(--c-ink)]">No Prerequisite Nodes</h4>
+                <h4 className="text-sm font-normal text-[var(--c-ink)]">No Prerequisite Nodes</h4>
                 <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
                   This technology is an entry-level root index. You can learn this directly without prior dependencies.
                 </p>
@@ -336,9 +335,9 @@ export default function ToolDetailPage() {
 
           {/* Learning path CTA */}
           {tool.has_roadmap && tool.roadmap_slug ? (
-            <div className="bg-gradient-to-r from-[var(--accent-1)] to-[var(--accent-2)] rounded-2xl p-5 text-white flex justify-between items-center gap-4 shadow-lg shadow-indigo-500/25">
+            <div className="bg-[var(--accent-1)] rounded-3xl p-5 text-white flex justify-between items-center gap-4">
               <div className="space-y-1">
-                <h4 className="text-sm font-bold flex items-center gap-2">
+                <h4 className="text-sm font-normal flex items-center gap-2">
                   <GraduationCap className="w-5 h-5" /> Master {tool.name} Sequence
                 </h4>
                 <p className="text-indigo-100 text-xs leading-relaxed font-extralight">
@@ -347,7 +346,7 @@ export default function ToolDetailPage() {
               </div>
               <Link
                 href={`/roadmap/${tool.roadmap_slug}`}
-                className="bg-[var(--c-surface)] hover:bg-[var(--c-surface-2)] text-indigo-600 px-4 py-2.5 rounded-xl font-mono text-xs font-bold shrink-0 shadow transition-all active:scale-95"
+                className="bg-[var(--c-surface)] hover:bg-[var(--c-surface-2)] text-indigo-600 px-4 py-2.5 rounded-xl font-mono text-xs font-normal shrink-0 shadow transition-all active:scale-95"
               >
                 GO_TO_ROADMAP
               </Link>
@@ -355,7 +354,7 @@ export default function ToolDetailPage() {
           ) : (
             <div className="tech-panel p-5 rounded-2xl flex justify-between items-center gap-4">
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-[var(--c-ink)] flex items-center gap-1.5">
+                <h4 className="text-sm font-normal text-[var(--c-ink)] flex items-center gap-1.5">
                   Custom Roadmap Scrapers
                 </h4>
                 <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
@@ -374,7 +373,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">GITHUB STARS</span>
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.stars.toLocaleString('en-US')}</span>
+              <span className="text-lg font-normal font-mono text-[var(--c-ink)]">{tool.stars.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -382,7 +381,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">FORKS</span>
             <div className="flex items-center gap-2">
               <GitFork className="w-4 h-4 text-indigo-600" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.forks.toLocaleString('en-US')}</span>
+              <span className="text-lg font-normal font-mono text-[var(--c-ink)]">{tool.forks.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -390,7 +389,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">HN DISCUSSIONS</span>
             <div className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-orange-500" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.hn_count.toLocaleString('en-US')}</span>
+              <span className="text-lg font-normal font-mono text-[var(--c-ink)]">{tool.hn_count.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -398,7 +397,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">DEV.TO ARTICLES</span>
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-indigo-600" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.devto_count.toLocaleString('en-US')}</span>
+              <span className="text-lg font-normal font-mono text-[var(--c-ink)]">{tool.devto_count.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -406,7 +405,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">REDDIT POSTS</span>
             <div className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-rose-500" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.reddit_count.toLocaleString('en-US')}</span>
+              <span className="text-lg font-normal font-mono text-[var(--c-ink)]">{tool.reddit_count.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -414,7 +413,7 @@ export default function ToolDetailPage() {
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">TECH NEWS SCAN</span>
             <div className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4 text-indigo-600" />
-              <span className="text-lg font-bold font-mono text-[var(--c-ink)]">{tool.news_count.toLocaleString('en-US')}</span>
+              <span className="text-lg font-normal font-mono text-[var(--c-ink)]">{tool.news_count.toLocaleString('en-US')}</span>
             </div>
           </div>
 
@@ -438,7 +437,7 @@ export default function ToolDetailPage() {
             </div>
             <div>
               <span className="text-[10px] font-mono text-[var(--c-ink-2)] block uppercase leading-none">CONNECTED REPO</span>
-              <span className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors font-mono">{tool.github_repo}</span>
+              <span className="font-normal text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors font-mono">{tool.github_repo}</span>
             </div>
             <ExternalLink className="w-4 h-4 text-[var(--c-ink-2)] ml-auto group-hover:text-indigo-600 transition-all" />
           </a>

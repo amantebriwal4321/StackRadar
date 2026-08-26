@@ -71,7 +71,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[var(--accent-2)]/[0.08] blur-3xl pointer-events-none" />
 
           <div className="relative">
-            <span className="text-[11px] font-mono font-bold text-indigo-600 uppercase tracking-widest">
+            <span className="text-[11px] font-mono font-semibold text-indigo-600 uppercase tracking-widest">
               Your 5-minute career plan
             </span>
             <div className="flex items-start gap-4 mt-3 mb-6">
@@ -90,7 +90,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
               {features.map((f) => (
                 <div key={f.t} className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60">
                   <f.icon className="w-5 h-5 text-indigo-600 mb-2" />
-                  <p className="text-sm font-bold text-[var(--c-ink)]">{f.t}</p>
+                  <p className="text-sm font-semibold text-[var(--c-ink)]">{f.t}</p>
                   <p className="text-xs text-[var(--c-ink-2)] font-extralight mt-0.5">{f.d}</p>
                 </div>
               ))}

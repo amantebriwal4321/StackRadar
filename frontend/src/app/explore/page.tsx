@@ -51,7 +51,7 @@ function ScoreRing({ score, size = 56, stroke = 4 }: { score: number; size?: num
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="font-mono font-black text-sm" style={{ color }}>{Math.round(score)}</span>
+        <span className="font-mono font-normal text-sm" style={{ color }}>{Math.round(score)}</span>
       </div>
     </div>
   );
@@ -67,17 +67,16 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
       className="group relative rounded-2xl p-5 overflow-hidden tech-panel tech-panel-interactive"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       <div className="flex items-center gap-4 relative">
         <span className="text-3xl p-2.5 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl group-hover:scale-105 group-hover:border-indigo-400/40 transition-all">
           {tool.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <h4 className="font-bold text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>
+          <h4 className="font-normal text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>
           <div className="flex items-center gap-1.5 mt-0.5">
             <p className="text-[10px] font-mono text-[var(--c-ink-2)]/60 uppercase truncate min-w-0">{tool.category}</p>
             {isEntry && (
-              <span className="shrink-0 px-1.5 py-0.5 rounded bg-indigo-600 text-[8px] font-mono font-bold text-white uppercase tracking-wider inline-flex items-center gap-0.5">
+              <span className="shrink-0 px-1.5 py-0.5 rounded bg-indigo-600 text-[8px] font-mono font-semibold text-white uppercase tracking-wider inline-flex items-center gap-0.5">
                 <GraduationCap className="w-2.5 h-2.5" /> Start
               </span>
             )}
@@ -91,7 +90,7 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
       </p>
 
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-indigo-500/5 relative">
-        <span className={`px-2 py-0.5 rounded-md border text-[9px] font-mono font-bold uppercase tracking-wide ${prio.cls}`}>
+        <span className={`px-2 py-0.5 rounded-md border text-[9px] font-mono font-semibold uppercase tracking-wide ${prio.cls}`}>
           {prio.label}
         </span>
         <div className="flex items-center gap-2 text-[10px] font-mono">
@@ -100,7 +99,7 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
             {tool.stars >= 1000 ? `${(tool.stars / 1000).toFixed(0)}k` : tool.stars}
           </span>
           <WatchlistButton toolSlug={tool.slug} className="-my-1" />
-          <Link href={`/tools/${tool.slug}`} className="flex items-center gap-0.5 text-indigo-600 hover:text-[var(--c-ink)] transition-colors font-bold">
+          <Link href={`/tools/${tool.slug}`} className="flex items-center gap-0.5 text-indigo-600 hover:text-[var(--c-ink)] transition-colors font-semibold">
             Analyze <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
@@ -110,9 +109,12 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
 }
 
 const TIER_META: Record<string, { label: string; color: string; ring: string; num: string }> = {
-  beginner: { label: "Foundational Tools", color: "#12B76A", ring: "shadow-[0_0_16px_rgba(18,183,106,0.4)]", num: "01" },
-  intermediate: { label: "Core Tools", color: "#B54708", ring: "shadow-[0_0_16px_rgba(181,71,8,0.35)]", num: "02" },
-  advanced: { label: "Advanced Tools", color: "#5266eb", ring: "shadow-[0_0_16px_rgba(82,102,235,0.45)]", num: "03" },
+  // `ring` is intentionally empty: Dala has no glows. The colour alone marks the
+  // level, and beginner/intermediate map onto the score green/amber. Advanced was
+  // #5266eb — a retired electric blue, hardcoded past the indigo token remap.
+  beginner: { label: "Foundational Tools", color: "#12B76A", ring: "", num: "01" },
+  intermediate: { label: "Core Tools", color: "#B54708", ring: "", num: "02" },
+  advanced: { label: "Advanced Tools", color: "#8052ff", ring: "", num: "03" },
 };
 
 export default function ExplorePage() {
@@ -194,17 +196,14 @@ export default function ExplorePage() {
 
   return (
     <DashboardShell>
-      <div className="absolute top-10 left-10 w-[300px] h-[300px] rounded-full bg-indigo-500/5 blur-[90px] pointer-events-none z-0" />
-      <div className="absolute bottom-20 right-10 w-[400px] h-[400px] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none z-0" />
 
       <div className="space-y-8 relative z-10 pb-16">
 
         {/* ─── Cinematic Header ─── */}
         <header className="p-6 md:p-8 rounded-3xl border border-indigo-500/10 bg-[var(--c-surface)]/80 backdrop-blur-md relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(82, 102, 235,0.08),transparent_55%)] pointer-events-none" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 relative">
             <div className="space-y-2">
-              <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+              <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
                 <Route className="w-3.5 h-3.5" /> The tool radar
               </span>
               <h1 className="text-3xl md:text-5xl font-normal tracking-[-0.04em] font-display flex items-center gap-3">
@@ -217,7 +216,6 @@ export default function ExplorePage() {
             </div>
 
             <div className="relative group w-full md:w-80">
-              <div className="absolute -inset-[1px] bg-gradient-to-r from-indigo-500 to-indigo-500 rounded-xl opacity-20 group-focus-within:opacity-50 transition-opacity duration-300 blur-sm" />
               <div className="relative bg-[var(--c-surface-2)] rounded-xl flex items-center border border-indigo-500/10 px-3">
                 <Search className="w-4 h-4 text-slate-500 group-focus-within:text-indigo-600" />
                 <input
@@ -225,7 +223,7 @@ export default function ExplorePage() {
                   placeholder="Search all technologies…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent border-none py-3 px-2 text-xs text-[var(--c-ink)] focus:outline-none placeholder-[var(--c-ink-2)]/50"
+                  className="w-full bg-transparent border-none py-3 px-2 text-xs text-[var(--c-ink)] placeholder-[var(--c-ink-2)]/50"
                 />
               </div>
             </div>
@@ -236,7 +234,7 @@ export default function ExplorePage() {
 
           {/* ─── Domain rail ─── */}
           <aside className="lg:col-span-3 bg-[var(--c-surface)]/80 border border-indigo-500/10 rounded-2xl p-4 space-y-1.5 lg:sticky lg:top-24 z-10 backdrop-blur-md">
-            <span className="text-[10px] font-mono font-bold text-[var(--c-ink-2)]/50 uppercase tracking-widest block px-2 pb-2 border-b border-indigo-500/5">
+            <span className="text-[10px] font-mono font-semibold text-[var(--c-ink-2)]/50 uppercase tracking-widest block px-2 pb-2 border-b border-indigo-500/5">
               Domains
             </span>
             <div className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-none">
@@ -247,12 +245,12 @@ export default function ExplorePage() {
                     key={d.slug}
                     onClick={() => { setSearchQuery(""); setActiveDomain(d.slug); }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs font-mono tracking-wider transition-all duration-300 shrink-0 text-left cursor-pointer ${
-                      isActive ? "bg-indigo-600/15 border-indigo-500/40 text-[var(--c-ink)] font-bold" : "bg-transparent border-transparent text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surface-2)]/50"
+                      isActive ? "bg-indigo-600/15 border-indigo-500/40 text-[var(--c-ink)] font-semibold" : "bg-transparent border-transparent text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surface-2)]/50"
                     }`}
                   >
                     <span className="text-base select-none">{d.icon}</span>
                     <span className="flex-1 truncate">{d.name}</span>
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ color: scoreColor(d.score), background: `${scoreColor(d.score)}18` }}>
+                    <span className="text-[9px] font-mono font-normal px-1.5 py-0.5 rounded" style={{ color: scoreColor(d.score), background: `${scoreColor(d.score)}18` }}>
                       {Math.round(d.score)}
                     </span>
                   </button>
@@ -267,7 +265,7 @@ export default function ExplorePage() {
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-mono text-[var(--c-ink-2)]">SEARCH RESULTS · &quot;{searchQuery}&quot;</h3>
-                  <span className="text-xs font-mono text-indigo-600 font-bold">{searchResults.length} FOUND</span>
+                  <span className="text-xs font-mono text-indigo-600 font-normal">{searchResults.length} FOUND</span>
                 </div>
                 {searchResults.length === 0 ? (
                   <div className="p-12 glass-panel rounded-2xl text-center font-mono text-xs text-[var(--c-ink-2)]">
@@ -289,16 +287,15 @@ export default function ExplorePage() {
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="relative rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-[var(--c-surface-2)]/80 to-[var(--c-surface)]/60 p-6 md:p-8 overflow-hidden glass-panel-glow"
+                      className="relative rounded-3xl border border-indigo-500/20 p-6 md:p-8 overflow-hidden glass-panel-glow"
                     >
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(82, 102, 235,0.12),transparent_55%)] pointer-events-none" />
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative">
                         <div className="flex items-center gap-5">
                           <span className="text-5xl p-4 bg-[var(--c-surface)] border border-indigo-500/20 rounded-2xl">{entryTool.icon}</span>
                           <ScoreRing score={entryTool.score} size={76} stroke={5} />
                         </div>
                         <div className="flex-1 space-y-2">
-                          <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5" /> Recommended first tool · {currentDomain.name}
                           </span>
                           <h2 className="text-2xl md:text-3xl font-normal font-display">
@@ -311,7 +308,7 @@ export default function ExplorePage() {
                             <Link href={`/roadmap/${currentDomain.slug}`} className="btn-primary">
                               <Map className="w-4 h-4" /> Start the {currentDomain.name} roadmap
                             </Link>
-                            <Link href={`/tools/${entryTool.slug}`} className="px-5 py-2.5 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors">
+                            <Link href={`/tools/${entryTool.slug}`} className="px-5 py-2.5 rounded-xl border border-indigo-500/20 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-xs font-semibold font-mono uppercase tracking-wider flex items-center gap-2 transition-colors">
                               <Zap className="w-3.5 h-3.5" /> Analyze {entryTool.name}
                             </Link>
                           </div>
@@ -345,7 +342,7 @@ export default function ExplorePage() {
                               style={{ background: meta.color }}
                             />
                             <div className="flex items-center gap-3 mb-5">
-                              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: meta.color, background: `${meta.color}18` }}>
+                              <span className="font-mono text-[10px] font-normal px-2 py-0.5 rounded" style={{ color: meta.color, background: `${meta.color}18` }}>
                                 STEP {meta.num}
                               </span>
                               <h3 className="text-lg md:text-xl font-normal font-display uppercase tracking-wide">{meta.label}</h3>
