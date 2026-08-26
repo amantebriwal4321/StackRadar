@@ -47,7 +47,7 @@ export default function ShareButton({
   return (
     <button
       onClick={onShare}
-      className="flex items-center justify-center gap-2 text-sm font-bold font-mono uppercase tracking-wider py-3.5 px-6 rounded-xl border border-indigo-500/25 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] hover:border-indigo-400/50 text-[var(--c-ink)] transition-colors cursor-pointer"
+      className="flex items-center justify-center gap-2 text-sm font-semibold font-mono uppercase tracking-wider py-3.5 px-6 rounded-xl border border-indigo-500/25 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] hover:border-indigo-400/50 text-[var(--c-ink)] transition-colors cursor-pointer"
     >
       {copied ? (
         <><Check className="w-4 h-4 text-[#12B76A]" /> Link copied</>

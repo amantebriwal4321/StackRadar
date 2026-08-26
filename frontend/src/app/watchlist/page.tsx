@@ -118,7 +118,7 @@ export default function WatchlistPage() {
         ) : watchedTools.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-border/60 rounded-2xl bg-muted/10">
             <Bookmark className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-bold mb-1">No tools in your watchlist</h3>
+            <h3 className="text-lg font-normal mb-1">No tools in your watchlist</h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
               Browse the dashboard and click the bookmark icon on any tool to start tracking it.
             </p>
@@ -142,12 +142,12 @@ export default function WatchlistPage() {
                       {tool.icon}
                     </div>
                     <div>
-                      <h3 className="font-bold group-hover:text-primary transition-colors">{tool.name}</h3>
+                      <h3 className="font-normal group-hover:text-primary transition-colors">{tool.name}</h3>
                       <span className="text-xs text-muted-foreground">{tool.category}</span>
                     </div>
                   </Link>
                   <div className="text-right">
-                    <span className="text-2xl font-black text-primary">{tool.score}</span>
+                    <span className="text-2xl font-normal text-primary">{tool.score}</span>
                     <span className="text-xs text-muted-foreground ml-1">/100</span>
                   </div>
                 </div>

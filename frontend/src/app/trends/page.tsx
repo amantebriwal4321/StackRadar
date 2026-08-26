@@ -69,7 +69,7 @@ function CircularProgressArc({ value, size = 64, strokeWidth = 5.5 }: { value: n
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-sm font-mono font-black text-[var(--c-ink)]">{value}</span>
+        <span className="text-sm font-mono font-normal text-[var(--c-ink)]">{value}</span>
       </div>
     </div>
   );
@@ -225,17 +225,15 @@ export default function TrendsPage() {
     <DashboardShell>
 
       {/* Decorative page glow */}
-      <div className="absolute top-0 right-10 w-[400px] h-[300px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none z-0" />
 
       <div className="space-y-8 relative z-10 pb-12">
         
         {/* Opacity blurred header section */}
         <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[var(--c-surface)]/80 backdrop-blur-md space-y-3 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-2 text-[11px] font-mono font-bold text-accent-primary uppercase tracking-[0.28em]">
+              <span className="inline-flex items-center gap-2 text-[11px] font-mono font-semibold text-accent-primary uppercase tracking-[0.28em]">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
@@ -257,7 +255,7 @@ export default function TrendsPage() {
                   { v: "5", l: "sources" },
                 ].map((s) => (
                   <div key={s.l} className="text-right">
-                    <div className="text-xl md:text-2xl font-black text-[var(--c-ink)] tabular-nums leading-none">{s.v}</div>
+                    <div className="text-xl md:text-2xl font-normal text-[var(--c-ink)] tabular-nums leading-none">{s.v}</div>
                     <div className="text-[9px] uppercase tracking-widest text-[var(--c-ink-2)]/60 mt-1">{s.l}</div>
                   </div>
                 ))}
@@ -288,21 +286,21 @@ export default function TrendsPage() {
             domains={dynamicCategories}
             allLabel="All Categories"
             showIcon={false}
-            className="glass p-1 rounded-xl flex items-center gap-1.5 overflow-x-auto w-fit max-w-full shadow-md"
+            className="glass p-1 rounded-xl flex items-center gap-1.5 overflow-x-auto w-fit max-w-full"
             prefixNode={
               <div className="flex items-center gap-1.5 pl-3 pr-1 text-[var(--c-ink-2)] shrink-0 select-none">
                 <Filter className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs font-mono font-bold uppercase tracking-wider">DOMAIN:</span>
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider">DOMAIN:</span>
               </div>
             }
           />
           
           <div className="flex flex-wrap items-center gap-4">
             {/* Sort control */}
-            <div className="glass p-1 rounded-xl flex items-center gap-1 w-fit shadow-md">
+            <div className="glass p-1 rounded-xl flex items-center gap-1 w-fit">
               <div className="flex items-center gap-1.5 pl-3 pr-1 text-[var(--c-ink-2)] shrink-0 select-none">
                 <ArrowUpDown className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs font-mono font-bold uppercase tracking-wider">SORT:</span>
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider">SORT:</span>
               </div>
               {SORTS.map((s) => (
                 <button
@@ -310,7 +308,7 @@ export default function TrendsPage() {
                   onClick={() => setSortBy(s.key)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer select-none ${
                     sortBy === s.key
-                      ? "bg-indigo-500/15 text-indigo-700 font-bold"
+                      ? "bg-indigo-500/15 text-indigo-700 font-semibold"
                       : "text-[var(--c-ink-2)] hover:text-[var(--c-ink)]"
                   }`}
                 >
@@ -320,7 +318,7 @@ export default function TrendsPage() {
             </div>
 
             <div className="text-xs font-mono text-[var(--c-ink-2)]/60">
-              SHOWING <span className="text-[var(--c-ink)] font-bold">{displayedTools.length}</span> TECHNOLOGIES
+              SHOWING <span className="text-[var(--c-ink)] font-semibold">{displayedTools.length}</span> TECHNOLOGIES
             </div>
           </div>
         </div>
@@ -337,14 +335,14 @@ export default function TrendsPage() {
             <div className="tech-panel p-6 rounded-2xl relative overflow-hidden">
               <div className="flex items-center gap-2 mb-6">
                 <BarChart3 className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-lg font-bold font-display">Comparative Performance Ratings</h2>
+                <h2 className="text-lg font-normal font-display">Comparative Performance Ratings</h2>
               </div>
 
               <div className="overflow-x-auto pb-2 scrollbar-none">
                 <div style={{ minWidth: `${Math.max(displayedTools.length * 60, 450)}px` }}>
                   <ChartContainer height={300}>
                     <BarChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(82, 102, 235, 0.06)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 82, 255, 0.10)" vertical={false} />
                       <XAxis
                         dataKey="name"
                         stroke="#c3c3cc"
@@ -374,7 +372,7 @@ export default function TrendsPage() {
                       />
                       <Bar
                         dataKey="score"
-                        fill="#5266eb"
+                        fill="#8052ff"
                         radius={[6, 6, 0, 0]}
                         animationDuration={1000}
                       />
@@ -425,10 +423,10 @@ export default function TrendsPage() {
                           </span>
                           <div>
                             <div className="flex items-center gap-2">
-                              <h3 className="font-bold text-sm text-[var(--c-ink)] hover:text-indigo-600 transition-colors">
+                              <h3 className="font-normal text-sm text-[var(--c-ink)] hover:text-indigo-600 transition-colors">
                                 <Link href={`/tools/${tool.slug}`}>{tool.name}</Link>
                               </h3>
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold border ${trend.cls}`}>
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-normal border ${trend.cls}`}>
                                 <trend.Icon className="w-2.5 h-2.5" />
                                 {trend.label}
                               </span>

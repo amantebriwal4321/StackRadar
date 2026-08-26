@@ -154,7 +154,6 @@ export default function TechSphere() {
   if (reducedMotion) {
     return (
       <div className="w-full h-full min-h-[350px] md:min-h-[450px] flex items-center justify-center relative">
-        <div className="absolute w-[200px] h-[200px] rounded-full bg-indigo-500/5 blur-[80px]" />
         <svg
           width="220"
           height="220"
@@ -175,7 +174,6 @@ export default function TechSphere() {
 
   return (
     <div className="w-full h-full min-h-[350px] md:min-h-[500px] relative select-none">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(82,102,235,0.08),transparent_70%)] pointer-events-none" />
       <Canvas
         camera={{ position: [0, 0, 4.5], fov: 55 }}
         gl={{ antialias: true, alpha: true }}

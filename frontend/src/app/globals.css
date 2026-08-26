@@ -113,7 +113,7 @@
 }
 
 :root {
-  /* Mercury radii: cards 12px, pills for controls. */
+  /* Dala radii: 24px on panels (--radius-card), pills for controls. */
   --radius: 0.75rem;
   --radius-card: 24px;
   --radius-pill: 999px;
@@ -136,24 +136,24 @@
   --input: rgba(0, 0, 0, 0.12);
   --ring: #8052ff;
 
-  /* ── PALETTE: Mercury — monochrome ground + cobalt as the sole accent ── */
+  /* ── PALETTE: Dala — the void + one electric accent ── */
   --accent-1: #8052ff;   /* Electric Iris — filled actions only */
   --accent-2: #ffb829;   /* Saffron Spark — highlight text/links */
   --accent-3: #6a3fd6;   /* pressed */
   --ground: #f4f5f9;
 
-  /* Remap Tailwind's whole indigo scale to cobalt so every `*-indigo-*` follows */
+  /* Remap Tailwind's whole indigo scale to Iris so every `*-indigo-*` follows */
   --color-indigo-400: #a488ff;
   --color-indigo-500: #8052ff;
   --color-indigo-600: #8052ff;
   --color-indigo-700: #6a3fd6;
 
   /* Themeable surface/text vars — flip under html.dark. (LIGHT values here.) */
-  /* Scroll-canvas endpoints — ScrollCanvas.tsx interpolates --c-ground between
-     these two as you scroll. Theme-scoped, so light mode needs no JS branch.
-     Both are Mercury surface values; the shift never introduces a third hue. */
+  /* Dala has NO scroll-driven colour: every section is one flat canvas, so both
+     endpoints are deliberately identical. The pair is kept only so --c-ground
+     keeps a single named source; there is no interpolation and no JS reading it. */
   --canvas-a: #ffffff;             /* page canvas (inverted void) */
-  --canvas-b: #ffffff;             /* Dala has no section colour shift */
+  --canvas-b: #ffffff;             /* equal to canvas-a by design */
   --c-ground: var(--canvas-a);
   /* There is no card SURFACE in Dala — panels are the canvas. Separation
      comes from whitespace, and on data routes from a hairline border. */
@@ -167,9 +167,9 @@
 }
 
 /* ══════════════════════════════════════════════
-   DARK MODE — "Mercury", and the DEFAULT look.
-   Onyx canvas, graphite cards, ivory text, cobalt as the only
-   chromatic punctuation. The pre-paint script in layout.tsx adds
+   DARK MODE — "Dala", and the DEFAULT look.
+   Pure-black canvas, no card surfaces, bone-white text, Electric Iris as
+   the only chromatic punctuation. The pre-paint script in layout.tsx adds
    .dark unless the visitor explicitly chose light, so this is what
    a first-time visitor sees. Data colours stay constant.
    ══════════════════════════════════════════════ */
@@ -371,11 +371,38 @@ body {
   transition: background-color 0.5s var(--ease-colour), transform 0.3s var(--ease-hover);
 }
 .btn-primary:hover {
+  /* No glow: the base rule sets box-shadow:none from the measured spec, and Dala
+     has no shadows on UI. Hover is the lift plus the pressed-accent colour. */
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--accent-1) 65%, transparent);
   background: var(--accent-3);
 }
 .btn-primary:active { transform: translateY(0) scale(0.98); }
+
+/* Secondary action — the same measured geometry as .btn-primary, but an outline
+   instead of a fill, so the pair reads as one system. This role was previously
+   hand-rolled at every call site, which drifted into two different paddings and
+   two different radii for the same button. */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--c-ink);
+  border: 1px solid var(--c-border);
+  border-radius: 22.5px;
+  padding: 13.4px 15.96px;   /* 1px less than primary to offset the border */
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: border-color 0.5s var(--ease-colour), transform 0.3s var(--ease-hover);
+}
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-1) 55%, transparent);
+}
+.btn-secondary:active { transform: translateY(0) scale(0.98); }
 
 /* ─────────────────────────────────────────────
    MARQUEE / TICKER
@@ -494,9 +521,10 @@ body {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   overflow: hidden;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.20),
-    0 28px 55px -28px rgba(0, 0, 0, 0.70);
+  /* No drop shadow — Dala forbids it, and on a pure-black canvas it rendered as
+     nothing anyway. The hairline is what separates the console, exactly as it
+     does for panels under `.route-data`. */
+  box-shadow: none;
 }
 .terminal-bar {
   display: flex; align-items: center; gap: 0.55rem;
@@ -508,6 +536,8 @@ body {
 .terminal-path {
   font-family: var(--font-mono);
   font-size: 11px; letter-spacing: 0.06em;
+  /* The bar sits on --c-scrim, which is black in BOTH themes, so this must stay
+     a light ink — a themed token would go black-on-black in light mode. */
   color: rgba(255, 255, 255, 0.55);
 }
 
@@ -523,7 +553,6 @@ body {
 /* ─────────────────────────────────────────────
    ACCENT TEXT (was rainbow "gradient-text") — now ONE accent
    ───────────────────────────────────────────── */
-@keyframes text-shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
 .text-shimmer {
   /* was an animated gradient sweep — Dala forbids UI gradients. Saffron is
      the spec's "highlight emphasis" role, so emphasis survives as flat colour. */
@@ -597,10 +626,12 @@ body {
 /* Magnetic button base (JS nudges --mx/--my) */
 .magnetic { transition: transform 0.25s var(--ease-spring); }
 
+/* Hairline grid. Was a hardcoded rgba(20,23,38) — a retired navy that never
+   flipped with the theme; now ink-tinted so it follows both. */
 .editorial-grid {
   background-image:
-    linear-gradient(to right, rgba(20,23,38,0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(20,23,38,0.05) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, var(--c-ink) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--c-ink) 5%, transparent) 1px, transparent 1px);
   background-size: 64px 64px;
 }
 
@@ -617,8 +648,8 @@ body {
 }
 
 /* ══════════════════════════════════════════════
-   TECHY GRID / HUD OVERLAY — Neon Noir "readout" texture.
-   Faint wine grid + scanline for a restrained cyberpunk feel
+   TECHY GRID / HUD OVERLAY — the "readout" texture.
+   Faint Iris grid + scanline for a restrained technical feel
    (used on hero / About sections so they read technical, not soft).
    ══════════════════════════════════════════════ */
 .hud-grid {
@@ -636,7 +667,7 @@ body {
     transparent 4px
   );
 }
-/* Neon underline / edge — a thin magenta-wine glow bar */
+/* Accent underline / edge — a flat Iris hairline (no glow; Dala has no shadows) */
 .neon-rule { height: 1px; background: color-mix(in srgb, var(--accent-1) 60%, transparent); box-shadow: none; }
 
 
@@ -755,8 +786,9 @@ body {
 .slide-up { animation: reveal-rise 0.6s var(--ease-standard) both; }
 .fade-in  { animation: reveal-fade 0.5s var(--ease-standard) both; }
 
-/* Cobalt lift on hover — the shared interactive affordance. CustomCursor also
-   keys off `.glow-hover` to grow the cursor, so the class had a job already. */
+/* Iris lift on hover — the shared interactive affordance, on the measured
+   curves. CustomCursor also keys off `.glow-hover` to grow the cursor, so the
+   class had a job already. */
 .glow-hover { transition: border-color 0.5s var(--ease-colour), box-shadow 0.5s var(--ease-colour), transform 0.3s var(--ease-hover); }
 .glow-hover:hover {
   border-color: color-mix(in srgb, var(--accent-1) 50%, transparent);
@@ -770,9 +802,30 @@ body {
 }
 
 /* Dala vertical rhythm — the live site runs 48px between sections
-   (and 144px above the hero). */
+   (and 144px above the hero).
+   `-lg` is OUR deviation, and a deliberate one: the reference separates sections
+   with rules and imagery, while Dala here has no card surface at all, so
+   whitespace is the only separator a section gets. 48px let borderless sections
+   run together. 96px is what the pages already used as a literal `py-24`; this
+   gives that value one home. */
 .section-rhythm { padding-top: 48px; padding-bottom: 48px; }
+.section-rhythm-lg { padding-top: 96px; padding-bottom: 96px; }
 .section-rhythm-hero { padding-top: 144px; padding-bottom: 48px; }
+
+
+/* ─────────────────────────────────────────────
+   FOCUS — one rule for the whole site.
+   Every hand-written component was missing a focus state; the only
+   `focus-visible` rules in the app sat inside unused shadcn primitives. A single
+   :focus-visible rule covers all of them, and `outline` (not box-shadow) means
+   it can never be clipped by an ancestor's overflow:hidden — which the ticker
+   rails, terminal window and ScrollExpand frames all set.
+   ───────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent-1);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
 
 
 /* ─────────────────────────────────────────────
@@ -866,10 +919,6 @@ body,
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
-
-/* Hover/colour transitions site-wide, on the measured curves. */
-.glow-hover { transition: border-color 0.5s var(--ease-colour), box-shadow 0.5s var(--ease-colour), transform 0.3s var(--ease-hover); }
-
 
 /* ─────────────────────────────────────────────
    DALA TYPE STEPS

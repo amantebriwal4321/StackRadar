@@ -159,12 +159,12 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             initial={canAnimate ? { opacity: 0, y: 16 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.18 }}
             className="flex flex-col gap-3 mb-7"
           >
-            <a href="#plan-m" className="btn-primary text-[15px] justify-center font-bold">
+            <a href="#plan-m" className="btn-primary text-[15px] justify-center font-semibold">
               <Compass className="w-5 h-5" /> Get my 5-minute plan <ArrowRight className="w-5 h-5" />
             </a>
             <Link
               href="/trends" prefetch
-              className="py-3.5 rounded-2xl border border-indigo-500/20 bg-[var(--c-surface)]/60 text-sm font-bold font-mono uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              className="py-3.5 rounded-2xl border border-indigo-500/20 bg-[var(--c-surface)]/60 text-sm font-semibold font-mono uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
             >
               <TrendingUp className="w-4 h-4" /> See the live data
             </Link>
@@ -175,8 +175,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           {chips.length > 0 && (
             <div className="-mx-5 mb-6">
               <div className="px-5 flex items-center gap-2 mb-2.5">
-                <span className="w-6 h-[2px] bg-gradient-to-r from-indigo-500 to-transparent" />
-                <span className="text-[9px] font-mono font-bold text-indigo-600/70 uppercase tracking-[0.18em]">Live momentum · tap to open</span>
+                <span className="eyebrow">Live momentum · tap to open</span>
               </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-none snap-x px-5 pb-1">
                 {chips.map((t, i) => (
@@ -190,7 +189,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
                       y: { repeat: Infinity, duration: 3 + i * 0.4, ease: "easeInOut", delay: i * 0.2 },
                     }}
                     onClick={() => router.push(`/tools/${t.slug}`)}
-                    className="snap-start shrink-0 inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-2 rounded-full border border-indigo-500/15 bg-[var(--c-surface)]/80 text-[12px] font-mono font-bold text-[var(--c-ink)] shadow-sm active:scale-95 transition-transform"
+                    className="snap-start shrink-0 inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-2 rounded-full border border-indigo-500/15 bg-[var(--c-surface)]/80 text-[12px] font-mono font-semibold text-[var(--c-ink)] active:scale-95 transition-transform"
                   >
                     <span className="text-sm leading-none">{t.icon}</span>
                     {t.name}
@@ -209,7 +208,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
               { label: "Live sources", value: stats.sources },
             ].map((s) => (
               <div key={s.label} className="flex-1 px-3 py-3.5 text-center">
-                <div className="text-xl font-black font-mono text-[var(--c-ink)] leading-none mb-1">
+                <div className="text-xl font-normal font-mono text-[var(--c-ink)] leading-none mb-1">
                   {isLoading ? <span className="text-[var(--c-ink-2)]/40">—</span> : s.value}
                 </div>
                 <div className="text-[9px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-wider">{s.label}</div>
@@ -232,7 +231,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
       {/* ══════════ PICK A DOMAIN → ROADMAP ══════════ */}
       <section className="px-5 mb-10">
         <motion.div {...reveal} className="mb-5">
-          <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-bold uppercase tracking-widest mb-2">
+          <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-semibold uppercase tracking-widest mb-2">
             <Compass className="w-4 h-4" /> Choose your path
           </div>
           <h2 className="text-2xl font-normal font-display tracking-tight leading-tight">
@@ -263,8 +262,8 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-base font-bold font-display truncate">{d.name}</h3>
-                      <span className={`ml-auto shrink-0 text-sm font-mono font-black ${c.text}`}>{d.score}</span>
+                      <h3 className="text-base font-normal font-display truncate">{d.name}</h3>
+                      <span className={`ml-auto shrink-0 text-sm font-mono font-normal ${c.text}`}>{d.score}</span>
                     </div>
                     <div className="h-1.5 w-full bg-[var(--c-surface-2)] rounded-full overflow-hidden mb-1.5">
                       <div className={`h-full ${c.bar} rounded-full`} style={{ width: `${d.score}%` }} />
@@ -287,12 +286,12 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
       <section className="mb-10">
         <motion.div {...reveal} className="px-5 mb-4 flex items-end justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-bold uppercase tracking-widest mb-2">
+            <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-semibold uppercase tracking-widest mb-2">
               <Flame className="w-4 h-4" /> Rising this week
             </div>
             <h2 className="text-2xl font-normal font-display tracking-tight">Worth learning now</h2>
           </div>
-          <Link href="/trends" prefetch className="shrink-0 text-[11px] font-mono font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-0.5 pb-1 active:opacity-70">
+          <Link href="/trends" prefetch className="shrink-0 text-[11px] font-mono font-semibold text-indigo-600 uppercase tracking-wider flex items-center gap-0.5 pb-1 active:opacity-70">
             see all <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </motion.div>
@@ -312,16 +311,16 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-2xl p-2 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl">{t.icon}</span>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-sm truncate">{t.name}</h3>
+                    <h3 className="font-normal text-sm truncate">{t.name}</h3>
                     <p className="text-[10px] text-[var(--c-ink-2)]/60 font-mono truncate">{t.category}</p>
                   </div>
                   <div className="ml-auto text-right">
-                    <div className="text-2xl font-black font-mono">{t.score}</div>
+                    <div className="text-2xl font-normal font-mono">{t.score}</div>
                     <div className="text-[8px] font-mono text-[var(--c-ink-2)]/50 uppercase">score</div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-indigo-500/5 pt-3 font-mono text-xs">
-                  <span className="flex items-center gap-1 text-emerald-600 font-bold">
+                  <span className="flex items-center gap-1 text-emerald-600 font-semibold">
                     <TrendingUp className="w-3.5 h-3.5" /> +{t.growth_pct.toFixed(1)}%
                   </span>
                   <span className="flex items-center gap-1 text-[var(--c-ink-2)]/60 text-[10px]">
@@ -351,7 +350,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           </div>
           <div className="p-4 bg-[var(--c-surface)]">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-indigo-500 font-mono text-sm font-bold">&gt;</span>
+              <span className="text-indigo-500 font-mono text-sm font-normal">&gt;</span>
               <span className="font-mono text-[10px] text-[var(--c-ink-2)] uppercase tracking-[0.12em]">what do you want to figure out?</span>
             </div>
             <div className="space-y-2">
@@ -374,7 +373,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
       {/* ══════════ HOW IT WORKS — vertical timeline ══════════ */}
       <section className="px-5 mb-10">
         <motion.div {...reveal} className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-bold uppercase tracking-widest mb-2">
+          <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-600 font-semibold uppercase tracking-widest mb-2">
             <Zap className="w-4 h-4" /> Why it stays current
           </div>
           <h2 className="text-2xl font-normal font-display leading-tight">
@@ -392,12 +391,12 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
                 transition={{ ...reveal.transition, delay: Math.min(i * 0.06, 0.3) }}
                 className="tech-panel rounded-2xl p-4 flex items-start gap-4"
               >
-                <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-[var(--accent-1)] to-[var(--accent-2)] flex items-center justify-center shadow-lg shadow-[var(--accent-1)]/25">
+                <div className="w-12 h-12 shrink-0 rounded-2xl bg-[var(--accent-1)] flex items-center justify-center">
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <div className="text-[9px] font-mono text-indigo-600/50 tracking-widest mb-1">STEP 0{i + 1}</div>
-                  <h3 className="text-[15px] font-bold font-display leading-tight mb-1">{s.title}</h3>
+                  <h3 className="text-[15px] font-normal font-display leading-tight mb-1">{s.title}</h3>
                   <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">{s.desc}</p>
                 </div>
               </motion.div>
@@ -420,10 +419,10 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             Sequenced steps, the best free video for each tool, and a streak to keep you going.
           </p>
           <div className="flex flex-col gap-3 relative">
-            <Link href="/roadmaps" className="btn-primary text-[15px] justify-center font-bold">
+            <Link href="/roadmaps" className="btn-primary text-[15px] justify-center font-semibold">
               <Compass className="w-5 h-5" /> Start a roadmap <ArrowRight className="w-5 h-5" />
             </Link>
-            <a href="#plan-m" className="py-3.5 rounded-2xl border border-indigo-500/20 bg-[var(--c-surface)]/60 text-sm font-bold font-mono uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+            <a href="#plan-m" className="py-3.5 rounded-2xl border border-indigo-500/20 bg-[var(--c-surface)]/60 text-sm font-semibold font-mono uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
               Get my 5-minute plan
             </a>
           </div>
@@ -447,7 +446,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           >
             <a
               href="#plan-m"
-              className="btn-primary w-full justify-center font-bold text-[15px] shadow-xl shadow-[var(--accent-1)]/30 pointer-events-auto"
+              className="btn-primary w-full justify-center pointer-events-auto"
             >
               <Compass className="w-5 h-5" /> Get my 5-minute plan <ArrowRight className="w-5 h-5" />
             </a>

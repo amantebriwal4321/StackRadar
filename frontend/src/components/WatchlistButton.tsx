@@ -61,7 +61,7 @@ export default function WatchlistButton({ toolSlug, showLabel = false, className
 
   // ── Labelled pill variant ──
   if (showLabel) {
-    const pill = `inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer ${
+    const pill = `inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-mono text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 cursor-pointer ${
       isWatched
         ? "bg-primary/10 border-primary/40 text-primary"
         : "bg-card border-border-subtle text-text-secondary hover:text-text-primary hover:border-primary/50"

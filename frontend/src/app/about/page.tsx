@@ -89,7 +89,7 @@ export default function AboutPage() {
             </Link>
             <Link
               href="/explore"
-              className="font-mono text-xs tracking-[0.14em] uppercase font-bold py-3 px-6 rounded-xl border border-border-subtle bg-[var(--c-surface)]/[0.02] text-text-secondary hover:text-text-primary hover:border-accent-primary transition-colors flex items-center gap-2"
+              className="font-mono text-xs tracking-[0.14em] uppercase font-semibold py-3 px-6 rounded-xl border border-border-subtle bg-[var(--c-surface)]/[0.02] text-text-secondary hover:text-text-primary hover:border-accent-primary transition-colors flex items-center gap-2"
             >
               <Compass className="w-4 h-4" /> Start learning
             </Link>
@@ -103,7 +103,7 @@ export default function AboutPage() {
           >
             {stats.map((s) => (
               <div key={s.label}>
-                <div className="font-display text-3xl font-bold tabular-nums text-text-primary">
+                <div className="font-display text-3xl font-normal tabular-nums text-text-primary">
                   {s.value}
                 </div>
                 <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-text-secondary mt-1">
@@ -154,7 +154,7 @@ export default function AboutPage() {
             }}
           />
           {/* core */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-accent-glow shadow-[0_0_16px_var(--accent-2)]" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-accent-glow" />
 
           {/* real top-3 tool chips */}
           {topTools.map((t, i) => {
@@ -166,7 +166,7 @@ export default function AboutPage() {
             return (
               <div
                 key={t.slug}
-                className="absolute glass-panel rounded-lg px-2.5 py-1.5 flex items-center gap-2 font-mono text-[11px] font-bold whitespace-nowrap shadow-[0_6px_24px_-10px_#000]"
+                className="absolute glass-panel rounded-lg px-2.5 py-1.5 flex items-center gap-2 font-mono text-[11px] font-normal whitespace-nowrap shadow-[0_6px_24px_-10px_#000]"
                 style={pos}
               >
                 <span>{t.icon}</span>
@@ -230,7 +230,7 @@ export default function AboutPage() {
         <span className="font-mono text-[11px] tracking-[0.28em] uppercase text-accent-primary">
           Positioning
         </span>
-        <p className="font-display font-bold tracking-tight leading-[1.12] text-[clamp(1.6rem,4vw,2.75rem)] max-w-[22ch] mt-4 text-balance">
+        <p className="font-display font-normal tracking-tight leading-[1.12] text-[clamp(1.6rem,4vw,2.75rem)] max-w-[22ch] mt-4 text-balance">
           StackRadar is the live intelligence layer for{" "}
           <span className="text-accent-primary">technology decisions</span> — it turns
           what the developer world is saying into a score, and turns that score into a
@@ -272,7 +272,7 @@ export default function AboutPage() {
                   <span className="w-8 h-8 rounded-lg grid place-items-center bg-accent-primary/12 border border-border-subtle">
                     <Icon className="w-4 h-4 text-accent-primary" />
                   </span>
-                  <span className="font-display font-bold text-lg">{step.k}</span>
+                  <span className="font-display font-normal text-lg">{step.k}</span>
                 </div>
                 <p className="text-text-secondary text-sm leading-relaxed">{step.body}</p>
                 {i < 2 && (
@@ -311,19 +311,19 @@ export default function AboutPage() {
         <div className="grid md:grid-cols-3 gap-4">
           {[
             {
-              tag: "Primary", accent: "#5266eb", icon: GraduationCap,
+              tag: "Primary", accent: "#8052ff", icon: GraduationCap,
               who: "Learners & career-switchers",
               jtbd: "“I have limited time — what do I learn next so it still matters in two years?”",
               hook: "See what’s rising, then start its roadmap in one click. Intelligence becomes action.",
             },
             {
-              tag: "Secondary", accent: "#5266eb", icon: Users,
+              tag: "Secondary", accent: "#8052ff", icon: Users,
               who: "Senior devs & tech leads",
               jtbd: "“Is this tool safe to standardize on, or is it already cooling off?”",
               hook: "Compare momentum and trajectory before you bet a codebase on it.",
             },
             {
-              tag: "Growth loop", accent: "#5266eb", icon: Megaphone,
+              tag: "Growth loop", accent: "#8052ff", icon: Megaphone,
               who: "DevRel & creators",
               jtbd: "“What’s heating up that I should make content about this week?”",
               hook: "Screenshot-ready score cards and movers → built-in distribution.",
@@ -337,7 +337,7 @@ export default function AboutPage() {
                   {a.tag}
                 </span>
               </div>
-              <div className="font-display font-bold text-lg">{a.who}</div>
+              <div className="font-display font-normal text-lg">{a.who}</div>
               <p className="text-text-secondary text-sm">{a.jtbd}</p>
               <p className="text-sm text-text-primary/90 border-t border-dashed border-border-subtle pt-3 mt-auto">
                 {a.hook}
@@ -367,7 +367,7 @@ export default function AboutPage() {
           </Link>
           <Link
             href="/explore"
-            className="font-mono text-xs tracking-[0.14em] uppercase font-bold py-3 px-6 rounded-xl border border-border-subtle bg-[var(--c-surface)]/[0.02] text-text-secondary hover:text-text-primary hover:border-accent-primary transition-colors flex items-center gap-2"
+            className="font-mono text-xs tracking-[0.14em] uppercase font-semibold py-3 px-6 rounded-xl border border-border-subtle bg-[var(--c-surface)]/[0.02] text-text-secondary hover:text-text-primary hover:border-accent-primary transition-colors flex items-center gap-2"
           >
             <Compass className="w-4 h-4" /> Browse learning paths
           </Link>
@@ -394,7 +394,7 @@ function Section({
           <span className="font-mono text-[11px] tracking-[0.28em] uppercase text-accent-primary">
             {eyebrow}
           </span>
-          <h2 className="font-display font-bold tracking-tight text-[clamp(1.5rem,3vw,2.1rem)] mt-2 leading-tight text-balance max-w-[20ch]">
+          <h2 className="font-display font-normal tracking-tight text-[clamp(1.5rem,3vw,2.1rem)] mt-2 leading-tight text-balance max-w-[20ch]">
             {title}
           </h2>
         </div>

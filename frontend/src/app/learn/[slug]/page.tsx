@@ -151,7 +151,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
             <Link href={`/roadmap/${slug}`} prefetch className="btn-primary justify-center">
               Start the interactive roadmap <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href={`/plan/${slug}`} prefetch className="px-7 py-3.5 rounded-xl border border-indigo-500/25 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-sm font-bold font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors text-[var(--c-ink)]">
+            <Link href={`/plan/${slug}`} prefetch className="px-7 py-3.5 rounded-xl border border-indigo-500/25 bg-[var(--c-surface)]/60 hover:bg-[var(--c-surface-2)] text-sm font-semibold font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-colors text-[var(--c-ink)]">
               Get your 5-minute plan
             </Link>
           </div>
@@ -166,10 +166,10 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
             {steps.map((s) => (
               <li key={s.step} className="tech-panel rounded-2xl p-5 md:p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-600 font-mono font-bold text-sm flex items-center justify-center shrink-0">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-600 font-mono font-normal text-sm flex items-center justify-center shrink-0">
                     {s.step}
                   </span>
-                  <h3 className="text-lg md:text-xl font-bold font-display text-[var(--c-ink)]">{s.title}</h3>
+                  <h3 className="text-lg md:text-xl font-normal font-display text-[var(--c-ink)]">{s.title}</h3>
                   <span className="ml-auto text-[10px] font-mono uppercase tracking-wider text-[var(--c-ink-2)]/70 shrink-0">{s.level}</span>
                 </div>
                 <p className="text-sm text-[var(--c-ink-2)] font-extralight leading-relaxed mb-3">{s.description}</p>
@@ -183,7 +183,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
                           href={t.video.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg border border-indigo-500/20 bg-[var(--accent-1)]/10 text-xs font-bold text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors"
+                          className="flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg border border-indigo-500/20 bg-[var(--accent-1)]/10 text-xs font-semibold text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors"
                         >
                           {t.video.kind === "playlist" ? <ListVideo className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                           {t.name}
@@ -192,7 +192,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
                         <Link
                           key={t.slug}
                           href={`/tools/${t.slug}`}
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-indigo-500/15 bg-[var(--c-surface)]/70 text-xs font-bold text-[var(--c-ink)] hover:border-indigo-400/40 transition-colors"
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-indigo-500/15 bg-[var(--c-surface)]/70 text-xs font-semibold text-[var(--c-ink)] hover:border-indigo-400/40 transition-colors"
                         >
                           {t.icon} {t.name}
                         </Link>

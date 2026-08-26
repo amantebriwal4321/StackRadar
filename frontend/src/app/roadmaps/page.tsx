@@ -69,7 +69,7 @@ export default function RoadmapsIndexPage() {
                 placeholder="Search roadmaps..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 glass rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
+                className="w-full sm:w-64 glass rounded-full py-2 pl-9 pr-4 text-sm transition-all placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function RoadmapsIndexPage() {
             <div className="w-16 h-16 rounded-full bg-muted/60 flex items-center justify-center mb-4">
               <PackageOpen className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-bold mb-2">No Roadmaps Found</h3>
+            <h3 className="text-lg font-normal mb-2">No Roadmaps Found</h3>
             <p className="text-muted-foreground max-w-sm mb-6 pb-6">
               We couldn&apos;t find any learning paths matching &quot;{searchQuery}&quot;. Try adjusting your search.
             </p>

@@ -22,14 +22,14 @@ export default function StatCard({
     <motion.div 
       whileHover={{ y: -5, scale: 1.02 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className={`bg-card p-5 rounded-2xl border border-border/60 text-center glow-hover hover:shadow-lg hover:shadow-primary/5 cursor-default ${hoverColorClass}`}
+      className={`bg-card p-5 rounded-2xl border border-border/60 text-center glow-hover cursor-default ${hoverColorClass}`}
     >
       {icon && (
         <div className={`w-6 h-6 mx-auto mb-3 ${iconColorClass}`}>
           {icon}
         </div>
       )}
-      <div className="text-3xl font-black text-foreground">
+      <div className="text-3xl font-normal text-foreground">
         {number}
       </div>
       <div className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mt-1">

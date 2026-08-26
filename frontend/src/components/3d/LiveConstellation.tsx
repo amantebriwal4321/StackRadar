@@ -292,13 +292,13 @@ function ConstellationScene({
           zIndexRange={[10, 0]}
           style={{ pointerEvents: "none" }}
         >
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--c-surface)]/85 border border-indigo-500/25 backdrop-blur-md whitespace-nowrap shadow-lg shadow-black/40">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--c-surface)]/85 border border-indigo-500/25 backdrop-blur-md whitespace-nowrap">
             <span className="text-sm leading-none">{node.tool.icon}</span>
-            <span className="text-[10px] font-bold text-[var(--c-ink)] leading-none">
+            <span className="text-[10px] font-semibold text-[var(--c-ink)] leading-none">
               {node.tool.name}
             </span>
             <span
-              className="text-[10px] font-mono font-bold leading-none"
+              className="text-[10px] font-mono font-normal leading-none"
               style={{
                 color:
                   node.tool.score >= 75

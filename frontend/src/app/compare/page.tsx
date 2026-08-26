@@ -17,7 +17,9 @@ import {
 
 // Series colors for up to 5 tracked tools — anchored on the indigo accent,
 // distinguishable via the system's own data tokens (no off-brand pink/teal).
-const COMPARE_COLORS = ["#5266eb", "#12B76A", "#B54708", "#F04438", "#8f9cf5"];
+// Iris ramp + neutrals. The score green/amber/red are deliberately absent:
+// as series colours they would imply a momentum reading the series does not have.
+const COMPARE_COLORS = ["#8052ff", "#a488ff", "#6a3fd6", "#c9b8ff", "#bdbdbd"];
 
 export default function ComparePage() {
   const [allTools, setAllTools] = useState<Tool[]>([]);
@@ -156,16 +158,14 @@ export default function ComparePage() {
     <DashboardShell>
       
       {/* Background glow overlay */}
-      <div className="absolute top-0 right-1/4 w-[350px] h-[300px] rounded-full bg-indigo-500/5 blur-[90px] pointer-events-none z-0" />
 
       <div className="space-y-8 relative z-10 pb-16">
         
         {/* Opacity Blurred Header */}
         <header className="p-6 md:p-8 rounded-2xl border border-indigo-500/10 bg-[var(--c-surface)]/85 backdrop-blur-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none" />
           
           <div className="space-y-1">
-            <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest block">
+            <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-widest block">
               SIDE BY SIDE
             </span>
             <h1 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] font-display flex items-center gap-3">
@@ -181,7 +181,7 @@ export default function ComparePage() {
             {selectedSlugs.length >= 2 && (
               <button
                 onClick={copyShareLink}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold transition-all active:scale-95 shadow-md shadow-indigo-500/25"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-semibold transition-colors active:scale-95"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
                 {copied ? "COPIED!" : "SHARE_LINK"}
@@ -203,7 +203,7 @@ export default function ComparePage() {
           
           {/* Selected items list */}
           <div className="flex items-center gap-2.5 flex-wrap min-h-[38px] pb-2 border-b border-indigo-500/5">
-            <span className="text-[10px] font-mono font-bold text-[var(--c-ink-2)]/50 uppercase tracking-widest mr-2">TRACKED:</span>
+            <span className="text-[10px] font-mono font-semibold text-[var(--c-ink-2)]/50 uppercase tracking-widest mr-2">TRACKED:</span>
             {selectedSlugs.length === 0 && (
               <span className="text-xs text-[var(--c-ink-2)]/40 italic">Add technologies using the list index below...</span>
             )}
@@ -214,7 +214,7 @@ export default function ComparePage() {
                 <button
                   key={slug}
                   onClick={() => toggleTool(slug)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-bold border transition-all hover:scale-105"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-normal border transition-all hover:scale-105"
                   style={{
                     borderColor: `${accentColor}40`,
                     color: accentColor,
@@ -230,7 +230,6 @@ export default function ComparePage() {
 
           {/* Search bar inside selector */}
           <div className="relative group max-w-md">
-            <div className="absolute -inset-[1px] bg-gradient-to-r from-indigo-500 to-indigo-500 rounded-xl opacity-10 group-focus-within:opacity-40 transition-opacity duration-300 blur-sm" />
             <div className="relative bg-[var(--c-surface-2)] rounded-xl flex items-center border border-indigo-500/10 px-3">
               <Search className="w-4 h-4 text-slate-500" />
               <input
@@ -238,7 +237,7 @@ export default function ComparePage() {
                 placeholder="Search tools to add..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent border-none py-2.5 px-2 text-xs text-[var(--c-ink)] focus:outline-none placeholder-[var(--c-ink-2)]/50"
+                className="w-full bg-transparent border-none py-2.5 px-2 text-xs text-[var(--c-ink)] placeholder-[var(--c-ink-2)]/50"
               />
             </div>
           </div>
@@ -260,7 +259,7 @@ export default function ComparePage() {
                     disabled={!isSelected && selectedSlugs.length >= 5}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono transition-all border cursor-pointer select-none text-left truncate ${
                       isSelected
-                        ? "bg-indigo-600/15 border-indigo-500 text-[var(--c-ink)] font-bold"
+                        ? "bg-indigo-600/15 border-indigo-500 text-[var(--c-ink)] font-semibold"
                         : "bg-[var(--c-surface)]/50 border-indigo-500/5 text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:border-indigo-500/20 disabled:opacity-20 disabled:cursor-not-allowed"
                     }`}
                   >
@@ -306,7 +305,7 @@ export default function ComparePage() {
                         <div className="flex flex-col items-center gap-1.5 p-2 bg-[var(--c-surface-2)]/50 rounded-xl border border-indigo-500/5 relative">
                           <div className="absolute top-1 right-2 w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
                           <span className="text-3xl select-none">{t.icon}</span>
-                          <span className="font-bold text-sm text-[var(--c-ink)]">{t.name}</span>
+                          <span className="font-semibold text-sm text-[var(--c-ink)]">{t.name}</span>
                           <span className="text-[8px] font-mono text-[var(--c-ink-2)]/60 uppercase">{t.category}</span>
                         </div>
                       </div>
@@ -316,16 +315,16 @@ export default function ComparePage() {
 
                 {/* 2. Momentum Score row */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3 font-mono text-xs font-bold text-[var(--c-ink)]">
+                  <div className="col-span-3 font-mono text-xs font-normal text-[var(--c-ink)]">
                     MOMENTUM SCORE
                   </div>
                   {compareData.map((t) => {
                     const isWinner = t.score === maxMetrics.score;
                     return (
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1.5">
-                        <span className="text-2xl font-black font-mono text-[var(--c-ink)]">{t.score}</span>
+                        <span className="text-2xl font-normal font-mono text-[var(--c-ink)]">{t.score}</span>
                         {isWinner && (
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-mono font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-0.5 shadow-sm">
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-mono font-semibold text-emerald-600 uppercase tracking-widest flex items-center gap-0.5 shadow-sm">
                             <Award className="w-2.5 h-2.5" /> HIGHEST
                           </span>
                         )}
@@ -363,12 +362,12 @@ export default function ComparePage() {
                     const color = t.growth_pct > 0 ? "text-emerald-600" : t.growth_pct < 0 ? "text-rose-600" : "text-[var(--c-ink-2)]";
                     return (
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
-                        <span className={`inline-flex items-center gap-1 font-bold font-mono text-xs ${color}`}>
+                        <span className={`inline-flex items-center gap-1 font-normal font-mono text-xs ${color}`}>
                           <Icon className="w-3.5 h-3.5" />
                           {t.growth_pct >= 0 ? "+" : ""}{t.growth_pct.toFixed(1)}%
                         </span>
                         {isWinner && t.growth_pct > 0 && (
-                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-mono font-bold text-emerald-600">
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-mono font-normal text-emerald-600">
                             FASTEST
                           </span>
                         )}
@@ -394,7 +393,7 @@ export default function ComparePage() {
                           {t.stars >= 1000 ? `${(t.stars / 1000).toFixed(1)}k` : t.stars}
                         </span>
                         {isWinner && (
-                          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[7px] font-mono font-bold text-amber-600">
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[7px] font-mono font-normal text-amber-600">
                             MOST STARS
                           </span>
                         )}
@@ -437,7 +436,7 @@ export default function ComparePage() {
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
                         <span className="font-mono text-xs text-[var(--c-ink)]">{totalMentions} scans</span>
                         {isWinner && (
-                          <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-[7px] font-mono font-bold text-indigo-600">
+                          <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-[7px] font-mono font-normal text-indigo-600">
                             MOST DISCUSSIONS
                           </span>
                         )}
@@ -458,11 +457,11 @@ export default function ComparePage() {
                     const isWinner = t.sentiment_positive === maxMetrics.sentiment_positive;
                     return (
                       <div key={t.slug} className="col-span-2 text-center flex flex-col items-center gap-1">
-                        <span className="text-xs font-mono font-bold text-[var(--c-ink)]">
+                        <span className="text-xs font-mono font-normal text-[var(--c-ink)]">
                           {t.sentiment_label?.toUpperCase()} ({(t.sentiment_positive * 100).toFixed(0)}% pos)
                         </span>
                         {isWinner && (
-                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-mono font-bold text-emerald-600">
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-mono font-normal text-emerald-600">
                             MOST FAVORABLE
                           </span>
                         )}
@@ -480,12 +479,12 @@ export default function ComparePage() {
               <div className="tech-panel p-6 rounded-2xl relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-6">
                   <TrendingUp className="w-5 h-5 text-indigo-600" />
-                  <h2 className="text-lg font-bold font-display">Comparative Score History</h2>
+                  <h2 className="text-lg font-normal font-display">Comparative Score History</h2>
                 </div>
                 
                 <ChartContainer height={300}>
                   <LineChart data={chartData} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(82, 102, 235, 0.05)" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 82, 255, 0.10)" vertical={false} />
                     <XAxis dataKey="date" stroke="#c3c3cc" fontSize={10} tickLine={false} axisLine={false} />
                     <YAxis stroke="#c3c3cc" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} />
                     <Tooltip contentStyle={chartTooltipStyle} itemStyle={chartItemStyle} labelStyle={chartLabelStyle} />
@@ -521,7 +520,7 @@ export default function ComparePage() {
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-3xl select-none">{t.icon}</span>
                       <div>
-                        <h3 className="font-bold text-sm text-[var(--c-ink)] font-display">{t.name} Recommendation</h3>
+                        <h3 className="font-normal text-sm text-[var(--c-ink)] font-display">{t.name} Recommendation</h3>
                         <span className="text-[9px] font-mono text-[var(--c-ink-2)] uppercase">{t.category}</span>
                       </div>
                     </div>
@@ -537,7 +536,7 @@ export default function ComparePage() {
         ) : (
           <div className="text-center py-20 border border-dashed border-indigo-500/10 rounded-2xl bg-[var(--c-surface-2)]/20 glass-panel">
             <GitCompare className="w-14 h-14 text-indigo-600/40 mx-auto mb-4 animate-pulse" />
-            <h3 className="text-base font-bold font-display mb-2">Select Technologies To Compare</h3>
+            <h3 className="text-base font-normal font-display mb-2">Select Technologies To Compare</h3>
             <p className="text-xs text-[var(--c-ink-2)] max-w-sm mx-auto leading-relaxed font-extralight">
               Add at least 2 technologies from the scanner selection above to compile details side-by-side.
             </p>

@@ -40,7 +40,7 @@ function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: bool
     >
       <div className="relative aspect-video bg-[var(--c-surface-2)] overflow-hidden">
         {topPick && (
-          <span className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-[var(--accent-1)] text-[10px] font-mono font-bold text-white uppercase tracking-widest flex items-center gap-1 shadow-lg">
+          <span className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-[var(--accent-1)] text-[10px] font-mono font-semibold text-white uppercase tracking-widest flex items-center gap-1">
             <Star className="w-3 h-3 fill-current" /> Top pick
           </span>
         )}
@@ -62,7 +62,7 @@ function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: bool
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
 
-        <span className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-mono font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+        <span className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-mono font-semibold text-white uppercase tracking-wider flex items-center gap-1.5">
           {r.kind === "playlist"
             ? <><ListVideo className="w-3 h-3" /> {r.item_count} videos</>
             : r.kind === "search"
@@ -71,20 +71,20 @@ function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: bool
         </span>
 
         {r.language === "hi" && (
-          <span className="absolute top-2 right-2 px-2 py-1 rounded-md bg-[var(--accent-1)] text-[10px] font-mono font-bold text-white uppercase tracking-wider">
+          <span className="absolute top-2 right-2 px-2 py-1 rounded-md bg-[var(--accent-1)] text-[10px] font-mono font-semibold text-white uppercase tracking-wider">
             हिन्दी
           </span>
         )}
 
         {r.duration_s ? (
-          <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/75 text-[10px] font-mono font-bold text-white tabular-nums">
+          <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/75 text-[10px] font-mono font-normal text-white tabular-nums">
             {duration(r.duration_s)}
           </span>
         ) : null}
       </div>
 
       <div className="p-4 flex flex-col gap-2 flex-1">
-        <h4 className="text-sm font-bold text-[var(--c-ink)] leading-snug line-clamp-2 group-hover:text-indigo-600 transition-colors">
+        <h4 className="text-sm font-normal text-[var(--c-ink)] leading-snug line-clamp-2 group-hover:text-indigo-600 transition-colors">
           {r.title}
         </h4>
         {r.channel && (
@@ -178,7 +178,7 @@ export default function LearningResources({ slug }: { slug: string }) {
         {/* ── Header ── */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5">
-            <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
+            <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5" /> Learn {data.name}
             </span>
             <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
@@ -191,7 +191,7 @@ export default function LearningResources({ slug }: { slug: string }) {
                   ? "Hand-picked flagship courses, each checked to be live right now. Add a YouTube API key to auto-rank the full catalog."
                   : "Scoped searches and reference platforms. Add a YouTube API key to rank actual videos here."}
               {data.latest_version && (
-                <> Currently on <span className="font-mono font-bold text-[var(--c-ink)]">{data.latest_version}</span>.</>
+                <> Currently on <span className="font-mono font-normal text-[var(--c-ink)]">{data.latest_version}</span>.</>
               )}
             </p>
           </div>
@@ -204,7 +204,7 @@ export default function LearningResources({ slug }: { slug: string }) {
               <button
                 key={l}
                 onClick={() => setLang(l)}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                   lang === l
                     ? "bg-[var(--accent-1)] text-white"
                     : "text-[var(--c-ink-2)] hover:bg-[var(--c-surface-2)]"
@@ -219,7 +219,7 @@ export default function LearningResources({ slug }: { slug: string }) {
         {/* ── Videos ── */}
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-4">
-            <h4 className="text-[11px] font-mono font-bold text-[var(--c-ink-2)] uppercase tracking-widest">
+            <h4 className="text-[11px] font-mono font-semibold text-[var(--c-ink-2)] uppercase tracking-widest">
               {data.videos_source === "youtube_api"
                 ? "Top-ranked videos & playlists"
                 : data.videos_source === "curated"
@@ -243,7 +243,7 @@ export default function LearningResources({ slug }: { slug: string }) {
 
         {/* ── Platforms ── */}
         <div className="space-y-3">
-          <h4 className="text-[11px] font-mono font-bold text-[var(--c-ink-2)] uppercase tracking-widest">
+          <h4 className="text-[11px] font-mono font-semibold text-[var(--c-ink-2)] uppercase tracking-widest">
             Beyond video
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -257,11 +257,11 @@ export default function LearningResources({ slug }: { slug: string }) {
               >
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-bold text-indigo-600 uppercase tracking-wider">
+                    <span className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-wider">
                       {p.channel}
                     </span>
                   </div>
-                  <p className="text-sm font-bold text-[var(--c-ink)] leading-snug group-hover:text-indigo-600 transition-colors">
+                  <p className="text-sm font-semibold text-[var(--c-ink)] leading-snug group-hover:text-indigo-600 transition-colors">
                     {p.title}
                   </p>
                   {p.blurb && (
