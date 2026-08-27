@@ -44,7 +44,7 @@ export default function AboutPage() {
   return (
     <DashboardShell fullWidth>
       {/* ══════════════ HERO ══════════════ */}
-      <section className="ch-cream relative grid lg:grid-cols-[1.1fr_.9fr] gap-12 lg:gap-16 items-center rounded-[10px] px-6 pt-10 pb-16 md:px-10 md:pt-14">
+      <section className="ch-cream relative grid lg:grid-cols-[1.1fr_.9fr] gap-12 lg:gap-16 items-center rounded-[50px] px-6 pt-10 pb-16 md:px-10 md:pt-14">
         {/* techy HUD grid backdrop */}
         <div
           className="absolute inset-0 -z-10 hud-grid opacity-70 [mask-image:radial-gradient(ellipse_at_35%_40%,black,transparent_78%)] pointer-events-none"

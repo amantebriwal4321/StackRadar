@@ -9,19 +9,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { fetchOverview, type Overview } from "@/data/trends";
 
-/* App chrome, not a marketing bar.
+/* A floating pill, which is the reference's signature piece of chrome:
+ * "Float the navigation as a single white pill bar with 50px radius ... rather
+ * than as a traditional rectangular header bar."
  *
- * The landing runs the "Live surface" grammar, which forbids the
- * wordmark-plus-CTA header outright: it is the single element that most makes
- * a product page read as a template. What replaces it is the chrome the real
- * instrument would have — a tab strip over the surfaces, and a status line
- * carrying what the scraper is actually doing right now.
+ * White on cream IS the elevation. No shadow, per the extracted system, whose
+ * shadow set is empty and whose don'ts forbid shadows outright. Floating with
+ * margin also means it never sits flush against content, so it needs no
+ * scroll-triggered background: the fill is constant.
  *
- * The status figures come from /overview and are real. If they cannot be
- * fetched the line simply does not render; it never shows a placeholder.
- *
- * Dala still governs the look: no fill, no border, no backdrop blur at any
- * scroll position. */
+ * Inside it, a tab strip over the surfaces and a status line carrying what the
+ * scraper is actually doing. Those figures come from /overview and are real;
+ * if the fetch fails the line simply does not render rather than showing a
+ * placeholder or a zero. */
 
 const navLinks = [
   { href: "/", label: "home" },
@@ -72,8 +72,8 @@ export default function Navbar() {
     };
   }, []);
 
-  // Scroll → drive the reading-progress bar. The nav itself never gains a
-  // surface in Dala, so there is no `scrolled` fill state.
+  // Scroll → drive the reading-progress hairline inside the pill. There is no
+  // `scrolled` fill state: a floating pill is opaque at every position.
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
@@ -107,14 +107,10 @@ export default function Navbar() {
   }, [mobileOpen]);
 
   return (
-    <header
-      className={`fixed top-0 inset-x-0 z-50 w-full transition-colors duration-300 ${
-        scrollProgress > 0.001
-          ? "bg-[var(--c-ground)]/92 backdrop-blur-md"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="relative flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
+    <header className="fixed inset-x-0 top-3 z-50 w-full px-3 md:top-5 md:px-6">
+      {/* The pill itself. White on cream is the whole elevation story here:
+          no shadow, per the reference's empty shadow set. */}
+      <div className="relative mx-auto flex h-16 max-w-[1400px] items-center justify-between rounded-[50px] border border-[var(--c-border)] bg-[var(--c-surface)] px-5 md:px-7">
         {/* ─── Mark ───
             Kept from Dala: flat geometric primitives on a grid, gradient-filled,
             no container badge. The quarter-circles are radar sweeps and the
@@ -244,14 +240,14 @@ export default function Navbar() {
             {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
-      </div>
 
-      {/* Reading progress across the bottom of the chrome. */}
-      <div className="absolute inset-x-0 bottom-0 h-px overflow-hidden">
-        <div
-          className="h-full bg-[var(--accent-1)] transition-[width] duration-150 ease-out"
-          style={{ width: `${scrollProgress * 100}%` }}
-        />
+        {/* Reading progress, inset so it follows the pill's curve. */}
+        <div className="pointer-events-none absolute inset-x-12 bottom-[6px] h-px overflow-hidden rounded-full">
+          <div
+            className="h-full bg-[var(--accent-green)] transition-[width] duration-150 ease-out"
+            style={{ width: `${scrollProgress * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* ─── Mobile overlay ─── */}
@@ -262,7 +258,7 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="fixed inset-0 top-16 z-40 bg-[var(--c-ground)] flex flex-col justify-between p-6 md:hidden"
+            className="fixed inset-0 top-24 z-40 bg-[var(--c-ground)] flex flex-col justify-between p-6 md:hidden"
           >
             <div className="flex flex-col space-y-6 pt-8">
               {navLinks.map((link) => {

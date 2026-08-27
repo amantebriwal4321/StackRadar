@@ -22,7 +22,7 @@ export default function ChOrder({ roadmaps }: { roadmaps: Roadmap[] }) {
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <h2
             id="ch-order-h"
-            className="max-w-[16ch] text-[clamp(2rem,4.4vw,3.28rem)] font-medium leading-[1.04] tracking-[-0.04em] text-[var(--c-ink)]"
+            className="max-w-[16ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
             data-sc-in
             data-sc-reveal="up"
           >
@@ -46,7 +46,7 @@ export default function ChOrder({ roadmaps }: { roadmaps: Roadmap[] }) {
             <li key={r.slug} data-sc-in style={{ transitionDelay: `${i * 55}ms` }}>
               <Link
                 href={`/roadmap/${r.slug}`}
-                className="block h-full rounded-[10px] p-7 transition-transform duration-300 hover:-translate-y-1"
+                className="block h-full rounded-[50px] p-7 transition-transform duration-300 hover:-translate-y-1"
                 style={{ background: CARD_TINTS[i % CARD_TINTS.length] }}
               >
                 <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#2C2E2A]/70 tabular-nums">

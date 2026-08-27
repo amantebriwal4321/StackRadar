@@ -65,7 +65,7 @@ export default function ChMeasure({
           <div>
             <h2
               id="ch-measure-h"
-              className="max-w-[15ch] text-[clamp(2rem,4.4vw,3.28rem)] font-medium leading-[1.04] tracking-[-0.04em] text-[var(--c-ink)]"
+              className="max-w-[15ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
               data-sc-in
             >
               So we measure it instead.

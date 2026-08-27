@@ -21,7 +21,7 @@ export default function ChGuess({ tools }: { tools: Tool[] }) {
         <div data-sc-reveal="up" data-sc-in>
           <h2
             id="ch-guess-h"
-            className="max-w-[16ch] text-[clamp(2rem,4.4vw,3.28rem)] font-medium leading-[1.04] tracking-[-0.04em] text-[var(--c-ink)]"
+            className="max-w-[16ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
           >
             Everyone is guessing. Including the people telling you what to
             learn.

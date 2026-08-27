@@ -31,7 +31,7 @@ export default function ChTitle({
 
         <h1
           id="ch-title-h"
-          className="mt-6 max-w-[15ch] text-[clamp(3rem,8.6vw,7.75rem)] font-medium leading-[0.98] tracking-[-0.04em] text-[var(--c-ink)]"
+          className="mt-6 max-w-[15ch] text-[clamp(3rem,8.6vw,8.75rem)] font-medium leading-[0.95] tracking-[-0.06em] text-[var(--c-ink)]"
           data-sc-in
         >
           Stop guessing what to learn next.

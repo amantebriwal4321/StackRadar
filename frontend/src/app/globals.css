@@ -121,7 +121,8 @@
 :root {
   /* Dala radii: 24px on panels (--radius-card), pills for controls. */
   --radius: 0.75rem;
-  --radius-card: 10px;   /* measured: mindmarket panels are 10px */
+  --radius-card: 50px;   /* measured: cards, buttons and nav are all 50px.
+                            10px is their INLINE-CHIP radius, not their card one. */
   --radius-pill: 999px;
   --background: var(--c-ground);
   --foreground: #2C2E2A;
@@ -505,7 +506,9 @@ body {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--radius-card);
-  box-shadow: 0 1px 2px rgba(44, 46, 42, 0.04), 0 8px 24px -12px rgba(44, 46, 42, 0.10);
+  /* No shadow, anywhere. Depth is the cream-to-white surface stack plus the
+     50px radius; the reference's extracted shadow list is empty. */
+  box-shadow: none;
   transition: border-color 0.5s var(--ease-colour),
               box-shadow 0.5s var(--ease-colour),
               background-color 0.5s var(--ease-colour),
@@ -515,7 +518,6 @@ body {
 .tech-panel-interactive { cursor: pointer; }
 .tech-panel-interactive:hover {
   border-color: color-mix(in srgb, var(--c-ink) 28%, transparent);
-  box-shadow: 0 2px 4px rgba(44, 46, 42, 0.06), 0 16px 32px -16px rgba(44, 46, 42, 0.16);
   transform: translateY(-3px);
 }
 
@@ -944,9 +946,9 @@ body,
    hierarchy comes from scale and tracking, never weight — with -0.04em
    above 42px. Responsive floors so phones don't get 112px headlines.
    ───────────────────────────────────────────── */
-.t-display   { font-size: clamp(2.75rem, 8vw, 7.75rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; }
-.t-section-lg{ font-size: clamp(2.25rem, 6vw, 3.28rem);  font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; }
-.t-cta       { font-size: clamp(1.875rem, 4.5vw, 2.5rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; }
+.t-display   { font-size: clamp(2.75rem, 8vw, 8.75rem); font-weight: 500; letter-spacing: -0.06em; line-height: 1.1; }
+.t-section-lg{ font-size: clamp(2.25rem, 6vw, 5.06rem);  font-weight: 500; letter-spacing: -0.06em; line-height: 1.1; }
+.t-cta       { font-size: clamp(1.875rem, 4.5vw, 3.31rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; }
 .t-statement { font-size: clamp(1.75rem, 4vw, 1.85rem);  font-weight: 500; letter-spacing: -0.04em; line-height: 1.2; }
 .t-narrative { font-size: clamp(1.35rem, 3vw, 1.26rem);  font-weight: 500; letter-spacing: -0.02em; line-height: 1.35; }
 
@@ -1120,10 +1122,10 @@ html.dark .ch-beige { background: var(--c-surface-2); }
 .stack-card {
   position: sticky;
   top: calc(18vh + var(--i, 0) * 14px);
-  border-radius: 10px;
+  border-radius: 50px;
   background: var(--c-surface);
   border: 1px solid var(--c-border);
-  box-shadow: 0 1px 2px rgba(44, 46, 42, 0.04), 0 18px 40px -20px rgba(44, 46, 42, 0.22);
+  box-shadow: none;
 }
 
 /* The reference's preloader signature: a cream curtain whose BOTTOM corners are
@@ -1132,19 +1134,21 @@ html.dark .ch-beige { background: var(--c-surface-2); }
 .curtain { clip-path: inset(0 round 0 0 50px 50px); }
 
 /* Panels framing product media, the way the reference frames photography. */
+/* Illustration containers take the deeper 63.75px in the reference; product
+   media reads as the same class of object here. */
 .media-frame {
-  border-radius: 10px;
+  border-radius: 63.75px;
   overflow: hidden;
   background: var(--c-surface-2);
   border: 1px solid var(--c-border);
-  box-shadow: 0 2px 4px rgba(44, 46, 42, 0.05), 0 24px 48px -24px rgba(44, 46, 42, 0.24);
+  box-shadow: none;
 }
 
 /* An asset we do not have yet. Deliberately visible and labelled, not a grey
    box: it tells the owner what to drop in and where. */
 .asset-slot {
   border: 2px dashed color-mix(in srgb, var(--c-ink) 26%, transparent);
-  border-radius: 10px;
+  border-radius: 50px;
   background: color-mix(in srgb, var(--accent-yellow) 12%, transparent);
 }
 

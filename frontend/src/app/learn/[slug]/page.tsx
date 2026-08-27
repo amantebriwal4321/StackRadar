@@ -164,7 +164,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
           </h2>
           <ol className="space-y-5">
             {steps.map((s) => (
-              <li key={s.step} className="tech-panel rounded-[10px] p-5 md:p-6">
+              <li key={s.step} className="tech-panel rounded-[50px] p-5 md:p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-600 font-mono font-normal text-sm flex items-center justify-center shrink-0">
                     {s.step}
@@ -214,7 +214,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
         </section>
 
         {/* Closing CTA */}
-        <section className="ch-beige rounded-[10px] p-8 md:p-12 text-center">
+        <section className="ch-beige rounded-[50px] p-8 md:p-12 text-center">
           <h2 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)] mb-2">
             Ready to start learning {subj}?
           </h2>

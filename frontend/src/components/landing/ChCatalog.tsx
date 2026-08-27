@@ -89,7 +89,7 @@ export default function ChCatalog({
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <h2
               id="ch-catalog-h"
-              className="max-w-[18ch] text-[clamp(2rem,4.4vw,3.28rem)] font-medium leading-[1.04] tracking-[-0.04em] text-[var(--c-ink)]"
+              className="max-w-[18ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
               data-sc-cue="0 1 0 0.1"
             >
               Pick up what you are actually building with.
@@ -117,7 +117,7 @@ export default function ChCatalog({
                   <button
                     onClick={() => onToggle(t.slug)}
                     aria-pressed={on}
-                    className={`group flex w-full items-center gap-3 rounded-[10px] border p-3 text-left transition-colors duration-200 ${
+                    className={`group flex w-full items-center gap-3 rounded-[50px] border p-3 text-left transition-colors duration-200 ${
                       on
                         ? "border-transparent bg-[#8ED462] text-[#2C2E2A]"
                         : "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-ink)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
