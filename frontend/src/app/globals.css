@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* scrollcraft's scroll engine. Imported UNMODIFIED and imported EARLY on
+   purpose: it carries html/body/* rules of its own, and everything Dala says
+   below has to win over them. Theme it by remapping --sc-* to Dala tokens
+   (see "scrollcraft ← Dala" near the end of this file), never by editing
+   lib/scrollcraft/scrollcraft.css. */
+@import "../lib/scrollcraft/scrollcraft.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -1029,3 +1035,48 @@ body,
   transform: scale(calc(1 - (var(--media-zoom, 1.06) - 1) * (1 - var(--expand))));
   transform-origin: center top;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   scrollcraft ← Dala
+   ───────────────────────────────────────────────────────────────────────────
+   The scroll engine ships its own palette and type scale. StackRadar keeps
+   Dala, so every --sc-* token is remapped onto a Dala token here rather than
+   the engine file being touched. Read the engine's values as defaults that
+   this block overrides; if the engine is ever updated, nothing here breaks.
+
+   Dala is a single-typeface system, so display / text / mono all resolve to
+   the same next/font faces the rest of the app uses.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sc-canvas:      var(--c-ground);
+  --sc-surface:     var(--c-surface);
+  --sc-ink:         var(--c-ink);
+  --sc-ink-soft:    var(--c-ink-2);
+  --sc-accent:      var(--accent-1);
+  --sc-accent-ink:  #ffffff;
+
+  --sc-font-display: var(--font-display);
+  --sc-font-text:    var(--font-sans);
+  --sc-font-mono:    var(--font-mono);
+
+  /* Dala's defining rule: hierarchy from scale and tracking, never weight.
+     Display sizes above 42px carry -0.04em. */
+  --sc-track-tight: -0.04em;
+  --sc-track-snug:  -0.03em;
+
+  /* ~26rem body column, matching .measure. */
+  --sc-measure: 26rem;
+}
+
+/* The engine sets html{scroll-behavior:smooth}. Lenis drives scrolling on the
+   ten non-landing routes and native smooth scrolling fights it, so this is
+   forced back to auto. The landing does not need it: scrollcraft reads
+   scrollY directly, and its own focus handler already jumps with
+   behavior:'instant' precisely because it cannot rely on this. */
+html { scroll-behavior: auto; }
+
+/* Dala has NO card surface, and the engine's raised-panel default would
+   reintroduce one. Acts sit on the void like every other StackRadar surface. */
+[data-sc-act] .sc-panel,
+[data-sc-act] [data-sc-stage] { background: transparent; }
