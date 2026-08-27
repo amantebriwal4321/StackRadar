@@ -40,7 +40,7 @@ function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: bool
     >
       <div className="relative aspect-video bg-[var(--c-surface-2)] overflow-hidden">
         {topPick && (
-          <span className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-[var(--accent-1)] text-[10px] font-mono font-semibold text-white uppercase tracking-widest flex items-center gap-1">
+          <span className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-[var(--accent-1)] text-[10px] font-mono font-semibold text-[var(--c-ground)] uppercase tracking-widest flex items-center gap-1">
             <Star className="w-3 h-3 fill-current" /> Top pick
           </span>
         )}
@@ -71,7 +71,7 @@ function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: bool
         </span>
 
         {r.language === "hi" && (
-          <span className="absolute top-2 right-2 px-2 py-1 rounded-md bg-[var(--accent-1)] text-[10px] font-mono font-semibold text-white uppercase tracking-wider">
+          <span className="absolute top-2 right-2 px-2 py-1 rounded-md bg-[var(--accent-1)] text-[10px] font-mono font-semibold text-[var(--c-ground)] uppercase tracking-wider">
             हिन्दी
           </span>
         )}
@@ -108,7 +108,7 @@ function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: bool
         )}
 
         {isSearch && r.blurb && (
-          <p className="text-[11px] text-[var(--c-ink-2)] font-extralight leading-relaxed">{r.blurb}</p>
+          <p className="text-[11px] text-[var(--c-ink-2)] font-medium leading-relaxed">{r.blurb}</p>
         )}
 
         {/* The differentiator: we know the tool's live release data, so we can
@@ -163,7 +163,7 @@ export default function LearningResources({ slug }: { slug: string }) {
   if (failed || !data) {
     return (
       <div className="tech-panel rounded-2xl p-6 md:p-8">
-        <p className="text-sm text-[var(--c-ink-2)] font-extralight">
+        <p className="text-sm text-[var(--c-ink-2)] font-medium">
           Couldn&apos;t load learning resources right now.
         </p>
       </div>
@@ -184,7 +184,7 @@ export default function LearningResources({ slug }: { slug: string }) {
             <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
               Where to actually learn this
             </h3>
-            <p className="text-sm text-[var(--c-ink-2)] font-extralight max-w-xl">
+            <p className="text-sm text-[var(--c-ink-2)] font-medium max-w-xl">
               {data.videos_source === "youtube_api"
                 ? "Ranked on real view counts, like ratio, recency and course depth — not on what YouTube wants to show you."
                 : data.videos_source === "curated"
@@ -206,7 +206,7 @@ export default function LearningResources({ slug }: { slug: string }) {
                 onClick={() => setLang(l)}
                 className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                   lang === l
-                    ? "bg-[var(--accent-1)] text-white"
+                    ? "bg-[var(--accent-1)] text-[var(--c-ground)]"
                     : "text-[var(--c-ink-2)] hover:bg-[var(--c-surface-2)]"
                 }`}
               >
@@ -265,7 +265,7 @@ export default function LearningResources({ slug }: { slug: string }) {
                     {p.title}
                   </p>
                   {p.blurb && (
-                    <p className="text-xs text-[var(--c-ink-2)] font-extralight leading-relaxed">{p.blurb}</p>
+                    <p className="text-xs text-[var(--c-ink-2)] font-medium leading-relaxed">{p.blurb}</p>
                   )}
                 </div>
                 <ExternalLink className="w-4 h-4 text-[var(--c-ink-2)] shrink-0 mt-0.5 group-hover:text-indigo-600 transition-colors" />

@@ -190,7 +190,7 @@ export default function RoadmapPage() {
               <span className="gradient-text">{roadmap.title}</span>
             </h1>
 
-            <p className="text-base md:text-lg text-[var(--c-ink-2)] leading-relaxed max-w-2xl mx-auto font-extralight mb-7">
+            <p className="text-base md:text-lg text-[var(--c-ink-2)] leading-relaxed max-w-2xl mx-auto font-medium mb-7">
               {roadmap.description || "Guided, sequenced steps built from live technology momentum — the right things to learn, in the right order."}
             </p>
 
@@ -255,7 +255,7 @@ export default function RoadmapPage() {
                       <p className="text-[10px] font-mono font-semibold text-indigo-600 uppercase tracking-wider mb-1.5">
                         New here? How this works
                       </p>
-                      <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-extralight list-decimal list-inside marker:text-indigo-600 marker:font-semibold">
+                      <ol className="space-y-1 text-[11px] text-[var(--c-ink-2)] font-medium list-decimal list-inside marker:text-indigo-600 marker:font-semibold">
                         <li>Begin with the highlighted <span className="font-semibold text-[var(--c-ink)]">Next up</span> module below.</li>
                         <li>Pick a way to learn it — <span className="font-semibold text-[var(--c-ink)]">Watch a video</span> or <span className="font-semibold text-[var(--c-ink)]">Read the guide</span>.</li>
                         <li>Come back and <span className="font-semibold text-[var(--c-ink)]">Mark as done</span> — a segment lights up and your streak grows.</li>
@@ -414,7 +414,7 @@ export default function RoadmapPage() {
                 >
                   <div className="space-y-3 pt-3">
 
-                  <p className="text-xs md:text-sm text-[var(--c-ink-2)] leading-relaxed font-extralight font-mono">
+                  <p className="text-xs md:text-sm text-[var(--c-ink-2)] leading-relaxed font-medium font-mono">
                     {step.description}
                   </p>
 
@@ -509,7 +509,7 @@ export default function RoadmapPage() {
                                     ? `Our top pick: ${tool.video.title}${tool.video.channel ? ` — ${tool.video.channel}` : ""}`
                                     : `Our top ${tool.name} ${tool.video.kind === "playlist" ? "series" : "course"}`
                                 }
-                                className="flex items-center gap-1 px-2.5 border-l border-indigo-500/15 bg-[var(--accent-1)]/10 text-[10px] font-mono font-normal text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-white transition-colors whitespace-nowrap"
+                                className="flex items-center gap-1 px-2.5 border-l border-indigo-500/15 bg-[var(--accent-1)]/10 text-[10px] font-mono font-normal text-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:text-[var(--c-ground)] transition-colors whitespace-nowrap"
                               >
                                 {tool.video.kind === "playlist"
                                   ? <ListVideo className="w-3.5 h-3.5" />

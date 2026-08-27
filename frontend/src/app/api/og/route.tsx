@@ -12,8 +12,8 @@ export const runtime = "nodejs";
 // Dala palette, duplicated by hand: this route renders server-side with
 // no CSS, so it cannot read the design tokens in globals.css. Keep these two
 // in step with --accent-1 / --color-indigo-400 by hand when the palette moves.
-const COBALT = "#8052ff";        // Electric Iris
-const COBALT_LIGHT = "#a488ff";  // Iris light
+const COBALT = "#2C2E2A";        // Electric Iris
+const COBALT_LIGHT = "#FF705D";  // Iris light
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -31,7 +31,7 @@ export async function GET(req: Request) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px",
-          background: "#000000",
+          background: "#F5F1E4",
           color: "#FFFFFF",
           fontFamily: "sans-serif",
         }}

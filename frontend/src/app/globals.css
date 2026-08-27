@@ -121,55 +121,67 @@
 :root {
   /* Dala radii: 24px on panels (--radius-card), pills for controls. */
   --radius: 0.75rem;
-  --radius-card: 24px;
+  --radius-card: 50px;   /* measured: cards, buttons and nav are all 50px.
+                            10px is their INLINE-CHIP radius, not their card one. */
   --radius-pill: 999px;
   --background: var(--c-ground);
-  --foreground: #171721;
+  --foreground: #2C2E2A;
   --card: #FFFFFF;
-  --card-foreground: #171721;
+  --card-foreground: #2C2E2A;
   --popover: #FFFFFF;
-  --popover-foreground: #171721;
-  --primary: #8052ff;
+  --popover-foreground: #2C2E2A;
+  --primary: #2C2E2A;
   --primary-foreground: #FFFFFF;
   --secondary: #ffffff;
-  --secondary-foreground: #171721;
-  --muted: #f2f2f2;
-  --muted-foreground: #5c5c6b;
-  --accent: #8052ff;
-  --accent-foreground: #FFFFFF;
+  --secondary-foreground: #2C2E2A;
+  --muted: #E0DBCE;
+  --muted-foreground: #80827F;
+  --accent: #FF705D;
+  --accent-foreground: #2C2E2A;
   --destructive: #F04438;
-  --border: rgba(0, 0, 0, 0.12);
-  --input: rgba(0, 0, 0, 0.12);
-  --ring: #8052ff;
+  --border: rgba(44, 46, 42, 0.14);
+  --input: rgba(44, 46, 42, 0.14);
+  --ring: #2C2E2A;
 
-  /* ── PALETTE: Dala — the void + one electric accent ── */
-  --accent-1: #8052ff;   /* Electric Iris — filled actions only */
-  --accent-2: #ffb829;   /* Saffron Spark — highlight text/links */
-  --accent-3: #6a3fd6;   /* pressed */
-  --ground: #f4f5f9;
+  /* ── PALETTE: warm editorial, measured off mindmarket.com ──
+     Cream ground, charcoal ink, four playful accents. This is now the DEFAULT
+     look; html.dark below is the opt-in. Replaces "Dala" (pure black, one
+     accent, no card surface, weight 400/200), which is retired. */
+  --accent-1: #2C2E2A;   /* Charcoal — filled actions. The primary button. */
+  --accent-2: #FF705D;   /* Coral — highlight, links, the warm punctuation */
+  --accent-3: #1A3300;   /* Deep green — pressed */
+  --accent-green: #8ED462;
+  --accent-coral: #FF705D;
+  --accent-yellow: #F5E211;
+  --accent-blue: #2BA0FF;
+  --ground: #F5F1E4;
 
-  /* Remap Tailwind's whole indigo scale to Iris so every `*-indigo-*` follows */
-  --color-indigo-400: #a488ff;
-  --color-indigo-500: #8052ff;
-  --color-indigo-600: #8052ff;
-  --color-indigo-700: #6a3fd6;
+  /* Tailwind's indigo scale is remapped so the ~350 existing *-indigo-*
+     utilities follow the new accent instead of being hunted down one by one. */
+  --color-indigo-400: #4a4d47;
+  --color-indigo-500: #2C2E2A;
+  --color-indigo-600: #2C2E2A;
+  --color-indigo-700: #1a1c19;
 
-  /* Themeable surface/text vars — flip under html.dark. (LIGHT values here.) */
-  /* Dala has NO scroll-driven colour: every section is one flat canvas, so both
-     endpoints are deliberately identical. The pair is kept only so --c-ground
-     keeps a single named source; there is no interpolation and no JS reading it. */
-  --canvas-a: #ffffff;             /* page canvas (inverted void) */
-  --canvas-b: #ffffff;             /* equal to canvas-a by design */
+  /* Panels have a REAL surface again: white or deeper beige on cream, 10px.
+     The Dala "no card surface" rule and the route-data hairline exception it
+     needed are both gone. */
+  --canvas-a: #F5F1E4;             /* cream — the page ground */
+  --canvas-b: #F5F1E4;
   --c-ground: var(--canvas-a);
-  /* There is no card SURFACE in Dala — panels are the canvas. Separation
-     comes from whitespace, and on data routes from a hairline border. */
-  --c-surface: #ffffff;
-  --c-surface-2: #ffffff;
-  --c-ink: #000000;                /* primary text */
-  --c-ink-2: #6b6b6b;              /* secondary text */
-  --c-ink-3: #8a8a8a;              /* tertiary / caption */
-  --c-border: rgba(0, 0, 0, 0.12); /* hairline (data routes only) */
-  --c-scrim: #000000;            /* full-bleed void chrome (preloader panels) — black in both themes */
+  --c-surface: #FFFFFF;            /* raised panel */
+  --c-surface-2: #E0DBCE;          /* deeper beige panel */
+  --c-ink: #2C2E2A;                /* charcoal — primary text */
+  --c-ink-2: #6A6C64;              /* secondary. The reference uses #80827F,
+                                      but that is 3.43:1 on this cream and
+                                      only 3.95:1 on their white, so it fails
+                                      the 4.5 floor either way. Darkened to
+                                      4.75:1 rather than copying the defect. */
+  --c-ink-3: #5E605A;              /* tertiary / caption. #B6B6B6 (the
+                                      reference's lightest grey) measures 1.79:1
+                                      on cream: that grey is for rules, not text. */
+  --c-border: rgba(44, 46, 42, 0.14);
+  --c-scrim: #2C2E2A;
 }
 
 /* ══════════════════════════════════════════════
@@ -180,50 +192,54 @@
    a first-time visitor sees. Data colours stay constant.
    ══════════════════════════════════════════════ */
 html.dark {
-  /* ── DALA, the default look: the void ── */
-  --canvas-a: #000000;             /* pure black — never dark grey */
-  --canvas-b: #000000;             /* no section colour shift in Dala */
+  /* ── The OPT-IN dark theme. Warm near-black, not the old pure #000000:
+     the light theme is now the default look and dark is its inversion, so it
+     carries the same warmth rather than being a separate design. ── */
+  --canvas-a: #1B1917;             /* warm near-black */
+  --canvas-b: #1B1917;
   --c-ground: var(--canvas-a);
-  /* Panels ARE the void. No fill, no shadow; data routes add a hairline. */
-  --c-surface: #000000;
-  --c-surface-2: #000000;
-  --c-ink: #ffffff;                /* Bone White — the only typographic colour */
-  --c-ink-2: #9a9a9a;              /* Ash Gray */
-  --c-ink-3: #bdbdbd;              /* Silver Mist — quietest readable grey */
-  --c-border: rgba(255, 255, 255, 0.12);
-  --ground: #000000;
+  --c-surface: #242220;            /* raised panel — dark mode HAS surfaces now */
+  --c-surface-2: #2F2C29;
+  --c-ink: #F7F4EC;                /* warm bone, not pure white */
+  --c-ink-2: #A3A099;
+  --c-ink-3: #8E8B83;              /* 3.92:1 at #7A7770 was under the 4.5 floor */
+  --c-border: rgba(247, 244, 236, 0.14);
+  --ground: #1B1917;
 
-  /* Electric Iris is a BUTTON/accent colour, never a large surface. */
-  --accent-1: #8052ff;
-  --accent-2: #ffb829;             /* Saffron Spark — highlight, not a gradient partner */
-  --accent-3: #6a3fd6;
-  --color-indigo-400: #a488ff;
-  --color-indigo-500: #8052ff;
-  --color-indigo-600: #8052ff;
-  --color-indigo-700: #6a3fd6;
-  --color-accent-primary: #8052ff;
-  --color-accent-glow: #ffb829;
-  --color-accent-deep: #6a3fd6;
-  --color-text-accent: #8052ff;
+  --accent-1: #F5F1E4;             /* cream fill on dark: the inverted button */
+  --accent-2: #FF705D;             /* coral holds in both themes */
+  --accent-3: #E0DBCE;
+  --accent-green: #8ED462;
+  --accent-coral: #FF705D;
+  --accent-yellow: #F5E211;
+  --accent-blue: #2BA0FF;
+  --color-indigo-400: #FFFFFF;
+  --color-indigo-500: #F5F1E4;
+  --color-indigo-600: #F5F1E4;
+  --color-indigo-700: #E0DBCE;
+  --color-accent-primary: #F5F1E4;
+  --color-accent-glow: #FF705D;
+  --color-accent-deep: #E0DBCE;
+  --color-text-accent: #FF705D;
 
   /* design tokens */
-  --color-ink: #ffffff;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #9a9a9a;
-  --color-text-faint: #6b6b6b;
-  --color-border-subtle: rgba(255, 255, 255, 0.12);
+  --color-ink: #F7F4EC;
+  --color-text-primary: #F7F4EC;
+  --color-text-secondary: #A3A099;
+  --color-text-faint: #7A7770;
+  --color-border-subtle: rgba(247, 244, 236, 0.14);
 
-  --foreground: #ffffff;
-  --card: #000000;
-  --card-foreground: #ffffff;
-  --popover: #000000;
-  --popover-foreground: #ffffff;
-  --primary: #8052ff;
-  --secondary: #000000;
-  --secondary-foreground: #ffffff;
-  --muted: #0a0a0a;
-  --muted-foreground: #9a9a9a;
-  --accent: #8052ff;
+  --foreground: #F7F4EC;
+  --card: #242220;
+  --card-foreground: #F7F4EC;
+  --popover: #242220;
+  --popover-foreground: #F7F4EC;
+  --primary: #F5F1E4;
+  --secondary: #242220;
+  --secondary-foreground: #F7F4EC;
+  --muted: #2F2C29;
+  --muted-foreground: #A3A099;
+  --accent: #FF705D;
   --border: rgba(255, 255, 255, 0.12);
   --input: rgba(255, 255, 255, 0.16);
   --ring: #8052ff;
@@ -364,15 +380,15 @@ body {
   justify-content: center;
   gap: 0.5rem;
   background: var(--accent-1);
-  color: #ffffff;
-  /* Measured from the live site: 22.5px radius, 14.4px/15.96px padding,
-     12px/600 uppercase at 0.3px tracking. */
-  border-radius: 22.5px;
-  padding: 14.4px 15.96px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  color: var(--c-ground);
+  /* Measured off mindmarket.com: 50px pill, 17px at weight 500, sentence
+     case. The old 12px uppercase pill belonged to the retired system. */
+  border-radius: 50px;
+  padding: 14px 26px;
+  font-size: 17px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: -0.01em;
   box-shadow: none;
   transition: background-color 0.5s var(--ease-colour), transform 0.3s var(--ease-hover);
 }
@@ -484,12 +500,14 @@ body {
    white body, ink-tinted borders, ONE indigo accent on hover.
    ───────────────────────────────────────────── */
 .tech-panel {
-  /* DALA: "Do not introduce card containers with borders, shadows, or
-     background fills — elements float on black with whitespace alone."
-     Data-dense routes re-add a hairline below; see `.route-data`. */
-  background: transparent;
-  border: 0;
+  /* Panels are REAL surfaces again: white on cream at 10px, a hairline, and
+     a shadow with actual offset and blur. The previous system made every card
+     transparent and borderless, which is most of why the app read as empty. */
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-card);
+  /* No shadow, anywhere. Depth is the cream-to-white surface stack plus the
+     50px radius; the reference's extracted shadow list is empty. */
   box-shadow: none;
   transition: border-color 0.5s var(--ease-colour),
               box-shadow 0.5s var(--ease-colour),
@@ -499,9 +517,7 @@ body {
 /* interactive surfaces: border lights up indigo + lifts on hover */
 .tech-panel-interactive { cursor: pointer; }
 .tech-panel-interactive:hover {
-  /* No fill, no shadow — hover reads as a lift plus an Iris hairline. */
-  background: transparent;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-1) 45%, transparent);
+  border-color: color-mix(in srgb, var(--c-ink) 28%, transparent);
   transform: translateY(-3px);
 }
 
@@ -567,12 +583,14 @@ body {
   -webkit-text-fill-color: currentColor;
 }
 .gradient-text {
-  color: var(--accent-2);
+  /* Coral measures 2.41:1 on cream and fails even the 3:1 large-text floor.
+     Headings take ink; the accent stays punctuation. */
+  color: var(--c-ink);
   background: none;
   -webkit-text-fill-color: currentColor;
 }
 .gradient-text-cool {
-  color: var(--accent-2);
+  color: var(--c-ink);
   background: none;
   -webkit-text-fill-color: currentColor;
 }
@@ -866,14 +884,10 @@ body,
    get a HAIRLINE only — still no fill, still no shadow. DashboardShell adds
    `route-data` from the pathname, so this is one rule, zero component edits.
    ───────────────────────────────────────────── */
-.route-data .tech-panel,
-.route-data .glass-panel,
-.route-data .glass-panel-glow {
-  border: 1px solid var(--c-border);
-}
-.route-data .tech-panel-interactive:hover {
-  border-color: color-mix(in srgb, var(--accent-1) 55%, transparent);
-}
+/* RETIRED. This rule re-added a hairline on data routes because panels there
+   had no fill and 31 rows of scores on pure black were unreadable. Panels now
+   carry a surface everywhere, so the exception has nothing left to fix.
+   `.route-data` is still set by DashboardShell and is free for future use. */
 
 
 /* ─────────────────────────────────────────────
@@ -932,11 +946,11 @@ body,
    hierarchy comes from scale and tracking, never weight — with -0.04em
    above 42px. Responsive floors so phones don't get 112px headlines.
    ───────────────────────────────────────────── */
-.t-display   { font-size: clamp(2.75rem, 8vw, 7rem);    font-weight: 400; letter-spacing: -0.04em; line-height: 1.1; }
-.t-section-lg{ font-size: clamp(2.25rem, 6vw, 4.875rem); font-weight: 400; letter-spacing: -0.04em; line-height: 1.1; }
-.t-cta       { font-size: clamp(1.875rem, 4.5vw, 3rem);  font-weight: 400; letter-spacing: -0.04em; line-height: 1.1; }
-.t-statement { font-size: clamp(1.75rem, 4vw, 2.625rem); font-weight: 400; letter-spacing: -0.04em; line-height: 1.2; }
-.t-narrative { font-size: clamp(1.35rem, 3vw, 2.25rem);  font-weight: 400; letter-spacing: -0.02em; line-height: 1.35; }
+.t-display   { font-size: clamp(2.75rem, 8vw, 8.75rem); font-weight: 500; letter-spacing: -0.06em; line-height: 1.1; }
+.t-section-lg{ font-size: clamp(2.25rem, 6vw, 5.06rem);  font-weight: 500; letter-spacing: -0.06em; line-height: 1.1; }
+.t-cta       { font-size: clamp(1.875rem, 4.5vw, 3.31rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; }
+.t-statement { font-size: clamp(1.75rem, 4vw, 1.85rem);  font-weight: 500; letter-spacing: -0.04em; line-height: 1.2; }
+.t-narrative { font-size: clamp(1.35rem, 3vw, 1.26rem);  font-weight: 500; letter-spacing: -0.02em; line-height: 1.35; }
 
 /* Dala's body measure is a narrow ~360px column, not a full-width paragraph. */
 .measure { max-width: 26rem; }
@@ -1060,8 +1074,7 @@ body,
   --sc-font-text:    var(--font-sans);
   --sc-font-mono:    var(--font-mono);
 
-  /* Dala's defining rule: hierarchy from scale and tracking, never weight.
-     Display sizes above 42px carry -0.04em. */
+  /* Tracking tightens with scale, measured off the reference. */
   --sc-track-tight: -0.04em;
   --sc-track-snug:  -0.03em;
 
@@ -1080,3 +1093,106 @@ html { scroll-behavior: auto; }
    reintroduce one. Acts sit on the void like every other StackRadar surface. */
 [data-sc-act] .sc-panel,
 [data-sc-act] [data-sc-stage] { background: transparent; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WARM EDITORIAL — devices lifted from mindmarket.com
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Chapter grounds. Each chapter lands on its own and STAYS there: hard cuts,
+   never an interpolated gradient. That alternation is what makes the page read
+   as printed rather than played. */
+.ch-cream  { background: #F5F1E4; }
+.ch-white  { background: #FFFFFF; }
+.ch-beige  {
+  background: #E0DBCE;
+  /* The default secondary ink measures 2.81:1 on this ground, which fails.
+     Re-scoping the tokens here fixes every descendant at once. Verified by the
+     harness, not by eye. */
+  --c-ink-2: #56584F;
+  /* #6E7067 measured 3.64:1 on this ground. ink-2 was checked when this block
+     was written and ink-3 was not; the labels in the diagnosis panel are the
+     first small text to actually sit on it. */
+  --c-ink-3: #5C5E56;
+}
+/* In dark the three grounds were #1B1917 / #242220 / #2F2C29 — so close that
+   the chapters stopped reading as separate grounds and the whole page went one
+   continuous brown-black. Pulled apart so the hard cuts between chapters land
+   in dark the way they do in light. */
+html.dark .ch-cream { background: #16110E; }
+html.dark .ch-white { background: #241F1A; }
+html.dark .ch-beige { background: #322A22; }
+html.dark .ch-beige {
+  /* The light theme darkens its ink on the beige ground; dark needs the
+     opposite, or the re-scoped tokens carry over and go too dark to read. */
+  --c-ink-2: #B8B2A6;
+  --c-ink-3: #99938A;
+}
+
+/* Stacking cards. Sticky siblings that pile up as you scroll, each one coming
+   to rest slightly below the last so the stack stays legible. The offset is
+   set per card with --i. */
+.stack-card {
+  position: sticky;
+  top: calc(18vh + var(--i, 0) * 14px);
+  border-radius: 50px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  box-shadow: none;
+}
+
+/* The reference's preloader signature: a cream curtain whose BOTTOM corners are
+   round while it lifts, so it reads as a card being drawn off the page rather
+   than a fade. */
+.curtain { clip-path: inset(0 round 0 0 50px 50px); }
+
+/* Panels framing product media, the way the reference frames photography. */
+/* Illustration containers take the deeper 63.75px in the reference; product
+   media reads as the same class of object here. */
+.media-frame {
+  border-radius: 63.75px;
+  overflow: hidden;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+  box-shadow: none;
+}
+
+/* An asset we do not have yet. Deliberately visible and labelled, not a grey
+   box: it tells the owner what to drop in and where. */
+.asset-slot {
+  border: 2px dashed color-mix(in srgb, var(--c-ink) 26%, transparent);
+  border-radius: 50px;
+  background: color-mix(in srgb, var(--accent-yellow) 12%, transparent);
+}
+/* Yellow at 12% over a dark ground goes muddy olive. Dark gets a neutral
+   raised surface plus a yellow edge, which reads as "reserved" rather than
+   as a stain. */
+html.dark .asset-slot {
+  background: color-mix(in srgb, var(--accent-yellow) 7%, var(--c-surface));
+  border-color: color-mix(in srgb, var(--accent-yellow) 45%, transparent);
+}
+
+
+/* The floating feedback pill.
+   Its label sits on the charcoal accent, so it needs the GROUND colour, which
+   is the one case on the site where inheriting ink is exactly wrong: it
+   rendered charcoal-on-charcoal at 1.01:1. Tailwind would not emit a colour
+   utility for it (only preflight's `color: inherit` matched the element), so
+   the colour is stated here rather than left to arbitrary-value generation. */
+.fab-pill,
+.fab-pill * { color: var(--c-ground); }
+
+
+/* Text sitting on one of the accent fills.
+ *
+ * Every accent (green, coral, yellow, blue, lilac) is LIGHT in both themes, so
+ * anything on top of one must be charcoal in both themes too. Left to inherit,
+ * the dark theme hands it cream ink and the result is cream-on-green at
+ * 1.55:1 — invisible.
+ *
+ * Stated as a rule rather than a utility class because Tailwind does not
+ * reliably emit an arbitrary colour here; the same thing already forced the
+ * .fab-pill rule. The descendant selector matters: these fills wrap spans that
+ * carry their own type classes and inherit the colour. */
+.on-accent,
+.on-accent * { color: #2C2E2A; }

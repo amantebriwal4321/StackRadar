@@ -273,7 +273,7 @@ export default function TrendsPage() {
               </button>
             </div>
           </div>
-          <p className="text-sm text-[var(--c-ink-2)] max-w-xl font-extralight">
+          <p className="text-sm text-[var(--c-ink-2)] max-w-xl font-medium">
             Every tracked technology, scored 0–100 by live momentum from GitHub stars and developer conversation. Sort by what&apos;s rising, most-starred, or most-discussed.
           </p>
         </header>
@@ -372,7 +372,7 @@ export default function TrendsPage() {
                       />
                       <Bar
                         dataKey="score"
-                        fill="#8052ff"
+                        fill="#2C2E2A"
                         radius={[6, 6, 0, 0]}
                         animationDuration={1000}
                       />

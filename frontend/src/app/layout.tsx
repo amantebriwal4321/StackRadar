@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
+// (Clerk dark theme import removed with the retired design system.)
 import SmoothScrollProvider from "@/components/providers/SmoothScroll";
 import Preloader from "@/components/ui/Preloader";
 import CustomCursor from "@/components/ui/CustomCursor";
@@ -53,23 +53,47 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Clerk's own modal follows the site, not the retired dark design: its
+  // baseTheme was pinned to `dark`, which opened a black sign-in sheet on top
+  // of a cream page.
   return (
-    <ClerkProvider appearance={{ baseTheme: dark }}>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: "#2C2E2A",
+          colorText: "#2C2E2A",
+          colorBackground: "#FFFFFF",
+          borderRadius: "10px",
+        },
+      }}
+    >
       <html lang="en" suppressHydrationWarning>
         <head>
           <script
             dangerouslySetInnerHTML={{
               __html: `
-                // Mercury is a dark-first design: dark unless the visitor has
-                // explicitly chosen light. Runs before paint so there's no flash.
+                // Light-first: the warm editorial system is the default look,
+                // and dark is the opt-in. Runs before paint so there's no flash.
+                //
+                // One-time migration: a stored 'dark' from before 2026-08-27
+                // refers to the RETIRED pure-black design, not a preference for
+                // this one, and it left returning visitors staring at a dark
+                // page after the system was rebuilt around cream. The stale
+                // value is cleared once; anything chosen after that sticks.
+                try {
+                  if (!localStorage.getItem('theme-v2')) {
+                    localStorage.removeItem('theme');
+                    localStorage.setItem('theme-v2', '1');
+                  }
+                } catch (_) {}
                 try {
                   const theme = localStorage.getItem('theme');
-                  if (theme === 'light') {
-                    document.documentElement.classList.remove('dark');
-                  } else {
+                  if (theme === 'dark') {
                     document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
                   }
-                } catch (_) { document.documentElement.classList.add('dark'); }
+                } catch (_) { document.documentElement.classList.remove('dark'); }
                 // Decide the first-visit loader BEFORE first paint so the home
                 // page never flashes in ahead of it. Returning (same-session)
                 // visitors get no class, so the loader stays hidden.

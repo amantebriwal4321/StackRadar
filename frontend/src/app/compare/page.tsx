@@ -19,7 +19,7 @@ import {
 // distinguishable via the system's own data tokens (no off-brand pink/teal).
 // Iris ramp + neutrals. The score green/amber/red are deliberately absent:
 // as series colours they would imply a momentum reading the series does not have.
-const COMPARE_COLORS = ["#8052ff", "#a488ff", "#6a3fd6", "#c9b8ff", "#bdbdbd"];
+const COMPARE_COLORS = ["#8052ff", "#a488ff", "#6a3fd6", "#c9b8ff", "#80827F"];
 
 export default function ComparePage() {
   const [allTools, setAllTools] = useState<Tool[]>([]);
@@ -172,7 +172,7 @@ export default function ComparePage() {
               <GitCompare className="w-8 h-8 text-indigo-600" />
               <span className="text-text-primary">Compare technologies</span>
             </h1>
-            <p className="text-[var(--c-ink-2)] text-sm font-extralight">
+            <p className="text-[var(--c-ink-2)] text-sm font-medium">
               Select 2 to 5 technologies from the scanner index. Shares links directly containing parameters.
             </p>
           </div>
@@ -524,7 +524,7 @@ export default function ComparePage() {
                         <span className="text-[9px] font-mono text-[var(--c-ink-2)] uppercase">{t.category}</span>
                       </div>
                     </div>
-                    <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight font-mono">
+                    <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-medium font-mono">
                       {t.recommendation || "No specialized profile recommendations. This technology represents stable developer vectors."}
                     </p>
                   </div>
@@ -537,7 +537,7 @@ export default function ComparePage() {
           <div className="text-center py-20 border border-dashed border-indigo-500/10 rounded-2xl bg-[var(--c-surface-2)]/20 glass-panel">
             <GitCompare className="w-14 h-14 text-indigo-600/40 mx-auto mb-4 animate-pulse" />
             <h3 className="text-base font-normal font-display mb-2">Select Technologies To Compare</h3>
-            <p className="text-xs text-[var(--c-ink-2)] max-w-sm mx-auto leading-relaxed font-extralight">
+            <p className="text-xs text-[var(--c-ink-2)] max-w-sm mx-auto leading-relaxed font-medium">
               Add at least 2 technologies from the scanner selection above to compile details side-by-side.
             </p>
           </div>

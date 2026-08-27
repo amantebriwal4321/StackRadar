@@ -54,7 +54,7 @@ export default function ContinueLearning() {
             <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
               Pick a roadmap. Learn one thing a day.
             </h3>
-            <p className="text-sm text-[var(--c-ink-2)] font-extralight max-w-lg">
+            <p className="text-sm text-[var(--c-ink-2)] font-medium max-w-lg">
               Track every module you finish, keep a streak, and get told exactly what to study
               next — on a syllabus that updates itself from live momentum data.
             </p>
@@ -84,7 +84,7 @@ export default function ContinueLearning() {
             <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)]">
               You haven&apos;t started a roadmap yet.
             </h3>
-            <p className="text-sm text-[var(--c-ink-2)] font-extralight max-w-lg">
+            <p className="text-sm text-[var(--c-ink-2)] font-medium max-w-lg">
               Choose a track and check off your first module — takes about an hour.
             </p>
           </div>
@@ -133,7 +133,7 @@ export default function ContinueLearning() {
             <h3 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)] leading-tight">
               {focus.title}
             </h3>
-            <p className="text-sm text-[var(--c-ink-2)] font-extralight mt-1.5 line-clamp-2 max-w-2xl">
+            <p className="text-sm text-[var(--c-ink-2)] font-medium mt-1.5 line-clamp-2 max-w-2xl">
               {focus.description}
             </p>
           </div>

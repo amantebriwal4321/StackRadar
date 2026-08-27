@@ -32,3 +32,31 @@ export const GOALS: Goal[] = [
 export function goalBySlug(slug: string): Goal | undefined {
   return GOALS.find((g) => g.slug === slug);
 }
+
+/* Tool category → roadmap slug.
+ *
+ * Lives here because this file is already the one place a "what should they
+ * learn next" target is resolved, and a second mapping elsewhere is exactly
+ * how the catalog and the colophon drifted apart.
+ *
+ * Six of the eight categories match their roadmap title verbatim; "AI / ML"
+ * and "DevOps" are the two that do not, which is why this is an explicit map
+ * rather than a title match. GOALS above covers only six domains because it
+ * lists CAREER goals; the catalog can hold anything in the catalog, so Cloud
+ * Native and Data & Databases are covered here too.
+ */
+export const ROADMAP_BY_CATEGORY: Record<string, string> = {
+  "Web Development": "web-development",
+  "AI / ML": "ai-ml",
+  "Cloud Native": "cloud-native",
+  "DevOps": "devops",
+  "Cybersecurity": "cybersecurity",
+  "Web3 / Blockchain": "web3",
+  "Systems Programming": "systems",
+  "Data & Databases": "data-databases",
+};
+
+export function roadmapForCategory(category: string | null | undefined): string | null {
+  if (!category) return null;
+  return ROADMAP_BY_CATEGORY[category] ?? null;
+}

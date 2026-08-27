@@ -26,7 +26,7 @@ export default function FaqAccordion({
           header={f.q}
           icon="plus"
         >
-          <p className="text-sm text-[var(--c-ink-2)] font-extralight leading-relaxed pt-3">
+          <p className="text-sm text-[var(--c-ink-2)] font-medium leading-relaxed pt-3">
             {f.a}
           </p>
         </AccordionItem>

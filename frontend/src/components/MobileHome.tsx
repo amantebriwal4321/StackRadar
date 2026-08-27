@@ -149,7 +149,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
 
           <motion.p
             initial={canAnimate ? { opacity: 0, y: 16 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }}
-            className="text-[15px] text-[var(--c-ink-2)] leading-relaxed font-extralight mb-6"
+            className="text-[15px] text-[var(--c-ink-2)] leading-relaxed font-medium mb-6"
           >
             <span className="font-semibold text-[var(--c-ink)]">Live momentum data, turned into a step-by-step roadmap</span> — the right tools in the right order, each with the single best free video.
           </motion.p>
@@ -397,7 +397,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
                 <div>
                   <div className="text-[9px] font-mono text-indigo-600/50 tracking-widest mb-1">STEP 0{i + 1}</div>
                   <h3 className="text-[15px] font-normal font-display leading-tight mb-1">{s.title}</h3>
-                  <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">{s.desc}</p>
+                  <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-medium">{s.desc}</p>
                 </div>
               </motion.div>
             );
@@ -415,7 +415,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
           <h3 className="text-2xl font-normal font-display tracking-tight leading-tight mb-3 relative">
             Pick a roadmap.<br /><span className="text-shimmer">Learn one thing a day.</span>
           </h3>
-          <p className="text-sm text-[var(--c-ink-2)] leading-relaxed mb-6 font-extralight relative">
+          <p className="text-sm text-[var(--c-ink-2)] leading-relaxed mb-6 font-medium relative">
             Sequenced steps, the best free video for each tool, and a streak to keep you going.
           </p>
           <div className="flex flex-col gap-3 relative">

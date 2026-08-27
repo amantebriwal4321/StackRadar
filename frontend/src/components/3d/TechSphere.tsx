@@ -86,7 +86,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
       <mesh ref={sphereRef}>
         <icosahedronGeometry args={[1.4, 2]} />
         <meshBasicMaterial
-          color="#8052ff"
+          color="#2C2E2A"
           wireframe
           transparent
           opacity={0.35}
@@ -115,7 +115,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
           />
         </bufferGeometry>
         <pointsMaterial
-          color="#8052ff"
+          color="#2C2E2A"
           size={0.035}
           sizeAttenuation
           transparent
@@ -127,7 +127,7 @@ function SphereScene({ prefersReducedMotion }: { prefersReducedMotion: boolean }
       {/* Glowing core dot */}
       <mesh>
         <sphereGeometry args={[0.12, 16, 16]} />
-        <meshBasicMaterial color="#8052ff" />
+        <meshBasicMaterial color="#2C2E2A" />
       </mesh>
     </group>
   );

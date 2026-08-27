@@ -133,7 +133,7 @@ export default function ToolDetailPage() {
                 <h1 className="text-3xl md:text-5xl font-normal font-display tracking-[-0.04em] text-[var(--c-ink)] leading-tight">
                   {tool.name}
                 </h1>
-                <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-2xl font-extralight">
+                <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-2xl font-medium">
                   {tool.description || "Continuous scans are ongoing for this technology index. Real-time mentions are captured below."}
                 </p>
               </div>
@@ -180,7 +180,7 @@ export default function ToolDetailPage() {
             <h4 className="text-[10px] font-mono font-semibold uppercase tracking-widest text-indigo-600 mb-2 flex items-center gap-2">
               <Info className="w-4 h-4" /> Decision Matrix Analysis
             </h4>
-            <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-4xl font-extralight pr-10">
+            <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-4xl font-medium pr-10">
               {tool.recommendation}
             </p>
           </div>
@@ -203,8 +203,8 @@ export default function ToolDetailPage() {
                 <AreaChart data={history} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="areaGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8052ff" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#8052ff" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#2C2E2A" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#2C2E2A" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   
@@ -314,7 +314,7 @@ export default function ToolDetailPage() {
                 <h4 className="text-sm font-normal text-[var(--c-ink)] flex items-center gap-1.5">
                   Prerequisite: <Link href={`/tools/${tool.parent_slug}`} className="text-indigo-600 hover:underline">{tool.parent_name}</Link>
                 </h4>
-                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
+                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-medium">
                   We highly recommend mapping out the concepts of {tool.parent_name} before indexing {tool.name}.
                 </p>
               </div>
@@ -326,7 +326,7 @@ export default function ToolDetailPage() {
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-normal text-[var(--c-ink)]">No Prerequisite Nodes</h4>
-                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
+                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-medium">
                   This technology is an entry-level root index. You can learn this directly without prior dependencies.
                 </p>
               </div>
@@ -335,12 +335,12 @@ export default function ToolDetailPage() {
 
           {/* Learning path CTA */}
           {tool.has_roadmap && tool.roadmap_slug ? (
-            <div className="bg-[var(--accent-1)] rounded-3xl p-5 text-white flex justify-between items-center gap-4">
+            <div className="bg-[var(--accent-1)] rounded-3xl p-5 text-[var(--c-ground)] flex justify-between items-center gap-4">
               <div className="space-y-1">
                 <h4 className="text-sm font-normal flex items-center gap-2">
                   <GraduationCap className="w-5 h-5" /> Master {tool.name} Sequence
                 </h4>
-                <p className="text-indigo-100 text-xs leading-relaxed font-extralight">
+                <p className="text-indigo-100 text-xs leading-relaxed font-medium">
                   Explore the curated learning sequence layout maps designed for {tool.category}.
                 </p>
               </div>
@@ -357,7 +357,7 @@ export default function ToolDetailPage() {
                 <h4 className="text-sm font-normal text-[var(--c-ink)] flex items-center gap-1.5">
                   Custom Roadmap Scrapers
                 </h4>
-                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-extralight">
+                <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-medium">
                   No dedicated roadmap created yet. Use explore sidebar to learn similar tools.
                 </p>
               </div>
