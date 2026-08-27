@@ -1,0 +1,162 @@
+"use client";
+
+import { useCallback, useRef } from "react";
+import TechLogo from "@/components/ui/TechLogo";
+import type { Tool } from "@/data/trends";
+import { useActProgress } from "@/lib/scrollcraft/useActProgress";
+
+/* CHAPTER 4 — The catalog. Feeling: agency. THE PEAK, and the signature move.
+ *
+ * The reader's hand goes on something for the first time. Picking a technology
+ * drops it into the margin folio, and the colophon at the end is computed from
+ * whatever is in there.
+ *
+ * AUTHORED SILENCE: the first ~0.10 of this chapter. The grid holds still and
+ * closed before the first row opens, so the first pick-up lands in quiet
+ * rather than on top of the busiest chapter on the page. Verification must not
+ * read that stretch as dead scroll.
+ *
+ * The rows open from --sc-p by direct style writes on one shared rAF. No
+ * per-frame React state.
+ */
+export default function ChCatalog({
+  tools,
+  picked,
+  onToggle,
+}: {
+  tools: Tool[];
+  picked: string[];
+  onToggle: (slug: string) => void;
+}) {
+  const actRef = useRef<HTMLElement>(null);
+  const gridRef = useRef<HTMLUListElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  const apply = useCallback((p: number) => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    // 0 .. 0.10 is the authored silence. The cascade then runs to 0.95.
+    const open = Math.min(Math.max((p - 0.10) / 0.85, 0), 1);
+    const items = grid.children;
+    const n = items.length;
+    let opened = 0;
+    for (let i = 0; i < n; i++) {
+      const el = items[i] as HTMLElement;
+      // Spacing of 1.0 means row i completes at (i+1)/n, so the LAST row lands
+      // at the end of the window. At 0.55 the whole grid was open by halfway
+      // and the rest of this act read as dead scroll.
+      const local = Math.min(Math.max(open * n - i, 0), 1);
+      const e = 1 - Math.pow(1 - local, 3);
+      el.style.opacity = String(0.18 + e * 0.82);
+      el.style.transform = `translateY(${(1 - e) * 18}px)`;
+      if (local >= 0.5) opened++;
+    }
+
+    /* Report what actually paints.
+     *
+     * The cascade is bespoke, so the verification harness cannot see it: its
+     * dead-scroll check builds a signature from cues, clips, rails and wipes,
+     * and the only cues in this act sit at full opacity throughout. Without
+     * this the whole peak was reported as dead scroll while it was in fact
+     * animating correctly.
+     *
+     * This publishes the RENDERED value (how many rows are open), not raw
+     * scroll progress. verify.md is explicit that publishing progress just to
+     * turn the check green is the exact failure the check exists to catch. */
+    stageRef.current?.setAttribute("data-sc-verify-state", `rows:${opened}`);
+  }, []);
+
+  useActProgress(actRef, apply);
+
+  const shown = tools.slice(0, 24);
+
+  return (
+    <section
+      ref={actRef}
+      className="ch-beige"
+      data-sc-act="pin"
+      data-sc-span="3.6"
+      aria-labelledby="ch-catalog-h"
+      id="build"
+    >
+      <div
+        ref={stageRef}
+        data-sc-stage
+        data-sc-verify-state="rows:0"
+        className="flex min-h-screen w-full items-center overflow-hidden"
+      >
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-16 md:px-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <h2
+              id="ch-catalog-h"
+              className="max-w-[18ch] text-[clamp(2rem,4.4vw,3.28rem)] font-medium leading-[1.04] tracking-[-0.04em] text-[var(--c-ink)]"
+              data-sc-cue="0 1 0 0.1"
+            >
+              Pick up what you are actually building with.
+            </h2>
+            <p
+              className="max-w-[34ch] text-[16px] font-medium leading-relaxed text-[var(--c-ink-2)]"
+              data-sc-cue="0 1 0 0.1"
+            >
+              Everything you choose goes into your stack in the margin. There is
+              no form at the end, only what you picked.
+            </p>
+          </div>
+
+          {/* Resting state is the readable one: if the rAF never runs, every
+              row is already visible at full opacity via CSS, and the scroll
+              treatment only animates toward that. */}
+          <ul
+            ref={gridRef}
+            className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+          >
+            {shown.map((t) => {
+              const on = picked.includes(t.slug);
+              return (
+                <li key={t.slug}>
+                  <button
+                    onClick={() => onToggle(t.slug)}
+                    aria-pressed={on}
+                    className={`group flex w-full items-center gap-3 rounded-[10px] border p-3 text-left transition-colors duration-200 ${
+                      on
+                        ? "border-transparent bg-[var(--c-ink)] text-[var(--c-ground)]"
+                        : "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-ink)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
+                    }`}
+                  >
+                    <span className="shrink-0">
+                      <TechLogo slug={t.slug} emoji={t.icon} size={22} brand={!on} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-medium leading-tight">
+                        {t.name}
+                      </span>
+                      <span
+                        className={`block font-mono text-[11px] tabular-nums ${
+                          on ? "opacity-70" : "text-[var(--c-ink-3)]"
+                        }`}
+                      >
+                        {t.score.toFixed(1)}
+                      </span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`shrink-0 text-[15px] leading-none ${on ? "" : "opacity-0 group-hover:opacity-40"}`}
+                    >
+                      {on ? "✓" : "＋"}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--c-ink-3)] tabular-nums">
+            {picked.length === 0
+              ? "nothing picked yet"
+              : `${picked.length} in your stack`}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
