@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -14,6 +15,12 @@ const SmoothScrollContext = createContext<SmoothScrollContextType>({ lenis: null
 export const useSmoothScroll = () => useContext(SmoothScrollContext);
 
 export default function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  // The landing runs the scrollcraft engine, which reads window.scrollY on its
+  // own rAF and pins acts against it. Lenis interpolates that same value, so
+  // running both means two systems disagreeing about where the page is: pins
+  // land late and drift past their act. scrollcraft owns scrolling on `/`.
+  const scrollcraftOwnsScroll = pathname === "/";
   const lenisRef = useRef<Lenis | null>(null);
   const rafRef = useRef<((time: number) => void) | null>(null);
   // Stable context object with a live getter: consumers read the current
@@ -30,6 +37,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
     // motion reduced-motion users are asking us not to do. Native scrolling
     // still works, so skipping Lenis degrades cleanly.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (scrollcraftOwnsScroll) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -57,7 +65,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
       if (rafRef.current) gsap.ticker.remove(rafRef.current);
       lenisRef.current = null;
     };
-  }, []);
+  }, [scrollcraftOwnsScroll]);
 
   // NOTE: this provider used to hold a `scrollProgress` state updated on every
   // Lenis scroll event, which re-rendered the ENTIRE app subtree each frame —

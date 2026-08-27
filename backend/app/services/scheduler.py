@@ -87,7 +87,7 @@ async def perform_full_scrape():
     _start = time.time()
     scrape_status["is_running"] = True
     scrape_status["start_time"] = datetime.now(timezone.utc).isoformat()
-    scrape_status["current_step"] = "0/8 — Validating GitHub token"
+    scrape_status["current_step"] = "0/8 · Validating GitHub token"
     scrape_status["errors"] = []
 
     db: Session = SessionLocal()
@@ -114,7 +114,7 @@ async def perform_full_scrape():
             )
 
         # ━━━ STEP 1: Fetch all community sources ━━━
-        scrape_status["current_step"] = "1/8 — Fetching community sources"
+        scrape_status["current_step"] = "1/8 · Fetching community sources"
         logger.info("Step 1: Fetching from community sources...")
 
         hn_stories, devto_articles, reddit_posts, news_articles = await asyncio.gather(
@@ -137,7 +137,7 @@ async def perform_full_scrape():
         )
 
         # ━━━ STEP 2: Sentiment Analysis ━━━
-        scrape_status["current_step"] = "2/8 — Running sentiment analysis"
+        scrape_status["current_step"] = "2/8 · Running sentiment analysis"
         logger.info("Step 2: Running sentiment analysis via Groq LLM...")
 
         all_content = hn_stories + devto_articles + reddit_posts + news_articles
@@ -167,7 +167,7 @@ async def perform_full_scrape():
         }
 
         # ━━━ STEP 3: Count mentions per tool (raw, from all source text) ━━━
-        scrape_status["current_step"] = "3/8 — Counting mentions"
+        scrape_status["current_step"] = "3/8 · Counting mentions"
         logger.info("Step 3: Counting tool mentions across sources...")
 
         all_tools = db.query(Tool).filter(Tool.slug.in_(TOOL_REGISTRY.keys())).all()
@@ -184,7 +184,7 @@ async def perform_full_scrape():
         logger.info(f"Step 3: matched {_cycle_mentions} tool mentions this cycle.")
 
         # ━━━ STEP 4: Fetch GitHub stats (Phase 1 — shared client + adaptive delay) ━━━
-        scrape_status["current_step"] = "4/8 — Fetching GitHub stats"
+        scrape_status["current_step"] = "4/8 · Fetching GitHub stats"
         logger.info("Step 4: Fetching GitHub repo stats (shared client, adaptive delays)...")
 
         github_stats: dict[str, dict] = {}
@@ -219,7 +219,7 @@ async def perform_full_scrape():
         )
 
         # ━━━ STEP 5: Calculate scores + Decision Intelligence ━━━
-        scrape_status["current_step"] = "5/8 — Computing scores"
+        scrape_status["current_step"] = "5/8 · Computing scores"
         logger.info("Step 5: Computing scores, growth, and decision intelligence...")
 
         today = date.today()
@@ -272,7 +272,7 @@ async def perform_full_scrape():
         all_scores = calculate_all_tool_scores(tool_signals)
 
         # 5d. Apply scores, sentiment, and decision intelligence
-        scrape_status["current_step"] = "6/8 — Updating tool records"
+        scrape_status["current_step"] = "6/8 · Updating tool records"
 
         for i, tool in enumerate(all_tools):
             slug = tool.slug
@@ -388,7 +388,7 @@ async def perform_full_scrape():
             )
 
         # ━━━ STEP 8: Aggregate domain scores ━━━
-        scrape_status["current_step"] = "7/8 — Aggregating domains"
+        scrape_status["current_step"] = "7/8 · Aggregating domains"
         logger.info("Step 8: Aggregating domain-level scores...")
 
         domains = db.query(Domain).all()
@@ -414,7 +414,7 @@ async def perform_full_scrape():
                 logger.info(f"  {domain.name}: avg_score={domain.score} stage={domain.stage}")
 
         scrape_status["tools_updated"] = tools_updated
-        scrape_status["current_step"] = "8/8 — Saving to database"
+        scrape_status["current_step"] = "8/8 · Saving to database"
         db.commit()
         logger.info(f"All {tools_updated} tools updated and saved successfully!")
 

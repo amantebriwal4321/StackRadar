@@ -2,23 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Sun, Moon, Bookmark, Sparkles } from "lucide-react";
+import { Menu, X, Sun, Moon, Bookmark } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
-import SplitReveal from "@/components/ui/SplitReveal";
+import { fetchOverview, type Overview } from "@/data/trends";
 
-// Roadmaps is the product's main attraction, so it sits first after the
-// console; the momentum surfaces (explore/trends/compare) follow as the
-// intelligence that powers those roadmaps.
-// Student-first labels: a first-time visitor should know where a link goes
-// without learning our vocabulary ("console", "explore" were insider words).
+/* App chrome, not a marketing bar.
+ *
+ * The landing runs the "Live surface" grammar, which forbids the
+ * wordmark-plus-CTA header outright: it is the single element that most makes
+ * a product page read as a template. What replaces it is the chrome the real
+ * instrument would have — a tab strip over the surfaces, and a status line
+ * carrying what the scraper is actually doing right now.
+ *
+ * The status figures come from /overview and are real. If they cannot be
+ * fetched the line simply does not render; it never shows a placeholder.
+ *
+ * Dala still governs the look: no fill, no border, no backdrop blur at any
+ * scroll position. */
+
 const navLinks = [
   { href: "/", label: "home" },
-  // The conversion front door — an anchor into the goal chooser on the landing
-  // page, reachable from anywhere. Never matches the active-state check, which
-  // is fine: it's an action, not a place.
   { href: "/#five-minute-plan", label: "my plan" },
   { href: "/roadmaps", label: "roadmaps" },
   { href: "/explore", label: "what to learn" },
@@ -34,6 +40,7 @@ export default function Navbar() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [mounted, setMounted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [overview, setOverview] = useState<Overview | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -48,8 +55,22 @@ export default function Navbar() {
     }
   }, []);
 
+  // Real telemetry for the status line. A failure is silent on purpose: the
+  // chrome degrades to just the tabs rather than showing an error or a zero.
+  useEffect(() => {
+    let cancelled = false;
+    fetchOverview()
+      .then((o) => {
+        if (!cancelled) setOverview(o);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Scroll → drive the reading-progress bar. The nav itself never gains a
-  // surface in Dala, so there is no `scrolled` fill state any more.
+  // surface in Dala, so there is no `scrolled` fill state.
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
@@ -72,7 +93,6 @@ export default function Navbar() {
     }
   };
 
-  // Stagger links entrance on mobile menu open
   useEffect(() => {
     if (mobileOpen) {
       gsap.fromTo(
@@ -85,25 +105,14 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 w-full">
-      {/* DALA: "Transparent background sitting directly on black canvas.
-          No border, no backdrop blur on the nav itself." The frosted fill that
-          Mercury called for is deliberately gone — the nav never gains a
-          surface, at any scroll position. */}
       <div className="relative flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
-        {/* ─── Logo ───
-            Built on Dala's construction: an abstract letterform assembled from
-            flat geometric primitives on a grid — a large quarter-circle, a solid
-            square, a smaller quarter-circle — gradient-filled across the brand
-            spectrum, with NO container badge (the mark floats on the void).
-            Ours makes those primitives mean something: the quarter-circles are
-            radar sweeps, the square is the stack. The wordmark stays monochrome
-            white so the mark carries all the colour, exactly as Dala does. */}
+        {/* ─── Mark ───
+            Kept from Dala: flat geometric primitives on a grid, gradient-filled,
+            no container badge. The quarter-circles are radar sweeps and the
+            square is the stack. The wordmark stays monochrome so the mark
+            carries all the colour. */}
         <Link href="/" className="flex items-center gap-3 group" aria-label="StackRadar home">
-          <svg
-            viewBox="0 0 39 48"
-            className="h-7 w-[22px] shrink-0 overflow-visible"
-            aria-hidden="true"
-          >
+          <svg viewBox="0 0 39 48" className="h-7 w-[22px] shrink-0 overflow-visible" aria-hidden="true">
             <defs>
               <linearGradient id="sr-sweep" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stopColor="#15846e" />
@@ -119,12 +128,8 @@ export default function Navbar() {
                 <stop offset="100%" stopColor="#8052ff" />
               </linearGradient>
             </defs>
-
-            {/* outer radar sweep — the wide quarter arc */}
             <path d="M15 0 A24 24 0 0 1 39 24 L15 24 Z" fill="url(#sr-sweep)" />
-            {/* the stack — solid block held in the negative space */}
             <rect x="0" y="24" width="15" height="15" fill="url(#sr-stack)" />
-            {/* inner sweep / signal returning */}
             <path d="M15 36 L33 36 A18 18 0 0 1 15 48 Z" fill="url(#sr-blip)" />
           </svg>
 
@@ -133,35 +138,32 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* ─── Desktop Navigation ─── */}
-        <nav className="hidden md:flex items-center gap-3" role="navigation">
+        {/* ─── Tab strip ───
+            Plain labels. The bracket-and-monospace styling was monospace worn
+            as a costume for "technical"; mono is kept for data and figures. */}
+        <nav className="hidden md:flex items-center gap-1" role="navigation">
           {navLinks.map((link) => {
             const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
+              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 prefetch
-                className={`group/nav relative px-3 py-2 rounded-lg text-xs font-semibold tracking-wider transition-all duration-300 font-mono select-none ${
+                className={`group/nav relative px-3 py-2 text-[13px] font-medium tracking-[-0.01em] transition-colors duration-300 select-none ${
                   isActive
-                    ? "text-accent-primary"
-                    : "text-text-secondary hover:text-text-primary hover:bg-[var(--c-surface)]/70"
+                    ? "text-[var(--c-ink)]"
+                    : "text-[var(--c-ink-3)] hover:text-[var(--c-ink)]"
                 }`}
               >
-                <span className={`mr-1 font-extralight transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>[</span>
-                <SplitReveal text={link.label} by="char" stagger={18} delay={60} />
-                <span className={`ml-1 font-extralight transition-all duration-300 ${isActive ? "text-accent-primary opacity-70" : "opacity-40 group-hover/nav:opacity-90 group-hover/nav:text-accent-primary"}`}>]</span>
-                {/* hover underline for inactive links — grows from the centre */}
+                {link.label}
                 {!isActive && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-[2px] w-0 group-hover/nav:w-[calc(100%-1.5rem)] bg-accent-primary/60 rounded-full transition-[width] duration-300" />
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-px w-0 group-hover/nav:w-[calc(100%-1.5rem)] bg-[var(--c-ink-3)] transition-[width] duration-300" />
                 )}
                 {isActive && (
                   <motion.div
                     layoutId="nav-underline"
-                    className="absolute bottom-1 left-3 right-3 h-[2px] bg-accent-primary rounded-full"
+                    className="absolute bottom-1 left-3 right-3 h-[2px] bg-[var(--accent-1)] rounded-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -170,23 +172,37 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* ─── Right Actions ─── */}
-        <div className="flex items-center gap-3">
-          {/* Live indicator */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-normal text-text-secondary border border-border-subtle bg-[var(--c-surface)]/50 font-mono">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-            </span>
-            active
-          </div>
+        {/* ─── Right: status line + session ─── */}
+        <div className="flex items-center gap-4">
+          {/* Real state, in the surface's own idiom. */}
+          {overview && (
+            <div className="hidden lg:flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--c-ink-3)] tabular-nums">
+              <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+                {overview.is_scraping && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-1)] opacity-60" />
+                )}
+                <span
+                  className="relative inline-flex rounded-full h-1.5 w-1.5"
+                  style={{
+                    background: overview.is_scraping
+                      ? "var(--accent-1)"
+                      : "var(--color-score-high)",
+                  }}
+                />
+              </span>
+              <span>{overview.is_scraping ? "collecting" : "idle"}</span>
+              <span aria-hidden="true" className="text-[var(--c-border)]">/</span>
+              <span>{overview.tools_tracked} tracked</span>
+              <span aria-hidden="true" className="text-[var(--c-border)]">/</span>
+              <span>{overview.signals_24h} signals 24h</span>
+            </div>
+          )}
 
-          {/* Auth buttons */}
           {isLoaded && isSignedIn ? (
             <>
               <Link
                 href="/watchlist"
-                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-normal text-accent-primary bg-accent-primary/10 border border-accent-primary/20 hover:bg-accent-primary/20 transition-colors duration-300 font-mono"
+                className="hidden sm:flex items-center gap-1.5 text-[13px] font-medium text-[var(--c-ink-3)] hover:text-[var(--c-ink)] transition-colors duration-300"
               >
                 <Bookmark className="w-3.5 h-3.5" />
                 watchlist
@@ -195,32 +211,25 @@ export default function Navbar() {
             </>
           ) : isLoaded ? (
             <SignInButton mode="modal">
-              <button className="btn-primary hidden sm:flex items-center gap-1.5 cursor-pointer select-none">
-                <Sparkles className="w-3.5 h-3.5" />
-                start console
+              <button className="hidden sm:inline text-[13px] font-medium text-[var(--c-ink-3)] hover:text-[var(--c-ink)] transition-colors duration-300 cursor-pointer select-none">
+                sign in
               </button>
             </SignInButton>
           ) : null}
 
-          {/* Theme switcher */}
           {mounted && (
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full border border-border-subtle bg-[var(--c-surface)]/50 hover:bg-indigo-600/10 transition-colors duration-300 text-text-secondary hover:text-text-primary cursor-pointer select-none"
+              className="p-2 rounded-full text-[var(--c-ink-3)] hover:text-[var(--c-ink)] transition-colors duration-300 cursor-pointer select-none"
               aria-label="Toggle theme"
             >
-              {theme === "dark" ? (
-                <Moon className="w-3.5 h-3.5 text-accent-glow" />
-              ) : (
-                <Sun className="w-3.5 h-3.5 text-amber-500" />
-              )}
+              {theme === "dark" ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
             </button>
           )}
 
-          {/* Mobile menu trigger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-full border border-border-subtle bg-[var(--c-surface)]/50 text-text-secondary cursor-pointer select-none"
+            className="md:hidden p-2 rounded-full text-[var(--c-ink-3)] cursor-pointer select-none"
             aria-label="Toggle mobile menu"
           >
             {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -228,16 +237,15 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Scroll-progress bar — the loading line that fills across the bottom of
-          the navbar as you move down the page. */}
-      <div className="absolute inset-x-0 bottom-0 h-[2px] overflow-hidden">
+      {/* Reading progress across the bottom of the chrome. */}
+      <div className="absolute inset-x-0 bottom-0 h-px overflow-hidden">
         <div
           className="h-full bg-[var(--accent-1)] transition-[width] duration-150 ease-out"
           style={{ width: `${scrollProgress * 100}%` }}
         />
       </div>
 
-      {/* ─── Mobile Fullscreen Overlay ─── */}
+      {/* ─── Mobile overlay ─── */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -250,9 +258,7 @@ export default function Navbar() {
             <div className="flex flex-col space-y-6 pt-8">
               {navLinks.map((link) => {
                 const isActive =
-                  link.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(link.href);
+                  link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
                 return (
                   <Link
                     key={link.href}
@@ -260,9 +266,11 @@ export default function Navbar() {
                     onClick={() => setMobileOpen(false)}
                     className="mobile-nav-link text-3xl font-normal font-display tracking-[-0.04em] text-left flex items-center"
                   >
-                    <span className={`transition-colors duration-300 ${
-                      isActive ? "text-accent-primary" : "text-text-secondary hover:text-text-primary"
-                    }`}>
+                    <span
+                      className={`transition-colors duration-300 ${
+                        isActive ? "text-[var(--c-ink)]" : "text-[var(--c-ink-3)]"
+                      }`}
+                    >
                       {link.label}
                     </span>
                   </Link>
@@ -275,15 +283,17 @@ export default function Navbar() {
                 <Link
                   href="/watchlist"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary font-semibold text-sm"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 text-[var(--c-ink)] font-medium text-sm"
                 >
                   <Bookmark className="w-4 h-4" />
                   My Watchlist
                 </Link>
               )}
-              <div className="text-center text-xs text-text-secondary font-mono">
-                stackradar v2.0 • live stats
-              </div>
+              {overview && (
+                <div className="text-center font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--c-ink-3)] tabular-nums">
+                  {overview.tools_tracked} tracked / {overview.signals_24h} signals 24h
+                </div>
+              )}
             </div>
           </motion.div>
         )}

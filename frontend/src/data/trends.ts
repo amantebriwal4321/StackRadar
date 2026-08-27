@@ -224,6 +224,42 @@ export async function fetchToolHistory(slug: string, days = 30): Promise<{ data:
   return res.json();
 }
 
+/* Many tools' series on one shared date axis.
+ *
+ * The landing scrubs the whole ranking through real time as you scroll, which
+ * needs every tracked tool at once; doing that through fetchToolHistory would
+ * be a request per tool on every render. `series` is index-aligned to `dates`
+ * and carries null where a tool has no reading that day, so the page never has
+ * to invent a value to close a gap. */
+export interface BulkHistoryReading {
+  score: number | null;
+  stars: number | null;
+  mention_count: number | null;
+}
+
+export interface BulkHistoryTool {
+  slug: string;
+  name: string;
+  icon: string | null;
+  category: string | null;
+  series: (BulkHistoryReading | null)[];
+}
+
+export interface BulkHistory {
+  days: number;
+  dates: string[];
+  tools: BulkHistoryTool[];
+}
+
+export async function fetchBulkHistory(limit = 12, days = 30): Promise<BulkHistory> {
+  const res = await resilientFetch(
+    `${API_BASE}/api/v1/tools/history/bulk?limit=${limit}&days=${days}`,
+    { next: { revalidate: REVALIDATE_SECONDS } }
+  );
+  if (!res.ok) throw new Error("Failed to fetch bulk history");
+  return res.json();
+}
+
 export async function fetchRoadmaps(): Promise<Roadmap[]> {
   const res = await resilientFetch(`${API_BASE}/api/v1/roadmaps`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error("Failed to fetch roadmaps");

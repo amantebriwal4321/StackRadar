@@ -332,6 +332,90 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
     }
 
 
+@router.get("/tools/history/bulk")
+def get_bulk_history(
+    slugs: Optional[str] = Query(None, description="Comma-separated slugs. Omit for the top tools by score."),
+    days: int = Query(30, ge=1, le=90),
+    limit: int = Query(12, ge=2, le=31),
+    db: Session = Depends(get_db),
+):
+    """Time series for many tools at once, aligned to a shared date axis.
+
+    The landing page scrubs the ranking through real time as you scroll, which
+    needs every tracked tool's series in one shot. Fetching them through
+    /tools/{slug}/history would be a request per tool on every render.
+
+    Readings are bucketed by DAY and the last reading of each day wins: the
+    scraper can run more than once in a day, and two readings hours apart are
+    not two points on a daily axis. `series` is index-aligned to `dates`, with
+    null where a tool has no reading for that day, so the client never has to
+    invent a value to fill a gap.
+    """
+    if slugs:
+        wanted = [validate_slug(s.strip()) for s in slugs.split(",") if s.strip()][:limit]
+        tools = db.query(Tool).filter(Tool.slug.in_(wanted)).all()
+        # Preserve the caller's order rather than the DB's.
+        order = {s: i for i, s in enumerate(wanted)}
+        tools.sort(key=lambda t: order.get(t.slug, len(order)))
+    else:
+        tools = (
+            db.query(Tool)
+            .filter(Tool.score.isnot(None))
+            .order_by(Tool.score.desc())
+            .limit(limit)
+            .all()
+        )
+
+    if not tools:
+        return {"days": days, "dates": [], "tools": []}
+
+    cutoff = date.today() - timedelta(days=days)
+    by_id = {t.id: t for t in tools}
+    snapshots = (
+        db.query(ToolSnapshot)
+        .filter(
+            ToolSnapshot.tool_id.in_(list(by_id)),
+            ToolSnapshot.recorded_at >= datetime(cutoff.year, cutoff.month, cutoff.day),
+        )
+        .order_by(ToolSnapshot.recorded_at.asc())
+        .all()
+    )
+
+    # (tool_id, day) -> last reading that day. Ascending order above means a
+    # later reading simply overwrites an earlier one.
+    latest: dict[tuple[int, date], ToolSnapshot] = {}
+    for s in snapshots:
+        latest[(s.tool_id, s.recorded_at.date())] = s
+
+    dates = sorted({d for (_, d) in latest})
+
+    return {
+        "days": days,
+        "dates": [d.isoformat() for d in dates],
+        "tools": [
+            {
+                "slug": t.slug,
+                "name": t.name,
+                "icon": t.icon,
+                "category": t.category,
+                "series": [
+                    (
+                        {
+                            "score": snap.score,
+                            "stars": snap.stars,
+                            "mention_count": snap.mention_count,
+                        }
+                        if (snap := latest.get((t.id, d))) is not None
+                        else None
+                    )
+                    for d in dates
+                ],
+            }
+            for t in tools
+        ],
+    }
+
+
 @router.get("/tools/{slug}/history")
 def get_tool_history(slug: str, days: int = Query(30, ge=1, le=90), db: Session = Depends(get_db)):
     """Get time-series data for a tool (last N days)."""
