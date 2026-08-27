@@ -54,7 +54,7 @@ export default function FeedbackButton() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Send feedback"
-        className="group animate-fab-in fixed bottom-20 right-4 z-[90] flex items-center gap-2 rounded-full bg-[var(--accent-1)] px-3.5 py-3 text-white shadow-lg shadow-black/30 transition-transform duration-300 hover:-translate-y-0.5 md:bottom-6 md:right-6 md:px-4"
+        className="group animate-fab-in fixed bottom-20 right-4 z-[90] flex items-center gap-2 fab-pill rounded-full bg-[var(--accent-1)] px-3.5 py-3 shadow-lg shadow-black/30 transition-transform duration-300 hover:-translate-y-0.5 md:bottom-6 md:right-6 md:px-4"
       >
         {/* soft magenta sweep on hover, echoing the logo */}
         <span className="pointer-events-none absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_72%,var(--accent-2))] opacity-0 transition-opacity duration-300 group-hover:opacity-40" />

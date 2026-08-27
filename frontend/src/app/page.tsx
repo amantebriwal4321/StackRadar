@@ -80,7 +80,7 @@ export default function Home() {
       if (!frame) frame = requestAnimationFrame(read);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    read();
+    frame = requestAnimationFrame(read);
     return () => {
       window.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
@@ -89,7 +89,6 @@ export default function Home() {
 
   const load = useCallback(async () => {
     try {
-      setError(null);
       const [allTools, overviewData, rm] = await Promise.all([
         fetchTools(),
         fetchOverview(),
@@ -98,6 +97,7 @@ export default function Home() {
       setTools(allTools);
       setOverview(overviewData);
       setRoadmaps(rm);
+      setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not reach the server");
     }

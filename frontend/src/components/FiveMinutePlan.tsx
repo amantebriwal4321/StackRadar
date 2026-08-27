@@ -84,7 +84,7 @@ export default function FiveMinutePlan() {
               <h2 className="text-2xl md:text-4xl font-normal font-display text-[var(--c-ink)] leading-tight mb-1.5">
                 Get your 5-minute career plan
               </h2>
-              <p className="text-sm md:text-base text-[var(--c-ink-2)] font-extralight max-w-xl mb-6">
+              <p className="text-sm md:text-base text-[var(--c-ink-2)] font-medium max-w-xl mb-6">
                 Pick where you want to go. We&apos;ll hand you the exact path — the right tools
                 in the right order, each with the single best free video.
               </p>
@@ -130,7 +130,7 @@ export default function FiveMinutePlan() {
                   <h2 className="text-2xl md:text-4xl font-normal font-display text-[var(--c-ink)] leading-tight">
                     {picked.label}
                   </h2>
-                  <p className="text-sm text-[var(--c-ink-2)] font-extralight mt-1">{picked.outcome} · {picked.weeks}</p>
+                  <p className="text-sm text-[var(--c-ink-2)] font-medium mt-1">{picked.outcome} · {picked.weeks}</p>
                 </div>
               </div>
 
@@ -181,7 +181,7 @@ export default function FiveMinutePlan() {
                     <div key={f.t} className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60">
                       <f.icon className="w-5 h-5 text-indigo-600 mb-2" />
                       <p className="text-sm font-semibold text-[var(--c-ink)]">{f.t}</p>
-                      <p className="text-xs text-[var(--c-ink-2)] font-extralight mt-0.5">{f.d}</p>
+                      <p className="text-xs text-[var(--c-ink-2)] font-medium mt-0.5">{f.d}</p>
                     </div>
                   ))}
                 </div>

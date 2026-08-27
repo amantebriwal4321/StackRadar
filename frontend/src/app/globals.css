@@ -171,8 +171,14 @@
   --c-surface: #FFFFFF;            /* raised panel */
   --c-surface-2: #E0DBCE;          /* deeper beige panel */
   --c-ink: #2C2E2A;                /* charcoal — primary text */
-  --c-ink-2: #80827F;              /* secondary */
-  --c-ink-3: #B6B6B6;              /* tertiary / caption */
+  --c-ink-2: #6A6C64;              /* secondary. The reference uses #80827F,
+                                      but that is 3.43:1 on this cream and
+                                      only 3.95:1 on their white, so it fails
+                                      the 4.5 floor either way. Darkened to
+                                      4.75:1 rather than copying the defect. */
+  --c-ink-3: #5E605A;              /* tertiary / caption. #B6B6B6 (the
+                                      reference's lightest grey) measures 1.79:1
+                                      on cream: that grey is for rules, not text. */
   --c-border: rgba(44, 46, 42, 0.14);
   --c-scrim: #2C2E2A;
 }
@@ -195,7 +201,7 @@ html.dark {
   --c-surface-2: #2F2C29;
   --c-ink: #F7F4EC;                /* warm bone, not pure white */
   --c-ink-2: #A3A099;
-  --c-ink-3: #7A7770;
+  --c-ink-3: #8E8B83;              /* 3.92:1 at #7A7770 was under the 4.5 floor */
   --c-border: rgba(247, 244, 236, 0.14);
   --ground: #1B1917;
 
@@ -575,12 +581,14 @@ body {
   -webkit-text-fill-color: currentColor;
 }
 .gradient-text {
-  color: var(--accent-2);
+  /* Coral measures 2.41:1 on cream and fails even the 3:1 large-text floor.
+     Headings take ink; the accent stays punctuation. */
+  color: var(--c-ink);
   background: none;
   -webkit-text-fill-color: currentColor;
 }
 .gradient-text-cool {
-  color: var(--accent-2);
+  color: var(--c-ink);
   background: none;
   -webkit-text-fill-color: currentColor;
 }
@@ -1139,3 +1147,13 @@ html.dark .ch-beige { background: var(--c-surface-2); }
   border-radius: 10px;
   background: color-mix(in srgb, var(--accent-yellow) 12%, transparent);
 }
+
+
+/* The floating feedback pill.
+   Its label sits on the charcoal accent, so it needs the GROUND colour, which
+   is the one case on the site where inheriting ink is exactly wrong: it
+   rendered charcoal-on-charcoal at 1.01:1. Tailwind would not emit a colour
+   utility for it (only preflight's `color: inherit` matched the element), so
+   the colour is stated here rather than left to arbitrary-value generation. */
+.fab-pill,
+.fab-pill * { color: var(--c-ground); }

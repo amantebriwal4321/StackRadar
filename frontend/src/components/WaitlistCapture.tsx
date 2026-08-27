@@ -164,7 +164,7 @@ export default function WaitlistCapture({
                 <button
                   type="submit"
                   disabled={state === "loading"}
-                  className="group flex shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--accent-1)] px-6 py-3.5 text-sm font-semibold text-white transition-colors duration-300 disabled:opacity-70"
+                  className="group flex shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--accent-1)] px-6 py-3.5 text-sm font-semibold text-[var(--c-ground)] transition-colors duration-300 disabled:opacity-70"
                 >
                   {state === "loading" ? (
                     <>

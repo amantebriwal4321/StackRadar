@@ -29,6 +29,7 @@ changes only grammar and world will fail it.
 | Build | Grammar | Nav treatment | Hero device | Act-sequence shape | Close pattern | Signature move | World | Port |
 |---|---|---|---|---|---|---|---|---|
 | stackradar-terminal | Live surface | App chrome: tab strip + live status line (no wordmark+CTA bar) | Surface already in a state (pinned readouts, no title card) | 5 acts / 11.0vh, peak 3rd and largest (3.4) | Real input (goal chooser), holds | Scroll is the time axis: the wheel scrubs the real snapshot series and the ranking reorders | Pure-black data surface, Dala tokens, no photography | StackRadar |
+| stackradar-editorial | Chaptered editorial | Margin folio (chapter number + title) that doubles as the stack tray | Title page, type on the cream ground, no media above the fold | 6 chapters / 9.7vh, peak 4th and largest (3.6) | Colophon plate, CTA as running text, computed from the reader's picks | Reading builds your stack: picks in ch4 fill the folio and the close computes from them | Warm light, cream/charcoal, product screenshots and brand marks, no photography | StackRadar |
 
 *(first row appended 2026-08-27. From the next build onwards, this table is the
 constraint.)*
@@ -50,6 +51,14 @@ as a constraint, so writing them down is the whole point.
 - The **5 acts / 11.0vh** band, peak third at 3.4vh.
 - A **pure-black, zero-imagery data ground.** A second build with no generated
   assets must find a different reason to have none.
+- **Chaptered editorial**, claimed by `stackradar-editorial`, along with the
+  **margin folio**, the **colophon close**, and **reading-builds-your-stack** as
+  a signature move. A later build where choices made while scrolling accumulate
+  into a personalised close is the same move with different nouns.
+- The **6 chapters / 9.7vh** band, peak fourth at 3.6vh.
+- **Warm cream and charcoal** with product screenshots standing in for
+  photography. Both StackRadar builds now spend zero on generated assets, so a
+  third has to earn that differently again.
 
 ---
 
