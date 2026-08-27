@@ -372,7 +372,7 @@ export default function TrendsPage() {
                       />
                       <Bar
                         dataKey="score"
-                        fill="#8052ff"
+                        fill="#2C2E2A"
                         radius={[6, 6, 0, 0]}
                         animationDuration={1000}
                       />

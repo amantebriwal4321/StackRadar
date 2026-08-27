@@ -114,7 +114,7 @@ const TIER_META: Record<string, { label: string; color: string; ring: string; nu
   // #5266eb — a retired electric blue, hardcoded past the indigo token remap.
   beginner: { label: "Foundational Tools", color: "#12B76A", ring: "", num: "01" },
   intermediate: { label: "Core Tools", color: "#B54708", ring: "", num: "02" },
-  advanced: { label: "Advanced Tools", color: "#8052ff", ring: "", num: "03" },
+  advanced: { label: "Advanced Tools", color: "#2C2E2A", ring: "", num: "03" },
 };
 
 export default function ExplorePage() {

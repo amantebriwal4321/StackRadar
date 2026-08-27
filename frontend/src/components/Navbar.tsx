@@ -37,21 +37,24 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [mounted, setMounted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [overview, setOverview] = useState<Overview | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    // Dark-first: only an explicit "light" choice opts out.
+    // Light-first: only an explicit "dark" choice opts in. This must agree
+    // with the pre-paint script in layout.tsx, which is the other half of the
+    // same decision; when they disagreed, this one silently won and the whole
+    // app stayed dark after the palette was flipped.
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "light") {
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
-    } else {
+    if (savedTheme === "dark") {
       setTheme("dark");
       document.documentElement.classList.add("dark");
+    } else {
+      setTheme("light");
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
@@ -115,17 +118,17 @@ export default function Navbar() {
           <svg viewBox="0 0 39 48" className="h-7 w-[22px] shrink-0 overflow-visible" aria-hidden="true">
             <defs>
               <linearGradient id="sr-sweep" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#15846e" />
-                <stop offset="52%" stopColor="#8052ff" />
-                <stop offset="100%" stopColor="#c9a6ff" />
+                <stop offset="0%" stopColor="#8ED462" />
+                <stop offset="52%" stopColor="#2C2E2A" />
+                <stop offset="100%" stopColor="#80827F" />
               </linearGradient>
               <linearGradient id="sr-blip" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#8052ff" />
-                <stop offset="100%" stopColor="#ffb829" />
+                <stop offset="0%" stopColor="#2C2E2A" />
+                <stop offset="100%" stopColor="#FF705D" />
               </linearGradient>
               <linearGradient id="sr-stack" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#6a3fd6" />
-                <stop offset="100%" stopColor="#8052ff" />
+                <stop offset="0%" stopColor="#1A3300" />
+                <stop offset="100%" stopColor="#2C2E2A" />
               </linearGradient>
             </defs>
             <path d="M15 0 A24 24 0 0 1 39 24 L15 24 Z" fill="url(#sr-sweep)" />

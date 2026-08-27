@@ -203,8 +203,8 @@ export default function ToolDetailPage() {
                 <AreaChart data={history} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="areaGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8052ff" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#8052ff" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#2C2E2A" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#2C2E2A" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   

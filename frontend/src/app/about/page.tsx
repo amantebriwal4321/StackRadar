@@ -311,19 +311,19 @@ export default function AboutPage() {
         <div className="grid md:grid-cols-3 gap-4">
           {[
             {
-              tag: "Primary", accent: "#8052ff", icon: GraduationCap,
+              tag: "Primary", accent: "#2C2E2A", icon: GraduationCap,
               who: "Learners & career-switchers",
               jtbd: "“I have limited time — what do I learn next so it still matters in two years?”",
               hook: "See what’s rising, then start its roadmap in one click. Intelligence becomes action.",
             },
             {
-              tag: "Secondary", accent: "#8052ff", icon: Users,
+              tag: "Secondary", accent: "#2C2E2A", icon: Users,
               who: "Senior devs & tech leads",
               jtbd: "“Is this tool safe to standardize on, or is it already cooling off?”",
               hook: "Compare momentum and trajectory before you bet a codebase on it.",
             },
             {
-              tag: "Growth loop", accent: "#8052ff", icon: Megaphone,
+              tag: "Growth loop", accent: "#2C2E2A", icon: Megaphone,
               who: "DevRel & creators",
               jtbd: "“What’s heating up that I should make content about this week?”",
               hook: "Screenshot-ready score cards and movers → built-in distribution.",

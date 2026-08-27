@@ -67,7 +67,7 @@ export default function Preloader() {
         initial={{ y: 0 }}
         animate={progress === 100 ? { y: "-100%" } : { y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute top-0 left-0 w-full h-1/2 bg-[var(--c-scrim)] border-b border-[var(--accent-1)]/20 pointer-events-auto"
+        className="curtain absolute top-0 left-0 w-full h-1/2 bg-[var(--ground)] pointer-events-auto"
       />
 
       {/* Bottom half */}
@@ -75,7 +75,7 @@ export default function Preloader() {
         initial={{ y: 0 }}
         animate={progress === 100 ? { y: "100%" } : { y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-0 left-0 w-full h-1/2 bg-[var(--c-scrim)] pointer-events-auto"
+        className="curtain absolute bottom-0 left-0 w-full h-1/2 bg-[var(--ground)] pointer-events-auto"
       />
 
       {/* The wait now SAYS something. A bare percentage taught a first-time
@@ -87,7 +87,7 @@ export default function Preloader() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="relative z-10 flex flex-col items-center justify-center gap-6 px-6 text-center"
       >
-        <div className="text-[11px] font-normal tracking-[0.4em] font-display text-white/50 uppercase">
+        <div className="text-[11px] font-normal tracking-[0.4em] font-display text-[var(--c-ink-2)] uppercase">
           StackRadar
         </div>
 
@@ -96,14 +96,14 @@ export default function Preloader() {
           text="Know what to learn next."
           delay={140}
           stagger={85}
-          className="max-w-3xl text-4xl md:text-6xl font-normal font-display tracking-[-0.04em] leading-[1.05] text-white"
+          className="max-w-3xl text-4xl md:text-6xl font-medium font-display tracking-[-0.04em] leading-[1.05] text-[var(--c-ink)]"
         />
 
         <SplitReveal
           text="Live momentum from GitHub, Hacker News, Reddit and Dev.to — turned into a roadmap."
           delay={520}
           stagger={26}
-          className="max-w-md text-[13px] md:text-sm font-extralight leading-relaxed text-white/55"
+          className="max-w-md text-[13px] md:text-sm font-medium leading-relaxed text-[var(--c-ink-2)]"
         />
 
         {/* Uiverse loader (bociKond), themed to the accent token */}

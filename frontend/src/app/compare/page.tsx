@@ -19,7 +19,7 @@ import {
 // distinguishable via the system's own data tokens (no off-brand pink/teal).
 // Iris ramp + neutrals. The score green/amber/red are deliberately absent:
 // as series colours they would imply a momentum reading the series does not have.
-const COMPARE_COLORS = ["#8052ff", "#a488ff", "#6a3fd6", "#c9b8ff", "#bdbdbd"];
+const COMPARE_COLORS = ["#8052ff", "#a488ff", "#6a3fd6", "#c9b8ff", "#80827F"];
 
 export default function ComparePage() {
   const [allTools, setAllTools] = useState<Tool[]>([]);

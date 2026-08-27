@@ -22,7 +22,7 @@ interface NodeDatum {
 }
 
 // Neon Noir — deep wine nodes with a magenta glow at the high end (bolder = higher score)
-const COLOR_HIGH = new THREE.Color("#8052ff"); // >= 75 — Electric Iris
+const COLOR_HIGH = new THREE.Color("#2C2E2A"); // >= 75 — Electric Iris
 const COLOR_MID = new THREE.Color("#15846e"); // 45–75 — Deep Verdant
 const COLOR_LOW = new THREE.Color("#9a9a9a"); // < 45 — Ash Gray
 
@@ -256,7 +256,7 @@ function ConstellationScene({
       {/* constellation lines */}
       <lineSegments ref={lineRef} geometry={lineGeometry}>
         <lineBasicMaterial
-          color="#8052ff"
+          color="#2C2E2A"
           transparent
           opacity={0.12}
           blending={THREE.AdditiveBlending}
@@ -278,9 +278,9 @@ function ConstellationScene({
       {/* glowing core */}
       <mesh>
         <sphereGeometry args={[0.13, 24, 24]} />
-        <meshBasicMaterial color="#8052ff" />
+        <meshBasicMaterial color="#2C2E2A" />
       </mesh>
-      <pointLight color="#8052ff" intensity={2} distance={6} />
+      <pointLight color="#2C2E2A" intensity={2} distance={6} />
 
       {/* floating labels for the top tools */}
       {labelled.map((node) => (
@@ -302,9 +302,9 @@ function ConstellationScene({
               style={{
                 color:
                   node.tool.score >= 75
-                    ? "#8052ff"
+                    ? "#2C2E2A"
                     : node.tool.score >= 45
-                    ? "#8052ff"
+                    ? "#2C2E2A"
                     : "#9a9a9a",
               }}
             >

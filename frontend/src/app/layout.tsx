@@ -60,16 +60,16 @@ export default function RootLayout({
           <script
             dangerouslySetInnerHTML={{
               __html: `
-                // Mercury is a dark-first design: dark unless the visitor has
-                // explicitly chosen light. Runs before paint so there's no flash.
+                // Light-first: the warm editorial system is the default look,
+                // and dark is the opt-in. Runs before paint so there's no flash.
                 try {
                   const theme = localStorage.getItem('theme');
-                  if (theme === 'light') {
-                    document.documentElement.classList.remove('dark');
-                  } else {
+                  if (theme === 'dark') {
                     document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
                   }
-                } catch (_) { document.documentElement.classList.add('dark'); }
+                } catch (_) { document.documentElement.classList.remove('dark'); }
                 // Decide the first-visit loader BEFORE first paint so the home
                 // page never flashes in ahead of it. Returning (same-session)
                 // visitors get no class, so the loader stays hidden.
