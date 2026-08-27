@@ -30,7 +30,7 @@ export default function StackFolio({
 
   return (
     <aside
-      className="pointer-events-none fixed left-0 top-0 z-40 hidden h-screen w-[clamp(9rem,13vw,13rem)] flex-col justify-between py-24 pl-6 lg:flex"
+      className="pointer-events-none fixed left-0 top-0 z-40 hidden h-screen w-[13rem] flex-col justify-between py-28 pl-6 xl:flex"
       aria-label="Reading position and your stack"
     >
       <div className="pointer-events-auto">

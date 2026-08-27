@@ -10,6 +10,8 @@ import type { Roadmap } from "@/data/trends";
  * ship-blocker, and an obviously empty slot is more honest than a plausible
  * invention.
  */
+const CARD_TINTS = ["#8ED462", "#FF705D", "#F5E211", "#2BA0FF", "#C3AEFF", "#A8E5E5"];
+
 export default function ChOrder({ roadmaps }: { roadmaps: Roadmap[] }) {
   const shown = roadmaps.slice(0, 6);
   const totalSteps = roadmaps.reduce((n, r) => n + (r.step_count ?? 0), 0);
@@ -44,15 +46,16 @@ export default function ChOrder({ roadmaps }: { roadmaps: Roadmap[] }) {
             <li key={r.slug} data-sc-in style={{ transitionDelay: `${i * 55}ms` }}>
               <Link
                 href={`/roadmap/${r.slug}`}
-                className="tech-panel tech-panel-interactive block h-full p-7"
+                className="block h-full rounded-[10px] p-7 transition-transform duration-300 hover:-translate-y-1"
+                style={{ background: CARD_TINTS[i % CARD_TINTS.length] }}
               >
-                <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--c-ink-3)] tabular-nums">
+                <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#2C2E2A]/70 tabular-nums">
                   {String(i + 1).padStart(2, "0")}
                 </p>
-                <h3 className="mt-4 text-[21px] font-medium tracking-[-0.02em] text-[var(--c-ink)]">
+                <h3 className="mt-4 text-[21px] font-medium tracking-[-0.02em] text-[#2C2E2A]">
                   {r.title ?? r.slug}
                 </h3>
-                <p className="mt-2 text-[14px] font-medium leading-relaxed text-[var(--c-ink-2)]">
+                <p className="mt-2 text-[14px] font-medium leading-relaxed text-[#2C2E2A]/80">
                   {r.step_count ?? 0} steps
                   {r.estimated_weeks ? ` · about ${r.estimated_weeks} weeks` : ""}
                 </p>

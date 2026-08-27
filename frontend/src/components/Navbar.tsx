@@ -107,7 +107,13 @@ export default function Navbar() {
   }, [mobileOpen]);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 w-full">
+    <header
+      className={`fixed top-0 inset-x-0 z-50 w-full transition-colors duration-300 ${
+        scrollProgress > 0.001
+          ? "bg-[var(--c-ground)]/92 backdrop-blur-md"
+          : "bg-transparent"
+      }`}
+    >
       <div className="relative flex h-16 items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
         {/* ─── Mark ───
             Kept from Dala: flat geometric primitives on a grid, gradient-filled,

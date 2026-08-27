@@ -119,7 +119,7 @@ export default function ChCatalog({
                     aria-pressed={on}
                     className={`group flex w-full items-center gap-3 rounded-[10px] border p-3 text-left transition-colors duration-200 ${
                       on
-                        ? "border-transparent bg-[var(--c-ink)] text-[var(--c-ground)]"
+                        ? "border-transparent bg-[#8ED462] text-[#2C2E2A]"
                         : "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-ink)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
                     }`}
                   >

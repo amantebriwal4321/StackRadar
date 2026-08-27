@@ -9,6 +9,7 @@ import {
   type Overview,
   type Roadmap,
 } from "@/data/trends";
+import Navbar from "@/components/Navbar";
 import ScrollcraftRoot from "@/components/scrollcraft/ScrollcraftRoot";
 import StackFolio from "@/components/landing/StackFolio";
 import ChTitle from "@/components/landing/ChTitle";
@@ -139,6 +140,8 @@ export default function Home() {
 
   return (
     <>
+      <Navbar />
+
       <StackFolio
         chapter={chapter + 1}
         chapterTitle={CHAPTERS[chapter] ?? CHAPTERS[0]}
@@ -147,7 +150,7 @@ export default function Home() {
         onRemove={remove}
       />
 
-      <ScrollcraftRoot>
+      <ScrollcraftRoot className="xl:pl-[13rem]">
         <span data-sc-progress className="sr-only" />
         <main id="top">
           <ChTitle overview={overview} tools={tools} />

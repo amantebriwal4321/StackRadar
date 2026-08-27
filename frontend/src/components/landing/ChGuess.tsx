@@ -56,7 +56,7 @@ export default function ChGuess({ tools }: { tools: Tool[] }) {
             className="h-auto w-full"
             priority={false}
           />
-          <figcaption className="border-t border-[var(--c-border)] bg-[var(--c-surface)] px-5 py-3 text-[13px] font-medium text-[var(--c-ink-2)]">
+          <figcaption className="bg-[#2BA0FF] px-5 py-3 text-[13px] font-medium text-[#2C2E2A]">
             The trends board, updated daily from live readings.
           </figcaption>
         </figure>

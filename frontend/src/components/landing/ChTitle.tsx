@@ -23,7 +23,7 @@ export default function ChTitle({
     <section className="ch-cream" data-sc-act="flow" aria-labelledby="ch-title-h">
       <div className="mx-auto w-full max-w-[1400px] px-6 pb-24 pt-[26vh] md:px-8">
         <p
-          className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--c-ink-2)]"
+          className="inline-block rounded-full bg-[#FF705D] px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-[#2C2E2A]"
           data-sc-in
         >
           Momentum intelligence for developers
@@ -51,7 +51,8 @@ export default function ChTitle({
 
         {/* The logo wall the reference uses for client brands. Ours is the
             catalog we actually track, so it is a claim we can support. */}
-        <div className="mt-20 border-t border-[var(--c-border)] pt-8" data-sc-in>
+        <div className="mt-20 pt-8" data-sc-in>
+          <span aria-hidden="true" className="mb-8 block h-1.5 w-full rounded-full bg-[linear-gradient(90deg,#8ED462_0_25%,#FF705D_25%_50%,#F5E211_50%_75%,#2BA0FF_75%_100%)]" />
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--c-ink-3)]">
             tracking {tracked} technologies · {stars} stars indexed
           </p>
