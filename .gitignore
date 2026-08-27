@@ -76,3 +76,6 @@ files.txt
 *.out
 dev-next.out
 
+
+# scrollcraft verification output (regenerate with scripts/shoot.mjs)
+scrollcraft/builds/*/lab/
