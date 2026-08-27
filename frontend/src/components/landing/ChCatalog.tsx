@@ -2,6 +2,8 @@
 
 import { useCallback, useRef } from "react";
 import TechLogo from "@/components/ui/TechLogo";
+import StackDiagnosis from "@/components/landing/StackDiagnosis";
+import { diagnose } from "@/lib/stack/diagnose";
 import type { Tool } from "@/data/trends";
 import { useActProgress } from "@/lib/scrollcraft/useActProgress";
 
@@ -47,7 +49,9 @@ export default function ChCatalog({
       // and the rest of this act read as dead scroll.
       const local = Math.min(Math.max(open * n - i, 0), 1);
       const e = 1 - Math.pow(1 - local, 3);
-      el.style.opacity = String(0.18 + e * 0.82);
+      // 0.55 floor, not 0.18: at 0.18 the un-revealed tail read as a
+      // disabled row rather than as content still arriving.
+      el.style.opacity = String(0.55 + e * 0.45);
       el.style.transform = `translateY(${(1 - e) * 18}px)`;
       if (local >= 0.5) opened++;
     }
@@ -83,32 +87,24 @@ export default function ChCatalog({
         ref={stageRef}
         data-sc-stage
         data-sc-verify-state="rows:0"
-        className="flex min-h-screen w-full items-center overflow-hidden"
+        className="flex min-h-screen w-full items-start overflow-hidden pt-24 md:items-center md:pt-0"
       >
-        <div className="mx-auto w-full max-w-[1400px] px-6 py-16 md:px-8">
-          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <h2
-              id="ch-catalog-h"
-              className="max-w-[18ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
-              data-sc-cue="0 1 0 0.1"
-            >
-              Pick up what you are actually building with.
-            </h2>
-            <p
-              className="max-w-[34ch] text-[16px] font-medium leading-relaxed text-[var(--c-ink-2)]"
-              data-sc-cue="0 1 0 0.1"
-            >
-              Everything you choose goes into your stack in the margin. There is
-              no form at the end, only what you picked.
-            </p>
-          </div>
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 md:px-8 md:py-16">
+          <h2
+            id="ch-catalog-h"
+            className="max-w-[18ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
+            data-sc-cue="0 1 0 0.1"
+          >
+            Pick up what you are actually building with.
+          </h2>
 
+          <div className="mt-6 grid gap-6 md:mt-10 md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-start">
           {/* Resting state is the readable one: if the rAF never runs, every
               row is already visible at full opacity via CSS, and the scroll
               treatment only animates toward that. */}
           <ul
             ref={gridRef}
-            className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+            className="grid grid-cols-2 gap-2 [&>li:nth-child(n+9)]:hidden sm:gap-3 sm:grid-cols-3 sm:[&>li:nth-child(n+9)]:block lg:grid-cols-3 xl:grid-cols-4"
           >
             {shown.map((t) => {
               const on = picked.includes(t.slug);
@@ -117,9 +113,10 @@ export default function ChCatalog({
                   <button
                     onClick={() => onToggle(t.slug)}
                     aria-pressed={on}
-                    className={`group flex w-full items-center gap-3 rounded-[50px] border p-3 text-left transition-colors duration-200 ${
+                    aria-label={`${t.name}, momentum ${t.score.toFixed(1)}`}
+                    className={`group flex w-full items-center gap-2.5 rounded-[50px] border p-2.5 text-left transition-colors duration-200 sm:gap-3 sm:p-3 ${
                       on
-                        ? "border-transparent bg-[#8ED462] text-[#2C2E2A]"
+                        ? "on-accent border-transparent bg-[#8ED462]"
                         : "border-[var(--c-border)] bg-[var(--c-surface)] text-[var(--c-ink)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
                     }`}
                   >
@@ -150,11 +147,19 @@ export default function ChCatalog({
             })}
           </ul>
 
-          <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--c-ink-3)] tabular-nums">
-            {picked.length === 0
-              ? "nothing picked yet"
-              : `${picked.length} in your stack`}
-          </p>
+            {/* The consequence, next to the cause. */}
+            <div className="order-first lg:order-none lg:sticky lg:top-28">
+              <StackDiagnosis d={diagnose(picked, tools)} compact />
+              {picked.length > 0 && (
+                <a
+                  href="#read-out"
+                  className="mt-6 inline-block text-[14px] font-medium text-[var(--c-ink-2)] underline decoration-[var(--c-ink-3)] underline-offset-4 transition-colors hover:text-[var(--c-ink)]"
+                >
+                  See the full read-out
+                </a>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </section>

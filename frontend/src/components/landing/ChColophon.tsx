@@ -3,111 +3,139 @@
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
 import AssetSlot from "@/components/ui/AssetSlot";
+import StackDiagnosis from "@/components/landing/StackDiagnosis";
+import { diagnose } from "@/lib/stack/diagnose";
 import type { Tool } from "@/data/trends";
 
 /* CHAPTER 6 — Colophon. Feeling: resolve.
  *
- * Chaptered editorial closes on a colophon plate: small type, the CTA set as a
- * line of running text rather than a button island, and no magnetic button.
+ * Chaptered editorial closes on a colophon plate: small type, the CTA as a
+ * line of running text rather than a button island.
  *
- * This is also where the signature move pays off. Everything here is computed
- * from what the reader picked up in chapter 4, from real scores. If they
- * picked nothing, the plate says so plainly rather than inventing a stack.
+ * This is where the signature move pays off, and it renders from the SAME
+ * diagnose() the catalog uses. Previously each chapter did its own arithmetic,
+ * which is how the two ended up feeling unrelated to each other.
+ *
+ * The empty state is a demonstration rather than a shrug. It used to read "You
+ * did not pick anything up. That is allowed." and stop, which is a dead end at
+ * the exact moment the page should be most useful. It now runs the same
+ * read-out over the three fastest-rising tools, labelled plainly as an example,
+ * so a reader who picked nothing still sees what the mechanic does.
  */
 export default function ChColophon({
   picked,
   tools,
+  onRemove,
 }: {
   picked: string[];
   tools: Tool[];
+  onRemove: (slug: string) => void;
 }) {
+  const empty = picked.length === 0;
+
+  // The worked example is the three fastest risers: real, and it changes with
+  // the data rather than being a hand-picked demo set.
+  const exampleSlugs = [...tools]
+    .sort((a, b) => b.growth_pct - a.growth_pct)
+    .slice(0, 3)
+    .map((t) => t.slug);
+
+  const d = diagnose(empty ? exampleSlugs : picked, tools);
   const bySlug = new Map(tools.map((t) => [t.slug, t]));
-  const chosen = picked.map((s) => bySlug.get(s)).filter(Boolean) as Tool[];
-
-  const avg =
-    chosen.length > 0
-      ? chosen.reduce((n, t) => n + t.score, 0) / chosen.length
-      : null;
-
-  // The strongest thing they did NOT pick, so the suggestion is a real gap
-  // rather than a generic upsell.
-  const missing = [...tools]
-    .filter((t) => !picked.includes(t.slug))
-    .sort((a, b) => b.score - a.score)[0];
-
-  const goal = chosen[0]?.category;
 
   return (
-    <section className="ch-cream" data-sc-act="flow" aria-labelledby="ch-colophon-h">
+    <section
+      className="ch-cream"
+      data-sc-act="flow"
+      aria-labelledby="ch-colophon-h"
+      id="read-out"
+    >
       <div className="mx-auto w-full max-w-[1400px] px-6 py-[18vh] md:px-8">
-        <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] lg:items-start">
+        <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.62fr)] lg:items-start">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--c-ink-3)]">
               your stack
             </p>
 
-            {chosen.length === 0 ? (
-              <>
-                <h2
-                  id="ch-colophon-h"
-                  className="mt-6 max-w-[18ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
-                  data-sc-in
-                >
-                  You did not pick anything up. That is allowed.
-                </h2>
-                <p className="mt-6 max-w-[46ch] text-[17px] font-medium leading-relaxed text-[var(--c-ink-2)]" data-sc-in>
-                  Scroll back to the catalog and choose two or three things you
-                  already use. Or skip it and{" "}
-                  <Link href="/explore" className="underline decoration-[var(--accent-coral)] decoration-2 underline-offset-4 hover:text-[var(--c-ink)]">
+            <h2
+              id="ch-colophon-h"
+              className="mt-6 max-w-[20ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
+              data-sc-in
+            >
+              {empty
+                ? "Here is what that read-out looks like."
+                : "This is what you are holding."}
+            </h2>
+
+            <div className="mt-8" data-sc-in>
+              <StackDiagnosis
+                d={d}
+                exampleOf={empty ? "example · the three fastest risers" : null}
+              />
+            </div>
+
+            {/* The picks themselves, removable. An editable list is the
+                difference between a summary and a tool. */}
+            {!empty && (
+              <ul className="mt-8 flex flex-wrap gap-2" data-sc-in>
+                {picked.map((slug) => {
+                  const t = bySlug.get(slug);
+                  if (!t) return null;
+                  return (
+                    <li key={slug}>
+                      <button
+                        onClick={() => onRemove(slug)}
+                        aria-label={`Remove ${t.name} from your stack`}
+                        className="flex items-center gap-2 rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-2 transition-colors hover:border-[color-mix(in_srgb,var(--c-ink)_35%,transparent)]"
+                      >
+                        <TechLogo slug={t.slug} emoji={t.icon} size={17} brand />
+                        <span className="text-[14px] font-medium text-[var(--c-ink)]">
+                          {t.name}
+                        </span>
+                        <span aria-hidden="true" className="text-[13px] text-[var(--c-ink-3)]">
+                          ×
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <p
+              className="mt-10 max-w-[46ch] text-[17px] font-medium leading-relaxed text-[var(--c-ink-2)]"
+              data-sc-in
+            >
+              {empty ? (
+                <>
+                  <Link
+                    href="#build"
+                    className="text-[var(--c-ink)] underline decoration-[#FF705D] decoration-2 underline-offset-4"
+                  >
+                    Pick your own
+                  </Link>{" "}
+                  and this recomputes from what you actually use. Or{" "}
+                  <Link
+                    href="/explore"
+                    className="underline decoration-[var(--c-ink-3)] underline-offset-4 hover:text-[var(--c-ink)]"
+                  >
                     open the console
                   </Link>{" "}
                   to see all {tools.length} ranked.
-                </p>
-              </>
-            ) : (
-              <>
-                <h2
-                  id="ch-colophon-h"
-                  className="mt-6 max-w-[20ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
-                  data-sc-in
-                >
-                  {chosen.length} picked, averaging {avg!.toFixed(1)} momentum.
-                </h2>
-
-                <ul className="mt-8 flex flex-wrap gap-2" data-sc-in>
-                  {chosen.map((t) => (
-                    <li
-                      key={t.slug}
-                      className="flex items-center gap-2 rounded-full border border-[var(--c-border)] bg-[var(--c-surface)] px-4 py-2"
-                    >
-                      <TechLogo slug={t.slug} emoji={t.icon} size={17} brand />
-                      <span className="text-[14px] font-medium text-[var(--c-ink)]">
-                        {t.name}
-                      </span>
-                      <span className="font-mono text-[12px] tabular-nums text-[var(--c-ink-3)]">
-                        {t.score.toFixed(1)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <p className="mt-10 max-w-[46ch] text-[17px] font-medium leading-relaxed text-[var(--c-ink-2)]" data-sc-in>
-                  The strongest thing you left out is{" "}
-                  <span className="text-[var(--c-ink)]">{missing?.name}</span> at{" "}
-                  <span className="font-mono tabular-nums text-[var(--c-ink)]">
-                    {missing?.score.toFixed(1)}
-                  </span>
-                  . When you are ready for the order to learn these in,{" "}
+                </>
+              ) : (
+                <>
                   <Link
-                    href={goal ? `/explore?domain=${encodeURIComponent(goal)}` : "/roadmaps"}
-                    className="underline decoration-[var(--accent-coral)] decoration-2 underline-offset-4 hover:text-[var(--c-ink)]"
+                    href="#build"
+                    className="text-[var(--c-ink)] underline decoration-[#FF705D] decoration-2 underline-offset-4"
                   >
-                    build my stack
-                  </Link>
-                  .
-                </p>
-              </>
-            )}
+                    Change your picks
+                  </Link>{" "}
+                  and everything above recomputes. Nothing was typed into a
+                  form: this is only what you chose while reading.
+                </>
+              )}
+            </p>
           </div>
 
           <div data-sc-in>

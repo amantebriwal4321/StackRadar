@@ -1110,11 +1110,24 @@ html { scroll-behavior: auto; }
      Re-scoping the tokens here fixes every descendant at once. Verified by the
      harness, not by eye. */
   --c-ink-2: #56584F;
-  --c-ink-3: #6E7067;
+  /* #6E7067 measured 3.64:1 on this ground. ink-2 was checked when this block
+     was written and ink-3 was not; the labels in the diagnosis panel are the
+     first small text to actually sit on it. */
+  --c-ink-3: #5C5E56;
 }
-html.dark .ch-cream { background: var(--c-ground); }
-html.dark .ch-white { background: var(--c-surface); }
-html.dark .ch-beige { background: var(--c-surface-2); }
+/* In dark the three grounds were #1B1917 / #242220 / #2F2C29 — so close that
+   the chapters stopped reading as separate grounds and the whole page went one
+   continuous brown-black. Pulled apart so the hard cuts between chapters land
+   in dark the way they do in light. */
+html.dark .ch-cream { background: #16110E; }
+html.dark .ch-white { background: #241F1A; }
+html.dark .ch-beige { background: #322A22; }
+html.dark .ch-beige {
+  /* The light theme darkens its ink on the beige ground; dark needs the
+     opposite, or the re-scoped tokens carry over and go too dark to read. */
+  --c-ink-2: #B8B2A6;
+  --c-ink-3: #99938A;
+}
 
 /* Stacking cards. Sticky siblings that pile up as you scroll, each one coming
    to rest slightly below the last so the stack stays legible. The offset is
@@ -1151,6 +1164,13 @@ html.dark .ch-beige { background: var(--c-surface-2); }
   border-radius: 50px;
   background: color-mix(in srgb, var(--accent-yellow) 12%, transparent);
 }
+/* Yellow at 12% over a dark ground goes muddy olive. Dark gets a neutral
+   raised surface plus a yellow edge, which reads as "reserved" rather than
+   as a stain. */
+html.dark .asset-slot {
+  background: color-mix(in srgb, var(--accent-yellow) 7%, var(--c-surface));
+  border-color: color-mix(in srgb, var(--accent-yellow) 45%, transparent);
+}
 
 
 /* The floating feedback pill.
@@ -1161,3 +1181,18 @@ html.dark .ch-beige { background: var(--c-surface-2); }
    the colour is stated here rather than left to arbitrary-value generation. */
 .fab-pill,
 .fab-pill * { color: var(--c-ground); }
+
+
+/* Text sitting on one of the accent fills.
+ *
+ * Every accent (green, coral, yellow, blue, lilac) is LIGHT in both themes, so
+ * anything on top of one must be charcoal in both themes too. Left to inherit,
+ * the dark theme hands it cream ink and the result is cream-on-green at
+ * 1.55:1 — invisible.
+ *
+ * Stated as a rule rather than a utility class because Tailwind does not
+ * reliably emit an arbitrary colour here; the same thing already forced the
+ * .fab-pill rule. The descendant selector matters: these fills wrap spans that
+ * carry their own type classes and inherit the colour. */
+.on-accent,
+.on-accent * { color: #2C2E2A; }

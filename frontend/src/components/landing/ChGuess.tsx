@@ -36,7 +36,7 @@ export default function ChGuess({ tools }: { tools: Tool[] }) {
             </p>
             <p className="text-[var(--c-ink)]">
               Meanwhile{" "}
-              <span className="rounded bg-[color-mix(in_srgb,var(--accent-yellow)_55%,transparent)] px-1.5 py-0.5">
+              <span className="on-accent rounded bg-[#F5E211] px-1.5 py-0.5">
                 {fastest?.name}
               </span>{" "}
               moved {fastest?.growth_pct >= 0 ? "up" : "down"}{" "}

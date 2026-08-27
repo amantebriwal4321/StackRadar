@@ -37,6 +37,8 @@ import ChColophon from "@/components/landing/ChColophon";
  * Brief: scrollcraft/builds/stackradar-editorial/BRIEF.md
  */
 
+const PICKS_KEY = "stackradar_picks";
+
 const CHAPTERS = [
   "Title page",
   "The guess",
@@ -52,9 +54,39 @@ export default function Home() {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  /* The signature move's state. Never pre-filled, so whatever the colophon
-     reports at the end was genuinely chosen while reading. */
+  /* The signature move's state. Never pre-filled from anything but the
+     reader's own earlier session, so whatever the colophon reports was always
+     genuinely chosen. Persisted because a reload used to wipe it, which made
+     the whole mechanic feel disposable. */
   const [picked, setPicked] = useState<string[]>([]);
+  const [picksLoaded, setPicksLoaded] = useState(false);
+
+  useEffect(() => {
+    // A frame later, not synchronously: setState in an effect body cascades a
+    // render, which is the lint rule this file already trips on elsewhere.
+    const f = requestAnimationFrame(() => {
+      try {
+        const raw = localStorage.getItem(PICKS_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(parsed)) {
+          setPicked(parsed.filter((x): x is string => typeof x === "string"));
+        }
+      } catch {
+        // Private mode throws on access. Losing the picks is survivable.
+      }
+      setPicksLoaded(true);
+    });
+    return () => cancelAnimationFrame(f);
+  }, []);
+
+  useEffect(() => {
+    // Only after the initial read, or the first render would clobber storage
+    // with the empty array before the saved value ever arrived.
+    if (!picksLoaded) return;
+    try {
+      localStorage.setItem(PICKS_KEY, JSON.stringify(picked));
+    } catch {}
+  }, [picked, picksLoaded]);
   const toggle = useCallback((slug: string) => {
     setPicked((p) => (p.includes(slug) ? p.filter((s) => s !== slug) : [...p, slug]));
   }, []);
@@ -158,7 +190,7 @@ export default function Home() {
           <ChMeasure tools={tools} overview={overview} />
           <ChCatalog tools={tools} picked={picked} onToggle={toggle} />
           <ChOrder roadmaps={roadmaps} />
-          <ChColophon picked={picked} tools={tools} />
+          <ChColophon picked={picked} tools={tools} onRemove={remove} />
         </main>
       </ScrollcraftRoot>
     </>

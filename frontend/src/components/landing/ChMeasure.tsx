@@ -94,7 +94,7 @@ export default function ChMeasure({
             {sources.map((s, i) => (
               <li
                 key={s.name}
-                className="stack-card p-7 md:p-9"
+                className="on-accent stack-card p-7 md:p-9"
                 style={{ ["--i" as string]: i, background: s.tint, borderColor: "transparent" }}
               >
                 <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#2C2E2A]/70">

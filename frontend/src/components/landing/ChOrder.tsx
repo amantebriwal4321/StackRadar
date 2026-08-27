@@ -46,7 +46,7 @@ export default function ChOrder({ roadmaps }: { roadmaps: Roadmap[] }) {
             <li key={r.slug} data-sc-in style={{ transitionDelay: `${i * 55}ms` }}>
               <Link
                 href={`/roadmap/${r.slug}`}
-                className="block h-full rounded-[50px] p-7 transition-transform duration-300 hover:-translate-y-1"
+                className="on-accent block h-full rounded-[50px] p-7 transition-transform duration-300 hover:-translate-y-1"
                 style={{ background: CARD_TINTS[i % CARD_TINTS.length] }}
               >
                 <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#2C2E2A]/70 tabular-nums">
