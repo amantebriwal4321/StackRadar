@@ -1213,6 +1213,67 @@ html.dark .asset-slot {
 }
 .sr-drift { animation: sr-drift 11s ease-in-out infinite; }
 
+/* ── Chapter art: continuous motion, plus a scroll-driven layer ──
+   The engine publishes each act's progress as --sc-p on the act element, and
+   custom properties inherit, so the art reads it in pure CSS. No extra rAF, no
+   listener, and the continuous half still runs if scripts never execute. */
+
+/* The sweep actually sweeps. transform-box: view-box makes 50% 50% mean the
+   centre of the viewBox rather than the element's own tight bounding box,
+   which for a needle drawn from the centre outward is not the same point. */
+@keyframes art-sweep { to { transform: rotate(360deg); } }
+.art-spin {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: art-sweep 14s linear infinite;
+}
+/* Scroll adds travel on top of the idle rotation. Two nested groups because a
+   CSS animation and a static transform cannot share one element. */
+.art-scroll-rot {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transform: rotate(calc(var(--sc-p, 0) * 90deg));
+}
+
+/* Contacts breathe, staggered so they do not pulse in unison. */
+@keyframes art-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.9; }
+  50%      { transform: scale(1.35); opacity: 1; }
+}
+.art-pulse {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: art-pulse 4.5s ease-in-out infinite;
+}
+.art-pulse-2 { animation-delay: -1.6s; }
+.art-pulse-3 { animation-delay: -3.1s; }
+
+/* The dashes flow along the trace, so the path reads as a live signal rather
+   than a drawn line. */
+@keyframes art-flow { to { stroke-dashoffset: -34; } }
+.art-flow { animation: art-flow 2.6s linear infinite; }
+
+/* The reading travels the trace as you scroll: offset-distance is driven
+   straight from act progress. This is the scroll animation proper. */
+.art-travel {
+  offset-path: path("M10 250 C 150 250, 210 120, 340 110 S 500 60, 596 20");
+  offset-distance: calc(var(--sc-p, 0) * 100%);
+  offset-rotate: 0deg;
+}
+
+/* The rings expand outward like a ping. */
+@keyframes art-ping {
+  0%   { transform: scale(0.72); opacity: 0.55; }
+  70%  { opacity: 0; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.art-ping {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: art-ping 6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.art-ping-2 { animation-delay: -3s; }
+
 /* Chapter content sits above its art. Excluding .ch-art matters: the rule
    sets `position: relative`, which overrode the art layer's own `absolute
    inset-0` and collapsed it to a zero-height box in flow. */
@@ -1221,5 +1282,13 @@ html.dark .asset-slot {
 .ch-beige > *:not(.ch-art) { position: relative; z-index: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sr-drift { animation: none; }
+  .sr-drift,
+  .art-spin,
+  .art-pulse,
+  .art-flow,
+  .art-ping { animation: none; }
+  /* The scroll-driven pieces hold at their start rather than tracking the
+     wheel, so nothing moves under a reader who asked for stillness. */
+  .art-scroll-rot { transform: none; }
+  .art-travel { offset-distance: 0%; }
 }
