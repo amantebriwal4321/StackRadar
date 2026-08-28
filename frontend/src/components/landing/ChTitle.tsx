@@ -1,3 +1,4 @@
+import ChapterArt from "@/components/landing/ChapterArt";
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
 import type { Overview, Tool } from "@/data/trends";
@@ -21,6 +22,7 @@ export default function ChTitle({
 
   return (
     <section className="ch-cream" data-sc-act="flow" aria-labelledby="ch-title-h">
+      <ChapterArt variant="sweep" />
       <div className="mx-auto w-full max-w-[1400px] px-6 pb-24 pt-[26vh] md:px-8">
         <p
           className="inline-block rounded-full bg-[#FF705D] px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-[#2C2E2A]"

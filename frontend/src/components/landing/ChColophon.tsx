@@ -1,5 +1,6 @@
 "use client";
 
+import ChapterArt from "@/components/landing/ChapterArt";
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
 import AssetSlot from "@/components/ui/AssetSlot";
@@ -50,6 +51,7 @@ export default function ChColophon({
       aria-labelledby="ch-colophon-h"
       id="read-out"
     >
+      <ChapterArt variant="quiet" />
       <div className="mx-auto w-full max-w-[1400px] px-6 py-[18vh] md:px-8">
         <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.62fr)] lg:items-start">
           <div>

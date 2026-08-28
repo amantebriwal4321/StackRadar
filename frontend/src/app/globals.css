@@ -1102,6 +1102,10 @@ html { scroll-behavior: auto; }
 /* Chapter grounds. Each chapter lands on its own and STAYS there: hard cuts,
    never an interpolated gradient. That alternation is what makes the page read
    as printed rather than played. */
+/* Positioned, so each chapter's art layer anchors to ITS OWN section. Without
+   this the `absolute inset-0` resolved against a far ancestor and all three
+   art layers stacked on top of the hero at once. */
+.ch-cream, .ch-white, .ch-beige { position: relative; }
 .ch-cream  { background: #F5F1E4; }
 .ch-white  { background: #FFFFFF; }
 .ch-beige  {
@@ -1196,3 +1200,26 @@ html.dark .asset-slot {
  * carry their own type classes and inherit the colour. */
 .on-accent,
 .on-accent * { color: #2C2E2A; }
+
+/* Ambient drift for chapter art.
+ *
+ * A CSS keyframe rather than a rAF loop: it keeps running where JS animation
+ * would not (a backgrounded tab, a failed script), so the resting state of the
+ * page is a composed frame rather than a blank one. Transform and opacity only.
+ */
+@keyframes sr-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(14px, -22px, 0); }
+}
+.sr-drift { animation: sr-drift 11s ease-in-out infinite; }
+
+/* Chapter content sits above its art. Excluding .ch-art matters: the rule
+   sets `position: relative`, which overrode the art layer's own `absolute
+   inset-0` and collapsed it to a zero-height box in flow. */
+.ch-cream > *:not(.ch-art),
+.ch-white > *:not(.ch-art),
+.ch-beige > *:not(.ch-art) { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sr-drift { animation: none; }
+}
