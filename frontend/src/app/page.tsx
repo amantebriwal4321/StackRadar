@@ -182,7 +182,7 @@ export default function Home() {
         onRemove={remove}
       />
 
-      <ScrollcraftRoot className="xl:pl-[13rem]">
+      <ScrollcraftRoot className="2xl:pl-[13rem]">
         <span data-sc-progress className="sr-only" />
         <main id="top">
           <ChTitle overview={overview} tools={tools} />

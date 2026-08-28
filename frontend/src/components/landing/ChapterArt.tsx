@@ -37,7 +37,7 @@ export default function ChapterArt({
       {variant === "sweep" && (
         <svg
           data-sc-parallax="-0.14"
-          className="absolute -right-[9vw] top-[16vh] hidden h-[68vh] w-[68vh] lg:block"
+          className="absolute -right-[7vw] top-[4vh] hidden h-[54vh] w-[54vh] lg:block"
           viewBox="0 0 400 400"
           fill="none"
         >

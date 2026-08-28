@@ -89,7 +89,7 @@ export default function ChCatalog({
         data-sc-verify-state="rows:0"
         className="flex min-h-screen w-full items-start overflow-hidden pt-24 md:items-center md:pt-0"
       >
-        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 md:px-8 md:py-16">
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 md:px-10 md:py-16 lg:px-16">
           <h2
             id="ch-catalog-h"
             className="max-w-[18ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"

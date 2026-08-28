@@ -18,7 +18,7 @@ export default function ChOrder({ roadmaps }: { roadmaps: Roadmap[] }) {
 
   return (
     <section className="ch-white" data-sc-act="flow" aria-labelledby="ch-order-h">
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-[18vh] md:px-8">
+      <div className="mx-auto w-full max-w-[1400px] px-6 py-[18vh] md:px-10 lg:px-16">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <h2
             id="ch-order-h"

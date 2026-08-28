@@ -23,7 +23,7 @@ export default function ChTitle({
   return (
     <section className="ch-cream" data-sc-act="flow" aria-labelledby="ch-title-h">
       <ChapterArt variant="sweep" />
-      <div className="mx-auto w-full max-w-[1400px] px-6 pb-24 pt-[26vh] md:px-8">
+      <div className="mx-auto w-full max-w-[1400px] px-6 pb-24 pt-[26vh] md:px-10 lg:px-16">
         <p
           className="inline-block rounded-full bg-[#FF705D] px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-[#2C2E2A]"
           data-sc-in
@@ -33,7 +33,7 @@ export default function ChTitle({
 
         <h1
           id="ch-title-h"
-          className="mt-6 max-w-[15ch] text-[clamp(3rem,8.6vw,8.75rem)] font-medium leading-[0.95] tracking-[-0.06em] text-[var(--c-ink)]"
+          className="mt-6 max-w-[13ch] text-[clamp(2.75rem,8vw,8.75rem)] font-medium leading-[0.95] tracking-[-0.06em] text-[var(--c-ink)]"
           data-sc-in
         >
           Stop guessing what to learn next.

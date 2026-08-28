@@ -62,7 +62,7 @@ export default function ChMeasure({
   return (
     <section className="ch-cream" data-sc-act="flow" aria-labelledby="ch-measure-h">
       <ChapterArt variant="traces" />
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-[16vh] md:px-8">
+      <div className="mx-auto w-full max-w-[1400px] px-6 py-[16vh] md:px-10 lg:px-16">
         <div className="grid gap-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] lg:items-start">
           <div>
             <h2

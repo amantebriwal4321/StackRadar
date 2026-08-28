@@ -17,7 +17,7 @@ export default function ChGuess({ tools }: { tools: Tool[] }) {
 
   return (
     <section className="ch-white" data-sc-act="flow" aria-labelledby="ch-guess-h">
-      <div className="mx-auto grid w-full max-w-[1400px] gap-14 px-6 py-[18vh] md:px-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:items-center">
+      <div className="mx-auto grid w-full max-w-[1400px] gap-14 px-6 py-[18vh] md:px-10 lg:px-16 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:items-center">
         <div data-sc-reveal="up" data-sc-in>
           <h2
             id="ch-guess-h"

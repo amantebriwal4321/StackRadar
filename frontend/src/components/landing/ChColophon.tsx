@@ -52,7 +52,7 @@ export default function ChColophon({
       id="read-out"
     >
       <ChapterArt variant="quiet" />
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-[18vh] md:px-8">
+      <div className="mx-auto w-full max-w-[1400px] px-6 py-[18vh] md:px-10 lg:px-16">
         <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.62fr)] lg:items-start">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--c-ink-3)]">
