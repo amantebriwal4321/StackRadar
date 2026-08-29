@@ -1,6 +1,7 @@
 "use client";
 
 import ChapterArt from "@/components/landing/ChapterArt";
+import ChapterHead from "@/components/landing/ChapterHead";
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
 import AssetSlot from "@/components/ui/AssetSlot";
@@ -52,22 +53,16 @@ export default function ChColophon({
       id="read-out"
     >
       <ChapterArt variant="quiet" />
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-[18vh] md:px-10 lg:px-16">
-        <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.62fr)] lg:items-start">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--c-ink-3)]">
-              your stack
-            </p>
+      <div className="ed-page py-[14vh]">
+        <ChapterHead
+          n={6}
+          id="ch-colophon-h"
+          title={empty ? "Here is what that reads like." : "This is what you are holding."}
+          thesis="Nothing was typed into a form. This is only what you chose while reading."
+        />
 
-            <h2
-              id="ch-colophon-h"
-              className="mt-6 max-w-[20ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
-              data-sc-in
-            >
-              {empty
-                ? "Here is what that read-out looks like."
-                : "This is what you are holding."}
-            </h2>
+        <div className="ed-grid mt-16 items-start">
+          <div className="col-span-4 md:col-span-7">
 
             <div className="mt-8" data-sc-in>
               <StackDiagnosis
@@ -140,7 +135,7 @@ export default function ChColophon({
             </p>
           </div>
 
-          <div data-sc-in>
+          <div className="col-span-4 md:col-span-4 md:col-start-9" data-sc-in>
             <AssetSlot
               label="Your photo or a short clip"
               what="A headshot or a 10 second clip of you saying what StackRadar is for. The reference site's whole pitch is real humans, and a beta product gains more from a face than a mature one does. This becomes the byline on this plate."

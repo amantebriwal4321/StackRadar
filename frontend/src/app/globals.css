@@ -1274,12 +1274,26 @@ html.dark .asset-slot {
 }
 .art-ping-2 { animation-delay: -3s; }
 
-/* Chapter content sits above its art. Excluding .ch-art matters: the rule
-   sets `position: relative`, which overrode the art layer's own `absolute
-   inset-0` and collapsed it to a zero-height box in flow. */
-.ch-cream > *:not(.ch-art),
-.ch-white > *:not(.ch-art),
-.ch-beige > *:not(.ch-art) { position: relative; z-index: 1; }
+/* Chapter content sits above its art.
+ *
+ * TWO exclusions, both of which this rule has already broken once:
+ *  - .ch-art: `position: relative` overrode the art layer's `absolute inset-0`
+ *    and collapsed it to a zero-height box in flow.
+ *  - [data-sc-stage]: the engine sets the pinned stage to `position: sticky`,
+ *    and this rule was overriding it back to relative. The catalog — the
+ *    page's peak — was therefore not pinning at all: its content scrolled
+ *    straight through a 3.6vh act, which is what left the long empty stretches
+ *    in a full-page capture. z-index still applies to it, because sticky is a
+ *    positioned value.
+ *
+ * Anything positioned by the engine must never have its `position` set here. */
+.ch-cream > *:not(.ch-art):not([data-sc-stage]),
+.ch-white > *:not(.ch-art):not([data-sc-stage]),
+.ch-beige > *:not(.ch-art):not([data-sc-stage]) { position: relative; z-index: 1; }
+
+.ch-cream > [data-sc-stage],
+.ch-white > [data-sc-stage],
+.ch-beige > [data-sc-stage] { z-index: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .sr-drift,
@@ -1291,4 +1305,51 @@ html.dark .asset-slot {
      wheel, so nothing moves under a reader who asked for stillness. */
   .art-scroll-rot { transform: none; }
   .art-travel { offset-distance: 0%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE EDITORIAL GRID
+   ───────────────────────────────────────────────────────────────────────────
+   Before this, every headline and paragraph in all six chapters started at
+   exactly x=84 inside a full-bleed container. One column, six blocks, vertical
+   margins — which is what "elements simply kept" means in measurable terms.
+
+   1200px is the reference's own extracted pageMaxWidth. The data routes keep
+   their wider container: rows of 31 scores genuinely need the room, editorial
+   prose does not.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ed-page {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+@media (min-width: 768px)  { .ed-page { padding-inline: 2.5rem; } }
+@media (min-width: 1280px) { .ed-page { padding-inline: 0; } }
+
+/* Twelve columns is the whole point: content places against shared column
+   edges instead of every block starting at the same left margin. Collapses to
+   four below md, where twelve columns are narrower than a word. */
+.ed-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  .ed-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+}
+
+/* The hairline every chapter opens on. */
+.ed-rule {
+  border-top: 1px solid var(--c-border);
+}
+
+/* Figures.
+   StackRadar is a ranking, a ranking is a table, and tables align their
+   figures. Mono was already loaded and already used for labels; promoting it
+   to the figure face costs nothing and encodes the subject. */
+.ed-fig {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }

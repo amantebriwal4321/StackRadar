@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from "react";
 import TechLogo from "@/components/ui/TechLogo";
+import ChapterHead from "@/components/landing/ChapterHead";
 import StackDiagnosis from "@/components/landing/StackDiagnosis";
 import { diagnose } from "@/lib/stack/diagnose";
 import type { Tool } from "@/data/trends";
@@ -89,22 +90,22 @@ export default function ChCatalog({
         data-sc-verify-state="rows:0"
         className="flex min-h-screen w-full items-start overflow-hidden pt-24 md:items-center md:pt-0"
       >
-        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 md:px-10 md:py-16 lg:px-16">
-          <h2
+        <div className="ed-page py-8 md:py-14">
+          <ChapterHead
+            n={4}
             id="ch-catalog-h"
-            className="max-w-[18ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
-            data-sc-cue="0 1 0 0.1"
-          >
-            Pick up what you are actually building with.
-          </h2>
+            title="Pick up what you are building with."
+            thesis="Everything you choose goes into your stack. There is no form at the end, only what you picked."
+            cue="0 1 0 0.1"
+          />
 
-          <div className="mt-6 grid gap-6 md:mt-10 md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-start">
+          <div className="ed-grid mt-10 items-start">
           {/* Resting state is the readable one: if the rAF never runs, every
               row is already visible at full opacity via CSS, and the scroll
               treatment only animates toward that. */}
           <ul
             ref={gridRef}
-            className="grid grid-cols-2 gap-2 [&>li:nth-child(n+9)]:hidden sm:gap-3 sm:grid-cols-3 sm:[&>li:nth-child(n+9)]:block lg:grid-cols-3 xl:grid-cols-4"
+            className="col-span-4 grid grid-cols-2 gap-2 [&>li:nth-child(n+9)]:hidden sm:gap-3 sm:grid-cols-3 sm:[&>li:nth-child(n+9)]:block md:col-span-7 lg:grid-cols-3 xl:grid-cols-4"
           >
             {shown.map((t) => {
               const on = picked.includes(t.slug);
@@ -148,7 +149,7 @@ export default function ChCatalog({
           </ul>
 
             {/* The consequence, next to the cause. */}
-            <div className="order-first lg:order-none lg:sticky lg:top-28">
+            <div className="order-first col-span-4 md:order-none md:col-span-4 md:col-start-9 lg:sticky lg:top-28">
               <StackDiagnosis d={diagnose(picked, tools)} compact />
               {picked.length > 0 && (
                 <a

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ChapterHead from "@/components/landing/ChapterHead";
 import AssetSlot from "@/components/ui/AssetSlot";
 import type { Roadmap } from "@/data/trends";
 
@@ -18,32 +19,17 @@ export default function ChOrder({ roadmaps }: { roadmaps: Roadmap[] }) {
 
   return (
     <section className="ch-white" data-sc-act="flow" aria-labelledby="ch-order-h">
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-[18vh] md:px-10 lg:px-16">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <h2
-            id="ch-order-h"
-            className="max-w-[16ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
-            data-sc-in
-            data-sc-reveal="up"
-          >
-            Then learn them in an order that holds up.
-          </h2>
-          <p className="max-w-[34ch] text-[16px] font-medium leading-relaxed text-[var(--c-ink-2)]" data-sc-in>
-            <span
-              className="font-mono tabular-nums text-[var(--c-ink)]"
-              data-sc-count={`0 ${totalSteps}`}
-              data-sc-count-at="0.1 0.5"
-            >
-              {totalSteps}
-            </span>{" "}
-            steps across {roadmaps.length} paths, each one tied to the tools
-            that are actually moving.
-          </p>
-        </div>
+      <div className="ed-page py-[14vh]">
+        <ChapterHead
+          n={5}
+          id="ch-order-h"
+          title="Then learn them in order."
+          thesis="Every step tied to the tools that are actually moving."
+        />
 
-        <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="ed-grid mt-16">
           {shown.map((r, i) => (
-            <li key={r.slug} data-sc-in style={{ transitionDelay: `${i * 55}ms` }}>
+            <li key={r.slug} className="col-span-4" data-sc-in style={{ transitionDelay: `${i * 55}ms` }}>
               <Link
                 href={`/roadmap/${r.slug}`}
                 className="on-accent block h-full rounded-[50px] p-7 transition-transform duration-300 hover:-translate-y-1"
@@ -64,14 +50,16 @@ export default function ChOrder({ roadmaps }: { roadmaps: Roadmap[] }) {
           ))}
         </ul>
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-2" data-sc-in>
+        <div className="ed-grid mt-16" data-sc-in>
           <AssetSlot
+            className="col-span-4 md:col-span-6"
             label="Beta-user quotes"
             what="Two or three real lines from your feedback form or waitlist, with a first name and what they were learning. This becomes a quoted testimonial row. Nothing is written here until you supply them: inventing a testimonial is a hard rule against."
             path="frontend/src/data/testimonials.ts"
             ratio="16 / 7"
           />
           <AssetSlot
+            className="col-span-4 md:col-span-6"
             label="Roadmap walkthrough"
             what="Optional. A short capture of you checking off steps on a roadmap page. It would sit beside the quotes and show the progress loop that the copy currently only claims."
             path="frontend/public/media/roadmap.mp4"

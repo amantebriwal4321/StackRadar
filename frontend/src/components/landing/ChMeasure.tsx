@@ -1,13 +1,17 @@
-import ChapterArt from "@/components/landing/ChapterArt";
 import AssetSlot from "@/components/ui/AssetSlot";
+import ChapterArt from "@/components/landing/ChapterArt";
+import ChapterHead from "@/components/landing/ChapterHead";
 import type { Overview, Tool } from "@/data/trends";
 
 /* CHAPTER 3 — The measurement. Feeling: reassurance.
  *
- * The reference's stacking number cards, rebuilt: sticky siblings that pile up
- * as you scroll, each resting slightly below the last so the whole stack stays
- * readable. Every figure is summed from the tools' own per-source counts, so
- * there is no counter here without a measured number behind it.
+ * The reference's stacking cards, rebuilt: sticky siblings that pile up as you
+ * scroll, each resting slightly below the last. Every figure is summed from the
+ * tools' own per-source counts, so there is no counter without a measured
+ * number behind it.
+ *
+ * RHYTHM: reversed from chapter 2. The stack takes columns 1–6 and the argument
+ * sits right in 8–12, so consecutive chapters do not share a silhouette.
  *
  * Deliberately the quietest chapter, and quieter than the catalog that follows.
  */
@@ -62,37 +66,18 @@ export default function ChMeasure({
   return (
     <section className="ch-cream" data-sc-act="flow" aria-labelledby="ch-measure-h">
       <ChapterArt variant="traces" />
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-[16vh] md:px-10 lg:px-16">
-        <div className="grid gap-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] lg:items-start">
-          <div>
-            <h2
-              id="ch-measure-h"
-              className="max-w-[15ch] text-[clamp(2rem,4.6vw,3.35rem)] font-medium leading-[1.15] tracking-[-0.04em] text-[var(--c-ink)]"
-              data-sc-in
-            >
-              So we measure it instead.
-            </h2>
-            <p
-              className="mt-6 max-w-[42ch] text-[17px] font-medium leading-relaxed text-[var(--c-ink-2)]"
-              data-sc-in
-            >
-              Five public sources, read every day and scored against each other.
-              A tool does not rise because it got louder. It rises because it
-              got louder than the others.
-            </p>
 
-            <div className="mt-10" data-sc-in>
-              <AssetSlot
-                label="Screen recording"
-                what="A 5 to 10 second screen capture of you scrolling the console and opening a tool. This replaces the static frame above and makes the whole chapter show the product working instead of describing it."
-                path="frontend/public/media/console.mp4"
-                ratio="16 / 10"
-              />
-            </div>
-          </div>
+      <div className="ed-page py-[14vh]">
+        <ChapterHead
+          n={3}
+          id="ch-measure-h"
+          title="So we measure it instead."
+          thesis="Five public sources, read every day and scored against each other."
+        />
 
+        <div className="ed-grid mt-16">
           {/* The stack. --i offsets each card's resting position. */}
-          <ol className="space-y-6">
+          <ol className="col-span-4 space-y-6 md:col-span-6">
             {sources.map((s, i) => (
               <li
                 key={s.name}
@@ -110,7 +95,7 @@ export default function ChMeasure({
                 </p>
                 <p className="mt-6 flex items-baseline gap-2">
                   <span
-                    className="font-mono text-[clamp(2rem,3.4vw,3rem)] font-medium tabular-nums tracking-[-0.03em] text-[#2C2E2A]"
+                    className="ed-fig text-[clamp(2rem,3.4vw,3rem)] font-medium text-[#2C2E2A]"
                     data-sc-count={`0 ${s.figure}`}
                     data-sc-count-at="0.1 0.5"
                   >
@@ -123,6 +108,30 @@ export default function ChMeasure({
               </li>
             ))}
           </ol>
+
+          <div className="col-span-4 md:col-span-5 md:col-start-8">
+            <p
+              className="text-[17px] font-medium leading-relaxed text-[var(--c-ink-2)]"
+              data-sc-in
+            >
+              A tool does not rise because it got louder. It rises because it
+              got louder than the others: every score is a percentile rank,
+              recomputed across all{" "}
+              <span className="ed-fig text-[var(--c-ink)]">
+                {overview?.tools_tracked ?? tools.length}
+              </span>{" "}
+              at once.
+            </p>
+
+            <div className="mt-10" data-sc-in>
+              <AssetSlot
+                label="Screen recording"
+                what="A 5 to 10 second screen capture of you scrolling the console and opening a tool. This replaces the static frame above and makes the whole chapter show the product working instead of describing it."
+                path="frontend/public/media/console.mp4"
+                ratio="16 / 10"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </section>
