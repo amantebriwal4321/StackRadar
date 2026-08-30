@@ -1,4 +1,5 @@
 import { roadmapForCategory } from "@/data/goals";
+import { tintForCategory } from "@/lib/stack/domainColour";
 import type { Tool } from "@/data/trends";
 
 /* One reading of "what does this stack look like", shared by the catalog and
@@ -40,25 +41,13 @@ export type Diagnosis = {
   picked: Tool[];
 };
 
-/* The accent set, assigned to domains by a stable order so a given domain is
- * always the same colour across the catalog bar and the colophon plate. */
-const TINTS = [
-  "#8ED462",
-  "#FF705D",
-  "#2BA0FF",
-  "#F5E211",
-  "#C3AEFF",
-  "#A8E5E5",
-  "#FFB29B",
-  "#B6E3A0",
-];
-
 export function diagnose(pickedSlugs: string[], tools: Tool[]): Diagnosis {
   const pickedSet = new Set(pickedSlugs);
   const picked = tools.filter((t) => pickedSet.has(t.slug));
 
-  // Domains in a stable order: by catalog size, so the colour assignment does
-  // not shuffle when scores move.
+  // Domains in a stable order: by catalog size, so the bar does not reshuffle
+  // when scores move. Colour no longer depends on this order — it comes from
+  // domainColour, which is keyed by the domain itself.
   const byCategory = new Map<string, Tool[]>();
   for (const t of tools) {
     if (!t.category) continue;
@@ -71,7 +60,7 @@ export function diagnose(pickedSlugs: string[], tools: Tool[]): Diagnosis {
     return d !== 0 ? d : a.localeCompare(b);
   });
 
-  const coverage: DomainCoverage[] = categories.map((category, i) => {
+  const coverage: DomainCoverage[] = categories.map((category) => {
     const all = byCategory.get(category) ?? [];
     const unpicked = all
       .filter((t) => !pickedSet.has(t.slug))
@@ -81,7 +70,7 @@ export function diagnose(pickedSlugs: string[], tools: Tool[]): Diagnosis {
       held: all.filter((t) => pickedSet.has(t.slug)).length,
       total: all.length,
       strongestMissing: unpicked[0] ?? null,
-      tint: TINTS[i % TINTS.length],
+      tint: tintForCategory(category),
     };
   });
 
