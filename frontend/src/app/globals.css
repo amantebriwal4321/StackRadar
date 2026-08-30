@@ -1209,6 +1209,94 @@ html.dark .asset-slot {
 .fab-pill * { color: var(--c-ground); }
 
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   AMBIENT FIELD — the background that travels with you.
+   Component: components/ui/AmbientField.tsx, which explains what it replaces.
+
+   Three parallax rates off ONE scroll variable. --af-y is scroll in px and
+   --af-p is 0..1 progress; both are written by a single passive rAF listener
+   and everything below is pure CSS, so the compositor does the work.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ambient-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  --af-y: 0;
+  --af-p: 0;
+}
+
+/* The measured field. Hairlines every 96px, drifting up at 0.18x — slow enough
+   that it reads as depth rather than as a second scrollbar. The mask keeps the
+   grid off the top and bottom edges so it never competes with the navbar or
+   fights a table's own rules for attention. */
+.af-rules {
+  position: absolute;
+  inset: -120px 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--c-ink) 5%, transparent) 0 1px,
+    transparent 1px 96px
+  );
+  transform: translate3d(0, calc(var(--af-y) * -0.18px), 0);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+}
+
+/* Progress, as a soft band rather than a bar. It rides the full height of the
+   page at 1.00x, so where it sits IS how far through you are — the only part of
+   the field carrying information rather than texture. */
+.af-sweep {
+  position: absolute;
+  inset-inline: 0;
+  height: 46vh;
+  top: calc(var(--af-p) * 100% - 23vh);
+  background: radial-gradient(
+    60% 50% at 50% 50%,
+    color-mix(in srgb, var(--accent-2) 9%, transparent) 0%,
+    transparent 72%
+  );
+}
+
+.af-contacts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+  transform: translate3d(0, calc(var(--af-y) * -0.42px), 0);
+}
+
+@keyframes af-contact-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.35); }
+}
+.af-contact {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: af-contact-pulse 7s ease-in-out infinite;
+}
+
+/* Dark needs a touch more presence: the same 5% ink over #1B1917 all but
+   vanishes, where over cream it reads. */
+html.dark .af-rules {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--c-ink) 9%, transparent) 0 1px,
+    transparent 1px 96px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The field stays — it is surface, not effect — but stops moving. The
+     component also skips its listener, so --af-y never leaves 0. */
+  .af-contact { animation: none; }
+  .af-rules,
+  .af-contacts { transform: none; }
+  .af-sweep { display: none; }
+}
+
 /* FILTER CHIP — the catalog's domain selector.
  *
  * Written as a real rule rather than assembled from utilities because a
