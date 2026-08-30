@@ -25,7 +25,9 @@ export default function ChTitle({
   tools: Tool[];
 }) {
   const tracked = overview?.tools_tracked ?? tools.length;
-  const wall = tools.slice(0, 12);
+  // The whole catalog, not a slice: the rail scrolls, so length costs nothing
+  // and the headline's "31 technologies" becomes something you can count.
+  const wall = tools;
 
   const updated = overview?.last_updated
     ? new Date(overview.last_updated).toLocaleString("en-US", {
@@ -109,20 +111,41 @@ export default function ChTitle({
           ))}
         </dl>
 
-        {/* The catalog we actually track, so the wall is a claim we can support. */}
+        {/* ── The wall, as a rail. ──
+            It was a static flex-wrap of the first twelve tools, on a page whose
+            headline claims we track thirty-one — so the one element that could
+            have evidenced the claim quietly under-reported it, and the hero had
+            no motion in it at all.
+
+            All 31 now, moving. The rail CSS already existed for the data
+            routes: edge masks so the row dissolves rather than being cut off,
+            hover-to-pause so a name can actually be read, and animation:none
+            under prefers-reduced-motion. Duplicated once because the keyframe
+            travels -50%; the copy is aria-hidden so a screen reader hears the
+            catalog once. */}
         <div className="ed-grid ed-rule mt-14 pt-6" data-sc-in>
-          <ul className="col-span-4 flex flex-wrap items-center gap-x-8 gap-y-5 md:col-span-12">
-            {wall.map((t) => (
-              <li key={t.slug} className="group flex items-center gap-2.5" title={t.name}>
-                <span className="text-[var(--c-ink)] opacity-70 transition-opacity duration-300 group-hover:opacity-100">
-                  <TechLogo slug={t.slug} emoji={t.icon} size={26} />
-                </span>
-                <span className="hidden text-[14px] font-medium text-[var(--c-ink-2)] xl:inline">
-                  {t.name}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="ticker-rail col-span-4 md:col-span-12" style={{ ["--ticker-duration" as string]: "72s" }}>
+            <ul className="ticker-scroll-left flex w-max items-center gap-x-8">
+              {[...wall, ...wall].map((t, i) => (
+                <li
+                  key={`${t.slug}-${i}`}
+                  className="group flex shrink-0 items-center gap-2.5"
+                  title={t.name}
+                  aria-hidden={i >= wall.length}
+                >
+                  <span className="text-[var(--c-ink)] opacity-70 transition-opacity duration-300 group-hover:opacity-100">
+                    <TechLogo slug={t.slug} emoji={t.icon} size={26} />
+                  </span>
+                  <span className="text-[14px] font-medium text-[var(--c-ink-2)]">
+                    {t.name}
+                  </span>
+                  <span className="ed-fig text-[13px] text-[var(--c-ink-3)]">
+                    {t.score.toFixed(1)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
