@@ -34,6 +34,25 @@ const DOMAIN_TINT: Record<string, string> = {
 /** Fallback for a domain added to the catalog but not yet given a colour. */
 const UNASSIGNED = "#D8D3C4";
 
+/* Three-or-four letter codes for the coverage bar.
+ *
+ * Eight segments share one grid column there, which leaves roughly 30px of
+ * width each — far too little for "Web Development" and not enough for a
+ * rotated label to stay legible. Before this the bar carried no domain
+ * identity at all: eight coloured tracks and a count under each, so a reader
+ * could see THAT something was empty and never which thing. A code plus the
+ * colour is enough to find the domain again in the roadmap chapter. */
+const DOMAIN_SHORT: Record<string, string> = {
+  "web-development": "WEB",
+  "ai-ml": "AI",
+  "cloud-native": "CLD",
+  devops: "OPS",
+  cybersecurity: "SEC",
+  "data-databases": "DATA",
+  web3: "WEB3",
+  systems: "SYS",
+};
+
 /** Tint for a roadmap/domain slug. */
 export function tintForSlug(slug: string | null | undefined): string {
   if (!slug) return UNASSIGNED;
@@ -44,4 +63,11 @@ export function tintForSlug(slug: string | null | undefined): string {
 export function tintForCategory(category: string | null | undefined): string {
   if (!category) return UNASSIGNED;
   return tintForSlug(ROADMAP_BY_CATEGORY[category]);
+}
+
+/** Short code for a Domain display name, for space-constrained labels. */
+export function shortForCategory(category: string | null | undefined): string {
+  if (!category) return "—";
+  const slug = ROADMAP_BY_CATEGORY[category];
+  return (slug && DOMAIN_SHORT[slug]) || category.slice(0, 3).toUpperCase();
 }

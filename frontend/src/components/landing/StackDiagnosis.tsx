@@ -3,6 +3,7 @@
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
 import type { Diagnosis } from "@/lib/stack/diagnose";
+import { shortForCategory } from "@/lib/stack/domainColour";
 
 /* The payoff for picking.
  *
@@ -64,13 +65,22 @@ export default function StackDiagnosis({
       <ul className="mt-6 flex items-end gap-1.5" aria-hidden="true">
         {d.coverage.map((c) => {
           const pct = c.total ? (c.held / c.total) * 100 : 0;
+          // The domain the read-out is about to recommend. Ringing its track
+          // makes the bar and the recommendation visibly the same object;
+          // without it the reader has to take on trust that the gap sentence
+          // refers to anything on the chart.
+          const isGap = !!d.gap && c.category === d.gap.category;
           return (
             <li key={c.category} className="flex-1" title={`${c.category}: ${c.held} of ${c.total}`}>
               {/* A bar, not a dot: at 8 segments across one column each track is
                   about as wide as it is tall, so rounded-full turned the whole
                   bar into a circle and a 1-of-11 fill into a 4px sliver. */}
               <div
-                className="relative w-full overflow-hidden rounded-[8px] border border-[var(--c-border)] bg-[color-mix(in_srgb,var(--c-ink)_7%,transparent)]"
+                className={`relative w-full overflow-hidden rounded-[8px] bg-[color-mix(in_srgb,var(--c-ink)_7%,transparent)] ${
+                  isGap
+                    ? "border-2 border-[var(--c-ink)]"
+                    : "border border-[var(--c-border)]"
+                }`}
                 style={{ height: compact ? 64 : 84 }}
               >
                 <span
@@ -86,6 +96,16 @@ export default function StackDiagnosis({
                 }`}
               >
                 {c.held}
+              </p>
+              {/* Which domain this actually is. Eight coloured tracks and a
+                  count told the reader THAT something was empty and never
+                  which thing. */}
+              <p
+                className={`mt-0.5 text-center font-mono text-[9px] uppercase tracking-[0.06em] ${
+                  isGap ? "text-[var(--c-ink)]" : "text-[var(--c-ink-3)]"
+                }`}
+              >
+                {shortForCategory(c.category)}
               </p>
             </li>
           );
