@@ -444,10 +444,29 @@ body {
 /* ─────────────────────────────────────────────
    SCROLL REVEAL
    ───────────────────────────────────────────── */
-.reveal-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s var(--ease-standard), transform 0.8s var(--ease-standard); }
-.reveal-up.revealed { opacity: 1; transform: translateY(0); }
-.reveal-scale { opacity: 0; transform: scale(0.92); transition: opacity 0.6s var(--ease-standard), transform 0.6s var(--ease-spring); }
-.reveal-scale.revealed { opacity: 1; transform: scale(1); }
+/* Scroll reveal. Component: components/ui/Reveal.tsx.
+ *
+ * Replaces .reveal-up and .reveal-scale, which set opacity:0 and waited for a
+ * `.revealed` class that nothing in the app has ever added — and which nothing
+ * used either, so they were dead in both directions. Any element that HAD worn
+ * .reveal-up would have been permanently invisible.
+ *
+ * The resting state here is VISIBLE. .sr-out is applied only after the
+ * component has confirmed at runtime that it can be taken off again, so a
+ * reveal that never fires cannot strand content at zero. */
+.sr-reveal {
+  transition: opacity 0.7s var(--ease-standard), transform 0.7s var(--ease-standard);
+}
+.sr-out { opacity: 0; transform: translateY(22px); }
+.sr-in  { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The component already refuses to arm under this, so .sr-out never lands.
+     Stated anyway: a transition surviving here would be the one thing the
+     setting is asking us not to do. */
+  .sr-reveal { transition: none; }
+  .sr-out { opacity: 1; transform: none; }
+}
 
 /* ─────────────────────────────────────────────
    HAIRLINE SEPARATOR
