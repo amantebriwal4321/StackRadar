@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import TechLogo from "@/components/ui/TechLogo";
 import { useParams } from "next/navigation";
 
 import {
@@ -123,8 +124,8 @@ export default function ToolDetailPage() {
         <div className="flex flex-col md:flex-row justify-between items-start gap-6">
           <div className="space-y-4 flex-1">
             <div className="flex items-start gap-4">
-              <span className="text-5xl bg-[var(--c-surface-2)]/80 p-4 rounded-2xl border border-indigo-500/10 shrink-0 select-none">
-                {tool.icon}
+              <span className="flex h-[76px] w-[76px] items-center justify-center bg-[var(--c-surface-2)]/80 rounded-2xl border border-indigo-500/10 shrink-0">
+                <TechLogo slug={tool.slug} emoji={tool.icon} size={40} brand />
               </span>
               <div className="space-y-1">
                 <span className="text-[9px] font-mono text-indigo-600 tracking-widest uppercase">

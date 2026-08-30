@@ -13,6 +13,7 @@ import DashboardShell from "@/components/DashboardShell";
 import WatchlistButton from "@/components/WatchlistButton";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import TechLogo from "@/components/ui/TechLogo";
 
 /* ─── Score band helpers ─── */
 function scoreColor(score: number): string {
@@ -68,8 +69,8 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
       className="group relative rounded-2xl p-5 overflow-hidden tech-panel tech-panel-interactive"
     >
       <div className="flex items-center gap-4 relative">
-        <span className="text-3xl p-2.5 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl group-hover:scale-105 group-hover:border-indigo-400/40 transition-all">
-          {tool.icon}
+        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl group-hover:scale-105 group-hover:border-indigo-400/40 transition-all">
+          <TechLogo slug={tool.slug} emoji={tool.icon} size={26} brand />
         </span>
         <div className="min-w-0 flex-1">
           <h4 className="font-normal text-sm text-[var(--c-ink)] group-hover:text-indigo-600 transition-colors truncate">{tool.name}</h4>

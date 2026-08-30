@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TechLogo from "@/components/ui/TechLogo";
 import { ArrowRight, TrendingUp, TrendingDown, Minus, Star } from "lucide-react";
 import { type Tool } from "@/data/trends";
 import { motion } from "framer-motion";
@@ -125,8 +126,8 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
       >
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-muted/50 flex items-center justify-center text-lg">
-              {tool.icon}
+            <div className="w-8 h-8 rounded bg-muted/50 flex items-center justify-center">
+              <TechLogo slug={tool.slug} emoji={tool.icon} size={18} brand />
             </div>
             <h3 className="font-normal text-sm line-clamp-1">{tool.name}</h3>
           </div>
@@ -177,8 +178,8 @@ export default function TrendCard({ tool, variant = "default", index = 0 }: Tool
 
       <div className="flex justify-between items-center mb-4 relative z-10 pr-8">
         <div className="flex items-center gap-4 min-w-0">
-          <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center text-2xl shadow-sm border border-border/40 group-hover:scale-105 transition-transform duration-300 shrink-0">
-            {tool.icon}
+          <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center shadow-sm border border-border/40 group-hover:scale-105 transition-transform duration-300 shrink-0">
+            <TechLogo slug={tool.slug} emoji={tool.icon} size={26} brand />
           </div>
           <div className="min-w-0">
             <h3 className="text-lg font-normal group-hover:text-primary transition-colors truncate">{tool.name}</h3>

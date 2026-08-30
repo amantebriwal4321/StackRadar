@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { Bookmark, BookmarkCheck, Trash2, Loader2, TrendingUp, Star, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import TechLogo from "@/components/ui/TechLogo";
 import DashboardShell from "@/components/DashboardShell";
 import { type Tool, fetchTools } from "@/data/trends";
 
@@ -138,8 +139,8 @@ export default function WatchlistPage() {
               >
                 <div className="flex justify-between items-start">
                   <Link href={`/tools/${tool.slug}`} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-xl shadow-sm border border-border/40">
-                      {tool.icon}
+                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shadow-sm border border-border/40">
+                      <TechLogo slug={tool.slug} emoji={tool.icon} size={22} brand />
                     </div>
                     <div>
                       <h3 className="font-normal group-hover:text-primary transition-colors">{tool.name}</h3>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import TechLogo from "@/components/ui/TechLogo";
 import { TrendingUp, TrendingDown, Minus, BarChart3, Filter, Loader2, Star, Share2, MessageSquare, ArrowUpDown } from "lucide-react";
 import { type Tool, fetchTools, fetchCategories } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
@@ -418,8 +419,8 @@ export default function TrendsPage() {
                       >
                         {/* 1. Name & Info */}
                         <div className="col-span-4 flex items-center gap-3">
-                          <span className="text-3xl p-2 bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-lg select-none">
-                            {tool.icon}
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-lg">
+                            <TechLogo slug={tool.slug} emoji={tool.icon} size={24} brand />
                           </span>
                           <div>
                             <div className="flex items-center gap-2">
