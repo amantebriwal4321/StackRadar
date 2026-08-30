@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import SmoothScrollProvider from "@/components/providers/SmoothScroll";
 import Preloader from "@/components/ui/Preloader";
 import CustomCursor from "@/components/ui/CustomCursor";
+import AmbientField from "@/components/ui/AmbientField";
 import BackendWaking from "@/components/BackendWaking";
 import FeedbackButton from "@/components/FeedbackButton";
 import { Analytics } from "@vercel/analytics/next";
@@ -113,6 +114,11 @@ export default function RootLayout({
             <FeedbackButton />
             <CustomCursor />
             <div className="noise-overlay" aria-hidden="true" />
+            {/* Mounted here, above the route, so it survives navigation: the
+                field does not restart or re-fade when you move between pages,
+                which is the whole point of a background that stays. It renders
+                nothing on `/`. */}
+            <AmbientField />
             {children}
           </SmoothScrollProvider>
           {/* Vercel Web Analytics — pageviews + custom events. No-ops in local

@@ -310,54 +310,18 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
 }
 
-/* ─────────────────────────────────────────────
-   CURSOR SPOTLIGHT (subtle accent glow)
-   ───────────────────────────────────────────── */
-.cursor-spotlight {
-  position: fixed;
-  width: 520px;
-  height: 520px;
-  margin-left: -260px;
-  margin-top: -260px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-1) 6%, transparent) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-  transition: opacity 0.4s ease;
-  will-change: left, top;
-}
+/* .cursor-spotlight lived here. It painted a 520px radial of --accent-1 at 6%,
+   which was an indigo glow under the old system and is a charcoal smudge under
+   this one. Removed with its mousemove listener in DashboardShell. */
 
 /* ─────────────────────────────────────────────
    AMBIENT ORBS — single accent, restrained
    ───────────────────────────────────────────── */
-.ambient-orb {
-  /* Dala's ambient layer is a particle field, not a blurred colour wash.
-     Hidden here; the constellation carries ambience instead. */
-  display: none;
-}
-
-.ambient-orb-1 {
-  width: 500px; height: 500px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-1) 18%, transparent) 0%, transparent 70%);
-  top: -12%; right: -6%;
-  animation: orb-float-1 20s ease-in-out infinite;
-}
-.ambient-orb-2 {
-  width: 420px; height: 420px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-1) 10%, transparent) 0%, transparent 70%);
-  bottom: 8%; left: -8%;
-  animation: orb-float-2 24s ease-in-out infinite;
-}
-.ambient-orb-3 {
-  width: 360px; height: 360px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 10%, transparent) 0%, transparent 70%);
-  top: 42%; right: 14%;
-  animation: orb-float-3 26s ease-in-out infinite;
-}
-
-@keyframes orb-float-1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-30px,40px) scale(1.1)} 66%{transform:translate(20px,-30px) scale(.95)} }
-@keyframes orb-float-2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,-20px) scale(1.05)} 66%{transform:translate(-25px,35px) scale(.9)} }
-@keyframes orb-float-3 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-20px,-40px) scale(1.15)} 66%{transform:translate(30px,20px) scale(.85)} }
+/* .ambient-orb, .ambient-orb-1/2/3 and their three orb-float keyframes lived
+   here. They were stubbed to display:none when Dala replaced the blurred
+   colour wash, so nothing had rendered them for two design systems, and their
+   gradients still referenced the retired accents. AmbientField replaced the
+   role. */
 
 /* ─────────────────────────────────────────────
    DOT GRID — ink-tinted hairlines
@@ -907,33 +871,11 @@ body,
    scrolls — parallax for free, with NO scroll listener and nothing that can
    stall on a backgrounded tab. A slow drift keeps it alive.
    ───────────────────────────────────────────── */
-.ambient-particles {
-  position: fixed;
-  inset: -10%;
-  z-index: 0;
-  pointer-events: none;
-  /* Dala's ambient triangles are TINY and barely-there. The previous version
-     had a scale bug — a 60px SVG tile drawn at background-size 210px scaled
-     each triangle 3.5x, turning ambient scatter into wallpaper. Tile size now
-     EQUALS background-size, so a ~9px triangle renders at ~9px, spaced far
-     apart, at low opacity. */
-  opacity: 0.16;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='240'%3E%3Cpath d='M40 30 L45 40 L35 40 Z' fill='none' stroke='%238052ff' stroke-width='1'/%3E%3Cpath d='M190 150 L196 162 L184 162 Z' fill='none' stroke='%238052ff' stroke-width='1' transform='rotate(18 190 156)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='320'%3E%3Cpath d='M120 80 L126 92 L114 92 Z' fill='none' stroke='%23ffb829' stroke-width='1' transform='rotate(24 120 86)'/%3E%3Cpath d='M280 240 L285 250 L275 250 Z' fill='none' stroke='%23ffb829' stroke-width='1'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='400'%3E%3Cpath d='M60 300 L66 312 L54 312 Z' fill='none' stroke='%2315846e' stroke-width='1' transform='rotate(-18 60 306)'/%3E%3Cpath d='M330 90 L335 100 L325 100 Z' fill='none' stroke='%23bdbdbd' stroke-width='1'/%3E%3C/svg%3E");
-  background-size: 260px 240px, 340px 320px, 420px 400px;
-  background-position: 0 0, 90px 60px, 200px 150px;
-  animation: particle-drift 120s linear infinite;
-}
-@keyframes particle-drift {
-  from { background-position: 0 0, 90px 60px, 200px 150px; }
-  to   { background-position: 260px 240px, 430px 380px, 620px 550px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ambient-particles { animation: none; }
-}
-
+/* .ambient-particles lived here: a fixed scatter of triangles stroked
+   #8052ff, #ffb829 and #15846e at 0.16 opacity — indigo, saffron and deep
+   verdant, none of which exist in the warm editorial system. It was the last
+   live piece of the retired palette on the site and the reason the data routes
+   read as a different product from the landing. Replaced by .ambient-field. */
 
 /* ─────────────────────────────────────────────
    EYEBROW / KICKER
@@ -1223,7 +1165,10 @@ html.dark .asset-slot {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  --af-y: 0;
+  /* --af-rules is already wrapped to one tile by the component; --af-p is 0..1
+     page progress. Both default here so the field paints correctly before the
+     first scroll and under reduced motion, where nothing writes them. */
+  --af-rules: 0;
   --af-p: 0;
 }
 
@@ -1239,7 +1184,11 @@ html.dark .asset-slot {
     color-mix(in srgb, var(--c-ink) 5%, transparent) 0 1px,
     transparent 1px 96px
   );
-  transform: translate3d(0, calc(var(--af-y) * -0.18px), 0);
+  /* The offset arrives pre-wrapped to the 96px repeat, so it never exceeds one
+     tile and the 120px of overscan above is always enough. Translating by the
+     raw 0.18x reached -583px on a 4141px page and emptied the lower half of
+     the viewport. */
+  transform: translate3d(0, calc(var(--af-rules) * 1px), 0);
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
   mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
 }
@@ -1265,7 +1214,10 @@ html.dark .asset-slot {
   width: 100%;
   height: 100%;
   opacity: 0.5;
-  transform: translate3d(0, calc(var(--af-y) * -0.42px), 0);
+  /* Bounded drift, not raw parallax: +/-60px across the whole page. At a plain
+     0.42x these reached -1361px and left the viewport entirely, so after about
+     two screens there were no contacts at all. */
+  transform: translate3d(0, calc((var(--af-p) - 0.5) * -120px), 0);
 }
 
 @keyframes af-contact-pulse {

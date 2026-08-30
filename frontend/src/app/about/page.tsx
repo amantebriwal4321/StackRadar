@@ -352,7 +352,6 @@ export default function AboutPage() {
         {...reveal}
         className="my-6 rounded-3xl glass-panel-glow border border-accent-primary/15 px-6 md:px-12 py-12 md:py-16 text-center relative overflow-hidden"
       >
-        <div className="ambient-orb ambient-orb-1" aria-hidden="true" />
         <h2 className="font-display font-normal tracking-tight text-[clamp(1.75rem,3.5vw,2.75rem)] text-balance">
           Start with what&apos;s <span className="gradient-text">actually rising</span>.
         </h2>

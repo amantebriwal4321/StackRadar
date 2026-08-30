@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 
@@ -22,33 +21,9 @@ interface DashboardShellProps {
 const DATA_ROUTES = /^\/(explore|trends|compare|tools|roadmap|roadmaps|watchlist)(\/|$)/;
 
 export default function DashboardShell({ children, fullWidth = false, flushX = false, theme }: DashboardShellProps) {
-  const spotlightRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isDataRoute = DATA_ROUTES.test(pathname || "");
 
-  // Cursor spotlight tracking (inspired by XR reference)
-  useEffect(() => {
-    const el = spotlightRef.current;
-    if (!el) return;
-    let raf: number;
-    const onMove = (e: MouseEvent) => {
-      raf = requestAnimationFrame(() => {
-        el.style.left = `${e.clientX}px`;
-        el.style.top = `${e.clientY}px`;
-        el.style.opacity = "1";
-      });
-    };
-    const onLeave = () => {
-      el.style.opacity = "0";
-    };
-    window.addEventListener("mousemove", onMove, { passive: true });
-    document.addEventListener("mouseleave", onLeave);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseleave", onLeave);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
 
   // overflow-x-clip (not hidden): clips ambient orbs/decorations that spill past
   // the right edge WITHOUT creating a scroll container — `overflow:hidden` here
@@ -56,17 +31,13 @@ export default function DashboardShell({ children, fullWidth = false, flushX = f
   // would otherwise scroll away and leave the column empty).
   return (
     <div className={`flex flex-col min-h-screen bg-background relative overflow-x-clip${isDataRoute ? " route-data" : ""}${theme ? ` theme-${theme}` : ""}`}>
-      {/* ─── Noise Texture (like XR reference grain) ─── */}
-      <div className="noise-overlay" aria-hidden="true" />
-      
-      {/* ─── Cursor-following Spotlight ─── */}
-      <div ref={spotlightRef} className="cursor-spotlight" style={{ opacity: 0 }} aria-hidden="true" />
-      
-      {/* ─── Ambient Orbs ─── */}
-      <div className="ambient-particles" aria-hidden="true" />
-      <div className="ambient-orb ambient-orb-1" aria-hidden="true" />
-      <div className="ambient-orb ambient-orb-2" aria-hidden="true" />
-      <div className="ambient-orb ambient-orb-3" aria-hidden="true" />
+      {/* The retired dark system's ambient layer used to sit here: a second
+          copy of the noise overlay (the root layout already mounts one, and
+          this made three in the tree at once), a cursor spotlight whose accent
+          is charcoal now so it drew a grey smudge, and four orb/particle
+          divs — three of them dead at display:none and the fourth painting
+          indigo, saffron and teal from the old palette. AmbientField, mounted
+          once in the root layout, is what carries ambience now. */}
 
       {/* ─── Navigation ─── */}
       <Navbar />

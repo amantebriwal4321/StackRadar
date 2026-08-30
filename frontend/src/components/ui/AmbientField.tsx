@@ -18,9 +18,26 @@ import { usePathname } from "next/navigation";
  * baseline grid. Scrolling moves you through it. Three layers, each on its own
  * parallax rate, so the field has depth without any of it being loud:
  *
- *   rules     horizontal hairlines, the measured field           0.18x
- *   contacts  a handful of readings sitting on it                0.42x
+ *   rules     horizontal hairlines, the measured field           0.18x, wrapped
+ *   contacts  a handful of readings sitting on it                bounded drift
  *   sweep     one soft band tracking progress through the page   1.00x
+ *
+ * TWO THINGS THAT HAD TO BE BOUNDED, both caught by driving the variables to
+ * their extremes rather than by looking at the top of the page:
+ *
+ * The rules are a repeating gradient inside a layer with 120px of overscan. A
+ * raw 0.18x translate reaches -583px on a 4141px route, which slides the
+ * pattern clean off the bottom of its own layer and leaves the lower half of
+ * the viewport empty. Because the pattern repeats every 96px, translating by
+ * the REMAINDER is visually identical and never exceeds one tile — so the
+ * offset is taken modulo the tile here, and the layer keeps its cheap
+ * compositor transform.
+ *
+ * The contacts had the worse version of the same bug: at 0.42x they reach
+ * -1361px, which is a screen and a half above the viewport, so after about two
+ * screens of scrolling there were simply no contacts left. They now drift off
+ * PROGRESS rather than raw offset — a bounded +/-60px across the whole page,
+ * which still parallaxes against the rules but cannot leave.
  *
  * COST. Two CSS custom properties written from ONE passive rAF-throttled
  * listener. No canvas, no per-frame React state, no layout reads in the
@@ -45,12 +62,17 @@ export default function AmbientField() {
     // effect — but stops it responding to scroll. The CSS also drops the pulse.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    // Must match --af-tile in globals.css: the rules' repeat interval.
+    const TILE = 96;
+
     let frame = 0;
     const read = () => {
       frame = 0;
       const y = window.scrollY;
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      el.style.setProperty("--af-y", `${y}`);
+      // Wrapped to one tile — see the note above. JS rather than CSS mod(),
+      // whose support is still uneven.
+      el.style.setProperty("--af-rules", `${-((y * 0.18) % TILE)}`);
       el.style.setProperty("--af-p", max > 0 ? String(Math.min(y / max, 1)) : "0");
     };
     const onScroll = () => {
