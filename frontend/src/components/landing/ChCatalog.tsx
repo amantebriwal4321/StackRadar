@@ -133,16 +133,13 @@ export default function ChCatalog({
                 <button
                   onClick={() => setDomain(null)}
                   aria-pressed={domain === null}
-                  className={`whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                  className={`chip ${
                     domain === null
-                      ? "border-transparent bg-[var(--c-ink)] text-[var(--c-ground)]"
-                      : "border-[var(--c-border)] text-[var(--c-ink-2)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
+                      ? "on-ink border-transparent bg-[var(--c-ink)]"
+                      : "border-[var(--c-border)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
                   }`}
                 >
-                  All{" "}
-                  <span className="font-mono tabular-nums opacity-70">
-                    {tools.length}
-                  </span>
+                  All <span className="chip-n">{tools.length}</span>
                 </button>
               </li>
               {domains.map((d) => {
@@ -152,10 +149,10 @@ export default function ChCatalog({
                     <button
                       onClick={() => setDomain(on ? null : d.name)}
                       aria-pressed={on}
-                      className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                      className={`chip ${
                         on
-                          ? "border-transparent bg-[var(--c-ink)] text-[var(--c-ground)]"
-                          : "border-[var(--c-border)] text-[var(--c-ink-2)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
+                          ? "on-ink border-transparent bg-[var(--c-ink)]"
+                          : "border-[var(--c-border)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
                       }`}
                     >
                       <span
@@ -163,8 +160,7 @@ export default function ChCatalog({
                         className="h-2.5 w-2.5 shrink-0 rounded-full"
                         style={{ background: tintForCategory(d.name) }}
                       />
-                      {d.name}{" "}
-                      <span className="font-mono tabular-nums opacity-70">{d.n}</span>
+                      {d.name} <span className="chip-n">{d.n}</span>
                     </button>
                   </li>
                 );

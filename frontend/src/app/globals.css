@@ -1209,6 +1209,64 @@ html.dark .asset-slot {
 .fab-pill * { color: var(--c-ground); }
 
 
+/* FILTER CHIP — the catalog's domain selector.
+ *
+ * Written as a real rule rather than assembled from utilities because a
+ * Tailwind font-size utility DOES NOT APPLY TO A <button> in this app. Measured
+ * across the whole landing: every a/p/span/figcaption carrying text-[13px]
+ * renders at 13px and every button carrying it renders at 18px, the browser
+ * default. That is app-wide, it predates these chips, and it is very likely why
+ * .btn-primary and .btn-secondary were hand-written CSS in the first place.
+ * Anything with a required type size on a <button> belongs here, not in a
+ * className.
+ *
+ * Colour, border and background stay in the markup: those DO apply, and they
+ * are the part that changes with pressed state. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  border-radius: 50px;
+  border-width: 1px;
+  padding: 0.375rem 0.875rem;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  /* Resting colour lives here for the same reason the size does: an arbitrary
+     colour utility on a <button> did not apply either, so the unpressed chips
+     were inheriting the chapter's full ink instead of secondary. .on-ink is
+     declared after this block and wins for the pressed state. */
+  color: var(--c-ink-2);
+  transition: border-color 0.4s var(--ease-colour),
+              background-color 0.4s var(--ease-colour),
+              color 0.4s var(--ease-colour);
+}
+.chip .chip-n {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+/* Text sitting on the CHARCOAL fill — the inverse of .on-accent below.
+ *
+ * Two arbitrary `text-[...]` utilities on one element collide: the domain
+ * chips carried both `text-[13px]` and `text-[var(--c-ground)]`, and Tailwind
+ * could not tell which arbitrary value was the size and which was the colour,
+ * so NEITHER landed. The chip measured 18px (the browser's button default)
+ * with charcoal text inherited from the chapter — charcoal on charcoal, 1:1,
+ * completely invisible when pressed.
+ *
+ * The same pairing survives elsewhere (AssetSlot's pill resolves correctly at
+ * 11px), so this is not reliably reproducible from the markup alone, which is
+ * exactly why it belongs in a stated rule rather than in a utility. The app
+ * has now hit this three times: .fab-pill, .on-accent, and here.
+ *
+ * Descendant selector because these fills wrap spans carrying their own type
+ * classes, which would otherwise inherit the chapter's ink. */
+.on-ink,
+.on-ink * { color: var(--c-ground); }
+
 /* Text sitting on one of the accent fills.
  *
  * Every accent (green, coral, yellow, blue, lilac) is LIGHT in both themes, so

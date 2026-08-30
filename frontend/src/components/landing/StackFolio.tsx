@@ -113,7 +113,7 @@ export default function StackFolio({
 
       <a
         href="#read-out"
-        className="rounded-full bg-[var(--accent-1)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--c-ground)] transition-opacity hover:opacity-85"
+        className="on-ink rounded-full bg-[var(--accent-1)] px-3.5 py-1.5 text-[13px] font-medium transition-opacity hover:opacity-85"
       >
         Read-out
       </a>
