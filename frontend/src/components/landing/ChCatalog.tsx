@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import TechLogo from "@/components/ui/TechLogo";
 import ChapterHead from "@/components/landing/ChapterHead";
 import StackDiagnosis from "@/components/landing/StackDiagnosis";
 import { diagnose } from "@/lib/stack/diagnose";
 import type { Tool } from "@/data/trends";
 import { useActProgress } from "@/lib/scrollcraft/useActProgress";
+import { tintForCategory } from "@/lib/stack/domainColour";
 
 /* CHAPTER 4 — The catalog. Feeling: agency. THE PEAK, and the signature move.
  *
@@ -21,6 +22,13 @@ import { useActProgress } from "@/lib/scrollcraft/useActProgress";
  *
  * The rows open from --sc-p by direct style writes on one shared rAF. No
  * per-frame React state.
+ *
+ * FILTERING, because the catalog was not actually a catalog. It rendered
+ * tools.slice(0, 24) of 31, and hid everything past the eighth below sm — so
+ * seven tools were unreachable at the page's peak and a phone reader saw a
+ * quarter of what we track. Domain chips make all 31 reachable without turning
+ * the pinned stage into a scroll trap, and they double as the page's clearest
+ * statement of what the eight domains even are.
  */
 export default function ChCatalog({
   tools,
@@ -34,6 +42,26 @@ export default function ChCatalog({
   const actRef = useRef<HTMLElement>(null);
   const gridRef = useRef<HTMLUListElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+
+  /* null = every domain. Ordered by catalog size to match the coverage bar, so
+     the chips and the bar read left-to-right in the same order. */
+  const [domain, setDomain] = useState<string | null>(null);
+
+  const domains = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const t of tools) {
+      if (!t.category) continue;
+      counts.set(t.category, (counts.get(t.category) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([name, n]) => ({ name, n }));
+  }, [tools]);
+
+  const shown = useMemo(
+    () => (domain ? tools.filter((t) => t.category === domain) : tools),
+    [tools, domain],
+  );
 
   const apply = useCallback((p: number) => {
     const grid = gridRef.current;
@@ -73,8 +101,6 @@ export default function ChCatalog({
 
   useActProgress(actRef, apply);
 
-  const shown = tools.slice(0, 24);
-
   return (
     <section
       ref={actRef}
@@ -90,7 +116,7 @@ export default function ChCatalog({
         data-sc-verify-state="rows:0"
         className="flex min-h-screen w-full items-start overflow-hidden pt-24 md:items-center md:pt-0"
       >
-        <div className="ed-page py-8 md:py-14">
+        <div className="ed-page catalog-stage py-8 md:py-14">
           <ChapterHead
             n={4}
             id="ch-catalog-h"
@@ -99,13 +125,60 @@ export default function ChCatalog({
             cue="0 1 0 0.1"
           />
 
-          <div className="ed-grid mt-10 items-start">
+          {/* The domains, as filters. Each chip carries its domain's colour, so
+              this row is also the legend the coverage bar's codes refer to. */}
+          <div className="ed-grid catalog-chips mt-7">
+            <ul className="col-span-4 flex flex-wrap gap-2 md:col-span-12">
+              <li>
+                <button
+                  onClick={() => setDomain(null)}
+                  aria-pressed={domain === null}
+                  className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                    domain === null
+                      ? "border-transparent bg-[var(--c-ink)] text-[var(--c-ground)]"
+                      : "border-[var(--c-border)] text-[var(--c-ink-2)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
+                  }`}
+                >
+                  All{" "}
+                  <span className="font-mono tabular-nums opacity-70">
+                    {tools.length}
+                  </span>
+                </button>
+              </li>
+              {domains.map((d) => {
+                const on = domain === d.name;
+                return (
+                  <li key={d.name}>
+                    <button
+                      onClick={() => setDomain(on ? null : d.name)}
+                      aria-pressed={on}
+                      className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                        on
+                          ? "border-transparent bg-[var(--c-ink)] text-[var(--c-ground)]"
+                          : "border-[var(--c-border)] text-[var(--c-ink-2)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ background: tintForCategory(d.name) }}
+                      />
+                      {d.name}{" "}
+                      <span className="font-mono tabular-nums opacity-70">{d.n}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div className="ed-grid catalog-body mt-8 items-start">
           {/* Resting state is the readable one: if the rAF never runs, every
               row is already visible at full opacity via CSS, and the scroll
               treatment only animates toward that. */}
           <ul
             ref={gridRef}
-            className="col-span-4 grid grid-cols-2 gap-2 [&>li:nth-child(n+9)]:hidden sm:gap-3 sm:grid-cols-3 sm:[&>li:nth-child(n+9)]:block md:col-span-7 lg:grid-cols-3 xl:grid-cols-4"
+            className="catalog-grid col-span-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:col-span-7 lg:grid-cols-3 xl:grid-cols-4"
           >
             {shown.map((t) => {
               const on = picked.includes(t.slug);

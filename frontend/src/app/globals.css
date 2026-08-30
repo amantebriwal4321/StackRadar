@@ -1159,6 +1159,19 @@ html.dark .ch-beige {
    than a fade. */
 .curtain { clip-path: inset(0 round 0 0 50px 50px); }
 
+/* The catalog stage is PINNED, so its content cannot scroll — whatever does not
+   fit is clipped by the stage's overflow-hidden and simply disappears. At the
+   full 31 tools it measures 897px, which clears a 900px viewport and loses the
+   last row on a 1366x768 laptop. Short viewports get tighter padding and gaps
+   rather than fewer tools: the whole point of showing all 31 is that they are
+   all reachable. */
+@media (max-height: 880px) {
+  .catalog-stage { padding-block: 0.75rem; }
+  .catalog-chips { margin-top: 1rem; }
+  .catalog-body  { margin-top: 1rem; }
+  .catalog-grid  { gap: 0.5rem; }
+}
+
 /* Panels framing product media, the way the reference frames photography. */
 /* Illustration containers take the deeper 63.75px in the reference; product
    media reads as the same class of object here. */
