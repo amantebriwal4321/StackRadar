@@ -76,12 +76,19 @@ export default function ChTitle({
             them in.
           </p>
 
+          {/* Two paths, not one. The hero previously offered a single CTA, which
+              assumes every reader wants to start by picking — a reader who
+              arrived to look at the data had nothing to click. The secondary is
+              the same pill in outline, so the pair reads as one control. */}
           <div
-            className="col-span-4 mt-8 md:col-span-3 md:col-start-10 md:mt-10 md:flex md:justify-end"
+            className="col-span-4 mt-8 flex flex-wrap items-start gap-3 md:col-span-5 md:col-start-8 md:mt-10 md:justify-end"
             data-sc-in
           >
             <Link href="#build" className="btn-primary">
               Build my stack
+            </Link>
+            <Link href="/explore" className="btn-secondary">
+              Open the console
             </Link>
           </div>
         </div>
