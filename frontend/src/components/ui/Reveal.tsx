@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ElementType, type ReactNode } from "react";
+import { useEffect, useRef, type ElementType, type ReactNode } from "react";
 
 /* Scroll reveal for the data routes.
  *
@@ -14,6 +14,15 @@ import { useEffect, useRef, useState, type ElementType, type ReactNode } from "r
  * ONE OBSERVER FOR THE WHOLE APP. /trends alone reveals 31 rows; a per-instance
  * IntersectionObserver would mean 31 observers on one route. Elements register
  * with the shared one below and unregister on unmount.
+ *
+ * NO REACT STATE. The hidden/shown flip is a class written straight to the
+ * node through the ref. Holding it in state meant a setState in an effect body
+ * — the cascading-render rule this repo already enforces — and 31 rows on
+ * /trends would have been 31 extra render passes for something the compositor
+ * does from one class. An effect writing to the DOM is what effects are for.
+ *
+ * There is no flash: an element BELOW the fold is off-screen at the moment the
+ * effect hides it, and an element already on screen is never hidden at all.
  *
  * FAIL-SAFE, which is the part that matters. This starts VISIBLE and only hides
  * once the effect has confirmed it can un-hide it: an observer exists, motion is
@@ -71,8 +80,6 @@ export default function Reveal({
      string was passed, so this is a type-level narrowing only. */
   const Tag = as as "div";
   const ref = useRef<HTMLDivElement>(null);
-  const [armed, setArmed] = useState(false);
-  const [shown, setShown] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -83,34 +90,31 @@ export default function Reveal({
     const io = ensureObserver();
     if (!io) return;
 
-    // Only now is it safe to start hidden.
-    setArmed(true);
+    const show = () => {
+      if (delay) el.style.transitionDelay = `${delay}ms`;
+      el.classList.remove("sr-out");
+      el.classList.add("sr-in");
+    };
 
-    // Already on screen at mount (above the fold): show on the next frame so
-    // the transition still runs rather than snapping.
+    // Already on screen at mount: leave it visible. Hiding it here is what
+    // produces a flash, and an above-the-fold element has nothing to reveal.
     const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      const f = requestAnimationFrame(() => setShown(true));
-      return () => cancelAnimationFrame(f);
-    }
+    if (rect.top < window.innerHeight && rect.bottom > 0) return;
 
-    registry.set(el, { el, show: () => setShown(true) });
+    // Off-screen, so hiding it now is invisible to the reader.
+    el.classList.remove("sr-in");
+    el.classList.add("sr-out");
+
+    registry.set(el, { el, show });
     io.observe(el);
     return () => {
       io.unobserve(el);
       registry.delete(el);
     };
-  }, []);
-
-  const state = !armed || shown ? "sr-in" : "sr-out";
+  }, [delay]);
 
   return (
-    <Tag
-      ref={ref}
-      className={`sr-reveal ${state} ${className}`.trim()}
-      style={shown && delay ? { transitionDelay: `${delay}ms` } : undefined}
-      {...rest}
-    >
+    <Tag ref={ref} className={`sr-reveal sr-in ${className}`.trim()} {...rest}>
       {children}
     </Tag>
   );

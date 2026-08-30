@@ -5,6 +5,7 @@ import { useUser, SignInButton } from "@clerk/nextjs";
 import { Bookmark, BookmarkCheck, Trash2, Loader2, TrendingUp, Star, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
+import Reveal from "@/components/ui/Reveal";
 import DashboardShell from "@/components/DashboardShell";
 import { type Tool, fetchTools } from "@/data/trends";
 
@@ -132,9 +133,10 @@ export default function WatchlistPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {watchedTools.map((tool) => (
-              <div
+            {watchedTools.map((tool, i) => (
+              <Reveal
                 key={tool.slug}
+                delay={(i % 4) * 60}
                 className="group relative p-5 bg-card rounded-2xl border border-border/60 hover:border-primary/40 transition-colors shadow-sm"
               >
                 <div className="flex justify-between items-start">
@@ -172,7 +174,7 @@ export default function WatchlistPage() {
                     Remove
                   </button>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         )}

@@ -3,13 +3,12 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
+import Reveal from "@/components/ui/Reveal";
 import { TrendingUp, TrendingDown, Minus, BarChart3, Filter, Loader2, Star, Share2, MessageSquare, ArrowUpDown } from "lucide-react";
 import { type Tool, fetchTools, fetchCategories } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
 import FilterBar from "@/components/FilterBar";
 import WatchlistButton from "@/components/WatchlistButton";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
@@ -198,22 +197,12 @@ export default function TrendsPage() {
     }));
   }, [displayedTools]);
 
-  /* ─── GSAP List Stagger Entrance ───
-     Guarded like the landing: on mobile / reduced-motion the rows are simply
-     visible (no opacity:0 start), so a phone never gets a stuck-hidden list. */
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-    mm.add("(max-width: 767px), (prefers-reduced-motion: reduce)", () => {
-      gsap.set(".trend-list-row", { opacity: 1, y: 0 });
-    });
-    mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
-      if (isLoading) return;
-      gsap.fromTo(".trend-list-row",
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5, stagger: 0.05, ease: "power2.out" });
-    });
-    return () => mm.revert();
-  }, [isLoading, displayedTools]);
+  /* The GSAP stagger that used to live here was a MOUNT animation, not a scroll
+     one: it fired once when the list rendered, so every row below the fold
+     played its entrance while off-screen and you scrolled down to rows that had
+     already finished moving. The rows now use <Reveal>, which is driven by the
+     app's shared IntersectionObserver and therefore actually happens as you
+     reach them. */
 
   // Aggregate stats for the header (fills the empty right side with real provenance)
   const totalStars = useMemo(() => allTools.reduce((s, t) => s + (t.stars || 0), 0), [allTools]);
@@ -402,7 +391,7 @@ export default function TrendsPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-indigo-500/5">
-                  {displayedTools.map((tool) => {
+                  {displayedTools.map((tool, i) => {
                     // Real trend direction — no green "+0.0%" when nothing moved.
                     const g = tool.growth_pct;
                     const trend =
@@ -413,8 +402,13 @@ export default function TrendsPage() {
                         : { Icon: Minus, label: "stable", cls: "text-[var(--c-ink-2)]/70 bg-[var(--c-ink-2)]/[0.08] border-[var(--c-ink-2)]/25" };
 
                     return (
-                      <div
+                      <Reveal
                         key={tool.slug}
+                        /* Stagger rolls over every six rows rather than
+                           climbing with the index: at 31 rows a plain i*45
+                           would hand the last row a 1.35s delay, which it would
+                           then serve even when it scrolls into view alone. */
+                        delay={(i % 6) * 45}
                         className="trend-list-row grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-6 py-5 bg-[var(--c-surface-2)]/10 hover:bg-[var(--c-surface-2)]/50 transition-all duration-200"
                       >
                         {/* 1. Name & Info */}
@@ -470,7 +464,7 @@ export default function TrendsPage() {
                           </div>
                         </div>
 
-                      </div>
+                      </Reveal>
                     );
                   })}
                 </div>

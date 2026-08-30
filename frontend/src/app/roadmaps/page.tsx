@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Reveal from "@/components/ui/Reveal";
 import { MapPin, Compass, Search, PackageOpen, Loader2 } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
 import RoadmapCard from "@/components/RoadmapCard";
@@ -89,11 +90,9 @@ export default function RoadmapsIndexPage() {
         {filteredRoadmaps.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
             {filteredRoadmaps.map((roadmap, idx) => (
-              <RoadmapCard
-                key={roadmap.slug}
-                roadmap={roadmap}
-                index={idx}
-              />
+              <Reveal key={roadmap.slug} delay={(idx % 4) * 60} className="h-full">
+                <RoadmapCard roadmap={roadmap} index={idx} />
+              </Reveal>
             ))}
           </div>
         ) : (

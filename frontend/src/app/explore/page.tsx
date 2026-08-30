@@ -14,6 +14,7 @@ import WatchlistButton from "@/components/WatchlistButton";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
+import Reveal from "@/components/ui/Reveal";
 
 /* ─── Score band helpers ─── */
 function scoreColor(score: number): string {
@@ -59,10 +60,11 @@ function ScoreRing({ score, size = 56, stroke = 4 }: { score: number; size?: num
 }
 
 /* ─── Premium path node card ─── */
-function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) {
+function PathCard({ tool, isEntry = false, delay = 0 }: { tool: Tool; isEntry?: boolean; delay?: number }) {
   const prio = priorityStyle(tool.learning_priority);
   const growthStr = tool.growth_pct >= 0 ? `+${tool.growth_pct.toFixed(1)}%` : `${tool.growth_pct.toFixed(1)}%`;
   return (
+    <Reveal delay={delay} className="h-full">
     <motion.div
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
@@ -106,6 +108,7 @@ function PathCard({ tool, isEntry = false }: { tool: Tool; isEntry?: boolean }) 
         </div>
       </div>
     </motion.div>
+    </Reveal>
   );
 }
 
@@ -274,7 +277,7 @@ export default function ExplorePage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {searchResults.map((tool) => <PathCard key={tool.slug} tool={tool} />)}
+                    {searchResults.map((tool, i) => <PathCard key={tool.slug} tool={tool} delay={(i % 6) * 50} />)}
                   </div>
                 )}
               </div>
@@ -352,10 +355,10 @@ export default function ExplorePage() {
                               </span>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                              {tier.tools.map((t) => {
+                              {tier.tools.map((t, i) => {
                                 const full = toolBySlug[t.slug];
                                 if (!full) return null;
-                                return <PathCard key={t.slug} tool={full} isEntry={t.is_entry_point} />;
+                                return <PathCard key={t.slug} tool={full} isEntry={t.is_entry_point} delay={(i % 6) * 50} />;
                               })}
                             </div>
                           </div>
