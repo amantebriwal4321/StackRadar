@@ -128,12 +128,12 @@ export default function ChCatalog({
           {/* The domains, as filters. Each chip carries its domain's colour, so
               this row is also the legend the coverage bar's codes refer to. */}
           <div className="ed-grid catalog-chips mt-7">
-            <ul className="col-span-4 flex flex-wrap gap-2 md:col-span-12">
-              <li>
+            <ul className="catalog-chip-strip col-span-4 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0 md:col-span-12">
+              <li className="shrink-0">
                 <button
                   onClick={() => setDomain(null)}
                   aria-pressed={domain === null}
-                  className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                  className={`whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                     domain === null
                       ? "border-transparent bg-[var(--c-ink)] text-[var(--c-ground)]"
                       : "border-[var(--c-border)] text-[var(--c-ink-2)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
@@ -148,11 +148,11 @@ export default function ChCatalog({
               {domains.map((d) => {
                 const on = domain === d.name;
                 return (
-                  <li key={d.name}>
+                  <li key={d.name} className="shrink-0">
                     <button
                       onClick={() => setDomain(on ? null : d.name)}
                       aria-pressed={on}
-                      className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                      className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                         on
                           ? "border-transparent bg-[var(--c-ink)] text-[var(--c-ground)]"
                           : "border-[var(--c-border)] text-[var(--c-ink-2)] hover:border-[color-mix(in_srgb,var(--c-ink)_32%,transparent)]"
@@ -178,7 +178,7 @@ export default function ChCatalog({
               treatment only animates toward that. */}
           <ul
             ref={gridRef}
-            className="catalog-grid col-span-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:col-span-7 lg:grid-cols-3 xl:grid-cols-4"
+            className="catalog-grid col-span-4 grid grid-cols-2 gap-2 [&>li:nth-child(n+9)]:hidden sm:grid-cols-3 sm:gap-3 sm:[&>li:nth-child(n+9)]:block md:col-span-7 lg:grid-cols-3 xl:grid-cols-4"
           >
             {shown.map((t) => {
               const on = picked.includes(t.slug);
@@ -220,6 +220,16 @@ export default function ChCatalog({
               );
             })}
           </ul>
+
+            {/* Truncation stated, never silent — and the wording changes once a
+                chip is on, because "filter to see the rest" is false advice
+                when you are already filtered and Web Development holds 11. */}
+            {shown.length > 8 && (
+              <p className="col-span-4 mt-3 font-mono text-[11px] text-[var(--c-ink-3)] sm:hidden">
+                8 of <span className="tabular-nums">{shown.length}</span>
+                {domain ? ` in ${domain}` : " — filter by domain to see more"}
+              </p>
+            )}
 
             {/* The consequence, next to the cause. */}
             <div className="order-first col-span-4 md:order-none md:col-span-4 md:col-start-9 lg:sticky lg:top-28">
