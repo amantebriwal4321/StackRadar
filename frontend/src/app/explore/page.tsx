@@ -63,8 +63,11 @@ function ScoreRing({ score, size = 56, stroke = 4 }: { score: number; size?: num
 function PathCard({ tool, isEntry = false, delay = 0 }: { tool: Tool; isEntry?: boolean; delay?: number }) {
   const prio = priorityStyle(tool.learning_priority);
   const growthStr = tool.growth_pct >= 0 ? `+${tool.growth_pct.toFixed(1)}%` : `${tool.growth_pct.toFixed(1)}%`;
+  /* settle rather than rise: the card's own whileHover translates it on the y
+     axis, and two transforms on the same axis fight for the frames where they
+     overlap. */
   return (
-    <Reveal delay={delay} className="h-full">
+    <Reveal delay={delay} variant="settle" className="h-full">
     <motion.div
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300, damping: 24 }}

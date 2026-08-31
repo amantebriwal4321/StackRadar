@@ -90,7 +90,7 @@ export default function RoadmapsIndexPage() {
         {filteredRoadmaps.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
             {filteredRoadmaps.map((roadmap, idx) => (
-              <Reveal key={roadmap.slug} delay={(idx % 4) * 60} className="h-full">
+              <Reveal key={roadmap.slug} variant="lift" delay={(idx % 4) * 60} className="h-full">
                 <RoadmapCard roadmap={roadmap} index={idx} />
               </Reveal>
             ))}

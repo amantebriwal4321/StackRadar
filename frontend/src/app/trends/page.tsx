@@ -409,6 +409,10 @@ export default function TrendsPage() {
                            would hand the last row a 1.35s delay, which it would
                            then serve even when it scrolls into view alone. */
                         delay={(i % 6) * 45}
+                        /* fade, not rise: 31 rows sliding in a dense table is
+                           more motion than the content can carry, and the row
+                           is a grid whose columns would shear during travel. */
+                        variant="fade"
                         className="trend-list-row grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-6 py-5 bg-[var(--c-surface-2)]/10 hover:bg-[var(--c-surface-2)]/50 transition-all duration-200"
                       >
                         {/* 1. Name & Info */}
