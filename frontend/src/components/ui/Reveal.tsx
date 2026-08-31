@@ -39,19 +39,52 @@ import { useEffect, useRef, type ElementType, type ReactNode } from "react";
  * must never be able to take the page down with it.
  */
 
-type Registered = { el: Element; show: () => void };
+type Registered = { el: Element; show: (skipAnimation?: boolean) => void };
 
 let observer: IntersectionObserver | null = null;
 const registry = new Map<Element, Registered>();
 
+/* FLICK DETECTION.
+ *
+ * On a hard scroll flick a dozen elements cross the threshold inside a couple
+ * of frames, and every one of them starts a 0.7s animation the reader has
+ * already scrolled past — so they arrive as a wall of movement in the wrong
+ * place, which is the single thing that makes scroll animation feel cheap.
+ *
+ * When the page is moving faster than this, elements are marked shown with no
+ * animation at all. They were never actually seen arriving; the honest thing
+ * is to have them simply be there. Normal reading scroll is nowhere near
+ * this — it is roughly a full viewport per second. */
+const FLICK_PX_PER_SEC = 2600;
+let lastSampleY = 0;
+let lastSampleT = 0;
+let scrollSpeed = 0;
+
+function trackSpeed() {
+  const now = performance.now();
+  const y = window.scrollY;
+  const dt = now - lastSampleT;
+  // Ignore samples closer than a frame; dt near zero makes the ratio explode.
+  if (dt > 12) {
+    scrollSpeed = (Math.abs(y - lastSampleY) / dt) * 1000;
+    lastSampleY = y;
+    lastSampleT = now;
+  }
+}
+
 function ensureObserver(): IntersectionObserver | null {
   if (observer) return observer;
   if (typeof IntersectionObserver === "undefined") return null;
+  lastSampleY = window.scrollY;
+  lastSampleT = performance.now();
+  window.addEventListener("scroll", trackSpeed, { passive: true });
+
   observer = new IntersectionObserver(
     (entries) => {
+      const flicking = scrollSpeed > FLICK_PX_PER_SEC;
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
-        registry.get(entry.target)?.show();
+        registry.get(entry.target)?.show(flicking);
         // One-shot: re-hiding on the way out makes a page flicker when the
         // reader scrolls back up, which reads as a bug rather than an effect.
         observer?.unobserve(entry.target);
@@ -100,7 +133,12 @@ export default function Reveal({
     const io = ensureObserver();
     if (!io) return;
 
-    const show = () => {
+    const show = (skipAnimation = false) => {
+      // Passed at speed: just be there. See FLICK_PX_PER_SEC above.
+      if (skipAnimation) {
+        el.classList.remove("sr-out");
+        return;
+      }
       // animation-delay, not transition-delay: the latter stays on the element
       // afterwards and would delay every later hover transition by the stagger.
       if (delay) el.style.animationDelay = `${delay}ms`;
