@@ -14,6 +14,7 @@ import { fetchToolDetail, fetchToolHistory, type ToolDetail, type ToolHistoryPoi
 import DashboardShell from "@/components/DashboardShell";
 import WatchlistButton from "@/components/WatchlistButton";
 import LearningResources from "@/components/LearningResources";
+import Reveal from "@/components/ui/Reveal";
 import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -174,7 +175,7 @@ export default function ToolDetailPage() {
 
         {/* ── Recommendation Panel ── */}
         {tool.recommendation && (
-          <div className="tech-panel p-6 rounded-2xl relative overflow-hidden">
+          <Reveal variant="rise" className="tech-panel p-6 rounded-2xl relative overflow-hidden">
             <div className="absolute top-4 right-4 p-2 bg-indigo-600/10 border border-indigo-500/20 rounded-xl text-indigo-600">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
@@ -184,11 +185,11 @@ export default function ToolDetailPage() {
             <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-4xl font-medium pr-10">
               {tool.recommendation}
             </p>
-          </div>
+          </Reveal>
         )}
 
         {/* ── Dual Layout: Main Chart (left) and Sentiment Dial (right) ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        <Reveal variant="rise" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* A. Recharts Area Chart (lg:col-span-8) */}
           <div className="lg:col-span-8 tech-panel p-6 rounded-2xl flex flex-col justify-between">
@@ -300,10 +301,10 @@ export default function ToolDetailPage() {
             </div>
           </div>
 
-        </div>
+        </Reveal>
 
         {/* ── Sequential Roadmap CTA & Prerequisites ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        <Reveal variant="rise" className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           
           {/* Prerequisite Node details */}
           {tool.parent_slug && tool.parent_name ? (
@@ -365,10 +366,10 @@ export default function ToolDetailPage() {
             </div>
           )}
 
-        </div>
+        </Reveal>
 
         {/* ── Multi-channel Telemetry metric counters ── */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        <Reveal variant="rise" className="grid grid-cols-2 md:grid-cols-6 gap-4">
           
           <div className="tech-panel p-4 rounded-xl">
             <span className="text-[10px] font-mono text-[var(--c-ink-2)] uppercase block mb-1">GITHUB STARS</span>
@@ -418,12 +419,14 @@ export default function ToolDetailPage() {
             </div>
           </div>
 
-        </div>
+        </Reveal>
 
         {/* ── Where to learn it ──
             The score answers "is this worth my time?"; this answers the
             question every user asks immediately after. */}
-        <LearningResources slug={tool.slug} />
+        <Reveal variant="fade">
+          <LearningResources slug={tool.slug} />
+        </Reveal>
 
         {/* ── Raw Github Repository connection ── */}
         {tool.github_repo && (
