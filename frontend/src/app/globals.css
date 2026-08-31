@@ -1236,6 +1236,9 @@ html.dark .asset-slot {
      first scroll and under reduced motion, where nothing writes them. */
   --af-rules: 0;
   --af-p: 0;
+  /* 0..1 scroll velocity, written by the same listener. Rises immediately and
+     eases back to 0 about a second after the scrolling stops. */
+  --af-v: 0;
 }
 
 /* The measured field. Hairlines every 96px, drifting up at 0.18x — slow enough
@@ -1272,6 +1275,12 @@ html.dark .asset-slot {
     color-mix(in srgb, var(--accent-2) 9%, transparent) 0%,
     transparent 72%
   );
+  /* Brightens with travel — and it has to REST below 1 to have anywhere to go.
+     The first version was calc(1 + v * 0.55), which clamps: opacity cannot
+     exceed 1, so the sweep measured 1 at every velocity and the effect did
+     nothing at all. Resting at 0.6 of a 9% wash means ~5% at rest rising to
+     the full 9% at speed. */
+  opacity: calc(0.6 + var(--af-v) * 0.4);
 }
 
 .af-contacts {
@@ -1280,6 +1289,9 @@ html.dark .asset-slot {
   width: 100%;
   height: 100%;
   opacity: 0.5;
+  /* Stretched very slightly along the axis of travel while moving — the same
+     trick a camera does at speed. 4% at full tilt, which is felt and not seen. */
+  scale: 1 calc(1 + var(--af-v) * 0.04);
   /* Bounded drift, not raw parallax: +/-60px across the whole page. At a plain
      0.42x these reached -1361px and left the viewport entirely, so after about
      two screens there were no contacts at all. */
@@ -1311,7 +1323,7 @@ html.dark .af-rules {
      component also skips its listener, so --af-y never leaves 0. */
   .af-contact { animation: none; }
   .af-rules,
-  .af-contacts { transform: none; }
+  .af-contacts { transform: none; scale: none; }
   .af-sweep { display: none; }
 }
 

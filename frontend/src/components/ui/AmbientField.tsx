@@ -22,6 +22,13 @@ import { usePathname } from "next/navigation";
  *   contacts  a handful of readings sitting on it                bounded drift
  *   sweep     one soft band tracking progress through the page   1.00x
  *
+ * It also reads VELOCITY, not just position. A field that only parallaxes is
+ * still a static image being moved; reacting to how fast you are travelling is
+ * what makes it feel like a surface rather than a texture. Fast scrolling
+ * brightens the sweep and stretches the contacts very slightly along the axis
+ * of travel, and both decay back to rest within about a second of stopping.
+ * Capped hard: this is meant to be noticed only once, and never diagnosed.
+ *
  * TWO THINGS THAT HAD TO BE BOUNDED, both caught by driving the variables to
  * their extremes rather than by looking at the top of the page:
  *
@@ -62,10 +69,35 @@ export default function AmbientField() {
     // effect — but stops it responding to scroll. The CSS also drops the pulse.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // Must match --af-tile in globals.css: the rules' repeat interval.
+    // Must match the rules' repeat interval in globals.css.
     const TILE = 96;
+    // Pixels-per-frame that counts as "full tilt". Roughly a fast trackpad
+    // flick; anything above this is clamped so the effect has a ceiling.
+    const FULL_TILT = 55;
 
     let frame = 0;
+    let decay = 0;
+    let lastY = window.scrollY;
+    let energy = 0;
+
+    const paint = () => {
+      el.style.setProperty("--af-v", energy.toFixed(3));
+    };
+
+    // Ease back to rest after the scrolling stops. Without this the field
+    // freezes mid-stretch the instant you let go, which reads as a stutter.
+    const settle = () => {
+      energy *= 0.88;
+      if (energy < 0.01) {
+        energy = 0;
+        decay = 0;
+        paint();
+        return;
+      }
+      paint();
+      decay = requestAnimationFrame(settle);
+    };
+
     const read = () => {
       frame = 0;
       const y = window.scrollY;
@@ -74,7 +106,18 @@ export default function AmbientField() {
       // whose support is still uneven.
       el.style.setProperty("--af-rules", `${-((y * 0.18) % TILE)}`);
       el.style.setProperty("--af-p", max > 0 ? String(Math.min(y / max, 1)) : "0");
+
+      const v = Math.min(Math.abs(y - lastY) / FULL_TILT, 1);
+      lastY = y;
+      // Rise fast, fall slow: energy takes the higher of the new reading and a
+      // decayed previous one, so a burst does not flicker between frames.
+      energy = Math.max(v, energy * 0.7);
+      paint();
+
+      if (decay) cancelAnimationFrame(decay);
+      decay = requestAnimationFrame(settle);
     };
+
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(read);
     };
@@ -86,6 +129,7 @@ export default function AmbientField() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);
+      if (decay) cancelAnimationFrame(decay);
     };
   }, [enabled, pathname]);
 
