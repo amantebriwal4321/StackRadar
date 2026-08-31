@@ -15,6 +15,12 @@ import { useEffect, useRef, type ElementType, type ReactNode } from "react";
  * IntersectionObserver would mean 31 observers on one route. Elements register
  * with the shared one below and unregister on unmount.
  *
+ * ANIMATION, NOT TRANSITION. The first version set a `transition` shorthand on
+ * the host element, which replaced the host's OWN transition — every revealed
+ * element also carries `transition-all duration-200` for its hover state, and
+ * measured on /trends all 31 rows had silently lost their hover fade. animation
+ * and transition are separate properties and compose cleanly.
+ *
  * NO REACT STATE. The hidden/shown flip is a class written straight to the
  * node through the ref. Holding it in state meant a setState in an effect body
  * — the cascading-render rule this repo already enforces — and 31 rows on
@@ -91,9 +97,11 @@ export default function Reveal({
     if (!io) return;
 
     const show = () => {
-      if (delay) el.style.transitionDelay = `${delay}ms`;
+      // animation-delay, not transition-delay: the latter stays on the element
+      // afterwards and would delay every later hover transition by the stagger.
+      if (delay) el.style.animationDelay = `${delay}ms`;
       el.classList.remove("sr-out");
-      el.classList.add("sr-in");
+      el.classList.add("sr-run");
     };
 
     // Already on screen at mount: leave it visible. Hiding it here is what
@@ -102,7 +110,6 @@ export default function Reveal({
     if (rect.top < window.innerHeight && rect.bottom > 0) return;
 
     // Off-screen, so hiding it now is invisible to the reader.
-    el.classList.remove("sr-in");
     el.classList.add("sr-out");
 
     registry.set(el, { el, show });
@@ -114,7 +121,7 @@ export default function Reveal({
   }, [delay]);
 
   return (
-    <Tag ref={ref} className={`sr-reveal sr-in ${className}`.trim()} {...rest}>
+    <Tag ref={ref} className={`sr-reveal ${className}`.trim()} {...rest}>
       {children}
     </Tag>
   );

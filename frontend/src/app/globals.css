@@ -454,18 +454,40 @@ body {
  * The resting state here is VISIBLE. .sr-out is applied only after the
  * component has confirmed at runtime that it can be taken off again, so a
  * reveal that never fires cannot strand content at zero. */
-.sr-reveal {
-  transition: opacity 0.7s var(--ease-standard), transform 0.7s var(--ease-standard);
+/* DRIVEN BY ANIMATION, NOT TRANSITION, and that is not a style preference.
+ *
+ * .sr-reveal used to set `transition: opacity .7s, transform .7s` on the host
+ * element. `transition` is a shorthand, so it REPLACED whatever the host had
+ * already declared — and the elements being revealed are the same ones that
+ * carry `transition-all duration-200` for their own hover states. Measured on
+ * /trends: transition-property came back `opacity, transform`, so all 31 rows
+ * had lost the hover background fade and snapped instead. Every revealed
+ * element in the app had the same injury.
+ *
+ * `animation` and `transition` are separate properties and do not collide, so
+ * the host keeps its own transitions untouched. It also gives us animation-delay
+ * for the stagger, which — unlike transition-delay — cannot linger afterwards
+ * and delay a later hover. */
+.sr-reveal { }
+.sr-out { opacity: 0; }
+
+/* `both` fill so the 0% keyframe applies during the delay as well; without it a
+   staggered element flashes at full opacity before its turn. */
+.sr-run {
+  animation-duration: var(--sr-dur, 0.72s);
+  animation-timing-function: var(--sr-ease, cubic-bezier(0.22, 0.68, 0.3, 1));
+  animation-fill-mode: both;
+  animation-name: sr-rise;
 }
-.sr-out { opacity: 0; transform: translateY(22px); }
-.sr-in  { opacity: 1; transform: none; }
+
+@keyframes sr-rise { from { opacity: 0; transform: translate3d(0, 26px, 0); } }
 
 @media (prefers-reduced-motion: reduce) {
-  /* The component already refuses to arm under this, so .sr-out never lands.
-     Stated anyway: a transition surviving here would be the one thing the
-     setting is asking us not to do. */
-  .sr-reveal { transition: none; }
-  .sr-out { opacity: 1; transform: none; }
+  /* The component already refuses to arm here, so neither class lands. Stated
+     anyway: an animation surviving this is the one thing the setting asks us
+     not to do. */
+  .sr-run { animation: none; }
+  .sr-out { opacity: 1; }
 }
 
 /* ─────────────────────────────────────────────
