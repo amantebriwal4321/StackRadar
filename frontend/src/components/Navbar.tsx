@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Sun, Moon, Bookmark } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
@@ -39,7 +39,7 @@ export default function Navbar() {
   const { isSignedIn, isLoaded } = useUser();
   const [theme, setTheme] = useState<"dark" | "light">("light");
   const [mounted, setMounted] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const progressRef = useRef<HTMLDivElement>(null);
   const [overview, setOverview] = useState<Overview | null>(null);
 
   useEffect(() => {
@@ -72,17 +72,37 @@ export default function Navbar() {
     };
   }, []);
 
-  // Scroll → drive the reading-progress hairline inside the pill. There is no
-  // `scrolled` fill state: a floating pill is opaque at every position.
+  /* Scroll → the reading-progress hairline inside the pill. There is no
+     `scrolled` fill state: a floating pill is opaque at every position.
+
+     WRITTEN TO THE DOM, NOT TO STATE. This used to call setScrollProgress from
+     an unthrottled scroll handler, so every scroll event re-rendered the whole
+     Navbar — logo SVG, tab strip, status line and all — to move a 1px bar.
+     CLAUDE.md records the same pattern being torn out of SmoothScrollProvider
+     for the same reason. One rAF-throttled listener writing a transform now:
+     no React render at all, and scaleX composites where width would have
+     forced layout on every frame. */
   useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
+    const el = progressRef.current;
+    if (!el) return;
+    let frame = 0;
+    const read = () => {
+      frame = 0;
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(max > 0 ? Math.min(y / max, 1) : 0);
+      const p = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+      el.style.transform = `scaleX(${p})`;
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(read);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    read();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -244,8 +264,9 @@ export default function Navbar() {
         {/* Reading progress, inset so it follows the pill's curve. */}
         <div className="pointer-events-none absolute inset-x-12 bottom-[6px] h-px overflow-hidden rounded-full">
           <div
-            className="h-full bg-[var(--accent-green)] transition-[width] duration-150 ease-out"
-            style={{ width: `${scrollProgress * 100}%` }}
+            ref={progressRef}
+            className="h-full w-full origin-left bg-[var(--accent-green)]"
+            style={{ transform: "scaleX(0)" }}
           />
         </div>
       </div>
