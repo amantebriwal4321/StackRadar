@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Reveal from "@/components/ui/Reveal";
 import { motion } from "framer-motion";
 import {
   Radar, Signal, BarChart3, Map, ArrowRight, GitBranch,
@@ -186,7 +187,7 @@ export default function AboutPage() {
         title="Developers make high-stakes bets on stale information."
         blurb="“Should I learn this? Is it still worth investing in? What’s rising right now?” — asked constantly, answered badly."
       >
-        <div className="grid md:grid-cols-2 gap-5">
+        <Reveal variant="rise" className="grid md:grid-cols-2 gap-5">
           <div className="tech-panel rounded-2xl p-6 md:p-7">
             <h3 className="font-mono text-xs tracking-[0.16em] uppercase text-text-secondary mb-4">
               Today, you rely on…
@@ -222,7 +223,7 @@ export default function AboutPage() {
               ))}
             </ul>
           </div>
-        </div>
+        </Reveal>
       </Section>
 
       {/* ══════════════ POSITIONING STATEMENT ══════════════ */}

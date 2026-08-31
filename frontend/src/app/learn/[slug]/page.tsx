@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Reveal from "@/components/ui/Reveal";
 import { notFound } from "next/navigation";
 import { ArrowRight, Play, ListVideo, CheckCircle2, Clock, TrendingUp } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
@@ -158,7 +159,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
         </header>
 
         {/* The path */}
-        <section className="mb-12">
+        <Reveal as="section" variant="rise" className="mb-12">
           <h2 className="text-2xl md:text-3xl font-normal font-display text-[var(--c-ink)] mb-6">
             The step-by-step path
           </h2>
@@ -203,18 +204,18 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
               </li>
             ))}
           </ol>
-        </section>
+        </Reveal>
 
         {/* FAQ */}
-        <section className="mb-12">
+        <Reveal as="section" variant="rise" className="mb-12">
           <h2 className="text-2xl md:text-3xl font-normal font-display text-[var(--c-ink)] mb-6">
             Frequently asked questions
           </h2>
           <FaqAccordion faqs={faqs} />
-        </section>
+        </Reveal>
 
         {/* Closing CTA */}
-        <section className="ch-beige rounded-[50px] p-8 md:p-12 text-center">
+        <Reveal as="section" variant="settle" className="ch-beige rounded-[50px] p-8 md:p-12 text-center">
           <h2 className="text-xl md:text-2xl font-normal font-display text-[var(--c-ink)] mb-2">
             Ready to start learning {subj}?
           </h2>
@@ -222,7 +223,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
           <Link href={`/roadmap/${slug}`} prefetch className="btn-primary inline-flex">
             Open the {subj} roadmap <ArrowRight className="w-4 h-4" />
           </Link>
-        </section>
+        </Reveal>
       </article>
     </DashboardShell>
   );
