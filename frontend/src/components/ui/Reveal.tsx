@@ -69,6 +69,7 @@ function ensureObserver(): IntersectionObserver | null {
 export default function Reveal({
   children,
   as = "div",
+  variant = "rise",
   delay = 0,
   className = "",
   ...rest
@@ -76,6 +77,9 @@ export default function Reveal({
   children: ReactNode;
   /** Element to render. Use "li"/"tr" where the parent demands it. */
   as?: ElementType;
+  /** How it arrives. See the .sr-v-* block in globals.css for distances.
+   *  `fade` is the safe choice for anything that carries its own transform. */
+  variant?: "rise" | "lift" | "left" | "right" | "settle" | "fade";
   /** Stagger, in ms. Keep sequences short — past ~6 the tail feels broken. */
   delay?: number;
   className?: string;
@@ -100,8 +104,21 @@ export default function Reveal({
       // animation-delay, not transition-delay: the latter stays on the element
       // afterwards and would delay every later hover transition by the stagger.
       if (delay) el.style.animationDelay = `${delay}ms`;
+      // Promote for the duration only. A blanket `will-change` in the
+      // stylesheet would hold a compositor layer for all 31 rows of /trends for
+      // the life of the page, which is the documented way to make a page slower
+      // by trying to make it faster. Granted on arm, surrendered on the way out.
+      el.style.willChange = "opacity, transform";
       el.classList.remove("sr-out");
-      el.classList.add("sr-run");
+      el.classList.add("sr-run", `sr-v-${variant}`);
+      el.addEventListener(
+        "animationend",
+        () => {
+          el.style.willChange = "";
+          el.style.animationDelay = "";
+        },
+        { once: true },
+      );
     };
 
     // Already on screen at mount: leave it visible. Hiding it here is what
@@ -118,7 +135,7 @@ export default function Reveal({
       io.unobserve(el);
       registry.delete(el);
     };
-  }, [delay]);
+  }, [delay, variant]);
 
   return (
     <Tag ref={ref} className={`sr-reveal ${className}`.trim()} {...rest}>
