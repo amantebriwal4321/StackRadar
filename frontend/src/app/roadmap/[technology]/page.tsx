@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import Reveal from "@/components/ui/Reveal";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Star, Sparkles, Check, Flame, Play, ListVideo, Youtube } from "lucide-react";
 import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
@@ -313,9 +314,17 @@ export default function RoadmapPage() {
             const isNextUp = !isDone && nextUpStep === step.step;
 
             return (
-              <div
+              /* Was `slide-up`, a mount animation: every step on the path
+                 played its entrance at once on load, so by the time you
+                 scrolled to step 5 it had long since finished. Reveal runs off
+                 the shared observer, so a step arrives when you reach it.
+                 `left` because the path has a numbered spine down its side and
+                 the steps read as swinging off it. */
+              <Reveal
                 key={idx}
-                className={`glass-panel p-4 md:p-6 rounded-2xl border transition-all duration-300 relative group flex gap-4 md:gap-5 items-start slide-up z-10 ${
+                variant="left"
+                delay={(idx % 5) * 55}
+                className={`glass-panel p-4 md:p-6 rounded-2xl border transition-all duration-300 relative group flex gap-4 md:gap-5 items-start z-10 ${
                   isDone
                     // Done modules recede: clearly marked, but visually quieter so
                     // attention lands on what's still ahead.
@@ -550,7 +559,7 @@ export default function RoadmapPage() {
                   </div>
                 </AccordionItem>
 
-              </div>
+              </Reveal>
             );
           })}
           </Accordion>
