@@ -16,6 +16,19 @@
  *    progress on the act element and custom properties inherit, so CSS reads
  *    it directly: the sweep gains travel and the reading rides the trace.
  *
+ * IT NOW EXISTS BELOW lg. Every prop was `hidden lg:block`, so a phone or a
+ * tablet got bare cream on all six chapters — the art layer was the only thing
+ * giving those grounds any texture, and the width where most people will
+ * actually read this had none of it. They render at every width now, pushed
+ * further into the margin and held at 45% so a narrow column never has a
+ * radar sweep competing with the headline.
+ *
+ * The offsets are MEASURED, not guessed. The first attempt put the sweep at
+ * top-[2vh] on mobile and it covered the h1 by 32,592px^2 — the hero headline,
+ * the single most important text on the site. On narrow screens it now sits
+ * at 78vh, below the hero copy and both CTAs, because a 375px column has no free
+ * margin beside the text the way a 1440px one does.
+ *
  * RESTRAINT IS STILL THE POINT. The reference measures 0.031 colourfulness —
  * ~97% neutral, props punctuating a mostly empty canvas. An earlier pass put
  * big saturated dots across the headline and read as confetti. Each variant is
@@ -37,7 +50,7 @@ export default function ChapterArt({
       {variant === "sweep" && (
         <svg
           data-sc-parallax="-0.14"
-          className="absolute -right-[7vw] top-[4vh] hidden h-[54vh] w-[54vh] lg:block"
+          className="absolute -right-[26vw] top-[78vh] h-[34vh] w-[34vh] opacity-40 sm:-right-[18vw] sm:top-[64vh] lg:-right-[7vw] lg:top-[4vh] lg:h-[54vh] lg:w-[54vh] lg:opacity-100"
           viewBox="0 0 400 400"
           fill="none"
         >
@@ -75,7 +88,7 @@ export default function ChapterArt({
       {variant === "traces" && (
         <svg
           data-sc-parallax="-0.1"
-          className="absolute -left-[3vw] bottom-[-2vh] hidden h-[42vh] w-[52vw] lg:block"
+          className="absolute -left-[10vw] bottom-[-4vh] h-[32vh] w-[92vw] opacity-45 lg:-left-[3vw] lg:bottom-[-2vh] lg:h-[42vh] lg:w-[52vw] lg:opacity-100"
           viewBox="0 0 600 300"
           fill="none"
         >
@@ -97,7 +110,7 @@ export default function ChapterArt({
       {variant === "quiet" && (
         <svg
           data-sc-parallax="-0.08"
-          className="absolute -left-[9vw] bottom-[-6vh] hidden h-[52vh] w-[52vh] lg:block"
+          className="absolute -left-[24vw] bottom-[-8vh] h-[44vh] w-[44vh] opacity-45 sm:-left-[16vw] lg:-left-[9vw] lg:bottom-[-6vh] lg:h-[52vh] lg:w-[52vh] lg:opacity-100"
           viewBox="0 0 400 400"
           fill="none"
         >
