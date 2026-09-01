@@ -55,6 +55,7 @@ export default function ChTitle({
           <p
             className="col-span-4 md:col-span-9"
             data-sc-in
+            data-sc-reveal="up"
           >
             <span className="inline-block rounded-full bg-[#FF705D] px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-[#2C2E2A]">
               Momentum intelligence for developers
@@ -65,6 +66,7 @@ export default function ChTitle({
             id="ch-title-h"
             className="col-span-4 mt-6 text-[clamp(2.75rem,7.4vw,7.5rem)] font-medium leading-[0.95] tracking-[-0.06em] text-[var(--c-ink)] md:col-span-9"
             data-sc-in
+            data-sc-reveal="up"
           >
             Stop guessing what to learn next.
           </h1>
@@ -85,6 +87,7 @@ export default function ChTitle({
           <div
             className="col-span-4 mt-8 flex flex-wrap items-start gap-3 md:col-span-5 md:col-start-8 md:mt-10 md:justify-end"
             data-sc-in
+            data-sc-reveal="right"
           >
             <Link href="#build" className="btn-primary">
               Build my stack
@@ -98,7 +101,7 @@ export default function ChTitle({
         {/* ── The spec row. ──
             A ruled line of measured figures, right-aligned in their columns.
             This is the page's subject stated as the subject states itself. */}
-        <dl className="ed-grid ed-rule mt-24 pt-5" data-sc-in>
+        <dl className="ed-grid ed-rule mt-24 pt-5" data-sc-in data-sc-reveal="up">
           {spec.map((s) => (
             <div key={s.label} className="col-span-2 md:col-span-3">
               <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--c-ink-3)]">

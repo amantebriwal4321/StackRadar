@@ -113,6 +113,7 @@ export default function ChMeasure({
             <p
               className="text-[17px] font-medium leading-relaxed text-[var(--c-ink-2)]"
               data-sc-in
+              data-sc-reveal="right"
             >
               A tool does not rise because it got louder. It rises because it
               got louder than the others: every score is a percentile rank,
@@ -123,7 +124,7 @@ export default function ChMeasure({
               at once.
             </p>
 
-            <div className="mt-10" data-sc-in>
+            <div className="mt-10" data-sc-in data-sc-reveal="right">
               <AssetSlot
                 n={1}
                 label="Screen recording"

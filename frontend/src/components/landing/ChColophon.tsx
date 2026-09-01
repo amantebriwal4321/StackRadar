@@ -64,7 +64,7 @@ export default function ChColophon({
         <div className="ed-grid mt-16 items-start">
           <div className="col-span-4 md:col-span-7">
 
-            <div className="mt-8" data-sc-in>
+            <div className="mt-8" data-sc-in data-sc-reveal="left">
               <StackDiagnosis
                 d={d}
                 exampleOf={empty ? "example · the three fastest risers" : null}
@@ -74,7 +74,7 @@ export default function ChColophon({
             {/* The picks themselves, removable. An editable list is the
                 difference between a summary and a tool. */}
             {!empty && (
-              <ul className="mt-8 flex flex-wrap gap-2" data-sc-in>
+              <ul className="mt-8 flex flex-wrap gap-2" data-sc-in data-sc-reveal="left">
                 {picked.map((slug) => {
                   const t = bySlug.get(slug);
                   if (!t) return null;
@@ -135,7 +135,7 @@ export default function ChColophon({
             </p>
           </div>
 
-          <div className="col-span-4 md:col-span-4 md:col-start-9" data-sc-in>
+          <div className="col-span-4 md:col-span-4 md:col-start-9" data-sc-in data-sc-reveal="right">
             <AssetSlot
               n={3}
               label="Your photo, or a short clip"
