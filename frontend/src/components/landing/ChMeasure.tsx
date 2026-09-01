@@ -125,8 +125,18 @@ export default function ChMeasure({
 
             <div className="mt-10" data-sc-in>
               <AssetSlot
+                n={1}
                 label="Screen recording"
-                what="A 5 to 10 second screen capture of you scrolling the console and opening a tool. This replaces the static frame above and makes the whole chapter show the product working instead of describing it."
+                priority="do this one first"
+                spec={[
+                  ["Length", "5–10 seconds"],
+                  ["Shows", "scrolling /explore, then opening one tool"],
+                  ["Audio", "not needed"],
+                  ["Size", "1280px wide or more"],
+                  ["Format", ".mp4"],
+                ]}
+                changes="This chapter stops describing the product and starts showing it running. It is the largest single upgrade left on the page."
+                how="Windows: Win + Alt + R starts a capture. Let a score ring finish animating before you stop."
                 path="frontend/public/media/console.mp4"
                 ratio="16 / 10"
               />

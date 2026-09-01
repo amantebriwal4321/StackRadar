@@ -112,15 +112,31 @@ export default function ChOrder({
         <div className="ed-grid mt-16" data-sc-in>
           <AssetSlot
             className="col-span-4 md:col-span-6"
+            n={2}
             label="Beta-user quotes"
-            what="Two or three real lines from your feedback form or waitlist, with a first name and what they were learning. This becomes a quoted testimonial row. Nothing is written here until you supply them: inventing a testimonial is a hard rule against."
+            spec={[
+              ["How many", "two or three is plenty"],
+              ["Each needs", "the quote, a first name, what they were learning"],
+              ["Source", "feedback form or waitlist replies"],
+              ["Length", "one or two sentences each"],
+            ]}
+            changes="This empty slot becomes a quoted row. Until then the page makes no social-proof claim at all, which is the honest position for a beta."
+            how="Paste them to me in any form and I will shape the file. Nothing gets written here until they are real — inventing a testimonial is a hard rule against."
             path="frontend/src/data/testimonials.ts"
             ratio="16 / 7"
           />
           <AssetSlot
             className="col-span-4 md:col-span-6"
+            n={4}
             label="Roadmap walkthrough"
-            what="Optional. A short capture of you checking off steps on a roadmap page. It would sit beside the quotes and show the progress loop that the copy currently only claims."
+            priority="optional"
+            spec={[
+              ["Length", "6–12 seconds"],
+              ["Shows", "checking off two or three steps on a roadmap"],
+              ["Audio", "not needed"],
+              ["Format", ".mp4"],
+            ]}
+            changes="Demonstrates the progress loop that the copy here currently only claims. Sits beside the quotes."
             path="frontend/public/media/roadmap.mp4"
             ratio="16 / 7"
           />

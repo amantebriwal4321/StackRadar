@@ -137,8 +137,16 @@ export default function ChColophon({
 
           <div className="col-span-4 md:col-span-4 md:col-start-9" data-sc-in>
             <AssetSlot
-              label="Your photo or a short clip"
-              what="A headshot or a 10 second clip of you saying what StackRadar is for. The reference site's whole pitch is real humans, and a beta product gains more from a face than a mature one does. This becomes the byline on this plate."
+              n={3}
+              label="Your photo, or a short clip"
+              spec={[
+                ["Either", "a headshot, or ~10s of you to camera"],
+                ["Saying", "what StackRadar is for, in your own words"],
+                ["Crop", "portrait, 4:5"],
+                ["Format", ".jpg — or .mp4 for the clip"],
+              ]}
+              changes="Becomes the byline on this closing plate, so the page ends on a person rather than a paragraph."
+              how="A phone photo in even light is genuinely fine. The reference site's whole pitch is real humans, and a beta gains more from a face than a mature product does."
               path="frontend/public/media/founder.jpg"
               ratio="4 / 5"
             />
