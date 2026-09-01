@@ -1,28 +1,49 @@
 # Assets still needed
 
-The landing is built and live. Three things on it are **labelled placeholder
+The landing is built and live. Four things on it are **labelled placeholder
 slots** rather than content, because they need something only you can supply.
-Each slot is visible on the page and says what goes in it, so nothing is hidden.
+Each slot is visible on the page and carries its own spec, so you can work from
+the site itself and never need this file — it is here so the list survives
+outside the browser, and the numbering matches (`Asset 01` on the page is `1.`
+below).
 
 Nothing here is faked to fill the gap. In particular the testimonial slot stays
 empty until real quotes exist: inventing one is a hard rule against, and a
 plausible fake is worse than an obvious blank.
 
+**Order of value:** 1 is worth more than 2, 3 and 4 combined. If you only ever
+do one of these, do 1.
+
+| # | Asset | Where | Drop it at |
+|---|---|---|---|
+| 1 | Screen recording | ch. 3, The measurement | `frontend/public/media/console.mp4` |
+| 2 | Beta-user quotes | ch. 5, The order | `frontend/src/data/testimonials.ts` |
+| 3 | Your photo or clip | ch. 6, Colophon | `frontend/public/media/founder.jpg` |
+| 4 | Roadmap walkthrough *(optional)* | ch. 5, beside the quotes | `frontend/public/media/roadmap.mp4` |
+
+When any of them is in place, tell me the filename and I will wire it in,
+delete the slot, and re-verify the page.
+
 ---
 
-## 1. Screen recording of the console  ·  highest value
+## 1. Screen recording of the console  ·  do this one first
 
 **Where:** chapter 3, "The measurement", beside the source cards.
 **Drop it at:** `frontend/public/media/console.mp4`
 
-5 to 10 seconds. Scroll `/explore`, open a tool, let a score ring animate. No
-audio needed, and any resolution above 1280 wide is fine. Screen-record it
-however you like (Windows: `Win + Alt + R`).
+| | |
+|---|---|
+| Length | 5–10 seconds |
+| Shows | scrolling `/explore`, then opening one tool |
+| Audio | not needed |
+| Size | 1280px wide or more |
+| Format | `.mp4` |
 
-**What changes when it lands:** the chapter stops describing the product and
-shows it running. This is the single biggest remaining upgrade on the page.
+**How:** Windows `Win + Alt + R` starts a capture. Let a score ring finish
+animating before you stop.
 
-**Tell me:** "console.mp4 is in" and I will wire it in and re-verify.
+**When it lands:** the chapter stops describing the product and starts showing
+it running. The largest single upgrade left on the page.
 
 ---
 
@@ -31,13 +52,17 @@ shows it running. This is the single biggest remaining upgrade on the page.
 **Where:** chapter 5, "The order", where the reference site runs case studies.
 **Drop them at:** `frontend/src/data/testimonials.ts`
 
-Two or three is plenty. For each: the quote, a first name, and what they were
-learning. Anything real from the feedback form or the waitlist works, even if
-it is short.
+| | |
+|---|---|
+| How many | two or three is plenty |
+| Each needs | the quote, a first name, what they were learning |
+| Source | feedback form or waitlist replies |
+| Length | one or two sentences each |
 
-**What changes when it lands:** an empty slot becomes a quoted row. Until then
-the page makes no social-proof claim at all, which is the honest position for a
-beta.
+**How:** paste them to me in any form and I will shape the file.
+
+**When it lands:** an empty slot becomes a quoted row. Until then the page
+makes no social-proof claim at all, which is the honest position for a beta.
 
 ---
 
@@ -46,19 +71,34 @@ beta.
 **Where:** chapter 6, the colophon byline.
 **Drop it at:** `frontend/public/media/founder.jpg` (or `.mp4` for a clip)
 
-A headshot, or 10 seconds of you saying what StackRadar is for. The reference
-site's entire pitch is real humans, and a beta product gains more from a face
-than a mature one does.
+| | |
+|---|---|
+| Either | a headshot, or ~10s of you to camera |
+| Saying | what StackRadar is for, in your own words |
+| Crop | portrait, 4:5 |
+| Format | `.jpg` — or `.mp4` for the clip |
+
+**How:** a phone photo in even light is genuinely fine.
+
+**When it lands:** becomes the byline on the closing plate, so the page ends on
+a person rather than a paragraph.
 
 ---
 
-## 4. Optional: roadmap walkthrough
+## 4. Roadmap walkthrough  ·  optional
 
 **Where:** chapter 5, beside the quotes.
 **Drop it at:** `frontend/public/media/roadmap.mp4`
 
-You checking off steps on a roadmap page. Shows the progress loop the copy
-currently only claims.
+| | |
+|---|---|
+| Length | 6–12 seconds |
+| Shows | checking off two or three steps on a roadmap |
+| Audio | not needed |
+| Format | `.mp4` |
+
+**When it lands:** demonstrates the progress loop that the copy currently only
+claims.
 
 ---
 
