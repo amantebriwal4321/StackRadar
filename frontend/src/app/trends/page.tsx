@@ -5,7 +5,8 @@ import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
 import Reveal from "@/components/ui/Reveal";
 import { TrendingUp, TrendingDown, Minus, BarChart3, Filter, Loader2, Star, Share2, MessageSquare, ArrowUpDown } from "lucide-react";
-import { type Tool, fetchTools, fetchCategories } from "@/data/trends";
+import { type Tool, type Overview, fetchTools, fetchCategories, fetchOverview } from "@/data/trends";
+import { freshness } from "@/lib/freshness";
 import DashboardShell from "@/components/DashboardShell";
 import FilterBar from "@/components/FilterBar";
 import WatchlistButton from "@/components/WatchlistButton";
@@ -147,6 +148,7 @@ export default function TrendsPage() {
   const [allTools, setAllTools] = useState<Tool[]>([]);
   const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [overview, setOverview] = useState<Overview | null>(null);
 
   // Load categories dynamically from the API
   useEffect(() => {
@@ -159,8 +161,12 @@ export default function TrendsPage() {
     async function load() {
       setIsLoading(true);
       try {
-        const data = await fetchTools();
+        /* Overview alongside the tools, for one reason: this header calls
+           itself "Live momentum index" with a pulsing green dot, and nothing
+           on the page had any idea when the numbers were last measured. */
+        const [data, ov] = await Promise.all([fetchTools(), fetchOverview().catch(() => null)]);
         setAllTools(data);
+        setOverview(ov);
       } catch (err) {
         console.error("Failed to fetch tools:", err);
       } finally {
@@ -204,6 +210,9 @@ export default function TrendsPage() {
      app's shared IntersectionObserver and therefore actually happens as you
      reach them. */
 
+  /* How old the numbers on this page actually are. */
+  const age = freshness(overview?.last_updated);
+
   // Aggregate stats for the header (fills the empty right side with real provenance)
   const totalStars = useMemo(() => allTools.reduce((s, t) => s + (t.stars || 0), 0), [allTools]);
   const starsLabel =
@@ -223,12 +232,32 @@ export default function TrendsPage() {
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-2 text-[11px] font-mono font-semibold text-accent-primary uppercase tracking-[0.28em]">
+              {/* The badge used to read "Live momentum index" over a pulsing
+                  emerald dot unconditionally — on data that can be, and here
+                  was, six weeks old. "Live" is a claim; it now has to be
+                  earned by the timestamp, and the ping only runs when it is
+                  actually true. */}
+              <span
+                className="inline-flex items-center gap-2 text-[11px] font-mono font-semibold uppercase tracking-[0.28em]"
+                style={{ color: age?.level === "stale" ? "var(--color-score-low)" : undefined }}
+              >
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                  {age?.level === "fresh" && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                  )}
+                  <span
+                    className="relative inline-flex rounded-full h-1.5 w-1.5"
+                    style={{
+                      background:
+                        age?.level === "stale"
+                          ? "var(--color-score-low)"
+                          : age?.level === "aging"
+                            ? "var(--color-score-mid)"
+                            : "var(--color-score-high)",
+                    }}
+                  />
                 </span>
-                Live momentum index
+                {age ? (age.level === "fresh" ? "Live momentum index" : `Momentum index · ${age.ageLabel} old`) : "Momentum index"}
               </span>
               <h1 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] font-display flex items-center gap-3">
                 <TrendingUp className="w-8 h-8 text-indigo-600" />
