@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { freshness } from "@/lib/freshness";
 import { usePathname } from "next/navigation";
 import { Menu, X, Sun, Moon, Bookmark } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -126,6 +127,9 @@ export default function Navbar() {
     }
   }, [mobileOpen]);
 
+  /* Age of the reading behind every figure in this line. */
+  const age = freshness(overview?.last_updated);
+
   return (
     <header className="fixed inset-x-0 top-3 z-50 w-full px-3 md:top-5 md:px-6">
       {/* The pill itself. White on cream is the whole elevation story here:
@@ -202,6 +206,11 @@ export default function Navbar() {
           {/* Real state, in the surface's own idiom. */}
           {overview && (
             <div className="hidden lg:flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--c-ink-3)] tabular-nums">
+              {/* The dot reports the READING's health, not merely whether a
+                  scrape happens to be running. It was hardcoded to score-high
+                  green whenever is_scraping was false, so a backend that had
+                  not collected anything in six weeks still showed green and
+                  the word "idle" — the two states a viewer reads as fine. */}
               <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
                 {overview.is_scraping && (
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-1)] opacity-60" />
@@ -211,11 +220,17 @@ export default function Navbar() {
                   style={{
                     background: overview.is_scraping
                       ? "var(--accent-1)"
-                      : "var(--color-score-high)",
+                      : age?.level === "stale"
+                        ? "var(--color-score-low)"
+                        : age?.level === "aging"
+                          ? "var(--color-score-mid)"
+                          : "var(--color-score-high)",
                   }}
                 />
               </span>
-              <span>{overview.is_scraping ? "collecting" : "idle"}</span>
+              <span className={age?.level === "stale" ? "text-[var(--color-score-low)]" : undefined}>
+                {overview.is_scraping ? "collecting" : age ? `${age.ageLabel} old` : "idle"}
+              </span>
               <span aria-hidden="true" className="text-[var(--c-border)]">/</span>
               <span>{overview.tools_tracked} tracked</span>
               <span aria-hidden="true" className="text-[var(--c-border)]">/</span>
