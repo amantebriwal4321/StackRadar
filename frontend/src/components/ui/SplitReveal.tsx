@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Word-by-word masked split-text reveal (the motion.dev "text split reveal"
+ * Masked split-text reveal, per word or per character (the motion.dev "text split reveal"
  * treatment): each word sits in an overflow-hidden box and rises into place on a
  * stagger, so the line assembles itself rather than fading in as a block.
  *
@@ -46,17 +46,26 @@ export default function SplitReveal({
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const words = text.split(" ");
+  /* `by` was accepted, documented and then never read: the component always
+     split on spaces, so a caller asking for "char" silently got words. Either
+     the prop had to go or it had to work, and per-character is the treatment
+     the design system actually calls for on short labels.
+
+     Units carry their own separator rather than relying on whitespace between
+     inline-blocks, which collapses. */
+  const units = by === "char" ? Array.from(text) : text.split(" ");
 
   return (
     <Tag
       ref={ref as React.Ref<HTMLHeadingElement>}
       className={`split-reveal ${armed ? "is-armed" : ""} ${className}`}
     >
-      {words.map((word, i) => (
-        <span key={`${word}-${i}`} className="split-reveal-word">
-          <span style={{ animationDelay: `${delay + i * stagger}ms` }}>{word}</span>
-          {i < words.length - 1 ? "\u00A0" : ""}
+      {units.map((unit, i) => (
+        <span key={`${unit}-${i}`} className="split-reveal-word">
+          <span style={{ animationDelay: `${delay + i * stagger}ms` }}>
+            {unit === " " ? "\u00A0" : unit}
+          </span>
+          {by === "word" && i < units.length - 1 ? "\u00A0" : ""}
         </span>
       ))}
     </Tag>
