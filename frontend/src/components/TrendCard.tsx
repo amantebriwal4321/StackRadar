@@ -62,59 +62,67 @@ function GrowthIndicator({ growth }: { growth: number }) {
   );
 }
 
-export default function TrendCard({ tool, variant = "default", index = 0 }: ToolCardProps) {
-  // Sparkline Component
-  const Sparkline = ({ points, growth, slug }: { points?: number[]; growth: number; slug: string }) => {
-    // Honest empty state. A synthetic flat line used to be drawn here, which
-    // implied history existed when it didn't. Real history accrues per scrape.
-    if (!points || points.length < 2) {
-      return (
-        <div className="flex items-center justify-center h-full w-full">
-          <span className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wider whitespace-nowrap">
-            building history
-          </span>
-        </div>
-      );
-    }
-
-    const chartPoints = points;
-
-    const width = 120;
-    const height = 36;
-    const min = Math.min(...chartPoints);
-    const max = Math.max(...chartPoints);
-    const range = max - min === 0 ? 1 : max - min;
-    const padding = 2;
-    const chartHeight = height - padding * 2;
-
-    const coords = chartPoints.map((p, idx) => {
-      const x = (idx / (chartPoints.length - 1)) * width;
-      const y = height - padding - ((p - min) / range) * chartHeight;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    });
-
-    const pathD = `M ${coords.join(" L ")}`;
-    const fillPathD = `${pathD} L ${width},${height} L 0,${height} Z`;
-
-    const strokeColor = growth > 0
-      ? "oklch(0.70 0.16 185)" // Emerald
-      : growth < 0
-        ? "oklch(0.60 0.20 25)"  // Rose
-        : "oklch(0.55 0.02 240)"; // Muted
-
+/* Sparkline.
+ *
+ * Declared at MODULE scope, not inside TrendCard's render. A component created
+ * during render is a new component type on every pass, so React unmounts and
+ * remounts its entire subtree whenever the parent renders — discarding DOM
+ * state and defeating reconciliation for no benefit. It was also one of the
+ * repo's standing lint errors. Nothing in here closed over TrendCard's props,
+ * so hoisting it is a pure move. */
+function Sparkline({ points, growth, slug }: { points?: number[]; growth: number; slug: string }) {
+  // Honest empty state. A synthetic flat line used to be drawn here, which
+  // implied history existed when it didn't. Real history accrues per scrape.
+  if (!points || points.length < 2) {
     return (
-      <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="overflow-visible">
-        <defs>
-          <linearGradient id={`sparkline-grad-${slug}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
-            <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
-          </linearGradient>
-        </defs>
-        <path d={fillPathD} fill={`url(#sparkline-grad-${slug})`} />
-        <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <div className="flex items-center justify-center h-full w-full">
+        <span className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wider whitespace-nowrap">
+          building history
+        </span>
+      </div>
     );
-  };
+  }
+
+  const chartPoints = points;
+
+  const width = 120;
+  const height = 36;
+  const min = Math.min(...chartPoints);
+  const max = Math.max(...chartPoints);
+  const range = max - min === 0 ? 1 : max - min;
+  const padding = 2;
+  const chartHeight = height - padding * 2;
+
+  const coords = chartPoints.map((p, idx) => {
+    const x = (idx / (chartPoints.length - 1)) * width;
+    const y = height - padding - ((p - min) / range) * chartHeight;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  const pathD = `M ${coords.join(" L ")}`;
+  const fillPathD = `${pathD} L ${width},${height} L 0,${height} Z`;
+
+  const strokeColor = growth > 0
+    ? "oklch(0.70 0.16 185)" // Emerald
+    : growth < 0
+      ? "oklch(0.60 0.20 25)"  // Rose
+      : "oklch(0.55 0.02 240)"; // Muted
+
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="overflow-visible">
+      <defs>
+        <linearGradient id={`sparkline-grad-${slug}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+        </linearGradient>
+      </defs>
+      <path d={fillPathD} fill={`url(#sparkline-grad-${slug})`} />
+      <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export default function TrendCard({ tool, variant = "default", index = 0 }: ToolCardProps) {
 
   if (variant === "compact") {
     return (
