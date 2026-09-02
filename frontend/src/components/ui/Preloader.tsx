@@ -24,9 +24,16 @@ export default function Preloader() {
     const html = document.documentElement;
     const firstVisit = html.classList.contains("sr-preloading");
     if (!firstVisit) {
-      // Returning visitor — CSS already keeps this hidden; just unmount.
-      setIsDone(true);
-      return;
+      /* Returning visitor — CSS already keeps this hidden; just unmount.
+         Deferred on a TIMER rather than set synchronously (and not on rAF,
+         which does not fire in a hidden tab): a setState in an
+         effect body cascades an extra render pass, which is the rule this
+         repo enforces everywhere else and which this file was the last
+         holdout on. Nothing is visible in the intervening frame, because the
+         pre-paint script only adds `sr-preloading` on a first visit and this
+         branch is the case where it did not. */
+      const t = setTimeout(() => setIsDone(true), 0);
+      return () => clearTimeout(t);
     }
 
     let current = 0;

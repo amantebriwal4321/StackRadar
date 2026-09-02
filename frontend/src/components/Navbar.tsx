@@ -44,19 +44,37 @@ export default function Navbar() {
   const [overview, setOverview] = useState<Overview | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    // Light-first: only an explicit "dark" choice opts in. This must agree
-    // with the pre-paint script in layout.tsx, which is the other half of the
-    // same decision; when they disagreed, this one silently won and the whole
-    // app stayed dark after the palette was flipped.
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-    } else {
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
+    /* Light-first: only an explicit "dark" choice opts in. This must agree
+       with the pre-paint script in layout.tsx, which is the other half of the
+       same decision; when they disagreed, this one silently won and the whole
+       app stayed dark after the palette was flipped.
+
+       The class is written to the DOM immediately — it is the thing that
+       actually themes the page and must not wait a frame — while the two
+       setState calls are deferred, because a synchronous setState in an
+       effect body cascades a render pass. The pre-paint script has already
+       applied the same class before first paint, so this effect is only
+       reconciling React's copy of a decision the document has already made. */
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem("theme");
+    } catch {
+      // Private mode throws on access; light is the correct fallback.
     }
+    const dark = saved === "dark";
+    document.documentElement.classList.toggle("dark", dark);
+
+    /* setTimeout, NOT requestAnimationFrame. rAF does not fire in a hidden or
+       background tab, and `mounted` gates whether the theme toggle renders at
+       all — deferring it on a frame callback meant the button simply never
+       appeared for anyone whose tab was not foregrounded when it loaded.
+       Caught by measuring: zero theme buttons in the header. A timer always
+       fires, throttled at worst. */
+    const t = setTimeout(() => {
+      setTheme(dark ? "dark" : "light");
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(t);
   }, []);
 
   // Real telemetry for the status line. A failure is silent on purpose: the
