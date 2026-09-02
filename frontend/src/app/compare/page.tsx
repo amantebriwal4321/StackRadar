@@ -10,6 +10,7 @@ import {
   fetchTools, fetchCompareTools,
 } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
+import TechLogo from "@/components/ui/TechLogo";
 import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -263,7 +264,7 @@ export default function ComparePage() {
                         : "bg-[var(--c-surface)]/50 border-indigo-500/5 text-[var(--c-ink-2)] hover:text-[var(--c-ink)] hover:border-indigo-500/20 disabled:opacity-20 disabled:cursor-not-allowed"
                     }`}
                   >
-                    <span className="text-base select-none">{tool.icon}</span>
+                    <TechLogo slug={tool.slug} emoji={tool.icon} size={17} brand />
                     <span className="truncate flex-1">{tool.name}</span>
                     {isSelected && (
                       <span
@@ -304,7 +305,7 @@ export default function ComparePage() {
                       <div key={t.slug} className="col-span-2 text-center" style={{ minWidth: "120px" }}>
                         <div className="flex flex-col items-center gap-1.5 p-2 bg-[var(--c-surface-2)]/50 rounded-xl border border-indigo-500/5 relative">
                           <div className="absolute top-1 right-2 w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                          <span className="text-3xl select-none">{t.icon}</span>
+                          <TechLogo slug={t.slug} emoji={t.icon} size={28} brand />
                           <span className="font-semibold text-sm text-[var(--c-ink)]">{t.name}</span>
                           <span className="text-[8px] font-mono text-[var(--c-ink-2)]/60 uppercase">{t.category}</span>
                         </div>
@@ -518,7 +519,7 @@ export default function ComparePage() {
                     style={{ borderTopWidth: "3px", borderTopColor: color }}
                   >
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-3xl select-none">{t.icon}</span>
+                      <TechLogo slug={t.slug} emoji={t.icon} size={28} brand />
                       <div>
                         <h3 className="font-normal text-sm text-[var(--c-ink)] font-display">{t.name} Recommendation</h3>
                         <span className="text-[9px] font-mono text-[var(--c-ink-2)] uppercase">{t.category}</span>
