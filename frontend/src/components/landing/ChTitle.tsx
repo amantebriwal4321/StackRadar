@@ -1,6 +1,7 @@
 import ChapterArt from "@/components/landing/ChapterArt";
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
+import { freshness } from "@/lib/freshness";
 import type { Overview, Tool } from "@/data/trends";
 
 /* CHAPTER 1 — Title page. Feeling: invitation.
@@ -38,12 +39,22 @@ export default function ChTitle({
       })
     : null;
 
+  /* Age of the data behind every figure in this row. The spec row printed a
+     formatted date and nothing else, so a six-week-old reading looked exactly
+     like an hour-old one — under a page that says three separate times that
+     the sources are read every day. */
+  const age = freshness(overview?.last_updated);
+
   // Every figure real, from /overview.
-  const spec: { label: string; value: string }[] = [
+  const spec: { label: string; value: string; warn?: boolean }[] = [
     { label: "tracked", value: String(tracked) },
     { label: "sources", value: String(overview?.source_count ?? 5) },
     { label: "stars indexed", value: (overview?.total_stars ?? 0).toLocaleString("en-US") },
-    { label: "last reading", value: updated ?? "—" },
+    {
+      label: age?.contradictsClaim ? "last reading · stale" : "last reading",
+      value: age ? `${age.ageLabel} ago` : updated ?? "—",
+      warn: age?.contradictsClaim,
+    },
   ];
 
   return (
@@ -104,10 +115,18 @@ export default function ChTitle({
         <dl className="ed-grid ed-rule mt-24 pt-5" data-sc-in data-sc-reveal="up">
           {spec.map((s) => (
             <div key={s.label} className="col-span-2 md:col-span-3">
-              <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--c-ink-3)]">
+              <dt
+                className={`font-mono text-[10px] uppercase tracking-[0.2em] ${
+                  s.warn ? "text-[var(--color-score-low)]" : "text-[var(--c-ink-3)]"
+                }`}
+              >
                 {s.label}
               </dt>
-              <dd className="ed-fig mt-1.5 text-[clamp(1.1rem,1.7vw,1.6rem)] font-medium text-[var(--c-ink)]">
+              <dd
+                className={`ed-fig mt-1.5 text-[clamp(1.1rem,1.7vw,1.6rem)] font-medium ${
+                  s.warn ? "text-[var(--color-score-low)]" : "text-[var(--c-ink)]"
+                }`}
+              >
                 {s.value}
               </dd>
             </div>
