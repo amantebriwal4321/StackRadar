@@ -7,6 +7,7 @@ import TechLogo from "@/components/ui/TechLogo";
 import AssetSlot from "@/components/ui/AssetSlot";
 import StackDiagnosis from "@/components/landing/StackDiagnosis";
 import { diagnose } from "@/lib/stack/diagnose";
+import { freshness } from "@/lib/freshness";
 import type { Tool } from "@/data/trends";
 
 /* CHAPTER 6 — Colophon. Feeling: resolve.
@@ -28,12 +29,16 @@ export default function ChColophon({
   picked,
   tools,
   onRemove,
+  lastUpdated = null,
 }: {
   picked: string[];
   tools: Tool[];
   onRemove: (slug: string) => void;
+  /** From /overview, so the provenance line can hold itself to its own claim. */
+  lastUpdated?: string | null;
 }) {
   const empty = picked.length === 0;
+  const age = freshness(lastUpdated);
 
   // The worked example is the three fastest risers: real, and it changes with
   // the data rather than being a hand-picked demo set.
@@ -150,10 +155,27 @@ export default function ChColophon({
               path="frontend/public/media/founder.jpg"
               ratio="4 / 5"
             />
+            {/* The page's provenance claim, and the one sentence that has to
+                be true. "Reads five sources every day" was printed
+                unconditionally — including on an instance whose last reading
+                was six weeks old, which turns the strongest sentence on the
+                page into the least accurate one. It now states the actual
+                cadence when that is what is happening, and says plainly when
+                it is not. */}
             <p className="mt-4 text-[13px] font-medium leading-relaxed text-[var(--c-ink-2)]">
               Built and maintained by one developer. StackRadar reads five
-              public sources every day and keeps the history, so the ranking is
-              a measurement rather than an opinion.
+              public sources{age?.contradictsClaim ? "" : " every day"} and
+              keeps the history, so the ranking is a measurement rather than an
+              opinion.
+              {age?.contradictsClaim && (
+                <>
+                  {" "}
+                  <span className="text-[var(--color-score-low)]">
+                    The last reading was {age.ageLabel} ago, so these scores are
+                    not current.
+                  </span>
+                </>
+              )}
             </p>
           </div>
         </div>

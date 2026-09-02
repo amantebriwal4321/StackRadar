@@ -190,7 +190,12 @@ export default function Home() {
           <ChMeasure tools={tools} overview={overview} />
           <ChCatalog tools={tools} picked={picked} onToggle={toggle} />
           <ChOrder roadmaps={roadmaps} tools={tools} />
-          <ChColophon picked={picked} tools={tools} onRemove={remove} />
+          <ChColophon
+            picked={picked}
+            tools={tools}
+            onRemove={remove}
+            lastUpdated={overview?.last_updated ?? null}
+          />
         </main>
       </ScrollcraftRoot>
     </>
