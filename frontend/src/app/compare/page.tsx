@@ -11,6 +11,7 @@ import {
 } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
 import TechLogo from "@/components/ui/TechLogo";
+import Reveal from "@/components/ui/Reveal";
 import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -290,7 +291,7 @@ export default function ComparePage() {
           <div className="space-y-8">
             
             {/* COLUMN COMPARISON MATRIX GRID */}
-            <div className="tech-panel rounded-2xl overflow-hidden overflow-x-auto">
+            <Reveal variant="fade" className="tech-panel rounded-2xl overflow-hidden overflow-x-auto">
               
               <div className="min-w-[800px] divide-y divide-indigo-500/5">
                 
@@ -473,7 +474,7 @@ export default function ComparePage() {
 
               </div>
 
-            </div>
+            </Reveal>
 
             {/* LINE CHART SCORE OVERTIME COMPARISONS */}
             {chartData.length > 1 && (
@@ -513,8 +514,10 @@ export default function ComparePage() {
               {compareData.map((t, idx) => {
                 const color = COMPARE_COLORS[idx % COMPARE_COLORS.length];
                 return (
-                  <div
+                  <Reveal
                     key={t.slug}
+                    variant="settle"
+                    delay={(idx % 4) * 60}
                     className="tech-panel p-6 rounded-2xl relative overflow-hidden"
                     style={{ borderTopWidth: "3px", borderTopColor: color }}
                   >
@@ -528,7 +531,7 @@ export default function ComparePage() {
                     <p className="text-xs text-[var(--c-ink-2)] leading-relaxed font-medium font-mono">
                       {t.recommendation || "No specialized profile recommendations. This technology represents stable developer vectors."}
                     </p>
-                  </div>
+                  </Reveal>
                 );
               })}
             </div>
