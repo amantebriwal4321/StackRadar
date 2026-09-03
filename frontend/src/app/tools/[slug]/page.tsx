@@ -10,11 +10,12 @@ import {
   TrendingUp, TrendingDown, Minus, Loader2, ExternalLink, Star, GitFork,
   Sparkles, Rocket, MapPin, Eye, Info, BarChart3, AlertCircle
 } from "lucide-react";
-import { fetchToolDetail, fetchToolHistory, type ToolDetail, type ToolHistoryPoint } from "@/data/trends";
+import { fetchToolDetail, fetchToolHistory, type ToolDetail, type ToolHistoryPoint, fetchOverview, type Overview } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
 import WatchlistButton from "@/components/WatchlistButton";
 import LearningResources from "@/components/LearningResources";
 import Reveal from "@/components/ui/Reveal";
+import { freshness } from "@/lib/freshness";
 import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -48,18 +49,25 @@ export default function ToolDetailPage() {
   const [history, setHistory] = useState<ToolHistoryPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [overview, setOverview] = useState<Overview | null>(null);
 
   useEffect(() => {
     async function load() {
       setIsLoading(true);
       setError(null);
       try {
-        const [toolData, historyData] = await Promise.all([
+        /* Overview alongside, so the header can say how old this tool's
+           score is. Every figure on this page — the 0-100 score, the growth
+           percentage, the per-source mention counts — is a measurement, and a
+           measurement with no date on it is just a number. */
+        const [toolData, historyData, ov] = await Promise.all([
           fetchToolDetail(slug),
           fetchToolHistory(slug, 30),
+          fetchOverview().catch(() => null),
         ]);
         setTool(toolData);
         setHistory(historyData.data);
+        setOverview(ov);
       } catch (err: any) {
         setError(err.message || "Failed to load detailed telemetry.");
       } finally {
@@ -78,6 +86,8 @@ export default function ToolDetailPage() {
     if (!tool) return 0;
     return Math.round((tool.sentiment_negative ?? 0.2) * 100);
   }, [tool]);
+
+  const age = freshness(overview?.last_updated);
 
   if (isLoading) {
     return (
@@ -132,6 +142,21 @@ export default function ToolDetailPage() {
                 <span className="text-[9px] font-mono text-indigo-600 tracking-widest uppercase">
                   CLASSIFIED NODE PROFILE
                 </span>
+                {age && (
+                  <span
+                    className="ml-2 text-[9px] font-mono tracking-widest uppercase"
+                    style={{
+                      color:
+                        age.level === "stale"
+                          ? "var(--color-score-low)"
+                          : age.level === "aging"
+                            ? "var(--color-score-mid)"
+                            : "var(--c-ink-3)",
+                    }}
+                  >
+                    · measured {age.ageLabel} ago
+                  </span>
+                )}
                 <h1 className="text-3xl md:text-5xl font-normal font-display tracking-[-0.04em] text-[var(--c-ink)] leading-tight">
                   {tool.name}
                 </h1>
