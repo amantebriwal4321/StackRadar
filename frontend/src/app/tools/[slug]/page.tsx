@@ -8,7 +8,7 @@ import { useParams } from "next/navigation";
 import {
   ArrowLeft, Github, MessageSquare, FileText, GraduationCap,
   TrendingUp, TrendingDown, Minus, Loader2, ExternalLink, Star, GitFork,
-  Sparkles, Rocket, MapPin, Eye, Info, BarChart3, AlertCircle
+  Sparkles, MapPin, Info, BarChart3, AlertCircle
 } from "lucide-react";
 import { fetchToolDetail, fetchToolHistory, type ToolDetail, type ToolHistoryPoint, fetchOverview, type Overview } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
@@ -16,7 +16,7 @@ import WatchlistButton from "@/components/WatchlistButton";
 import LearningResources from "@/components/LearningResources";
 import Reveal from "@/components/ui/Reveal";
 import { freshness } from "@/lib/freshness";
-import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
+import ChartContainer, { chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import { useParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Star, Sparkles, Check, Flame, Play, ListVideo, Youtube } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Sparkles, Check, Flame, Play, ListVideo, Youtube } from "lucide-react";
 import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
 import { fetchRoadmap, fetchProgress, toggleProgressStep, type Roadmap } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
