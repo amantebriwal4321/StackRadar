@@ -1311,6 +1311,9 @@ html { scroll-behavior: smooth; }
   /* 0..1 scroll velocity, written by the same listener. Rises immediately and
      eases back to 0 about a second after the scrolling stops. */
   --af-v: 0;
+  /* Sign of travel: 1 downward, -1 upward. Velocity alone is unsigned, so
+     without this the field looked identical in both directions. */
+  --af-dir: 1;
 }
 
 /* The measured field. Hairlines every 96px, drifting up at 0.18x — slow enough
@@ -1362,8 +1365,11 @@ html { scroll-behavior: smooth; }
   height: 100%;
   opacity: 0.5;
   /* Stretched very slightly along the axis of travel while moving — the same
-     trick a camera does at speed. 4% at full tilt, which is felt and not seen. */
+     trick a camera does at speed. 4% at full tilt, which is felt and not seen.
+     The lean is signed, so the contacts trail BEHIND the direction of travel
+     rather than doing the same thing whichever way you go. */
   scale: 1 calc(1 + var(--af-v) * 0.04);
+  translate: 0 calc(var(--af-v) * var(--af-dir) * -14px);
   /* Bounded drift, not raw parallax: +/-60px across the whole page. At a plain
      0.42x these reached -1361px and left the viewport entirely, so after about
      two screens there were no contacts at all. */
@@ -1395,7 +1401,7 @@ html.dark .af-rules {
      component also skips its listener, so --af-y never leaves 0. */
   .af-contact { animation: none; }
   .af-rules,
-  .af-contacts { transform: none; scale: none; }
+  .af-contacts { transform: none; scale: none; translate: none; }
   .af-sweep { display: none; }
 }
 

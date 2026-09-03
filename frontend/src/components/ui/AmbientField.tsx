@@ -29,6 +29,11 @@ import { usePathname } from "next/navigation";
  * of travel, and both decay back to rest within about a second of stopping.
  * Capped hard: this is meant to be noticed only once, and never diagnosed.
  *
+ * It reads DIRECTION too. Velocity alone is unsigned, so travelling up and
+ * travelling down produced an identical field — which is the tell that it is
+ * an effect rather than a place. --af-dir carries the sign, and the contacts
+ * lean against travel the way anything loose in a moving vehicle does.
+ *
  * TWO THINGS THAT HAD TO BE BOUNDED, both caught by driving the variables to
  * their extremes rather than by looking at the top of the page:
  *
@@ -107,7 +112,10 @@ export default function AmbientField() {
       el.style.setProperty("--af-rules", `${-((y * 0.18) % TILE)}`);
       el.style.setProperty("--af-p", max > 0 ? String(Math.min(y / max, 1)) : "0");
 
-      const v = Math.min(Math.abs(y - lastY) / FULL_TILT, 1);
+      const dy = y - lastY;
+      const v = Math.min(Math.abs(dy) / FULL_TILT, 1);
+      // Ignore sub-pixel jitter, or the sign flips constantly at rest.
+      if (Math.abs(dy) > 1) el.style.setProperty("--af-dir", dy > 0 ? "1" : "-1");
       lastY = y;
       // Rise fast, fall slow: energy takes the higher of the new reading and a
       // decayed previous one, so a burst does not flicker between frames.
