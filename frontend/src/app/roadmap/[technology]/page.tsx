@@ -68,7 +68,7 @@ export default function RoadmapPage() {
 
   // Scroll tracking states
   const timelineRef = useRef<HTMLDivElement>(null);
-  const [scrollFillHeight, setScrollFillHeight] = useState(0);
+  const fillRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -86,39 +86,51 @@ export default function RoadmapPage() {
     load();
   }, [slug]);
 
-  // Track window scrolls to fill timeline neon line
+  /* The timeline's fill line, drawn as you scroll the path.
+   *
+   * This used to call setScrollFillHeight from an UNTHROTTLED scroll handler,
+   * so every scroll event re-rendered this entire page — the header, all the
+   * step accordions, every video card — to move one 2px line. It is the same
+   * defect the Navbar's progress bar had, and this page is far heavier.
+   *
+   * One rAF-throttled listener writing to the node through a ref now, so there
+   * is no React render involved at all. Signed-in users get their real
+   * completion percentage instead and never need this, so the listener does
+   * not even attach for them. */
   useEffect(() => {
     if (isLoading || error || !roadmap) return;
+    if (isSignedIn) return;
 
-    const handleScroll = () => {
-      if (!timelineRef.current) return;
-      const rect = timelineRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      
-      const startOffset = windowHeight * 0.7; // Start drawing when container hits 70% height
-      const endOffset = windowHeight * 0.3; // Full progress when container bottom reaches 30% height
-      
-      const totalHeight = rect.height;
-      const topOffset = rect.top;
-      
-      const progressAmount = startOffset - topOffset;
-      const maxScrollDist = totalHeight - (startOffset - endOffset);
-      const percentage = Math.min(Math.max(progressAmount / maxScrollDist, 0), 1);
-      
-      setScrollFillHeight(percentage * 100);
+    let frame = 0;
+    const read = () => {
+      frame = 0;
+      const el = timelineRef.current;
+      const fill = fillRef.current;
+      if (!el || !fill) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const startOffset = vh * 0.7; // start drawing when the container hits 70%
+      const endOffset = vh * 0.3; // full when its bottom reaches 30%
+      const maxScrollDist = rect.height - (startOffset - endOffset);
+      const pct = Math.min(Math.max((startOffset - rect.top) / maxScrollDist, 0), 1);
+      fill.style.height = `${pct * 100}%`;
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(read);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("resize", handleScroll);
-    
-    // Initial call
-    setTimeout(handleScroll, 100);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    // A timer, not rAF: this must still run if the tab is not foregrounded.
+    const t = setTimeout(read, 100);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      clearTimeout(t);
+      if (frame) cancelAnimationFrame(frame);
     };
-  }, [isLoading, error, roadmap]);
+  }, [isLoading, error, roadmap, isSignedIn]);
 
   if (isLoading) {
     return (
@@ -296,7 +308,8 @@ export default function RoadmapPage() {
                 ? "bg-[#12B76A]"
                 : "bg-indigo-500"
             }`}
-            style={{ height: `${isSignedIn ? percent : scrollFillHeight}%` }}
+            ref={fillRef}
+            style={{ height: isSignedIn ? `${percent}%` : "0%" }}
           />
 
           {/* Steps as accordion panels. `key` includes the next-up step so that
