@@ -517,7 +517,6 @@ export default function ComparePage() {
                   <Reveal
                     key={t.slug}
                     variant="settle"
-                    delay={(idx % 4) * 60}
                     className="tech-panel p-6 rounded-2xl relative overflow-hidden"
                     style={{ borderTopWidth: "3px", borderTopColor: color }}
                   >

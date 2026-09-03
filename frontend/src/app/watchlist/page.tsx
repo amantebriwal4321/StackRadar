@@ -140,7 +140,6 @@ export default function WatchlistPage() {
                    pair reads as closing together rather than as two things
                    doing the same thing. */
                 variant={i % 2 === 0 ? "left" : "right"}
-                delay={(i % 4) * 60}
                 className="group relative p-5 bg-card rounded-2xl border border-border/60 hover:border-primary/40 transition-colors shadow-sm"
               >
                 <div className="flex justify-between items-start">

@@ -323,7 +323,6 @@ export default function RoadmapPage() {
               <Reveal
                 key={idx}
                 variant="left"
-                delay={(idx % 5) * 55}
                 className={`glass-panel p-4 md:p-6 rounded-2xl border transition-all duration-300 relative group flex gap-4 md:gap-5 items-start z-10 ${
                   isDone
                     // Done modules recede: clearly marked, but visually quieter so

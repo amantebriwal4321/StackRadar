@@ -280,7 +280,7 @@ export default function ExplorePage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {searchResults.map((tool, i) => <PathCard key={tool.slug} tool={tool} delay={(i % 6) * 50} />)}
+                    {searchResults.map((tool) => <PathCard key={tool.slug} tool={tool} />)}
                   </div>
                 )}
               </div>
@@ -361,7 +361,7 @@ export default function ExplorePage() {
                               {tier.tools.map((t, i) => {
                                 const full = toolBySlug[t.slug];
                                 if (!full) return null;
-                                return <PathCard key={t.slug} tool={full} isEntry={t.is_entry_point} delay={(i % 6) * 50} />;
+                                return <PathCard key={t.slug} tool={full} isEntry={t.is_entry_point} />;
                               })}
                             </div>
                           </div>
