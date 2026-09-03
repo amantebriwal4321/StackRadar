@@ -420,7 +420,7 @@ export default function TrendsPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-indigo-500/5">
-                  {displayedTools.map((tool, i) => {
+                  {displayedTools.map((tool) => {
                     // Real trend direction — no green "+0.0%" when nothing moved.
                     const g = tool.growth_pct;
                     const trend =
@@ -433,11 +433,11 @@ export default function TrendsPage() {
                     return (
                       <Reveal
                         key={tool.slug}
-                        /* Stagger rolls over every six rows rather than
-                           climbing with the index: at 31 rows a plain i*45
-                           would hand the last row a 1.35s delay, which it would
-                           then serve even when it scrolls into view alone. */
-                        delay={(i % 6) * 45}
+                        /* No per-row delay here any more. The shared observer
+                           now staggers by position within the batch that
+                           actually entered together, which is the only place
+                           that information exists — an index-based delay served
+                           row 18 its own offset even when it arrived alone. */
                         /* fade, not rise: 31 rows sliding in a dense table is
                            more motion than the content can carry, and the row
                            is a grid whose columns would shear during travel. */

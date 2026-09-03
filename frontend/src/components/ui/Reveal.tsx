@@ -39,7 +39,10 @@ import { useEffect, useRef, type ElementType, type ReactNode } from "react";
  * must never be able to take the page down with it.
  */
 
-type Registered = { el: Element; show: (skipAnimation?: boolean, fromAbove?: boolean) => void };
+type Registered = {
+  el: Element;
+  show: (skipAnimation?: boolean, fromAbove?: boolean, batchDelay?: number) => void;
+};
 
 let observer: IntersectionObserver | null = null;
 const registry = new Map<Element, Registered>();
@@ -80,6 +83,12 @@ function trackSpeed() {
   }
 }
 
+function teardown() {
+  observer?.disconnect();
+  observer = null;
+  window.removeEventListener("scroll", trackSpeed);
+}
+
 function ensureObserver(): IntersectionObserver | null {
   if (observer) return observer;
   if (typeof IntersectionObserver === "undefined") return null;
@@ -90,14 +99,31 @@ function ensureObserver(): IntersectionObserver | null {
   observer = new IntersectionObserver(
     (entries) => {
       const flicking = scrollSpeed > FLICK_PX_PER_SEC;
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        registry.get(entry.target)?.show(flicking, scrollUp);
+      /* Stagger is assigned HERE, by position within the batch that actually
+         crossed together, rather than by each element's index in its list.
+         An index-based delay is wrong the moment a list is entered anywhere
+         but the top: row 18 of /trends scrolled into view alone would still
+         serve itself row 18's delay. Callers keep a `delay` for a deliberate
+         offset; this adds the part only the observer can know.
+
+         Entries arrive in document order within a callback, which is the
+         order the reader's eye travels — except when scrolling up, where the
+         lowest element is reached first. */
+      const arriving = entries.filter((e) => e.isIntersecting);
+      if (scrollUp) arriving.reverse();
+
+      arriving.forEach((entry, i) => {
+        registry.get(entry.target)?.show(flicking, scrollUp, Math.min(i, 5) * 45);
         // One-shot: re-hiding on the way out makes a page flicker when the
         // reader scrolls back up, which reads as a bug rather than an effect.
         observer?.unobserve(entry.target);
         registry.delete(entry.target);
-      }
+      });
+
+      // Nothing left to watch: surrender the observer and its scroll listener
+      // rather than leaving both attached for the life of the tab. The next
+      // Reveal to mount builds a fresh one.
+      if (registry.size === 0) teardown();
     },
     // Fires a little before the element's top edge arrives, so the movement is
     // finishing as it reaches comfortable reading position rather than starting
@@ -141,7 +167,7 @@ export default function Reveal({
     const io = ensureObserver();
     if (!io) return;
 
-    const show = (skipAnimation = false, fromAbove = false) => {
+    const show = (skipAnimation = false, fromAbove = false, batchDelay = 0) => {
       // Passed at speed: just be there. See FLICK_PX_PER_SEC above.
       if (skipAnimation) {
         el.classList.remove("sr-out");
@@ -149,7 +175,8 @@ export default function Reveal({
       }
       // animation-delay, not transition-delay: the latter stays on the element
       // afterwards and would delay every later hover transition by the stagger.
-      if (delay) el.style.animationDelay = `${delay}ms`;
+      const total = delay + batchDelay;
+      if (total) el.style.animationDelay = `${total}ms`;
       // Promote for the duration only. A blanket `will-change` in the
       // stylesheet would hold a compositor layer for all 31 rows of /trends for
       // the life of the page, which is the documented way to make a page slower
