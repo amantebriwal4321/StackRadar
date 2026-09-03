@@ -133,6 +133,24 @@ export default function ChTitle({
           ))}
         </dl>
 
+        {/* ── Scroll cue. ──
+            The landing is six chapters of scroll-driven argument, and nothing
+            on the first screen said so. A reader who does not scroll sees a
+            headline, two buttons and a logo rail, and has no way to know the
+            page continues into a catalog they can actually operate. This is
+            the invitation.
+
+            It sits in normal flow, so it leaves the viewport the moment the
+            reader does the thing it asks for. No listener, no timer. */}
+        <div className="sc-cue-wrap mt-16 hidden md:flex" aria-hidden="true">
+          <span className="sc-cue-rail">
+            <span className="sc-cue-dot" />
+          </span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--c-ink-3)]">
+            Scroll — six chapters
+          </span>
+        </div>
+
         {/* ── The wall, as a rail. ──
             It was a static flex-wrap of the first twelve tools, on a page whose
             headline claims we track thirty-one — so the one element that could
