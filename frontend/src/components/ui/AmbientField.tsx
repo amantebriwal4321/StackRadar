@@ -82,6 +82,7 @@ export default function AmbientField() {
 
     let frame = 0;
     let decay = 0;
+    let stopped = false;
     let lastY = window.scrollY;
     let energy = 0;
 
@@ -92,6 +93,7 @@ export default function AmbientField() {
     // Ease back to rest after the scrolling stops. Without this the field
     // freezes mid-stretch the instant you let go, which reads as a stutter.
     const settle = () => {
+      if (stopped) return;
       energy *= 0.88;
       if (energy < 0.01) {
         energy = 0;
@@ -133,7 +135,12 @@ export default function AmbientField() {
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     read();
+    /* `stopped` matters: settle() reschedules itself, so a frame already in
+       flight when the route changes would queue another one after cleanup had
+       already cancelled the last. It ran on a detached node until the energy
+       decayed — harmless but genuinely leaked frames on every navigation. */
     return () => {
+      stopped = true;
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);

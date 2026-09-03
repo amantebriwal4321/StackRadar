@@ -206,12 +206,30 @@ export default function Reveal({
     const rect = el.getBoundingClientRect();
     if (rect.top < window.innerHeight && rect.bottom > 0) return;
 
+    /* KEYBOARD AND FIND-IN-PAGE MUST NEVER LAND ON HIDDEN CONTENT.
+     *
+     * A reveal that has not fired yet holds its subtree at opacity 0, and an
+     * element can be reached without any scrolling at all — Tab into a link
+     * inside it, or Ctrl+F to text inside it, and the browser jumps there
+     * without the observer necessarily having run first. The reader then
+     * stares at nothing, or worse, at a focus ring around nothing.
+     *
+     * `focusin` covers Tab; `beforematch` covers find-in-page and
+     * scroll-to-text-fragment where the browser supports it. Both simply
+     * reveal immediately, with no animation — arriving by keyboard is not a
+     * scroll and should not be dressed as one. */
+    const reveal = () => show(true);
+    el.addEventListener("focusin", reveal, { once: true });
+    el.addEventListener("beforematch", reveal, { once: true });
+
     // Off-screen, so hiding it now is invisible to the reader.
     el.classList.add("sr-out");
 
     registry.set(el, { el, show });
     io.observe(el);
     return () => {
+      el.removeEventListener("focusin", reveal);
+      el.removeEventListener("beforematch", reveal);
       io.unobserve(el);
       registry.delete(el);
     };
