@@ -490,6 +490,8 @@ body {
    scrolling into work. */
 @keyframes sr-rise  { from { opacity: 0; transform: translate3d(0, 26px, 0); } }
 @keyframes sr-lift  { from { opacity: 0; transform: translate3d(0, 44px, 0); } }
+@keyframes sr-rise-down { from { opacity: 0; transform: translate3d(0, -26px, 0); } }
+@keyframes sr-lift-down { from { opacity: 0; transform: translate3d(0, -44px, 0); } }
 @keyframes sr-left  { from { opacity: 0; transform: translate3d(-32px, 0, 0); } }
 @keyframes sr-right { from { opacity: 0; transform: translate3d(32px, 0, 0); } }
 /* Settles from slightly large rather than growing from small: a card that
@@ -502,6 +504,11 @@ body {
 
 .sr-v-rise   { animation-name: sr-rise; }
 .sr-v-lift   { animation-name: sr-lift;   --sr-dur: 0.86s; }
+/* Mirrored, for when the reader is scrolling UP. Content entering over the top
+   edge should arrive from the top; rising to meet an upward reader is the
+   opposite of how a physical page moves. */
+.sr-v-rise-down { animation-name: sr-rise-down; }
+.sr-v-lift-down { animation-name: sr-lift-down; --sr-dur: 0.86s; }
 .sr-v-left   { animation-name: sr-left;   --sr-dur: 0.78s; }
 .sr-v-right  { animation-name: sr-right;  --sr-dur: 0.78s; }
 .sr-v-settle { animation-name: sr-settle; --sr-dur: 0.66s; }
@@ -1216,6 +1223,27 @@ html.dark .asset-slot {
 .fab-pill,
 .fab-pill * { color: var(--c-ground); }
 
+
+/* IN-PAGE NAVIGATION.
+ *
+ * Two defects, both measured. `scroll-behavior` was `auto`, so every in-page
+ * anchor — "Build my stack", "See the full read-out", "Change your picks" —
+ * teleported. On a page whose entire grammar is scroll-driven, a jump cut is
+ * the one motion the reader did not ask for, and on the landing it also drops
+ * the reader past pinned acts with no sense of where they went.
+ *
+ * And every anchor target measured scroll-margin-top: 0 while the navbar is a
+ * FIXED 64px pill sitting 12-20px from the top. So arriving at #build or
+ * #read-out put the target's own heading underneath the chrome. 6.5rem clears
+ * the pill plus its offset with a little air.
+ *
+ * Smooth is withdrawn under reduced-motion, where an instant jump is correct
+ * rather than merely acceptable. */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+[id] { scroll-margin-top: 6.5rem; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    AMBIENT FIELD — the background that travels with you.

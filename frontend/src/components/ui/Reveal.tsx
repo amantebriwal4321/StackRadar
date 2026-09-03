@@ -39,7 +39,7 @@ import { useEffect, useRef, type ElementType, type ReactNode } from "react";
  * must never be able to take the page down with it.
  */
 
-type Registered = { el: Element; show: (skipAnimation?: boolean) => void };
+type Registered = { el: Element; show: (skipAnimation?: boolean, fromAbove?: boolean) => void };
 
 let observer: IntersectionObserver | null = null;
 const registry = new Map<Element, Registered>();
@@ -59,6 +59,12 @@ const FLICK_PX_PER_SEC = 2600;
 let lastSampleY = 0;
 let lastSampleT = 0;
 let scrollSpeed = 0;
+/* Which way the reader is travelling. Everything used to rise regardless, so
+   scrolling back UP the page made content climb toward the reader — the
+   opposite of how a physical page behaves, and the reason upward scrolling
+   felt subtly wrong even though nothing was visibly broken. `up` variants
+   mirror the travel so content always enters from the edge it came from. */
+let scrollUp = false;
 
 function trackSpeed() {
   const now = performance.now();
@@ -66,7 +72,9 @@ function trackSpeed() {
   const dt = now - lastSampleT;
   // Ignore samples closer than a frame; dt near zero makes the ratio explode.
   if (dt > 12) {
-    scrollSpeed = (Math.abs(y - lastSampleY) / dt) * 1000;
+    const dy = y - lastSampleY;
+    if (Math.abs(dy) > 2) scrollUp = dy < 0;
+    scrollSpeed = (Math.abs(dy) / dt) * 1000;
     lastSampleY = y;
     lastSampleT = now;
   }
@@ -84,7 +92,7 @@ function ensureObserver(): IntersectionObserver | null {
       const flicking = scrollSpeed > FLICK_PX_PER_SEC;
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
-        registry.get(entry.target)?.show(flicking);
+        registry.get(entry.target)?.show(flicking, scrollUp);
         // One-shot: re-hiding on the way out makes a page flicker when the
         // reader scrolls back up, which reads as a bug rather than an effect.
         observer?.unobserve(entry.target);
@@ -133,7 +141,7 @@ export default function Reveal({
     const io = ensureObserver();
     if (!io) return;
 
-    const show = (skipAnimation = false) => {
+    const show = (skipAnimation = false, fromAbove = false) => {
       // Passed at speed: just be there. See FLICK_PX_PER_SEC above.
       if (skipAnimation) {
         el.classList.remove("sr-out");
@@ -148,7 +156,14 @@ export default function Reveal({
       // by trying to make it faster. Granted on arm, surrendered on the way out.
       el.style.willChange = "opacity, transform";
       el.classList.remove("sr-out");
-      el.classList.add("sr-run", `sr-v-${variant}`);
+      /* Mirror the vertical variants when travelling upward: an element
+         entering from the top of the viewport should arrive from the top. The
+         horizontal and non-directional variants are unaffected. */
+      const v =
+        fromAbove && (variant === "rise" || variant === "lift")
+          ? `${variant}-down`
+          : variant;
+      el.classList.add("sr-run", `sr-v-${v}`);
       el.addEventListener(
         "animationend",
         () => {
