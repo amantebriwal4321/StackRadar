@@ -2,49 +2,91 @@ name: Keep backend awake
 
 # The backend runs on Render's free tier, which spins the service down after
 # ~15 minutes of inactivity — so the first visitor after a quiet spell hits a
-# ~30–50s cold-start wait. This pings the health endpoint on a schedule so the
-# service stays warm and visitors get an instant load (matters most during a
-# launch, when traffic arrives in waves).
+# ~35s cold start (measured against production, not estimated).
 #
-# Notes:
-#  - GitHub cron can be delayed several minutes under load, so */10 gives margin
-#    under the 15-min sleep window without cutting it close.
-#  - Actions minutes are unlimited on public repos; on a PRIVATE repo this uses
-#    ~1 min/run against the monthly quota — if that matters, switch to a free
-#    external pinger (cron-job.org / UptimeRobot) instead.
-#  - GitHub auto-disables scheduled workflows after 60 days with no repo
-#    activity; a normal commit cadence keeps it alive.
+# WHY THIS LOOPS INSTEAD OF JUST PINGING ONCE.
+#
+# The previous version asked for `*/10` and pinged once per run. It ran 117
+# times and never worked, because GitHub does not honour frequent schedules on
+# free runners — it deprioritises them under load. The actual gaps between runs,
+# read from the API:
+#
+#     115m, 124m, 176m, 211m, 243m, 260m, 262m, 263m, 277m, 278m
+#
+# Against a 15-minute sleep window that is useless: each run woke the service,
+# it stayed up a quarter of an hour, then slept for the next two to four hours.
+# Every run reported success, which is why this went unnoticed.
+#
+# A schedule cannot be made reliable, so each run now stays alive and pings on
+# its own timer for ~5.5 hours. Even at the observed worst-case 4.6-hour gap
+# between runs, coverage overlaps and is effectively continuous. Actions minutes
+# are unlimited on public repos, so the long job costs nothing here.
+#
+# THE COST THAT IS REAL: this keeps the Render service running continuously,
+# which consumes the free tier's 750 instance-hours against a ~730-hour month.
+# That is essentially the whole allowance. Fine if StackRadar is the only free
+# service on the account; if it is not, delete this workflow and use an external
+# pinger you can point at a schedule you control (cron-job.org, UptimeRobot),
+# which is also the more robust answer since it does not depend on GitHub
+# scheduling at all.
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    # Asking hourly rather than every 10 minutes: the run does the real work, so
+    # this only needs to start often enough that one is always alive.
+    - cron: '0 * * * *'
   workflow_dispatch: {}   # allow manual runs from the Actions tab
 
-# If a run is still going when the next fires, skip the new one rather than pile up.
+# Newest run wins. Without cancel-in-progress a queued run would sit waiting for
+# the 5.5-hour one to finish, which defeats the overlap this depends on.
 concurrency:
   group: keep-awake
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    # GitHub's hard ceiling is 6 hours; stay under it so the job ends cleanly
+    # rather than being killed mid-loop.
+    timeout-minutes: 340
     steps:
-      - name: Ping backend health
+      - name: Keep the service warm
         run: |
           URL="https://stackradar-backend-kbxl.onrender.com/api/v1/health"
+          # A browser-like UA avoids Cloudflare's bot challenge on the
+          # *.onrender.com edge, which would otherwise return a non-200.
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-          # Retry to ride out a cold wake — the first ping after a sleep can take
-          # ~50s while the dyno boots. A browser-like UA avoids Cloudflare's
-          # bot challenge on the *.onrender.com edge.
-          for i in 1 2 3 4 5 6; do
-            code=$(curl -s -m 75 -A "$UA" -o /dev/null -w "%{http_code}" "$URL" || echo "000")
-            echo "attempt $i -> HTTP $code"
+          INTERVAL=600          # 10 minutes, comfortably inside the 15-min window
+          DEADLINE=$(( $(date +%s) + 330*60 ))
+
+          ok=0; fail=0
+          while [ "$(date +%s)" -lt "$DEADLINE" ]; do
+            # -m 90: a cold wake takes ~35s and Render holds the connection open
+            # while it boots, so the request must be allowed to WAIT rather than
+            # be cut short. Aborting early is exactly the bug the frontend
+            # curtain had.
+            start=$(date +%s)
+            code=$(curl -s -m 90 -A "$UA" -o /dev/null -w "%{http_code}" "$URL" || echo "000")
+            took=$(( $(date +%s) - start ))
+
             if [ "$code" = "200" ]; then
-              echo "backend awake (200)"
-              exit 0
+              ok=$((ok+1))
+              # A slow 200 means it had gone to sleep — worth seeing in the log,
+              # because a run of these says the interval is not tight enough.
+              if [ "$took" -gt 10 ]; then
+                echo "$(date -u +%H:%M:%S)  200 in ${took}s  <- was asleep"
+              else
+                echo "$(date -u +%H:%M:%S)  200 in ${took}s"
+              fi
+            else
+              fail=$((fail+1))
+              echo "$(date -u +%H:%M:%S)  HTTP $code after ${took}s"
             fi
-            sleep 15
+
+            sleep "$INTERVAL"
           done
-          # Don't fail loudly on a transient miss — the next scheduled run retries.
-          echo "backend did not return 200 this run; will retry next cycle"
+
+          echo "---"
+          echo "run finished: $ok ok, $fail failed"
+          # Never fail the workflow on a transient miss; the next run takes over.
           exit 0
