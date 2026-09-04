@@ -170,7 +170,7 @@ export default function ChColophon({
               {age?.contradictsClaim && (
                 <>
                   {" "}
-                  <span className="text-[var(--color-score-low)]">
+                  <span className="text-[var(--color-score-low-text)]">
                     The last reading was {age.ageLabel} ago, so these scores are
                     not current.
                   </span>

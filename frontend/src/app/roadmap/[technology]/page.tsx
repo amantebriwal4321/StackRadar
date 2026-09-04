@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
+import { TIER_BADGE } from "@/components/ProjectCard";
 import { useParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Sparkles, Check, Flame, Play, ListVideo, Youtube } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Sparkles, Check, Flame, Play, ListVideo, Youtube, Hammer } from "lucide-react";
 import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
 import { fetchRoadmap, fetchProgress, toggleProgressStep, type Roadmap } from "@/data/trends";
 import DashboardShell from "@/components/DashboardShell";
@@ -539,6 +540,38 @@ export default function RoadmapPage() {
                               </a>
                             )}
                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Prove it ──
+                      A checked-off step is a claim that you learned something.
+                      A built project is evidence. These are the briefs whose
+                      tool appears in this step; a step whose tools have none
+                      yet simply does not render this block. */}
+                  {step.projects && step.projects.length > 0 && (
+                    <div className="pt-3 border-t border-indigo-500/5 space-y-2">
+                      <span className="flex items-center gap-1 text-[9px] font-mono text-[var(--c-ink-2)]/60 uppercase tracking-wider">
+                        <Hammer className="w-3.5 h-3.5 text-indigo-600" /> Build one of these to prove it
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {step.projects.map((proj) => (
+                          <Link
+                            key={proj.slug}
+                            href={`/projects/${proj.slug}`}
+                            className="group/proj flex items-center gap-2 rounded-lg border border-indigo-500/15 bg-[var(--c-surface)]/70 px-2.5 py-1.5 hover:bg-[var(--c-surface-2)] hover:border-indigo-400/40 transition-all"
+                          >
+                            <span className={`rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${TIER_BADGE[proj.tier]}`}>
+                              {proj.tier.slice(0, 3)}
+                            </span>
+                            <span className="text-[11px] font-semibold text-[var(--c-ink)] group-hover/proj:text-indigo-600 transition-colors">
+                              {proj.title}
+                            </span>
+                            <span className="font-mono text-[10px] tabular-nums text-[var(--c-ink-2)]/70">
+                              {proj.est_hours}h
+                            </span>
+                          </Link>
                         ))}
                       </div>
                     </div>

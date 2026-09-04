@@ -15,6 +15,7 @@ import DashboardShell from "@/components/DashboardShell";
 import WatchlistButton from "@/components/WatchlistButton";
 import LearningResources from "@/components/LearningResources";
 import Reveal from "@/components/ui/Reveal";
+import ToolProjects from "@/components/ToolProjects";
 import { freshness } from "@/lib/freshness";
 import ChartContainer, { chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
@@ -148,7 +149,7 @@ export default function ToolDetailPage() {
                     style={{
                       color:
                         age.level === "stale"
-                          ? "var(--color-score-low)"
+                          ? "var(--color-score-low-text)"
                           : age.level === "aging"
                             ? "var(--color-score-mid)"
                             : "var(--c-ink-3)",
@@ -451,6 +452,14 @@ export default function ToolDetailPage() {
             question every user asks immediately after. */}
         <Reveal variant="fade">
           <LearningResources slug={tool.slug} />
+        </Reveal>
+
+        {/* ── Then go build something ──
+            Directly after the courses, because that is the order the questions
+            arrive in: is this worth learning, how do I learn it, what do I do
+            with it. */}
+        <Reveal variant="rise">
+          <ToolProjects slug={tool.slug} toolName={tool.name} />
         </Reveal>
 
         {/* ── Raw Github Repository connection ── */}

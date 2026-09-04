@@ -239,7 +239,7 @@ export default function TrendsPage() {
                   actually true. */}
               <span
                 className="inline-flex items-center gap-2 text-[11px] font-mono font-semibold uppercase tracking-[0.28em]"
-                style={{ color: age?.level === "stale" ? "var(--color-score-low)" : undefined }}
+                style={{ color: age?.level === "stale" ? "var(--color-score-low-text)" : undefined }}
               >
                 <span className="relative flex h-1.5 w-1.5">
                   {age?.level === "fresh" && (

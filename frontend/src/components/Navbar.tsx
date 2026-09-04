@@ -28,6 +28,7 @@ const navLinks = [
   { href: "/", label: "home" },
   { href: "/#five-minute-plan", label: "my plan" },
   { href: "/roadmaps", label: "roadmaps" },
+  { href: "/projects", label: "build" },
   { href: "/explore", label: "what to learn" },
   { href: "/trends", label: "what's rising" },
   { href: "/compare", label: "compare" },
@@ -246,7 +247,7 @@ export default function Navbar() {
                   }}
                 />
               </span>
-              <span className={age?.level === "stale" ? "text-[var(--color-score-low)]" : undefined}>
+              <span className={age?.level === "stale" ? "text-[var(--color-score-low-text)]" : undefined}>
                 {overview.is_scraping ? "collecting" : age ? `${age.ageLabel} old` : "idle"}
               </span>
               <span aria-hidden="true" className="text-[var(--c-border)]">/</span>

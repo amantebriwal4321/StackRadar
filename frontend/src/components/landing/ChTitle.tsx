@@ -117,14 +117,14 @@ export default function ChTitle({
             <div key={s.label} className="col-span-2 md:col-span-3">
               <dt
                 className={`font-mono text-[10px] uppercase tracking-[0.2em] ${
-                  s.warn ? "text-[var(--color-score-low)]" : "text-[var(--c-ink-3)]"
+                  s.warn ? "text-[var(--color-score-low-text)]" : "text-[var(--c-ink-3)]"
                 }`}
               >
                 {s.label}
               </dt>
               <dd
                 className={`ed-fig mt-1.5 text-[clamp(1.1rem,1.7vw,1.6rem)] font-medium ${
-                  s.warn ? "text-[var(--color-score-low)]" : "text-[var(--c-ink)]"
+                  s.warn ? "text-[var(--color-score-low-text)]" : "text-[var(--c-ink)]"
                 }`}
               >
                 {s.value}

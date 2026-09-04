@@ -69,6 +69,8 @@ export interface RoadmapStep {
   description: string;
   level: "Beginner" | "Intermediate" | "Advanced";
   resources: { label: string; url: string }[];
+  /** Buildable projects for this step's tools. Empty when none exist yet. */
+  projects?: ProjectSummary[];
   tools?: {
     slug: string; name: string; icon: string; score: number; stars: number;
     /** Top learning video for this tool, or null if none is curated. */
@@ -269,6 +271,79 @@ export async function fetchRoadmaps(): Promise<Roadmap[]> {
 export async function fetchRoadmap(slug: string): Promise<Roadmap> {
   const res = await resilientFetch(`${API_BASE}/api/v1/roadmaps/${slug}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error(`Roadmap '${slug}' not found`);
+  return res.json();
+}
+
+// ── Projects (learning turned into evidence) ───────────────────────────
+// The catalog is hand-authored server-side in backend/app/services/projects.py.
+// `video_verified` reports whether the walkthrough video was confirmed live at
+// serve time; when it is false there is no video and the docs and written steps
+// are what the learner gets. The UI must not imply otherwise.
+
+export type ProjectTier = "beginner" | "intermediate" | "advanced";
+
+/** Summary shape, as returned by the list endpoints. */
+export interface ProjectSummary {
+  slug: string;
+  tool_slug: string;
+  tool_name: string | null;
+  tool_icon: string | null;
+  category: string | null;
+  tier: ProjectTier;
+  title: string;
+  summary: string;
+  est_hours: number;
+  has_video: boolean;
+  step_count: number;
+  doc_count: number;
+}
+
+export interface ProjectWalkthrough {
+  video: { url: string; title: string | null; channel: string | null; thumbnail: string | null } | null;
+  video_verified: boolean;
+  docs: { label: string; url: string }[];
+  steps: string[];
+}
+
+/** Full brief, as returned by /projects/{slug}. */
+export interface Project extends ProjectSummary {
+  brief: string;
+  requirements: string[];
+  skills: string[];
+  walkthrough: ProjectWalkthrough;
+}
+
+export async function fetchProjects(opts: { tool?: string; domain?: string; tier?: ProjectTier } = {}): Promise<{
+  projects: ProjectSummary[];
+  count: number;
+  tools_covered: string[];
+}> {
+  const q = new URLSearchParams();
+  if (opts.tool) q.set("tool", opts.tool);
+  if (opts.domain) q.set("domain", opts.domain);
+  if (opts.tier) q.set("tier", opts.tier);
+  const qs = q.toString();
+  const res = await resilientFetch(
+    `${API_BASE}/api/v1/projects${qs ? `?${qs}` : ""}`,
+    { next: { revalidate: REVALIDATE_SECONDS } },
+  );
+  if (!res.ok) throw new Error("Failed to fetch projects");
+  return res.json();
+}
+
+export async function fetchProject(slug: string): Promise<Project> {
+  const res = await resilientFetch(`${API_BASE}/api/v1/projects/${slug}`, {
+    next: { revalidate: REVALIDATE_SECONDS },
+  });
+  if (!res.ok) throw new Error(`Project '${slug}' not found`);
+  return res.json();
+}
+
+export async function fetchToolProjects(slug: string): Promise<{ tool: string; projects: ProjectSummary[]; count: number }> {
+  const res = await resilientFetch(`${API_BASE}/api/v1/tools/${slug}/projects`, {
+    next: { revalidate: REVALIDATE_SECONDS },
+  });
+  if (!res.ok) throw new Error(`Projects for '${slug}' not found`);
   return res.json();
 }
 

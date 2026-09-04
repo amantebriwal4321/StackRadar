@@ -74,6 +74,12 @@
   --color-score-high: #12B76A;     /* rising / strong */
   --color-score-mid: #B54708;      /* watch */
   --color-score-low: #F04438;      /* cooling / weak */
+  /* The same signal, dark enough to be READ. #F04438 is correct as a fill, a
+     dot or a bar, but as small text it measures 3.76:1 on white and 3.33:1 on
+     cream — both under 4.5:1, caught by a contrast sweep on the staleness
+     label. This variant clears every ground the app has: 6.57 on white, 5.82
+     on cream, 4.76 on beige. Use it whenever score-low is TYPE. */
+  --color-score-low-text: #B42318;
 
   --color-border-subtle: rgba(0, 0, 0, 0.12);
   --color-glow-violet: rgba(128, 82, 255, 0.14);
@@ -204,6 +210,8 @@ html.dark {
   --c-ink-2: #A3A099;
   --c-ink-3: #8E8B83;              /* 3.92:1 at #7A7770 was under the 4.5 floor */
   --c-border: rgba(247, 244, 236, 0.14);
+  /* Inverted: on #1B1917 the light red is the readable one. */
+  --color-score-low-text: #FDA29B;
   --ground: #1B1917;
 
   --accent-1: #F5F1E4;             /* cream fill on dark: the inverted button */
