@@ -152,10 +152,24 @@ const REVALIDATE_SECONDS = 1800;
  * a Vercel function with a hard time budget, so a 45s retry would 504 the whole
  * page. Server renders fail fast to their existing fallback/throw behaviour.
  */
+/** How long a SERVER-side fetch may take before we give up on it. */
+const SERVER_FETCH_TIMEOUT_MS = 8000;
+
 async function resilientFetch(url: string, init?: RequestInit): Promise<Response> {
-  // Server: keep the original single-shot behaviour.
+  /* Server: single-shot, and now with a HARD DEADLINE.
+   *
+   * This branch had no timeout at all, which was survivable while every page
+   * was client-rendered and nothing ever called it. Now that the data pages
+   * render on the server it is on the critical path: a sleeping backend takes
+   * ~35s to wake (measured), a Vercel Hobby function is killed at ~10s, and a
+   * hung fetch would 504 the whole page instead of falling back to the
+   * cached-or-empty render.
+   *
+   * Failing fast is the correct behaviour here precisely BECAUSE of ISR — a
+   * failed revalidation serves the previous cached page, so giving up early
+   * costs a visitor nothing and protects the function. */
   if (typeof window === "undefined") {
-    return fetch(url, init);
+    return fetch(url, { ...init, signal: AbortSignal.timeout(SERVER_FETCH_TIMEOUT_MS) });
   }
 
   const deadline = Date.now() + 60_000; // cold start after a redeploy can run ~60–90s

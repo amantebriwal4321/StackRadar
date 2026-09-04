@@ -6,7 +6,6 @@ import SmoothScrollProvider from "@/components/providers/SmoothScroll";
 import Preloader from "@/components/ui/Preloader";
 import CustomCursor from "@/components/ui/CustomCursor";
 import AmbientField from "@/components/ui/AmbientField";
-import BackendWaking from "@/components/BackendWaking";
 import FeedbackButton from "@/components/FeedbackButton";
 import { Analytics } from "@vercel/analytics/next";
 import { SITE_URL } from "@/lib/site";
@@ -110,7 +109,19 @@ export default function RootLayout({
         <body className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased bg-bg-primary text-text-primary transition-colors duration-300`}>
           <SmoothScrollProvider>
             <Preloader />
-            <BackendWaking />
+            {/* <BackendWaking /> was mounted here: a full-screen curtain shown
+                while the free-tier backend woke. It is gone because the reason
+                for it is gone — the data pages are server-rendered with ISR
+                now, so a visitor gets cached HTML with real numbers whether or
+                not the backend happens to be awake.
+
+                It also had a failure mode worse than the problem it solved: if
+                the health probe never returned 200, the curtain never lifted
+                and the ENTIRE site was unreachable behind it. That is what a
+                stopped local backend looked like — a working frontend showing
+                nothing but a loading screen forever. A blocking overlay that
+                can strand the whole app is not an acceptable trade for hiding
+                a cold start. */}
             <FeedbackButton />
             <CustomCursor />
             <div className="noise-overlay" aria-hidden="true" />
