@@ -46,7 +46,9 @@ export default function BackendWaking() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const ok = await pingOk(2000);
+      // A warm server answers in well under a second, so this only has to be
+      // long enough to never flash the curtain on a healthy load.
+      const ok = await pingOk(2500);
       if (cancelled) return;
       setStatus(ok ? "warm" : "cold");
     })();
@@ -55,30 +57,50 @@ export default function BackendWaking() {
     };
   }, []);
 
-  // While cold: poll GENTLY until it wakes, then hard-reload so the page's data
-  // fetches (which may have given up during a long wake) re-run against the now-
-  // warm server. Polling is spaced out + jittered on purpose: the backend sits
-  // behind Cloudflare, and tight polling during a slow wake can trip rate-
-  // limiting (429), which would keep the curtain up even once the server is fine.
+  /* While cold: HOLD ONE REQUEST OPEN rather than polling with a short timeout.
+   *
+   * This is the fix for a measured 27 seconds of pure self-inflicted delay.
+   * Render's free tier does not refuse a request while the service is asleep —
+   * it holds the connection open, boots, and then answers it. Timed directly
+   * against production: a single curl returned 200 in 34.8s.
+   *
+   * The previous version polled every ~4s with a 7s AbortController. So every
+   * ping was the request that would have succeeded, and every ping was aborted
+   * at seven seconds while the server was still booting. The curtain could only
+   * clear once the server was already fully awake and a fresh ping happened to
+   * complete quickly — which is why an owner watching this saw 62s for a wake
+   * that actually took 35.
+   *
+   * So: one long-lived request that resolves the moment the server is ready,
+   * plus a slow backstop poll in case that request dies to a proxy or a network
+   * blip. The backstop stays gentle and jittered — the original reason for that
+   * was Cloudflare rate-limiting during a slow wake, which is still true. */
   useEffect(() => {
     if (status !== "cold") return;
     let cancelled = false;
 
     const tick = setInterval(() => setSeconds((s) => s + 1), 1000);
 
+    const wake = () => {
+      // We showed the curtain, so the page underneath likely rendered empty or
+      // gave up. One reload into the warm server is the clean recovery.
+      if (!cancelled) window.location.reload();
+    };
+
+    // The request that actually does the waiting.
+    (async () => {
+      const ok = await pingOk(90_000);
+      if (!cancelled && ok) wake();
+    })();
+
+    // Backstop, in case the long request is dropped by something in between.
     const poll = async () => {
       while (!cancelled) {
-        // 3.5s base + up to ~1.5s jitter, so many tabs don't hammer in lockstep.
-        await new Promise((r) => setTimeout(r, 3500 + Math.random() * 1500));
+        await new Promise((r) => setTimeout(r, 8000 + Math.random() * 2000));
         if (cancelled) return;
-        const ok = await pingOk(7000);
+        const ok = await pingOk(20_000);
         if (cancelled) return;
-        if (ok) {
-          // We showed the curtain, so the page likely rendered empty / gave up.
-          // A single reload into the warm server is the clean recovery.
-          window.location.reload();
-          return;
-        }
+        if (ok) return wake();
       }
     };
     poll();
@@ -90,7 +112,8 @@ export default function BackendWaking() {
   }, [status]);
 
   // A very long wait (server having a bad day) — offer a manual reload.
-  const stalled = seconds >= 70;
+  // Past roughly double the measured wake, something is wrong rather than slow.
+  const stalled = seconds >= 75;
 
   // Rolling status line — makes a long wake read as real work in progress, not a
   // frozen spinner. Tied to elapsed time; the later lines just hold if the wake
@@ -102,16 +125,30 @@ export default function BackendWaking() {
     { t: 24, label: "Scoring 31 technologies by momentum…" },
     { t: 35, label: "Ranking what's rising fastest…" },
     { t: 47, label: "Assembling your radar…" },
+    { t: 62, label: "Taking longer than usual — still waiting on the server…" },
   ];
   const phase = PHASES.reduce((acc, p) => (seconds >= p.t ? p : acc), PHASES[0]);
 
-  // Estimated progress — a decelerating curve that eases toward ~96% and never
-  // fakes completion; the actual 100% is the reload once the server answers.
-  // Front-loaded: ~27% at 2s, ~53% at 5s, ~78% at 10s, easing to a 96% ceiling.
-  // The old /15 constant sat at 27% after FIVE seconds, which reads as stalled —
-  // perceived speed is set in the first couple of seconds. Still never reaches
-  // 100: the real completion is the reload when the server answers.
-  const progress = Math.min(96, Math.round(96 * (1 - Math.exp(-seconds / 6))));
+  /* Estimated progress, CALIBRATED TO THE MEASURED WAKE rather than to a curve
+   * that felt right. Production cold start timed at 34.8s, so the bar is paced
+   * against ~35s and simply keeps creeping past it instead of flatlining.
+   *
+   * The old curve hit its 96% ceiling at about 35s and then sat there. On a
+   * 62s wake that is 27 seconds of a bar not moving, which is precisely the
+   * "reads as stalled" failure its own comment said it was avoiding — the
+   * problem had just been moved to the end. It still never reaches 100: the
+   * real completion is the reload when the server answers.
+   *
+   * The two terms do different jobs: the exponential keeps the first seconds
+   * fast, because perceived speed is set almost entirely there, and the linear
+   * term keeps the bar honestly creeping afterwards. Tracks the old curve to
+   * within a few points up to 5s (51% vs 54%) and then diverges where it
+   * matters — 87% at 35s, 93% at 62s, still moving. */
+  const EXPECTED_S = 35;
+  const progress = Math.min(
+    97,
+    Math.round(78 * (1 - Math.exp(-seconds / 5)) + Math.min(19, seconds / 4)),
+  );
 
   // Radar "contacts" that twinkle in around the dish, like signals being picked
   // up. Purely decorative; the text below always carries the real state.
@@ -233,7 +270,10 @@ export default function BackendWaking() {
                 />
               </div>
               <div className="mt-2 flex items-center justify-between font-mono text-[11px] text-[var(--c-ink-2)]/70">
-                <span>free-tier server · first visit only</span>
+                {/* The expected duration, stated. A reader who knows it takes
+                    about half a minute waits differently from one watching an
+                    unexplained bar. */}
+                <span>free-tier server · about {EXPECTED_S}s</span>
                 <span className="tabular-nums text-[var(--accent-1)]">{progress}%</span>
               </div>
             </div>
