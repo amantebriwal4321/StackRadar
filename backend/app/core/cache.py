@@ -33,3 +33,18 @@ def cache_response(expiration: int = 300):
 def clear_cache():
     """Clear all cached entries."""
     _cache.clear()
+
+
+def get_cached(key: str):
+    """Read one value. Returns None when absent OR expired.
+
+    Callers that need to distinguish "absent" from "cached a falsy value"
+    should store a sentinel — the project walkthrough verifier caches an empty
+    dict for a dead video id so it is not re-checked on every request.
+    """
+    return _cache.get(key)
+
+
+def set_cached(key: str, value) -> None:
+    """Write one value under the module's shared TTL."""
+    _cache[key] = value

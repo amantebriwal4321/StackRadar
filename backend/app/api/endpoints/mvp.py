@@ -19,6 +19,8 @@ import json
 import re
 import os
 import asyncio
+import httpx
+from loguru import logger
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from sqlalchemy.orm import Session
@@ -30,6 +32,8 @@ from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain, UserP
 from app.services.scheduler import scrape_status
 from app.services.scoring import calculate_star_velocity
 from app.services import resources as resources_svc
+from app.services import projects as projects_svc
+from app.core.cache import get_cached, set_cached
 from app.core.auth import verified_clerk_user
 
 router = APIRouter()
@@ -585,6 +589,118 @@ async def get_tool_resources(
 # ROADMAPS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PROJECTS  (learning turned into evidence)
+#
+# The catalog is hand-authored in app/services/projects.py — see that module for
+# why briefs are written but every walkthrough link is verified. These endpoints
+# read from it and never author anything themselves.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async def _verified_walkthrough(project: dict) -> dict:
+    """Resolve a project's walkthrough, dropping any video that no longer exists.
+
+    The video id is checked live through the same oEmbed path the curated video
+    list uses: no API key, no quota, and it returns the real title so a mistyped
+    id that happens to resolve to some unrelated video is caught too. A failure
+    removes the video and leaves the docs and written steps — the project still
+    ships, just without a link we cannot stand behind.
+    """
+    w = dict(project.get("walkthrough") or {})
+    video_id = w.pop("video_id", None)
+    keywords = w.pop("keywords", []) or []
+
+    out = {
+        "docs": [{"label": d[0], "url": d[1]} for d in (w.get("docs") or [])],
+        "steps": w.get("steps") or [],
+        "video": None,
+        "video_verified": False,
+    }
+    if not video_id:
+        return out
+
+    cache_key = f"project_video:{video_id}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        out["video"] = cached or None
+        out["video_verified"] = bool(cached)
+        return out
+
+    try:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            found = await resources_svc.verify_youtube(client, video_id, "video", keywords)
+    except Exception as e:  # noqa: BLE001
+        logger.debug(f"walkthrough verify failed for {video_id}: {e}")
+        found = None
+
+    video = (
+        {
+            "url": found.get("url"),
+            "title": found.get("title"),
+            "channel": found.get("channel"),
+            "thumbnail": found.get("thumbnail"),
+        }
+        if found
+        else None
+    )
+    # Cache the negative too, so a dead id is not re-checked on every request.
+    set_cached(cache_key, video or {})
+    out["video"] = video
+    out["video_verified"] = bool(video)
+    return out
+
+
+@router.get("/projects")
+def list_projects(
+    tool: Optional[str] = Query(None, description="Filter to one tool slug"),
+    domain: Optional[str] = Query(None, description="Filter to one domain name"),
+    tier: Optional[str] = Query(None, pattern="^(beginner|intermediate|advanced)$"),
+):
+    """Every buildable project, filterable. Summaries only — no walkthrough."""
+    if tool:
+        validate_slug(tool)
+    items = projects_svc.list_projects(tool=tool, category=domain, tier=tier)
+    return {
+        "projects": items,
+        "count": len(items),
+        "tools_covered": sorted(projects_svc.tool_slugs_with_projects()),
+    }
+
+
+@router.get("/projects/{slug}")
+async def get_project(slug: str):
+    """One project brief, with its walkthrough verified at serve time."""
+    validate_slug(slug)
+    project = projects_svc.get_project(slug)
+    if not project:
+        raise HTTPException(status_code=404, detail=f"Project '{slug}' not found")
+
+    summary = projects_svc.list_projects(tool=project["tool_slug"])
+    detail = next((p for p in summary if p["slug"] == slug), None) or {}
+    return {
+        **detail,
+        "brief": project["brief"],
+        "requirements": project["requirements"],
+        "skills": project["skills"],
+        "walkthrough": await _verified_walkthrough(project),
+    }
+
+
+@router.get("/tools/{slug}/projects")
+def get_tool_projects(slug: str, db: Session = Depends(get_db)):
+    """Projects for one technology, for the tool profile page.
+
+    404s on an unknown tool rather than returning an empty list, so a typo in a
+    URL is distinguishable from a tool that simply has no project yet.
+    """
+    validate_slug(slug)
+    tool = db.query(Tool).filter(Tool.slug == slug).first()
+    if not tool:
+        raise HTTPException(status_code=404, detail=f"Tool '{slug}' not found")
+    items = projects_svc.list_projects(tool=slug)
+    return {"tool": slug, "projects": items, "count": len(items)}
+
+
 @router.get("/roadmaps")
 def get_roadmaps(db: Session = Depends(get_db)):
     """Get all available learning roadmaps."""
@@ -670,9 +786,23 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
                     }
             info["video"] = top_video.get(s)
 
+    # A project per step, so a checkbox has something to prove behind it.
+    # Grouped in one pass rather than a lookup per step.
+    projects_by_tool = projects_svc.projects_for_tools(needed_slugs) if needed_slugs else {}
+
     for step in steps:
         slugs = step_tool_map.get(step.get("step"), [])
         step["tools"] = [tools_by_slug[s] for s in slugs if s in tools_by_slug]
+        # Deduplicated by project slug: two tools in one step can share none
+        # today, but the shape should not depend on that staying true.
+        seen: set[str] = set()
+        step_projects = []
+        for s_ in slugs:
+            for proj in projects_by_tool.get(s_, []):
+                if proj["slug"] not in seen:
+                    seen.add(proj["slug"])
+                    step_projects.append(proj)
+        step["projects"] = step_projects
 
     return {
         "slug": roadmap.slug,
