@@ -11,7 +11,7 @@
  */
 
 /** frontend/public/media/console.mp4 — 5-10s screen capture of the console. */
-export const HAS_CONSOLE_VIDEO = false;
+export const HAS_CONSOLE_VIDEO = true;
 
 /** frontend/public/media/founder.jpg — headshot, portrait 4:5. */
 export const HAS_FOUNDER_PHOTO = false;

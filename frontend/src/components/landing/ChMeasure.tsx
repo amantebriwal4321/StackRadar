@@ -133,7 +133,17 @@ export default function ChMeasure({
                 this becomes the capture instead, with no other change. */}
             <figure className="media-frame mt-10" data-sc-in data-sc-reveal="right">
               {HAS_CONSOLE_VIDEO ? (
-                <video src="/media/console.mp4" autoPlay muted loop playsInline className="h-auto w-full" />
+                <video
+                  src="/media/console.mp4"
+                  poster="/media/console-poster.jpg"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label="A screen recording of the StackRadar console, scrolling the ranked technology list"
+                  className="h-auto w-full"
+                />
               ) : (
                 <Image
                   src="/media/shot-explore.png"
