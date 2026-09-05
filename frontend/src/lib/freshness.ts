@@ -52,7 +52,12 @@ export function freshness(
   const ageHours = Math.floor(ms / 3_600_000);
   const days = Math.floor(ageHours / 24);
 
-  const ageLabel = mins < 60 ? `${mins}m` : ageHours < 48 ? `${ageHours}h` : `${days}d`;
+  /* Units must survive being UPPERCASED. The navbar renders this inside a
+     `uppercase` span, which turned "3m old" into "3M OLD" — read as three
+     MONTHS on data that was three minutes fresh. The freshness feature exists
+     to stop the product looking staler than it is, and that label was doing
+     precisely the opposite. "min" and "hr" are unambiguous in either case. */
+  const ageLabel = mins < 60 ? `${mins} min` : ageHours < 48 ? `${ageHours} hr` : `${days}d`;
 
   /* The scraper loop runs every 30 minutes, so anything inside six hours is
      working as designed. Past 48 hours the "every day" copy is false, which is

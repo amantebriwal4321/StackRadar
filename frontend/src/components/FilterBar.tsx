@@ -30,7 +30,7 @@ export default function FilterBar({
         onClick={() => onDomainChange("All")}
         className={`relative px-4 py-1.5 rounded-xl text-sm font-semibold shrink-0 transition-all duration-300 select-none cursor-pointer ${
           activeDomain === "All"
-            ? "text-primary-foreground font-semibold"
+            ? "on-ink font-semibold"
             : "text-muted-foreground hover:text-foreground"
         }`}
       >
@@ -52,7 +52,7 @@ export default function FilterBar({
             onClick={() => onDomainChange(domain)}
             className={`relative px-4 py-1.5 rounded-xl text-sm font-semibold shrink-0 transition-all duration-300 select-none cursor-pointer ${
               isActive
-                ? "text-primary-foreground font-semibold"
+                ? "on-ink font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
