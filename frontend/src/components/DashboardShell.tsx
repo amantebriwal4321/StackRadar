@@ -45,11 +45,19 @@ export default function DashboardShell({ children, fullWidth = false, flushX = f
       {/* ─── Main Content ─── */}
       <main className="flex-1 relative">
         <div className="bg-dot-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
-        {/* pt clears the fixed 65px navbar. Without it every page's first element
-            renders UNDERNEATH the header — most pages hid this behind large hero
-            padding, but any page whose first element sits high (e.g. the roadmap
-            back-link) collided with the nav links. */}
-        <div className={`relative z-10 mx-auto ${fullWidth ? 'max-w-[1280px]' : 'max-w-6xl'} ${flushX ? 'px-0' : 'px-4 md:px-6 lg:px-8'} pt-[5.5rem] md:pt-24 pb-6 md:pb-8`}>
+        {/* pt clears the floating navbar: a 64px pill offset 12px from the top,
+            so 76px of footprint, and 6.5rem leaves ~28px of air. Matches the
+            scroll-margin-top used for in-page anchors so a jump and a page load
+            land content at the same height.
+
+            IT WAS md:pt-24, WHICH IS NOT 96px HERE. globals.css redefines
+            Tailwind's spacing scale to literal pixels (--spacing-24: 24px), so
+            pt-24 resolved to 24px and every DashboardShell route rendered its
+            first element 60px underneath the navbar on desktop — measured: nav
+            bottom 84px, header top 24px. It showed up as the /trends header
+            stats being sliced in half. Arbitrary rem values are not affected by
+            that scale, which is why this is stated in rem. */}
+        <div className={`relative z-10 mx-auto ${fullWidth ? 'max-w-[1280px]' : 'max-w-6xl'} ${flushX ? 'px-0' : 'px-4 md:px-6 lg:px-8'} pt-[5.5rem] md:pt-[6.5rem] pb-6 md:pb-8`}>
           {children}
         </div>
       </main>
