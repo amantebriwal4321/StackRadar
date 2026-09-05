@@ -457,9 +457,62 @@ async def fetch_tech_news() -> List[Dict[str, Any]]:
 # Phase 5: Combined sentiment + tool identification in one call
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+# Models to try, in order, when GROQ_MODEL is not pinned.
+#
+# WHY A LIST AND NOT A NAME. This was hardcoded to `llama-3.1-8b-instant`, which
+# Groq decommissioned. Every call then returned 404 model_not_found, and because
+# the batch handler falls back to "neutral" on any exception, the failure was
+# invisible: a valid key, zero reported errors, and 386 items all scored neutral.
+# It looked exactly like the key being absent.
+#
+# A hardcoded model name is a time bomb on a provider that retires models
+# without notice, so the resolver walks this list once, keeps the first that
+# answers, and logs which one. Adding a name here is cheaper than another
+# outage; GROQ_MODEL overrides it entirely for a dashboard-only fix.
+_GROQ_MODEL_CANDIDATES = [
+    "llama-3.3-70b-versatile",
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "openai/gpt-oss-20b",
+    "qwen/qwen3-32b",
+    "llama-3.1-8b-instant",  # kept last: retired, but harmless to try
+]
+
+# Resolved once per process so a dead model is not re-probed every batch.
+_groq_model: Optional[str] = None
+
+
+def _resolve_groq_model(client) -> Optional[str]:
+    """Ask Groq which of our candidates it actually serves. None if none do."""
+    global _groq_model
+    if _groq_model:
+        return _groq_model
+
+    pinned = getattr(__import__("app.core.config", fromlist=["settings"]).settings, "GROQ_MODEL", "")
+    candidates = [pinned] if pinned else _GROQ_MODEL_CANDIDATES
+
+    try:
+        available = {m.id for m in client.models.list().data}
+        for name in candidates:
+            if name in available:
+                _groq_model = name
+                logger.info(f"Groq sentiment model resolved: {name}")
+                return name
+        logger.warning(
+            f"None of the candidate Groq models are available to this key. "
+            f"Offered: {sorted(available)[:8]}... — set GROQ_MODEL to one of them."
+        )
+        return None
+    except Exception as e:  # noqa: BLE001
+        # Listing failed (network, auth). Fall back to trying the first
+        # candidate directly rather than giving up on sentiment entirely.
+        logger.warning(f"Could not list Groq models ({e}); trying {candidates[0]}")
+        _groq_model = candidates[0]
+        return _groq_model
+
+
 async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int = 20) -> List[Dict[str, Any]]:
     """
-    Analyze sentiment of content items using Groq LLM (llama-3.1-8b-instant).
+    Analyze sentiment of content items using a Groq-hosted LLM.
 
     Each item should have a "title" key. Returns the same items enriched with
     a "sentiment" key: "positive", "negative", or "neutral".
@@ -479,6 +532,13 @@ async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int 
         return items
 
     client = Groq(api_key=api_key)
+
+    model = _resolve_groq_model(client)
+    if not model:
+        logger.warning("No usable Groq model — defaulting all to 'neutral'")
+        for item in items:
+            item["sentiment"] = "neutral"
+        return items
 
     for batch_start in range(0, len(items), batch_size):
         batch = items[batch_start:batch_start + batch_size]
@@ -504,7 +564,7 @@ async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int 
 
         try:
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
                 max_tokens=1024,

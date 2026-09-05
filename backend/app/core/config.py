@@ -28,6 +28,11 @@ class Settings(BaseSettings):
 
     # GROQ (for sentiment analysis)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    # Pin a specific Groq model. Leave empty and the scraper walks its own
+    # candidate list, which is the safer default — Groq decommissions models
+    # without notice and a hardcoded name eventually 404s. Set this only to
+    # override, so a model can be fixed from the dashboard without a deploy.
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "")
 
     # DAILY NUDGE — retention loop. When RESEND_API_KEY is set, the daily-digest
     # job emails opted-in users their next lesson; empty → the job builds the
