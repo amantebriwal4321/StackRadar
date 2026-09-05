@@ -110,7 +110,21 @@ export default function ChMeasure({
             ))}
           </ol>
 
-          <div className="col-span-4 md:col-span-5 md:col-start-8">
+          {/* STICKY, because the column beside it is not.
+              The five source cards are position:sticky and stack as you scroll,
+              which makes this chapter several viewports tall. This column is
+              short, so it used to scroll away almost immediately and the video
+              was only properly framed at the very end of the chapter — you saw
+              a sliver of it for most of the scroll.
+
+              self-start matters as much as the sticky: a grid item stretches to
+              the row height by default, and a full-height item has nothing to
+              stick within. Shrinking it to its content is what lets it hold.
+
+              6.5rem clears the navbar, matching the shell padding and the
+              anchor scroll-margin. Stated in rem because globals.css redefines
+              Tailwind's spacing scale to literal pixels. */}
+          <div className="col-span-4 md:col-span-5 md:col-start-8 md:sticky md:top-[6.5rem] md:self-start">
             <p
               className="text-[17px] font-medium leading-relaxed text-[var(--c-ink-2)]"
               data-sc-in
