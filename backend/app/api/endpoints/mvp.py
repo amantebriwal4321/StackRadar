@@ -1266,7 +1266,25 @@ def get_overview(db: Session = Depends(get_db)):
     movers = sorted(curated, key=lambda t: (t.growth_pct or 0), reverse=True)
     top_mover = movers[0] if movers and (movers[0].growth_pct or 0) > 0 else None
 
+    # WHEN THE DATA WAS LAST REFRESHED.
+    #
+    # This reported the newest ToolSnapshot.recorded_at, which is not the same
+    # thing: snapshots are written far less often than the 30-minute scrape loop
+    # runs. Measured in production - last scrape 09:39, newest snapshot 00:21,
+    # nine hours apart on data that was ten minutes old.
+    #
+    # Everything downstream believed it. /trends showed "Momentum index - 9h
+    # old" in amber instead of a green "Live momentum index", and the landing
+    # spec row said "last reading - stale". So the honesty feature was reporting
+    # the product as staler than it actually was, which is its own kind of
+    # dishonesty.
+    #
+    # The scraper already tracks the real answer and /status already serves it.
+    # Fall back to the snapshot only when no scrape has completed in this
+    # process, which is the case on a fresh boot before the first cycle.
+    last_scraped = scrape_status.get("last_scraped_time")
     last_snapshot = db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
+    last_updated = last_scraped or (last_snapshot.recorded_at.isoformat() if last_snapshot else None)
 
     return {
         "tools_tracked": tracked_count,
@@ -1286,7 +1304,7 @@ def get_overview(db: Session = Depends(get_db)):
             "score": top_mover.score,
             "growth_pct": top_mover.growth_pct,
         } if top_mover else None,
-        "last_updated": last_snapshot.recorded_at.isoformat() if last_snapshot else None,
+        "last_updated": last_updated,
         "is_scraping": scrape_status.get("is_running", False),
         "next_cycle": scrape_status.get("next_scraped_time"),
     }

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import ChapterHead from "@/components/landing/ChapterHead";
-import AssetSlot from "@/components/ui/AssetSlot";
 import TechLogo from "@/components/ui/TechLogo";
 import { ROADMAP_BY_CATEGORY } from "@/data/goals";
 import { tintForSlug } from "@/lib/stack/domainColour";
@@ -109,38 +108,15 @@ export default function ChOrder({
           })}
         </ul>
 
-        <div className="ed-grid mt-16" data-sc-in>
-          <AssetSlot
-            className="col-span-4 md:col-span-6"
-            n={2}
-            label="Beta-user quotes"
-            spec={[
-              ["How many", "two or three is plenty"],
-              ["Each needs", "the quote, a first name, what they were learning"],
-              ["Source", "feedback form or waitlist replies"],
-              ["Length", "one or two sentences each"],
-            ]}
-            changes="This empty slot becomes a quoted row. Until then the page makes no social-proof claim at all, which is the honest position for a beta."
-            how="Paste them to me in any form and I will shape the file. Nothing gets written here until they are real — inventing a testimonial is a hard rule against."
-            path="frontend/src/data/testimonials.ts"
-            ratio="16 / 7"
-          />
-          <AssetSlot
-            className="col-span-4 md:col-span-6"
-            n={4}
-            label="Roadmap walkthrough"
-            priority="optional"
-            spec={[
-              ["Length", "6–12 seconds"],
-              ["Shows", "checking off two or three steps on a roadmap"],
-              ["Audio", "not needed"],
-              ["Format", ".mp4"],
-            ]}
-            changes="Demonstrates the progress loop that the copy here currently only claims. Sits beside the quotes."
-            path="frontend/public/media/roadmap.mp4"
-            ratio="16 / 7"
-          />
-        </div>
+        {/* Two <AssetSlot> boxes stood here: beta-user quotes and an optional
+            roadmap capture. Removed for the hackathon submission — a judge
+            reads a dashed TODO box as unfinished, not as candour, and the
+            quotes in particular have no content coming. Inventing a
+            testimonial remains a hard rule against, so the honest move is to
+            make no social-proof claim at all rather than to stage one.
+
+            To restore: see ASSETS-TODO.md, entries 2 and 4. */}
+
       </div>
     </section>
   );

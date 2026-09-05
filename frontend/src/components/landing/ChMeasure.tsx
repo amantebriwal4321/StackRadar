@@ -1,4 +1,5 @@
-import AssetSlot from "@/components/ui/AssetSlot";
+import Image from "next/image";
+import { HAS_CONSOLE_VIDEO } from "@/lib/media";
 import ChapterArt from "@/components/landing/ChapterArt";
 import ChapterHead from "@/components/landing/ChapterHead";
 import type { Overview, Tool } from "@/data/trends";
@@ -124,24 +125,28 @@ export default function ChMeasure({
               at once.
             </p>
 
-            <div className="mt-10" data-sc-in data-sc-reveal="right">
-              <AssetSlot
-                n={1}
-                label="Screen recording"
-                priority="do this one first"
-                spec={[
-                  ["Length", "5–10 seconds"],
-                  ["Shows", "scrolling /explore, then opening one tool"],
-                  ["Audio", "not needed"],
-                  ["Size", "1280px wide or more"],
-                  ["Format", ".mp4"],
-                ]}
-                changes="This chapter stops describing the product and starts showing it running. It is the largest single upgrade left on the page."
-                how="Windows: Win + Alt + R starts a capture. Let a score ring finish animating before you stop."
-                path="frontend/public/media/console.mp4"
-                ratio="16 / 10"
-              />
-            </div>
+            {/* The product, shown rather than described.
+                A dashed placeholder box stood here. That was honest during
+                development and wrong for a submission: a real screenshot of the
+                console says more than a note promising a video will exist. Flip
+                HAS_CONSOLE_VIDEO in lib/media.ts once console.mp4 lands and
+                this becomes the capture instead, with no other change. */}
+            <figure className="media-frame mt-10" data-sc-in data-sc-reveal="right">
+              {HAS_CONSOLE_VIDEO ? (
+                <video src="/media/console.mp4" autoPlay muted loop playsInline className="h-auto w-full" />
+              ) : (
+                <Image
+                  src="/media/shot-explore.png"
+                  alt="The StackRadar console, showing tracked technologies and their momentum scores"
+                  width={1440}
+                  height={900}
+                  className="h-auto w-full"
+                />
+              )}
+              <figcaption className="on-accent bg-[#8ED462] px-5 py-3 text-[13px] font-medium">
+                The console — every score here is measured, not estimated.
+              </figcaption>
+            </figure>
           </div>
         </div>
       </div>

@@ -4,7 +4,8 @@ import ChapterArt from "@/components/landing/ChapterArt";
 import ChapterHead from "@/components/landing/ChapterHead";
 import Link from "next/link";
 import TechLogo from "@/components/ui/TechLogo";
-import AssetSlot from "@/components/ui/AssetSlot";
+import Image from "next/image";
+import { HAS_FOUNDER_PHOTO } from "@/lib/media";
 import StackDiagnosis from "@/components/landing/StackDiagnosis";
 import { diagnose } from "@/lib/stack/diagnose";
 import { freshness } from "@/lib/freshness";
@@ -141,20 +142,23 @@ export default function ChColophon({
           </div>
 
           <div className="col-span-4 md:col-span-4 md:col-start-9" data-sc-in data-sc-reveal="right">
-            <AssetSlot
-              n={3}
-              label="Your photo, or a short clip"
-              spec={[
-                ["Either", "a headshot, or ~10s of you to camera"],
-                ["Saying", "what StackRadar is for, in your own words"],
-                ["Crop", "portrait, 4:5"],
-                ["Format", ".jpg — or .mp4 for the clip"],
-              ]}
-              changes="Becomes the byline on this closing plate, so the page ends on a person rather than a paragraph."
-              how="A phone photo in even light is genuinely fine. The reference site's whole pitch is real humans, and a beta gains more from a face than a mature product does."
-              path="frontend/public/media/founder.jpg"
-              ratio="4 / 5"
-            />
+            {/* The byline portrait, when there is one.
+                A dashed placeholder box stood here asking for a headshot. On a
+                submission that reads as unfinished, so it renders nothing until
+                the photo exists — the provenance paragraph below carries this
+                column on its own perfectly well. Drop founder.jpg in and flip
+                HAS_FOUNDER_PHOTO in lib/media.ts. */}
+            {HAS_FOUNDER_PHOTO && (
+              <figure className="media-frame mb-5 overflow-hidden">
+                <Image
+                  src="/media/founder.jpg"
+                  alt="The developer who builds and maintains StackRadar"
+                  width={640}
+                  height={800}
+                  className="h-auto w-full"
+                />
+              </figure>
+            )}
             {/* The page's provenance claim, and the one sentence that has to
                 be true. "Reads five sources every day" was printed
                 unconditionally — including on an instance whose last reading
