@@ -40,6 +40,7 @@ than producing a project attached to nothing.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from app.services.catalog import TOOLS
@@ -302,6 +303,7 @@ PROJECTS: list[dict[str, Any]] = [
         "walkthrough": {
             "must": ['short'],
             "any": ['next'],
+            "deny": ['razorpay', 'pro plans'],
             "video_id": "ZVnjOPwW4ZA",
             "keywords": ["next"],
             "search": "build url shortener nextjs postgres tutorial",
@@ -762,6 +764,9 @@ def list_projects(
     return sorted(out, key=lambda p: (_TIER_RANK[p["tier"]], p["title"]))
 
 
+NEGATED = "(?:^|[^a-z])(?:no|not|without|instead of)[^a-z][^.,;:!?]{0,24}?%s"
+
+
 def video_matches(title: str, walkthrough: dict[str, Any]) -> bool:
     """Does this video's REAL title match what the project is about?
 
@@ -779,8 +784,21 @@ def video_matches(title: str, walkthrough: dict[str, Any]) -> bool:
     the written steps, which teach the project on their own.
     """
     t = (title or "").lower()
-    if not all(term in t for term in walkthrough.get("must") or []):
-        return False
+
+    for term in walkthrough.get("deny") or []:
+        if term in t:
+            return False
+
+    for term in walkthrough.get("must") or []:
+        if term not in t:
+            return False
+        # A required term can appear as the thing the video says it does NOT
+        # use. "Building a neural network FROM SCRATCH (no Tensorflow/PyTorch)"
+        # contains "pytorch" and is the opposite of a PyTorch walkthrough.
+        # Substring matching cannot see that; this can.
+        if re.search(NEGATED % re.escape(term), t):
+            return False
+
     anyof = walkthrough.get("any") or []
     return not anyof or any(term in t for term in anyof)
 
