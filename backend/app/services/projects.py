@@ -193,6 +193,7 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["useReducer", "HTML drag-and-drop", "persistence", "keyboard accessibility"],
         "walkthrough": {
+            "search": "build a kanban board in react with drag and drop",
             "docs": [
                 ["HTML Drag and Drop API", "https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API"],
                 ["Extracting state logic into a reducer", "https://react.dev/learn/extracting-state-logic-into-a-reducer"],
@@ -232,7 +233,7 @@ PROJECTS: list[dict[str, Any]] = [
         "walkthrough": {
             "video_id": "wm5gMKuwSYk",
             "keywords": ["next"],
-            "search": "nextjs app router mdx blog tutorial",
+            "search": "build a personal blog website with nextjs and mdx",
             "docs": [
                 ["Routing fundamentals", "https://nextjs.org/docs/app/building-your-application/routing"],
                 ["Metadata", "https://nextjs.org/docs/app/api-reference/functions/generate-metadata"],
@@ -354,7 +355,7 @@ PROJECTS: list[dict[str, Any]] = [
         "starter": "python -m venv venv && pip install \"fastapi[standard]\" sqlalchemy",
         "stack": ["fastapi", "uvicorn", "sqlalchemy", "pydantic"],
         "walkthrough": {
-            "search": "fastapi sqlalchemy crud api tutorial",
+            "search": "build a rest api from scratch fastapi sqlalchemy project",
             "docs": [
                 ["FastAPI tutorial", "https://fastapi.tiangolo.com/tutorial/"],
                 ["SQL databases", "https://fastapi.tiangolo.com/tutorial/sql-databases/"],
@@ -411,6 +412,7 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["async/await", "asyncio.gather", "background tasks", "caching and TTLs"],
         "walkthrough": {
+            "search": "build an rss feed aggregator with python and fastapi",
             "docs": [
                 ["Concurrency and async/await", "https://fastapi.tiangolo.com/async/"],
                 ["Background tasks", "https://fastapi.tiangolo.com/tutorial/background-tasks/"],
@@ -507,6 +509,7 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["compose networking", "volumes", "healthchecks", "environment config"],
         "walkthrough": {
+            "search": "docker compose multi container app with postgres tutorial",
             "docs": [
                 ["Compose file reference", "https://docs.docker.com/reference/compose-file/"],
                 ["Startup order", "https://docs.docker.com/compose/how-tos/startup-order/"],
@@ -542,6 +545,7 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["tensors", "autograd", "nn.Module", "the training loop"],
         "walkthrough": {
+            "search": "pytorch mnist handwritten digit classifier from scratch",
             "docs": [
                 ["Learn the Basics", "https://pytorch.org/tutorials/beginner/basics/intro.html"],
                 ["Optimization loop", "https://pytorch.org/tutorials/beginner/basics/optimization_tutorial.html"],
@@ -575,6 +579,7 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["transfer learning", "torchvision transforms", "overfitting", "evaluation"],
         "walkthrough": {
+            "search": "pytorch transfer learning fine tune a pretrained model",
             "docs": [
                 ["Transfer learning tutorial", "https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html"],
                 ["torchvision transforms", "https://pytorch.org/vision/stable/transforms.html"],
@@ -611,6 +616,7 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["ownership and borrowing", "Result and ?", "pattern matching", "cargo"],
         "walkthrough": {
+            "search": "build a grep clone command line tool in rust",
             "docs": [
                 ["An I/O Project: Building a Command Line Program", "https://doc.rust-lang.org/book/ch12-00-an-io-project.html"],
                 ["Error handling", "https://doc.rust-lang.org/book/ch09-00-error-handling.html"],
@@ -645,6 +651,7 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["TcpListener", "byte parsing", "threads and channels", "Arc and Mutex"],
         "walkthrough": {
+            "search": "build an http server in rust from scratch with tcp",
             "docs": [
                 ["Final Project: Building a Multithreaded Web Server", "https://doc.rust-lang.org/book/ch20-00-final-project-a-web-server.html"],
                 ["Fearless Concurrency", "https://doc.rust-lang.org/book/ch16-00-concurrency.html"],

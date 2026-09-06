@@ -25,6 +25,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+import hashlib
 from datetime import date, timedelta, datetime, timezone
 from app.db.session import get_db
 from app.core.config import settings
@@ -633,7 +634,12 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
     # TTL, and it survives a restart — which the in-process cache does not, and
     # a YouTube search costs 100 quota units against a 10k daily budget.
     if search and settings.YOUTUBE_API_KEY:
-        cache_slug = f"project:{project['slug']}"
+        # The search string is part of the key. Editing a project's `search`
+        # then has to re-fetch instead of serving the old query's winner for
+        # up to 24h — which is exactly the trap that hid two generic results
+        # behind a correct-looking fix.
+        qhash = hashlib.sha1(search.encode()).hexdigest()[:8]
+        cache_slug = f"project:{project['slug']}:{qhash}"
         cached = (
             db.query(ToolResource)
             .filter(ToolResource.tool_slug == cache_slug)
@@ -661,7 +667,9 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
 
         if found:
             top = found[0]
-            db.query(ToolResource).filter(ToolResource.tool_slug == cache_slug).delete()
+            db.query(ToolResource).filter(
+                ToolResource.tool_slug.like(f"project:{project['slug']}%")
+            ).delete(synchronize_session=False)
             db.add(ToolResource(
                 tool_slug=cache_slug, kind=top.get("kind", "video"), source="youtube",
                 title=top.get("title") or "", url=top.get("url") or "",
