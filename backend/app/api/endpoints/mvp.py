@@ -638,7 +638,10 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
         # then has to re-fetch instead of serving the old query's winner for
         # up to 24h — which is exactly the trap that hid two generic results
         # behind a correct-looking fix.
-        qhash = hashlib.sha1(search.encode()).hexdigest()[:8]
+        w = project["walkthrough"]
+        qhash = hashlib.sha1(
+            repr((search, w.get("must"), w.get("any"))).encode()
+        ).hexdigest()[:8]
         cache_slug = f"project:{project['slug']}:{qhash}"
         cached = (
             db.query(ToolResource)
@@ -658,12 +661,21 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
             return out
 
         try:
+            # Ask for a pool, not a winner. The top-ranked result is the most
+            # WATCHED of the candidates, not the most relevant - so take the
+            # best one that actually matches the project and fall through the
+            # rest in rank order.
             found = await resources_svc.fetch_youtube(
-                project.get("tool_slug", ""), query=search, limit=1
+                project.get("tool_slug", ""), query=search, limit=8
             )
         except Exception as e:  # noqa: BLE001
             logger.debug(f"project video search failed for {project['slug']}: {e}")
             found = []
+
+        found = [
+            f for f in found
+            if projects_svc.video_matches(f.get("title") or "", project["walkthrough"])
+        ]
 
         if found:
             top = found[0]

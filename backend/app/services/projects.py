@@ -72,6 +72,8 @@ PROJECTS: list[dict[str, Any]] = [
         "starter": "npm create vite@latest quiz -- --template react-ts",
         "stack": ["react", "react-dom", "vite"],
         "walkthrough": {
+            "must": ['quiz'],
+            "any": ['react'],
             "video_id": "bMknfKXIFA8",
             "keywords": ["react"],
             "search": "build a react quiz app tutorial",
@@ -133,6 +135,8 @@ PROJECTS: list[dict[str, Any]] = [
         "starter": "npm create vite@latest gh-explorer -- --template react-ts",
         "stack": ["react", "react-dom", "vite"],
         "walkthrough": {
+            "must": ['react'],
+            "any": ['github', 'search', 'fetch', 'api'],
             "video_id": "SqcY0GlETPk",
             "keywords": ["react"],
             "search": "react debounce search api abortcontroller tutorial",
@@ -193,6 +197,8 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["useReducer", "HTML drag-and-drop", "persistence", "keyboard accessibility"],
         "walkthrough": {
+            "must": ['kanban'],
+            "any": [],
             "search": "build a kanban board in react with drag and drop",
             "docs": [
                 ["HTML Drag and Drop API", "https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API"],
@@ -231,6 +237,8 @@ PROJECTS: list[dict[str, Any]] = [
         "starter": "npx create-next-app@latest my-site --typescript --app --tailwind",
         "stack": ["next", "react", "gray-matter", "next-mdx-remote"],
         "walkthrough": {
+            "must": ['blog'],
+            "any": ['next'],
             "video_id": "wm5gMKuwSYk",
             "keywords": ["next"],
             "search": "build a personal blog website with nextjs and mdx",
@@ -292,6 +300,8 @@ PROJECTS: list[dict[str, Any]] = [
         "starter": "npx create-next-app@latest shortener --typescript --app --tailwind",
         "stack": ["next", "@vercel/postgres", "nanoid", "zod"],
         "walkthrough": {
+            "must": ['short'],
+            "any": ['next'],
             "video_id": "ZVnjOPwW4ZA",
             "keywords": ["next"],
             "search": "build url shortener nextjs postgres tutorial",
@@ -355,6 +365,8 @@ PROJECTS: list[dict[str, Any]] = [
         "starter": "python -m venv venv && pip install \"fastapi[standard]\" sqlalchemy",
         "stack": ["fastapi", "uvicorn", "sqlalchemy", "pydantic"],
         "walkthrough": {
+            "must": ['fastapi'],
+            "any": ['api', 'crud', 'build'],
             "search": "build a rest api from scratch fastapi sqlalchemy project",
             "docs": [
                 ["FastAPI tutorial", "https://fastapi.tiangolo.com/tutorial/"],
@@ -412,6 +424,8 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["async/await", "asyncio.gather", "background tasks", "caching and TTLs"],
         "walkthrough": {
+            "must": ['rss', 'feed'],
+            "any": [],
             "search": "build an rss feed aggregator with python and fastapi",
             "docs": [
                 ["Concurrency and async/await", "https://fastapi.tiangolo.com/async/"],
@@ -450,6 +464,8 @@ PROJECTS: list[dict[str, Any]] = [
         "starter": "docker --version && docker build -t myapp . && docker images myapp",
         "stack": ["docker"],
         "walkthrough": {
+            "must": ['docker'],
+            "any": ['image', 'size', 'dockerfile', 'multi'],
             "video_id": "3c-iBn73dDE",
             "keywords": ["docker"],
             "search": "docker multi stage build reduce image size tutorial",
@@ -509,6 +525,8 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["compose networking", "volumes", "healthchecks", "environment config"],
         "walkthrough": {
+            "must": ['docker'],
+            "any": ['compose', 'postgres'],
             "search": "docker compose multi container app with postgres tutorial",
             "docs": [
                 ["Compose file reference", "https://docs.docker.com/reference/compose-file/"],
@@ -545,6 +563,8 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["tensors", "autograd", "nn.Module", "the training loop"],
         "walkthrough": {
+            "must": ['pytorch'],
+            "any": ['mnist', 'digit', 'classifier', 'neural'],
             "search": "pytorch mnist handwritten digit classifier from scratch",
             "docs": [
                 ["Learn the Basics", "https://pytorch.org/tutorials/beginner/basics/intro.html"],
@@ -579,6 +599,8 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["transfer learning", "torchvision transforms", "overfitting", "evaluation"],
         "walkthrough": {
+            "must": ['pytorch'],
+            "any": ['transfer learning', 'fine-tun', 'fine tun'],
             "search": "pytorch transfer learning fine tune a pretrained model",
             "docs": [
                 ["Transfer learning tutorial", "https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html"],
@@ -616,6 +638,8 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["ownership and borrowing", "Result and ?", "pattern matching", "cargo"],
         "walkthrough": {
+            "must": ['rust'],
+            "any": ['grep', 'cli', 'command line'],
             "search": "build a grep clone command line tool in rust",
             "docs": [
                 ["An I/O Project: Building a Command Line Program", "https://doc.rust-lang.org/book/ch12-00-an-io-project.html"],
@@ -651,6 +675,8 @@ PROJECTS: list[dict[str, Any]] = [
         ],
         "skills": ["TcpListener", "byte parsing", "threads and channels", "Arc and Mutex"],
         "walkthrough": {
+            "must": ['rust'],
+            "any": ['http', 'tcp', 'server'],
             "search": "build an http server in rust from scratch with tcp",
             "docs": [
                 ["Final Project: Building a Multithreaded Web Server", "https://doc.rust-lang.org/book/ch20-00-final-project-a-web-server.html"],
@@ -734,6 +760,29 @@ def list_projects(
         low = category.lower()
         out = [p for p in out if (p.get("category") or "").lower() == low]
     return sorted(out, key=lambda p: (_TIER_RANK[p["tier"]], p["title"]))
+
+
+def video_matches(title: str, walkthrough: dict[str, Any]) -> bool:
+    """Does this video's REAL title match what the project is about?
+
+    rank_resource scores reach, engagement, freshness and depth - and nothing
+    at all for relevance. Re-ranking therefore discards YouTube's own relevance
+    ordering, so the most-watched video in the candidate pool wins even when it
+    has nothing to do with the query. That is harmless on a tool page, where any
+    popular React video is a fine React resource, and wrong for a project, where
+    matching the project IS the point: "build a grep clone in rust" returned
+    "How to Run Claude Code Completely Free forever".
+
+    Same discipline as resources.verify_youtube, for the same reason: a
+    walkthrough link is a claim about the video, so check it against the title
+    the platform actually reports and fail closed. No match leaves the docs and
+    the written steps, which teach the project on their own.
+    """
+    t = (title or "").lower()
+    if not all(term in t for term in walkthrough.get("must") or []):
+        return False
+    anyof = walkthrough.get("any") or []
+    return not anyof or any(term in t for term in anyof)
 
 
 def normalise_steps(steps: list[Any] | None) -> list[dict[str, Any]]:
