@@ -310,13 +310,32 @@ export interface ProjectSummary {
   has_video: boolean;
   step_count: number;
   doc_count: number;
+  /** Exact scaffold command, when the brief specifies one. */
+  starter: string | null;
+  /** Exact packages to install. */
+  stack: string[];
+}
+
+/** One step, always this shape — the API normalises string steps for the
+ *  projects that have not been given full materials yet. */
+export interface ProjectStep {
+  do: string;
+  /** The concrete specifics: real schema, real commands, the actual API. */
+  detail: string | null;
+  /** The exact documentation page for this step. */
+  doc: { label: string; url: string } | null;
+  /** The trap people fall into here. */
+  gotcha: string | null;
 }
 
 export interface ProjectWalkthrough {
   video: { url: string; title: string | null; channel: string | null; thumbnail: string | null } | null;
   video_verified: boolean;
+  /** True when the video was found by searching for THIS project rather than
+   *  falling back to a general course about the tool. */
+  videos_live: boolean;
   docs: { label: string; url: string }[];
-  steps: string[];
+  steps: ProjectStep[];
 }
 
 /** Full brief, as returned by /projects/{slug}. */

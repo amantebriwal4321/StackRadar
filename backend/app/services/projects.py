@@ -69,19 +69,44 @@ PROJECTS: list[dict[str, Any]] = [
             "A restart button that genuinely resets state",
         ],
         "skills": ["useState", "conditional rendering", "lists and keys", "lifting state up"],
+        "starter": "npm create vite@latest quiz -- --template react-ts",
+        "stack": ["react", "react-dom", "vite"],
         "walkthrough": {
             "video_id": "bMknfKXIFA8",
             "keywords": ["react"],
+            "search": "build a react quiz app tutorial",
             "docs": [
                 ["Thinking in React", "https://react.dev/learn/thinking-in-react"],
                 ["State: a component's memory", "https://react.dev/learn/state-a-components-memory"],
             ],
             "steps": [
-                "Render one hardcoded question and its options.",
-                "Move the current question index into state and add a Next button.",
-                "Record each answer in an array as it is chosen.",
-                "Swap the question view for a results view when the index runs out.",
-                "Add the restart, and make sure every piece of state resets.",
+                {
+                    "do": "Render one hardcoded question and its options",
+                    "detail": "An array of { question, options[], answerIndex }. Render options with .map and a key — use the option text, not the array index, or React reuses the wrong DOM node when the list changes.",
+                    "doc": ["Rendering lists", "https://react.dev/learn/rendering-lists"],
+                },
+                {
+                    "do": "Move the current question index into state",
+                    "detail": "const [current, setCurrent] = useState(0). A Next button does setCurrent(c => c + 1).",
+                    "doc": ["State: a component's memory", "https://react.dev/learn/state-a-components-memory"],
+                    "gotcha": "Use the updater form setCurrent(c => c + 1), not setCurrent(current + 1). The second reads a value captured when the component rendered, which is wrong the moment two updates land in one tick.",
+                },
+                {
+                    "do": "Record each answer as it is chosen",
+                    "detail": "const [answers, setAnswers] = useState([]) and setAnswers(a => [...a, chosenIndex]).",
+                    "doc": ["Updating arrays in state", "https://react.dev/learn/updating-arrays-in-state"],
+                    "gotcha": "Never answers.push(x). Mutating state in place does not re-render — React compares by reference and the array is the same object. Always build a new array.",
+                },
+                {
+                    "do": "Swap to a results view when the questions run out",
+                    "detail": "When current >= questions.length, render the score instead. Compare answers[i] against questions[i].answerIndex to list what was wrong.",
+                    "doc": ["Conditional rendering", "https://react.dev/learn/conditional-rendering"],
+                },
+                {
+                    "do": "Add restart, and reset every piece of state",
+                    "detail": "setCurrent(0) and setAnswers([]) together.",
+                    "gotcha": "This is where the bug usually is. Resetting only the index leaves the old answers, so the second run scores against the first run's data.",
+                },
             ],
         },
     },
@@ -105,19 +130,45 @@ PROJECTS: list[dict[str, Any]] = [
             "Repository detail: stars, language, last push, description",
         ],
         "skills": ["useEffect cleanup", "AbortController", "custom hooks", "async state"],
+        "starter": "npm create vite@latest gh-explorer -- --template react-ts",
+        "stack": ["react", "react-dom", "vite"],
         "walkthrough": {
             "video_id": "SqcY0GlETPk",
             "keywords": ["react"],
+            "search": "react debounce search api abortcontroller tutorial",
             "docs": [
                 ["Synchronizing with Effects", "https://react.dev/learn/synchronizing-with-effects"],
                 ["GitHub REST: search repositories", "https://docs.github.com/en/rest/search/search"],
             ],
             "steps": [
-                "Fetch a fixed query on mount and render the results.",
-                "Wire the input to state, then debounce it.",
-                "Add an AbortController and cancel on cleanup.",
-                "Give every failure mode its own visible state.",
-                "Extract the whole thing into a useRepoSearch hook.",
+                {
+                    "do": "Fetch one fixed query and render the results",
+                    "detail": "GET https://api.github.com/search/repositories?q=react - no auth needed. The array you want is data.items; each item carries full_name, description, stargazers_count, language and pushed_at.",
+                    "doc": ["Search repositories", "https://docs.github.com/en/rest/search/search"],
+                },
+                {
+                    "do": "Wire the input to state, then debounce it",
+                    "detail": "Inside the effect: const id = setTimeout(() => search(q), 400); return () => clearTimeout(id). The cleanup cancels the previous timer, so only the last keystroke in a 400ms window fires.",
+                    "doc": ["Synchronizing with Effects", "https://react.dev/learn/synchronizing-with-effects"],
+                    "gotcha": "Debouncing without the clearTimeout cleanup does nothing. You still queue one request per keystroke and they all still fire, just late.",
+                },
+                {
+                    "do": "Cancel superseded requests with AbortController",
+                    "detail": "const ctrl = new AbortController(); fetch(url, { signal: ctrl.signal }); return () => ctrl.abort(). Catch AbortError and ignore it - it is expected, not a failure.",
+                    "doc": ["AbortController", "https://developer.mozilla.org/en-US/docs/Web/API/AbortController"],
+                    "gotcha": "Without this you get the race that ruins every search box: a slow response for 're' lands after the fast one for 'react' and overwrites it, so the list shows results for a query the user already replaced.",
+                },
+                {
+                    "do": "Give every failure its own visible state",
+                    "detail": "Four distinct states, not one spinner: loading, empty (items.length === 0), error, and rate-limited. Unauthenticated search is 60 requests per hour.",
+                    "doc": ["Rate limits", "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api"],
+                    "gotcha": "Rate-limited comes back as 403 with x-ratelimit-remaining: 0, not as 429. Handle only 429 and you will show a generic error and never work out why it started failing.",
+                },
+                {
+                    "do": "Extract it into a useRepoSearch hook",
+                    "detail": "Return { results, status, error } and keep every effect inside it. The component should have no fetch logic left.",
+                    "doc": ["Reusing logic with custom Hooks", "https://react.dev/learn/reusing-logic-with-custom-hooks"],
+                },
             ],
         },
     },
@@ -176,19 +227,44 @@ PROJECTS: list[dict[str, Any]] = [
             "Deployed and reachable at a URL",
         ],
         "skills": ["App Router", "file-based routing", "generateMetadata", "static rendering"],
+        "starter": "npx create-next-app@latest my-site --typescript --app --tailwind",
+        "stack": ["next", "react", "gray-matter", "next-mdx-remote"],
         "walkthrough": {
             "video_id": "wm5gMKuwSYk",
             "keywords": ["next"],
+            "search": "nextjs app router mdx blog tutorial",
             "docs": [
                 ["Routing fundamentals", "https://nextjs.org/docs/app/building-your-application/routing"],
                 ["Metadata", "https://nextjs.org/docs/app/api-reference/functions/generate-metadata"],
             ],
             "steps": [
-                "Scaffold the app and build the layout and home page.",
-                "Add a /blog route listing posts from a local folder.",
-                "Render one post at /blog/[slug] from its MDX.",
-                "Add generateMetadata per post and check the preview.",
-                "Deploy it.",
+                {
+                    "do": "Scaffold, then build layout.tsx and page.tsx",
+                    "detail": "app/layout.tsx wraps every page and is where nav and fonts belong. app/page.tsx is the home route.",
+                    "doc": ["Pages and Layouts", "https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts"],
+                },
+                {
+                    "do": "List posts from MDX files on disk",
+                    "detail": "Put .mdx files in content/. Read them in a Server Component with fs.readdirSync, parse front-matter with gray-matter, sort by date descending.",
+                    "doc": ["Server Components", "https://nextjs.org/docs/app/building-your-application/rendering/server-components"],
+                    "gotcha": "fs only works in a Server Component. The moment that file gains a use client directive the build breaks, because there is no filesystem in a browser.",
+                },
+                {
+                    "do": "Render one post at /blog/[slug]",
+                    "detail": "app/blog/[slug]/page.tsx. Add generateStaticParams returning every slug so all posts are prerendered at build time rather than on demand.",
+                    "doc": ["generateStaticParams", "https://nextjs.org/docs/app/api-reference/functions/generate-static-params"],
+                },
+                {
+                    "do": "Add per-post metadata so shared links unfurl",
+                    "detail": "export async function generateMetadata({ params }) returning title, description and openGraph. Set metadataBase in the root layout.",
+                    "doc": ["generateMetadata", "https://nextjs.org/docs/app/api-reference/functions/generate-metadata"],
+                    "gotcha": "Without metadataBase your OG image path stays relative. It looks correct in your HTML and resolves to nothing once the link leaves your domain. Test with a real unfurler, not by eye.",
+                },
+                {
+                    "do": "Deploy it",
+                    "detail": "Push to GitHub, import the repo on Vercel. It detects Next.js with no configuration.",
+                    "doc": ["Deploying", "https://nextjs.org/docs/app/building-your-application/deploying"],
+                },
             ],
         },
     },
@@ -212,19 +288,45 @@ PROJECTS: list[dict[str, Any]] = [
             "A click count per link, and rejection of invalid or unsafe URLs",
         ],
         "skills": ["Route Handlers", "Server Actions", "Postgres", "HTTP redirects"],
+        "starter": "npx create-next-app@latest shortener --typescript --app --tailwind",
+        "stack": ["next", "@vercel/postgres", "nanoid", "zod"],
         "walkthrough": {
             "video_id": "ZVnjOPwW4ZA",
             "keywords": ["next"],
+            "search": "build url shortener nextjs postgres tutorial",
             "docs": [
                 ["Route Handlers", "https://nextjs.org/docs/app/building-your-application/routing/route-handlers"],
                 ["redirect()", "https://nextjs.org/docs/app/api-reference/functions/redirect"],
             ],
             "steps": [
-                "Create the links table: code, target, clicks, created_at.",
-                "Build the form and a Server Action that inserts a row.",
-                "Generate short codes, and decide what happens on a collision.",
-                "Add /[code] as a route that looks up and redirects.",
-                "Increment the click count, and validate the target URL.",
+                {
+                    "do": "Create the links table",
+                    "detail": "code TEXT PRIMARY KEY, target TEXT NOT NULL, clicks INTEGER NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL DEFAULT now(). Making code the primary key gives you the uniqueness constraint and the lookup index in one.",
+                    "doc": ["Vercel Postgres quickstart", "https://vercel.com/docs/storage/vercel-postgres/quickstart"],
+                },
+                {
+                    "do": "Build the form and a Server Action that inserts a row",
+                    "detail": "A Server Action is an async function with the use server directive; the form calls it directly with no API route in between. Validate the URL with zod before it reaches the database.",
+                    "doc": ["Server Actions", "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations"],
+                },
+                {
+                    "do": "Generate short codes and handle collisions",
+                    "detail": "nanoid(7) from a 64-character alphabet. Do not check-then-insert: insert and catch the unique-violation error (Postgres code 23505), then retry with a new code. Give up after three attempts.",
+                    "doc": ["Postgres error codes", "https://www.postgresql.org/docs/current/errcodes-appendix.html"],
+                    "gotcha": "Checking whether a code exists and then inserting is a race. Two requests can both see it free and both try to write. Let the database be the arbiter - that is what the constraint is for.",
+                },
+                {
+                    "do": "Add /[code] as a route that looks up and redirects",
+                    "detail": "app/[code]/page.tsx, look the code up, then call redirect(target) from next/navigation. That issues a real 307 - the browser never renders your page.",
+                    "doc": ["redirect()", "https://nextjs.org/docs/app/api-reference/functions/redirect"],
+                    "gotcha": "redirect() works by throwing. Call it inside a try/catch and your own catch swallows it and the redirect silently never happens. Call it outside, or rethrow.",
+                },
+                {
+                    "do": "Count the click, and refuse URLs you should not follow",
+                    "detail": "UPDATE links SET clicks = clicks + 1 WHERE code = $1 - increment in SQL, never read-then-write in JS. Reject anything that is not http or https: javascript: and data: URLs are how a shortener becomes an XSS vector.",
+                    "doc": ["Unvalidated redirects", "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"],
+                    "gotcha": "This is the security bug in almost every tutorial shortener. If you will redirect to any string a stranger submits, you have built an open redirect that lends your domain to a phishing link.",
+                },
             ],
         },
     },
@@ -249,17 +351,43 @@ PROJECTS: list[dict[str, Any]] = [
             "A real 404 for a missing id, not a 200 with null",
         ],
         "skills": ["path and query params", "Pydantic validation", "SQLAlchemy", "HTTP status codes"],
+        "starter": "python -m venv venv && pip install \"fastapi[standard]\" sqlalchemy",
+        "stack": ["fastapi", "uvicorn", "sqlalchemy", "pydantic"],
         "walkthrough": {
+            "search": "fastapi sqlalchemy crud api tutorial",
             "docs": [
                 ["FastAPI tutorial", "https://fastapi.tiangolo.com/tutorial/"],
                 ["SQL databases", "https://fastapi.tiangolo.com/tutorial/sql-databases/"],
             ],
             "steps": [
-                "Get one hardcoded GET endpoint running under uvicorn.",
-                "Define the Pydantic models and use them on the routes.",
-                "Add SQLAlchemy and a real table.",
-                "Implement the four operations against the database.",
-                "Handle the missing-id case with a proper 404.",
+                {
+                    "do": "Get one endpoint running under uvicorn",
+                    "detail": "uvicorn main:app --reload, then open /docs. The interactive documentation is generated from your type hints - you never write it.",
+                    "doc": ["First steps", "https://fastapi.tiangolo.com/tutorial/first-steps/"],
+                },
+                {
+                    "do": "Define the Pydantic models and put them on the routes",
+                    "detail": "Two models, not one: BookmarkCreate for the request and BookmarkRead for the response. Use response_model=BookmarkRead so the shape you return is enforced.",
+                    "doc": ["Request body", "https://fastapi.tiangolo.com/tutorial/body/"],
+                    "gotcha": "One shared model leaks fields you did not mean to expose and forces the client to send an id it cannot know. Splitting them is the whole discipline.",
+                },
+                {
+                    "do": "Add SQLAlchemy and a real table",
+                    "detail": "A separate declarative model from your Pydantic ones. Get a session per request with Depends(get_db) so it is opened and closed for you.",
+                    "doc": ["SQL databases", "https://fastapi.tiangolo.com/tutorial/sql-databases/"],
+                    "gotcha": "The SQLAlchemy model and the Pydantic model are different objects with the same field names. Conflating them is the most common beginner error in FastAPI.",
+                },
+                {
+                    "do": "Implement create, list, update and delete",
+                    "detail": "POST returns 201, DELETE returns 204 with no body. Add limit and offset as query parameters on the list route.",
+                    "doc": ["Query parameters", "https://fastapi.tiangolo.com/tutorial/query-params/"],
+                },
+                {
+                    "do": "Return a real 404 for a missing id",
+                    "detail": "raise HTTPException(status_code=404, detail=\"Bookmark not found\").",
+                    "doc": ["Handling errors", "https://fastapi.tiangolo.com/tutorial/handling-errors/"],
+                    "gotcha": "Returning 200 with null is the lazy version and it breaks every client. Callers check the status code before they look at the body.",
+                },
             ],
         },
     },
@@ -317,19 +445,45 @@ PROJECTS: list[dict[str, Any]] = [
             "Final image measurably smaller than the naive first attempt",
         ],
         "skills": ["Dockerfile layers", "multi-stage builds", "image size", "port mapping"],
+        "starter": "docker --version && docker build -t myapp . && docker images myapp",
+        "stack": ["docker"],
         "walkthrough": {
             "video_id": "3c-iBn73dDE",
             "keywords": ["docker"],
+            "search": "docker multi stage build reduce image size tutorial",
             "docs": [
                 ["Dockerfile reference", "https://docs.docker.com/reference/dockerfile/"],
                 ["Multi-stage builds", "https://docs.docker.com/build/building/multi-stage/"],
             ],
             "steps": [
-                "Write the simplest Dockerfile that works. Record the size.",
-                "Add a .dockerignore and rebuild. Record the size again.",
-                "Split into a build stage and a runtime stage.",
-                "Move to a slim or alpine runtime base.",
-                "Compare against your first image and understand each saving.",
+                {
+                    "do": "Write the simplest Dockerfile that works, and record the size",
+                    "detail": "FROM, WORKDIR, COPY . ., install, CMD. Run docker images and write the number down - every later step is measured against it.",
+                    "doc": ["Dockerfile reference", "https://docs.docker.com/reference/dockerfile/"],
+                },
+                {
+                    "do": "Add a .dockerignore and rebuild",
+                    "detail": "node_modules, .git, .env, dist, __pycache__. Rebuild and compare.",
+                    "doc": [".dockerignore", "https://docs.docker.com/build/concepts/context/#dockerignore-files"],
+                    "gotcha": "Without it, COPY . . ships your .git history and local node_modules into the image - and any .env sitting in the folder goes with them. That is a secret leak, not just wasted megabytes.",
+                },
+                {
+                    "do": "Order layers so the cache actually works",
+                    "detail": "Copy the manifest alone (package.json, requirements.txt), install, and only then copy the source. Docker caches per layer and invalidates everything after the first change.",
+                    "doc": ["Build cache", "https://docs.docker.com/build/cache/"],
+                    "gotcha": "COPY . . before installing means every one-character source edit reinstalls all dependencies. This single line is the difference between a two-second rebuild and a two-minute one.",
+                },
+                {
+                    "do": "Split into a build stage and a runtime stage",
+                    "detail": "FROM node AS build, then a second FROM with COPY --from=build of only the built output. Compilers and dev dependencies never reach the final image.",
+                    "doc": ["Multi-stage builds", "https://docs.docker.com/build/building/multi-stage/"],
+                },
+                {
+                    "do": "Move to a slim runtime base and compare",
+                    "detail": "node:20-slim or python:3.12-slim. Run docker images against your first number and be able to say where each saving came from.",
+                    "doc": ["Base images", "https://docs.docker.com/build/building/base-images/"],
+                    "gotcha": "alpine is smaller still but uses musl instead of glibc, which breaks native modules in subtle ways. Reach for slim first; take alpine only when the size genuinely matters.",
+                },
             ],
         },
     },
@@ -549,6 +703,8 @@ def _decorate(p: dict[str, Any]) -> dict[str, Any]:
         "tool_name": tool.get("name"),
         "tool_icon": tool.get("icon"),
         "category": tool.get("category"),
+        "starter": p.get("starter"),
+        "stack": p.get("stack") or [],
         "has_video": bool(p.get("walkthrough", {}).get("video_id")),
         "step_count": len(p.get("walkthrough", {}).get("steps", []) or []),
         "doc_count": len(p.get("walkthrough", {}).get("docs", []) or []),
@@ -571,6 +727,30 @@ def list_projects(
         low = category.lower()
         out = [p for p in out if (p.get("category") or "").lower() == low]
     return sorted(out, key=lambda p: (_TIER_RANK[p["tier"]], p["title"]))
+
+
+def normalise_steps(steps: list[Any] | None) -> list[dict[str, Any]]:
+    """Give every step the same shape, whatever it was written as.
+
+    Six projects carry rich steps — an instruction, the concrete detail, the
+    exact doc page and the trap people fall into. The rest are still single
+    strings. Normalising here rather than in the API or the UI means the seven
+    that have not been upgraded keep working and the frontend has one code path
+    instead of a type check at every render.
+    """
+    out: list[dict[str, Any]] = []
+    for st in steps or []:
+        if isinstance(st, str):
+            out.append({"do": st, "detail": None, "doc": None, "gotcha": None})
+        else:
+            doc = st.get("doc")
+            out.append({
+                "do": st.get("do", ""),
+                "detail": st.get("detail"),
+                "doc": {"label": doc[0], "url": doc[1]} if doc else None,
+                "gotcha": st.get("gotcha"),
+            })
+    return out
 
 
 def get_project(slug: str) -> dict[str, Any] | None:

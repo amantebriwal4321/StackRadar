@@ -597,7 +597,7 @@ async def get_tool_resources(
 # read from it and never author anything themselves.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-async def _verified_walkthrough(project: dict) -> dict:
+async def _verified_walkthrough(project: dict, db: Session) -> dict:
     """Resolve a project's walkthrough, dropping any video that no longer exists.
 
     The video id is checked live through the same oEmbed path the curated video
@@ -609,13 +609,76 @@ async def _verified_walkthrough(project: dict) -> dict:
     w = dict(project.get("walkthrough") or {})
     video_id = w.pop("video_id", None)
     keywords = w.pop("keywords", []) or []
+    search = w.pop("search", None)
 
     out = {
         "docs": [{"label": d[0], "url": d[1]} for d in (w.get("docs") or [])],
-        "steps": w.get("steps") or [],
+        "steps": projects_svc.normalise_steps(w.get("steps")),
         "video": None,
         "video_verified": False,
+        "videos_live": False,
     }
+
+    # PREFER A TUTORIAL FOR THIS PROJECT OVER A COURSE ABOUT THE TOOL.
+    #
+    # The hand-picked video_id below is a general course — "Next.js Tutorial for
+    # Beginners" attached to "build a URL shortener". It teaches the tool and not
+    # the thing, which is exactly why the walkthrough felt useless. When a
+    # YouTube key exists we search the PROJECT instead and rank the results on
+    # real statistics, reusing resources.fetch_youtube unchanged apart from the
+    # query it is handed.
+    #
+    # Cached in ToolResource under a namespaced slug: its unique constraint is
+    # (tool_slug, url) so "project:<slug>" is safe, it already carries the 24h
+    # TTL, and it survives a restart — which the in-process cache does not, and
+    # a YouTube search costs 100 quota units against a 10k daily budget.
+    if search and settings.YOUTUBE_API_KEY:
+        cache_slug = f"project:{project['slug']}"
+        cached = (
+            db.query(ToolResource)
+            .filter(ToolResource.tool_slug == cache_slug)
+            .order_by(ToolResource.rank_score.desc())
+            .first()
+        )
+        now = datetime.now(timezone.utc)
+        fresh = cached and (now - (cached.fetched_at or now).replace(tzinfo=timezone.utc)) <= RESOURCE_TTL
+        if fresh:
+            out["video"] = {
+                "url": cached.url, "title": cached.title,
+                "channel": cached.channel, "thumbnail": cached.thumbnail,
+            }
+            out["video_verified"] = True
+            out["videos_live"] = True
+            return out
+
+        try:
+            found = await resources_svc.fetch_youtube(
+                project.get("tool_slug", ""), query=search, limit=1
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.debug(f"project video search failed for {project['slug']}: {e}")
+            found = []
+
+        if found:
+            top = found[0]
+            db.query(ToolResource).filter(ToolResource.tool_slug == cache_slug).delete()
+            db.add(ToolResource(
+                tool_slug=cache_slug, kind=top.get("kind", "video"), source="youtube",
+                title=top.get("title") or "", url=top.get("url") or "",
+                channel=top.get("channel"), thumbnail=top.get("thumbnail"),
+                rank_score=top.get("rank_score") or 0.0, fetched_at=now,
+            ))
+            db.commit()
+            out["video"] = {
+                "url": top.get("url"), "title": top.get("title"),
+                "channel": top.get("channel"), "thumbnail": top.get("thumbnail"),
+            }
+            out["video_verified"] = True
+            out["videos_live"] = True
+            return out
+
+    # No key, or the search found nothing: fall back to the curated course,
+    # still verified through oEmbed and still failing closed.
     if not video_id:
         return out
 
@@ -668,7 +731,7 @@ def list_projects(
 
 
 @router.get("/projects/{slug}")
-async def get_project(slug: str):
+async def get_project(slug: str, db: Session = Depends(get_db)):
     """One project brief, with its walkthrough verified at serve time."""
     validate_slug(slug)
     project = projects_svc.get_project(slug)
@@ -682,7 +745,7 @@ async def get_project(slug: str):
         "brief": project["brief"],
         "requirements": project["requirements"],
         "skills": project["skills"],
-        "walkthrough": await _verified_walkthrough(project),
+        "walkthrough": await _verified_walkthrough(project, db),
     }
 
 

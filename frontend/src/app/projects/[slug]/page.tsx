@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft, Clock, PlayCircle, ExternalLink, Check, BookOpen, Loader2, Hammer,
+  AlertTriangle, Terminal,
 } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
 import TechLogo from "@/components/ui/TechLogo";
@@ -100,6 +101,36 @@ export default function ProjectPage() {
           <p className="mt-4 max-w-2xl text-[15px] font-medium leading-relaxed text-[var(--c-ink-2)]">
             {project.brief}
           </p>
+
+          {/* Start here. A brief that makes you guess the scaffold command has
+              already lost the reader before step one. */}
+          {(project.starter || project.stack.length > 0) && (
+            <div className="mt-6 border-t border-[var(--c-border)] pt-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--c-ink-3)]">
+                Start with
+              </p>
+              {project.starter && (
+                <p className="mt-2.5 flex items-start gap-2.5 overflow-x-auto rounded-lg bg-[var(--c-surface-2)] px-3 py-2.5">
+                  <Terminal className="mt-[3px] h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                  <code className="whitespace-pre font-mono text-[12.5px] text-[var(--c-ink)]">
+                    {project.starter}
+                  </code>
+                </p>
+              )}
+              {project.stack.length > 0 && (
+                <ul className="mt-3 flex flex-wrap gap-1.5">
+                  {project.stack.map((dep) => (
+                    <li
+                      key={dep}
+                      className="rounded border border-[var(--c-border)] px-2 py-0.5 font-mono text-[11px] text-[var(--c-ink-2)]"
+                    >
+                      {dep}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </header>
 
         {/* ── Done means this ── */}
@@ -123,7 +154,7 @@ export default function ProjectPage() {
           </p>
           <ul className="mt-3 flex flex-wrap gap-2">
             {project.skills.map((s) => (
-              <li key={s} className="rounded-full border border-[var(--c-border)] bg-[var(--c-surface-2)] px-3 py-1 text-[12px] font-medium text-[var(--c-ink-2)]">
+              <li key={s} className="rounded-full border border-[var(--c-border)] bg-[var(--c-surface-2)] px-3 py-1 text-[12px] font-medium text-[var(--c-ink)]">
                 {s}
               </li>
             ))}
@@ -161,16 +192,51 @@ export default function ProjectPage() {
               </a>
             )}
 
+            {/* Each step carries what to do, the concrete specifics, the exact
+                doc page, and the trap. Projects that only have the instruction
+                render just that line — the API normalises both shapes so there
+                is no branching on data quality here. */}
             {w.steps.length > 0 && (
-              <ol className="mt-6 space-y-4">
+              <ol className="mt-6 space-y-6">
                 {w.steps.map((step, i) => (
-                  <li key={step} className="flex gap-4">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--c-surface-2)] font-mono text-[11px] tabular-nums text-[var(--c-ink-2)]">
+                  <li key={step.do} className="flex gap-4">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--c-surface-2)] font-mono text-[11px] tabular-nums text-[var(--c-ink)]">
                       {i + 1}
                     </span>
-                    <span className="pt-0.5 text-[14px] font-medium leading-relaxed text-[var(--c-ink-2)]">
-                      {step}
-                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-medium leading-snug text-[var(--c-ink)]">
+                        {step.do}
+                      </p>
+
+                      {step.detail && (
+                        <p className="mt-1.5 text-[14px] font-medium leading-relaxed text-[var(--c-ink-2)]">
+                          {step.detail}
+                        </p>
+                      )}
+
+                      {step.doc && (
+                        <a
+                          href={step.doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--c-ink-2)] transition-colors hover:text-indigo-600"
+                        >
+                          <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                          {step.doc.label}
+                          <ExternalLink className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-60" />
+                        </a>
+                      )}
+
+                      {/* The trap. Amber, because it is a warning and not an
+                          error — score-mid is the token this app already uses
+                          for "pay attention" rather than "something is wrong". */}
+                      {step.gotcha && (
+                        <p className="mt-2.5 flex gap-2 rounded-lg border-l-2 border-[var(--color-score-mid)] bg-[color-mix(in_srgb,var(--color-score-mid)_7%,transparent)] px-3 py-2 text-[13px] font-medium leading-relaxed text-[var(--c-ink-2)]">
+                          <AlertTriangle className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[var(--color-score-mid)]" />
+                          <span>{step.gotcha}</span>
+                        </p>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ol>

@@ -193,13 +193,24 @@ async def fetch_youtube(
     language: str = "en",
     release_at: Optional[datetime] = None,
     limit: int = 6,
+    query: Optional[str] = None,
 ) -> list[dict[str, Any]]:
-    """Search YouTube for tutorials/courses on `tool_name`, hydrate real stats,
-    rank, and return the top `limit`. Empty list if no key or the API fails."""
+    """Search YouTube, hydrate real stats, rank, and return the top `limit`.
+    Empty list if no key or the API fails.
+
+    `query` overrides the default "<tool> tutorial" phrasing. Projects use it to
+    search for the PROJECT rather than the tool — "build a url shortener nextjs"
+    finds something that teaches the project, where "Next.js tutorial" only ever
+    finds a general course about the framework. That difference is the whole
+    reason a project walkthrough felt useless: it taught the tool, not the thing.
+    """
     if not settings.YOUTUBE_API_KEY:
         return []
 
-    query = f"{tool_name} tutorial" if language == "en" else f"{tool_name} tutorial hindi"
+    if query:
+        query = query if language == "en" else f"{query} hindi"
+    else:
+        query = f"{tool_name} tutorial" if language == "en" else f"{tool_name} tutorial hindi"
 
     async with httpx.AsyncClient(follow_redirects=True) as client:
         search = await _yt_get(client, "search", {
