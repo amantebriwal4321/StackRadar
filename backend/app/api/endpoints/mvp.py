@@ -640,7 +640,10 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
         # behind a correct-looking fix.
         w = project["walkthrough"]
         qhash = hashlib.sha1(
-            repr((search, w.get("must"), w.get("any"))).encode()
+            repr((
+                search, w.get("must"), w.get("any"), w.get("deny"),
+                projects_svc.GATE_VERSION,
+            )).encode()
         ).hexdigest()[:8]
         cache_slug = f"project:{project['slug']}:{qhash}"
         cached = (

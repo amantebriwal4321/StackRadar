@@ -764,6 +764,12 @@ def list_projects(
     return sorted(out, key=lambda p: (_TIER_RANK[p["tier"]], p["title"]))
 
 
+# Bump when video_matches changes behaviour. The cached winner is a
+# product of the gate as much as of the query, so a logic fix that does
+# not touch the query must still invalidate what the old logic chose -
+# otherwise the fix looks like it did nothing for 24 hours.
+GATE_VERSION = 2
+
 NEGATED = "(?:^|[^a-z])(?:no|not|without|instead of)[^a-z][^.,;:!?]{0,24}?%s"
 
 
