@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-  <strong>Real-time tech intelligence engine</strong> — tracks 54+ tools across GitHub, HackerNews, Dev.to & Reddit, scored by an AI-powered pipeline with user authentication and personal watchlists.
+  <strong>Real-time tech intelligence engine</strong> — tracks 30+ tools across GitHub, HackerNews, Dev.to & Reddit, scored by an AI-powered pipeline with user authentication and personal watchlists.
 </p>
 
 <p align="center">
@@ -61,66 +61,67 @@ Each tool gets a **composite score (0–100)** using logarithmic normalization w
 
 ## 🛡️ Hackathon Architecture: Agent Reliability & Security
 
-> **Status: design proposal, not yet implemented.** This section was produced for the
-> *MOSS Zero-Latency Builder Sprint*. It describes a reliability & security layer we would
-> add around StackRadar's LLM usage — it is **not** part of the shipped code today. The
-> "Current pipeline" below is what actually runs; the "Proposed Layer" is future work.
+> Produced for the **MOSS Zero-Latency Builder Sprint**. This is scoped honestly: the
+> **Runtime Guardrails** and the grounding half of **Context Eval** are a working
+> prototype in this repo (`app/services/guardrails.py`); **Moss** retrieval and a
+> production OpenTelemetry exporter are **design proposals, not built**. Each row in
+> the table below is tagged with its real status.
 
 ### Where the LLM actually sits today
 
 StackRadar is mostly deterministic. Scoring (`app/services/scoring.py`) is pure
 percentile math over GitHub + community signals — no model involved. The **only** LLM
-call on the live path is a single Groq `llama-3.1-8b-instant` request per scrape cycle
-that classifies community sentiment (`batch_sentiment_analysis` in
-`app/services/scraper.py`), and it is a no-op when `GROQ_API_KEY` is unset. There is no
-agent, no retrieval-augmented generation, and no user-facing text generation yet.
+call on the live path is a single Groq request per scrape cycle that classifies
+community sentiment (`batch_sentiment_analysis` in `app/services/scraper.py`), and it
+is a no-op when `GROQ_API_KEY` is unset. There is no agent, no retrieval-augmented
+generation, and no user-facing text generation yet.
 
-That single call is the seam the proposed layer wraps, and the seam any future
-generative feature (e.g. an "explain this trend" agent) would pass through.
+That single call is the seam this layer wraps, and the seam any future generative
+feature (e.g. an "explain this trend" agent) would pass through.
 
-### Proposed Layer — the "Trust Loop"
+### The "Trust Loop"
 
-| Component | Tech | Role |
-|-----------|------|------|
-| **Moss Retrieval** | Moss Engine, gRPC | Low-latency context retrieval — serves grounding snippets (tool docs, prior snapshots) to any LLM call instead of dumping raw scrape text into the prompt. |
-| **Runtime Guardrails** | Python, Pydantic v2 | Validates every LLM response against a strict schema before it reaches `scoring.py`; rejects/repairs malformed or out-of-range output and flags likely hallucinations (e.g. sentiment for a tool never mentioned in the source text). |
-| **Context Eval** | Python, custom scoring | Continuously scores faithfulness/groundedness of LLM output against the retrieved context; low scores are quarantined rather than persisted to `ToolSnapshot`. |
-| **Latency Tracing** | OpenTelemetry, Prometheus | Spans around retrieval + inference + validation, exported for real-time latency/error dashboards. |
+| Component | Tech | Status | Role |
+|-----------|------|--------|------|
+| **Runtime Guardrails** | Python, Pydantic v2 | ✅ prototype in repo | Every model response is validated against a strict schema (`SentimentVerdict`) before any sentiment reaches `scoring.py`. Malformed rows are dropped, a fully unparseable response rejects the whole batch, and a verdict whose index is outside the batch (a hallucinated index) is discarded. Anything not explicitly accepted stays at the safe `neutral` default. |
+| **Context Eval** (grounding) | Python | ✅ prototype in repo | A non-neutral verdict is kept only if the source headline actually mentions a tracked tool (`scoring.classify_text_to_tools`). A strong sentiment that can't be grounded in our domain is quarantined to `neutral` rather than persisted. Full faithfulness scoring against retrieved context is the proposed extension. |
+| **Latency Tracing** | OpenTelemetry, Prometheus | ◑ stub in repo | `guardrails.traced()` wraps the inference and validation hops and logs span durations today; swapping in a real OTel exporter leaves the call sites unchanged. |
+| **Moss Retrieval** | Moss Engine, gRPC | ○ proposed | Low-latency context retrieval — would serve grounding snippets (tool docs, prior snapshots) to the LLM call instead of dumping raw scrape text into the prompt, and back the faithfulness score above. |
 
 ```mermaid
 flowchart LR
-    subgraph current["Current pipeline (shipped)"]
+    subgraph current["Scrape pipeline"]
         SC[Scheduler loop - 30 min]
         SCR[Scraper - GitHub, HN, Reddit, Dev.to, RSS]
-        GROQ[Groq LLM - llama-3.1-8b - sentiment only]
+        GROQ[Groq LLM - sentiment classification]
         SCORE[Scoring engine - deterministic percentile]
         DB[(PostgreSQL / SQLite)]
-        SC --> SCR --> GROQ --> SCORE --> DB
+        SC --> SCR --> GROQ
+        SCORE --> DB
     end
 
-    subgraph proposed["Proposed Reliability and Security Layer (design)"]
-        MOSS[Moss Retrieval - gRPC]
-        GUARD[Runtime Guardrails - Pydantic]
-        EVAL[Context Eval - faithfulness]
-        TRACE[Latency Tracing - OpenTelemetry, Prometheus]
+    subgraph trustloop["Trust Loop"]
+        GUARD[Runtime Guardrails - Pydantic schema + index check - SHIPPED]
+        EVAL[Context Eval - grounding check - SHIPPED / faithfulness PROPOSED]
+        MOSS[Moss Retrieval - gRPC - PROPOSED]
+        TRACE[Latency Tracing - traced stub now, OpenTelemetry proposed]
     end
 
-    SCR -. grounding context .-> MOSS
     MOSS -. retrieved snippets .-> GROQ
-    GROQ -. raw response .-> GUARD
-    GUARD -. validated / repaired .-> SCORE
-    GUARD -. scored against context .-> EVAL
-    EVAL -. quarantine low-faithfulness .-> SCORE
-    TRACE -. spans .-> MOSS
+    GROQ -- raw response --> GUARD
+    GUARD -- validated --> EVAL
+    EVAL -- accepted --> SCORE
+    EVAL -- ungrounded, forced neutral --> SCORE
     TRACE -. spans .-> GROQ
     TRACE -. spans .-> GUARD
-    TRACE -. spans .-> EVAL
 ```
 
-**The Trust Loop:** `Moss (gRPC retrieval) -> LLM -> Runtime Guardrails (schema +
-hallucination check) -> Context Eval (faithfulness) -> persist or quarantine`, with
-Latency Tracing wrapping every hop. Nothing an LLM produces is written to the database
-until it has passed the guardrail schema check and cleared the faithfulness threshold.
+**The loop:** `Moss (gRPC retrieval) → LLM → Runtime Guardrails (schema + index) →
+Context Eval (grounding) → persist or quarantine`, with tracing around every hop.
+Nothing the LLM produces is written to the database until it has passed the guardrail
+schema check and cleared the grounding check. Offline proof:
+`backend/scripts/check_guardrails.py` runs the guardrail against well-formed,
+malformed, hallucinated-index and ungrounded responses with no network or API key.
 
 A conceptual diagram from the sprint design tool is kept at
 [`docs/architecture/proposed-reliability-layer.pdf`](./docs/architecture/proposed-reliability-layer.pdf)
@@ -208,7 +209,8 @@ npm run dev
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | ❌ | Backend URL (defaults to `http://localhost:8000`) |
+| `BACKEND_ORIGIN` | ❌ | Where the Next server proxies `/api/v1/*` (read at **build** time; defaults to `http://localhost:8000`, docker-compose sets `http://backend:8000`) |
+| `NEXT_PUBLIC_SITE_URL` | ❌ | Absolute site URL for OG/canonical/sitemap |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk publishable key from [dashboard.clerk.com](https://dashboard.clerk.com) |
 | `CLERK_SECRET_KEY` | ✅ | Clerk secret key |
 
