@@ -22,6 +22,7 @@ from datetime import datetime
 import feedparser
 from typing import List, Dict, Any, Optional, Tuple
 from app.core.config import settings
+from app.services.guardrails import validate_sentiment_batch, traced
 
 logger = logging.getLogger(__name__)
 
@@ -522,7 +523,6 @@ async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int 
     """
     from groq import Groq
     from app.core.config import settings
-    import json as _json
 
     api_key = settings.GROQ_API_KEY
     if not api_key:
@@ -563,32 +563,21 @@ async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int 
         )
 
         try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-                max_tokens=1024,
-            )
+            with traced(f"groq.sentiment.batch{batch_start // batch_size + 1}"):
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.0,
+                    max_tokens=1024,
+                )
 
             raw = response.choices[0].message.content.strip()
 
-            # Extract JSON from response (handle markdown code blocks)
-            if "```" in raw:
-                raw = raw.split("```")[1]
-                if raw.startswith("json"):
-                    raw = raw[4:]
-                raw = raw.strip()
-
-            results = _json.loads(raw)
-
-            # Apply sentiments to batch items
-            sentiment_map = {}
-            for r in results:
-                idx = r.get("i", r.get("index", -1))
-                sent = r.get("s", r.get("sentiment", "neutral"))
-                if sent not in ("positive", "negative", "neutral"):
-                    sent = "neutral"
-                sentiment_map[idx] = sent
+            # Runtime guardrail: schema + index + grounding checks before any
+            # sentiment is trusted. Anything absent from the map stays neutral
+            # (see app/services/guardrails.py).
+            with traced("guardrails.sentiment"):
+                sentiment_map, report = validate_sentiment_batch(raw, batch)
 
             for i, item in enumerate(batch):
                 item["sentiment"] = sentiment_map.get(i, "neutral")
@@ -598,7 +587,8 @@ async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int 
             neu_count = sum(1 for item in batch if item.get("sentiment") == "neutral")
             logger.info(
                 f"Sentiment batch {batch_start // batch_size + 1}: "
-                f"+{pos_count} -{neg_count} ~{neu_count} (of {len(batch)})"
+                f"+{pos_count} -{neg_count} ~{neu_count} (of {len(batch)}) "
+                f"[guardrail: {report.summary()}]"
             )
 
         except Exception as e:

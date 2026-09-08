@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-  <strong>Real-time tech intelligence engine</strong> — tracks 54+ tools across GitHub, HackerNews, Dev.to & Reddit, scored by an AI-powered pipeline with user authentication and personal watchlists.
+  <strong>Real-time tech intelligence engine</strong> — tracks 30+ tools across GitHub, HackerNews, Dev.to & Reddit, scored by an AI-powered pipeline with user authentication and personal watchlists.
 </p>
 
 <p align="center">
@@ -56,6 +56,80 @@ Each tool gets a **composite score (0–100)** using logarithmic normalization w
 │        PostgreSQL (Docker) / SQLite (Dev)     │
 └──────────────────────────────────────────────┘
 ```
+
+---
+
+## 🛡️ Hackathon Architecture: Agent Reliability & Security
+
+> Produced for the **MOSS Zero-Latency Builder Sprint** — track *Agent Reliability,
+> Security and Evaluation*. Scoped honestly: the **runtime guardrail** and the
+> grounding half of **Context Eval** are a working prototype in this repo
+> (`app/services/guardrails.py`); the named third-party stack — **Enkrypt AI**
+> (guardrails), **Qdrant** (gRPC retrieval), **Mastra** (agent evals + tracing) — is
+> **designed in, not yet wired**. Each row below is tagged with its real status.
+
+### Where the LLM actually sits today
+
+StackRadar is mostly deterministic. Scoring (`app/services/scoring.py`) is pure
+percentile math over GitHub + community signals — no model involved. The **only** LLM
+call on the live path is a single Groq request per scrape cycle that classifies
+community sentiment (`batch_sentiment_analysis` in `app/services/scraper.py`), and it
+is a no-op when `GROQ_API_KEY` is unset. There is no agent, no retrieval-augmented
+generation, and no user-facing text generation yet.
+
+That single call is the seam this layer wraps, and the seam any future generative
+feature (e.g. an "explain this trend" agent) would pass through.
+
+### The "Trust Loop"
+
+| Component | Tech (prototype → production target) | Status | Role |
+|-----------|------|--------|------|
+| **Runtime Guardrails** | Pydantic v2 → **Enkrypt AI** | ✅ prototype in repo | Every model response is validated against a strict schema (`SentimentVerdict`) before any sentiment reaches `scoring.py`. Malformed rows are dropped, a fully unparseable response rejects the whole batch, and a verdict whose index is outside the batch (a hallucinated index) is discarded. Anything not explicitly accepted stays at the safe `neutral` default. Enkrypt AI would add hallucination / safety / PII detectors on the same seam. |
+| **Context Eval** (grounding) | Python `scoring` regex → **Mastra evals** | ✅ prototype in repo | A non-neutral verdict is kept only if the source headline actually mentions a tracked tool (`scoring.classify_text_to_tools`). Sentiment that can't be grounded in our domain is quarantined to `neutral` rather than persisted. Faithfulness scoring against retrieved context is the proposed extension. |
+| **Fast Retrieval** | — → **Qdrant** (gRPC) | ○ designed, not wired | Low-latency vector retrieval — would serve grounding snippets (tool docs, prior snapshots) to the LLM call over gRPC instead of dumping raw scrape text into the prompt, and back the faithfulness score above. |
+| **Latency Tracing** | `guardrails.traced()` → **OpenTelemetry** / Mastra | ◑ stub in repo | Wraps the inference and validation hops and logs span durations today; swapping in a real exporter leaves the call sites unchanged. |
+
+```mermaid
+flowchart LR
+    subgraph current["Scrape pipeline"]
+        SC[Scheduler loop - 30 min]
+        SCR[Scraper - GitHub, HN, Reddit, Dev.to, RSS]
+        GROQ[Groq LLM - sentiment classification]
+        SCORE[Scoring engine - deterministic percentile]
+        DB[(PostgreSQL / SQLite)]
+        SC --> SCR --> GROQ
+        SCORE --> DB
+    end
+
+    subgraph trustloop["Trust Loop"]
+        GUARD[Runtime Guardrails - Pydantic schema + index check - SHIPPED - Enkrypt AI proposed]
+        EVAL[Context Eval - grounding check SHIPPED - faithfulness / Mastra evals proposed]
+        QDRANT[Qdrant - gRPC vector retrieval - PROPOSED]
+        TRACE[Latency Tracing - traced stub now - OpenTelemetry proposed]
+    end
+
+    QDRANT -. retrieved snippets .-> GROQ
+    GROQ -- raw response --> GUARD
+    GUARD -- validated --> EVAL
+    EVAL -- accepted --> SCORE
+    EVAL -- ungrounded, forced neutral --> SCORE
+    TRACE -. spans .-> GROQ
+    TRACE -. spans .-> GUARD
+```
+
+**The loop:** `Qdrant (gRPC retrieval) → LLM → runtime guardrails (schema + index) →
+Context Eval (grounding) → persist or quarantine`, with tracing around every hop.
+Nothing the LLM produces is written to the database until it has passed the guardrail
+schema check and cleared the grounding check. Offline proof:
+`backend/scripts/check_guardrails.py` runs the guardrail against well-formed,
+malformed, hallucinated-index and ungrounded responses with no network or API key.
+
+A conceptual diagram from the sprint design tool is kept at
+[`docs/architecture/proposed-reliability-layer.pdf`](./docs/architecture/proposed-reliability-layer.pdf)
+([PNG](./docs/architecture/proposed-reliability-layer.png)). Its "Existing Infrastructure"
+boxes are a generic template and differ from the real stack (e.g. the collector is Python,
+not Node.js; there is no Kong gateway) — the Mermaid diagram above is the accurate
+current-state reference.
 
 ---
 
@@ -136,7 +210,8 @@ npm run dev
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | ❌ | Backend URL (defaults to `http://localhost:8000`) |
+| `BACKEND_ORIGIN` | ❌ | Where the Next server proxies `/api/v1/*` (read at **build** time; defaults to `http://localhost:8000`, docker-compose sets `http://backend:8000`) |
+| `NEXT_PUBLIC_SITE_URL` | ❌ | Absolute site URL for OG/canonical/sitemap |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk publishable key from [dashboard.clerk.com](https://dashboard.clerk.com) |
 | `CLERK_SECRET_KEY` | ✅ | Clerk secret key |
 
