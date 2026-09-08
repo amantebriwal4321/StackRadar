@@ -124,6 +124,8 @@ schema check and cleared the grounding check. Offline proof:
 `backend/scripts/check_guardrails.py` runs the guardrail against well-formed,
 malformed, hallucinated-index and ungrounded responses with no network or API key.
 
+Full requirements, milestones and open risks: [`docs/architecture/PRD.md`](./docs/architecture/PRD.md).
+
 A conceptual diagram from the sprint design tool is kept at
 [`docs/architecture/proposed-reliability-layer.pdf`](./docs/architecture/proposed-reliability-layer.pdf)
 ([PNG](./docs/architecture/proposed-reliability-layer.png)). Its "Existing Infrastructure"
