@@ -61,11 +61,12 @@ Each tool gets a **composite score (0–100)** using logarithmic normalization w
 
 ## 🛡️ Hackathon Architecture: Agent Reliability & Security
 
-> Produced for the **MOSS Zero-Latency Builder Sprint**. This is scoped honestly: the
-> **Runtime Guardrails** and the grounding half of **Context Eval** are a working
-> prototype in this repo (`app/services/guardrails.py`); **Moss** retrieval and a
-> production OpenTelemetry exporter are **design proposals, not built**. Each row in
-> the table below is tagged with its real status.
+> Produced for the **MOSS Zero-Latency Builder Sprint** — track *Agent Reliability,
+> Security and Evaluation*. Scoped honestly: the **runtime guardrail** and the
+> grounding half of **Context Eval** are a working prototype in this repo
+> (`app/services/guardrails.py`); the named third-party stack — **Enkrypt AI**
+> (guardrails), **Qdrant** (gRPC retrieval), **Mastra** (agent evals + tracing) — is
+> **designed in, not yet wired**. Each row below is tagged with its real status.
 
 ### Where the LLM actually sits today
 
@@ -81,12 +82,12 @@ feature (e.g. an "explain this trend" agent) would pass through.
 
 ### The "Trust Loop"
 
-| Component | Tech | Status | Role |
+| Component | Tech (prototype → production target) | Status | Role |
 |-----------|------|--------|------|
-| **Runtime Guardrails** | Python, Pydantic v2 | ✅ prototype in repo | Every model response is validated against a strict schema (`SentimentVerdict`) before any sentiment reaches `scoring.py`. Malformed rows are dropped, a fully unparseable response rejects the whole batch, and a verdict whose index is outside the batch (a hallucinated index) is discarded. Anything not explicitly accepted stays at the safe `neutral` default. |
-| **Context Eval** (grounding) | Python | ✅ prototype in repo | A non-neutral verdict is kept only if the source headline actually mentions a tracked tool (`scoring.classify_text_to_tools`). A strong sentiment that can't be grounded in our domain is quarantined to `neutral` rather than persisted. Full faithfulness scoring against retrieved context is the proposed extension. |
-| **Latency Tracing** | OpenTelemetry, Prometheus | ◑ stub in repo | `guardrails.traced()` wraps the inference and validation hops and logs span durations today; swapping in a real OTel exporter leaves the call sites unchanged. |
-| **Moss Retrieval** | Moss Engine, gRPC | ○ proposed | Low-latency context retrieval — would serve grounding snippets (tool docs, prior snapshots) to the LLM call instead of dumping raw scrape text into the prompt, and back the faithfulness score above. |
+| **Runtime Guardrails** | Pydantic v2 → **Enkrypt AI** | ✅ prototype in repo | Every model response is validated against a strict schema (`SentimentVerdict`) before any sentiment reaches `scoring.py`. Malformed rows are dropped, a fully unparseable response rejects the whole batch, and a verdict whose index is outside the batch (a hallucinated index) is discarded. Anything not explicitly accepted stays at the safe `neutral` default. Enkrypt AI would add hallucination / safety / PII detectors on the same seam. |
+| **Context Eval** (grounding) | Python `scoring` regex → **Mastra evals** | ✅ prototype in repo | A non-neutral verdict is kept only if the source headline actually mentions a tracked tool (`scoring.classify_text_to_tools`). Sentiment that can't be grounded in our domain is quarantined to `neutral` rather than persisted. Faithfulness scoring against retrieved context is the proposed extension. |
+| **Fast Retrieval** | — → **Qdrant** (gRPC) | ○ designed, not wired | Low-latency vector retrieval — would serve grounding snippets (tool docs, prior snapshots) to the LLM call over gRPC instead of dumping raw scrape text into the prompt, and back the faithfulness score above. |
+| **Latency Tracing** | `guardrails.traced()` → **OpenTelemetry** / Mastra | ◑ stub in repo | Wraps the inference and validation hops and logs span durations today; swapping in a real exporter leaves the call sites unchanged. |
 
 ```mermaid
 flowchart LR
@@ -101,13 +102,13 @@ flowchart LR
     end
 
     subgraph trustloop["Trust Loop"]
-        GUARD[Runtime Guardrails - Pydantic schema + index check - SHIPPED]
-        EVAL[Context Eval - grounding check - SHIPPED / faithfulness PROPOSED]
-        MOSS[Moss Retrieval - gRPC - PROPOSED]
-        TRACE[Latency Tracing - traced stub now, OpenTelemetry proposed]
+        GUARD[Runtime Guardrails - Pydantic schema + index check - SHIPPED - Enkrypt AI proposed]
+        EVAL[Context Eval - grounding check SHIPPED - faithfulness / Mastra evals proposed]
+        QDRANT[Qdrant - gRPC vector retrieval - PROPOSED]
+        TRACE[Latency Tracing - traced stub now - OpenTelemetry proposed]
     end
 
-    MOSS -. retrieved snippets .-> GROQ
+    QDRANT -. retrieved snippets .-> GROQ
     GROQ -- raw response --> GUARD
     GUARD -- validated --> EVAL
     EVAL -- accepted --> SCORE
@@ -116,7 +117,7 @@ flowchart LR
     TRACE -. spans .-> GUARD
 ```
 
-**The loop:** `Moss (gRPC retrieval) → LLM → Runtime Guardrails (schema + index) →
+**The loop:** `Qdrant (gRPC retrieval) → LLM → runtime guardrails (schema + index) →
 Context Eval (grounding) → persist or quarantine`, with tracing around every hop.
 Nothing the LLM produces is written to the database until it has passed the guardrail
 schema check and cleared the grounding check. Offline proof:

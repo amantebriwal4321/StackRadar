@@ -17,8 +17,11 @@ Scope today: the single Groq sentiment call in
    sentiment about a headline that names none of our tools cannot be grounded in
    this domain, so it is quarantined to ``neutral`` rather than persisted.
 
-``Moss``-backed retrieval and full OpenTelemetry export remain proposed (see
-README); ``traced`` here is a dependency-free stand-in that logs span durations.
+Production targets for this layer (designed, not yet wired — see README):
+**Enkrypt AI** for the runtime guardrail / hallucination checks, **Qdrant** for
+low-latency gRPC context retrieval to ground the model, and **Mastra** for
+agent-level evals + tracing. ``traced`` here is a dependency-free stand-in that
+logs span durations until a real OpenTelemetry exporter replaces it.
 """
 
 from __future__ import annotations
