@@ -59,6 +59,78 @@ Each tool gets a **composite score (0–100)** using logarithmic normalization w
 
 ---
 
+## 🛡️ Hackathon Architecture: Agent Reliability & Security
+
+> **Status: design proposal, not yet implemented.** This section was produced for the
+> *MOSS Zero-Latency Builder Sprint*. It describes a reliability & security layer we would
+> add around StackRadar's LLM usage — it is **not** part of the shipped code today. The
+> "Current pipeline" below is what actually runs; the "Proposed Layer" is future work.
+
+### Where the LLM actually sits today
+
+StackRadar is mostly deterministic. Scoring (`app/services/scoring.py`) is pure
+percentile math over GitHub + community signals — no model involved. The **only** LLM
+call on the live path is a single Groq `llama-3.1-8b-instant` request per scrape cycle
+that classifies community sentiment (`batch_sentiment_analysis` in
+`app/services/scraper.py`), and it is a no-op when `GROQ_API_KEY` is unset. There is no
+agent, no retrieval-augmented generation, and no user-facing text generation yet.
+
+That single call is the seam the proposed layer wraps, and the seam any future
+generative feature (e.g. an "explain this trend" agent) would pass through.
+
+### Proposed Layer — the "Trust Loop"
+
+| Component | Tech | Role |
+|-----------|------|------|
+| **Moss Retrieval** | Moss Engine, gRPC | Low-latency context retrieval — serves grounding snippets (tool docs, prior snapshots) to any LLM call instead of dumping raw scrape text into the prompt. |
+| **Runtime Guardrails** | Python, Pydantic v2 | Validates every LLM response against a strict schema before it reaches `scoring.py`; rejects/repairs malformed or out-of-range output and flags likely hallucinations (e.g. sentiment for a tool never mentioned in the source text). |
+| **Context Eval** | Python, custom scoring | Continuously scores faithfulness/groundedness of LLM output against the retrieved context; low scores are quarantined rather than persisted to `ToolSnapshot`. |
+| **Latency Tracing** | OpenTelemetry, Prometheus | Spans around retrieval + inference + validation, exported for real-time latency/error dashboards. |
+
+```mermaid
+flowchart LR
+    subgraph current["Current pipeline (shipped)"]
+        SC[Scheduler loop - 30 min]
+        SCR[Scraper - GitHub, HN, Reddit, Dev.to, RSS]
+        GROQ[Groq LLM - llama-3.1-8b - sentiment only]
+        SCORE[Scoring engine - deterministic percentile]
+        DB[(PostgreSQL / SQLite)]
+        SC --> SCR --> GROQ --> SCORE --> DB
+    end
+
+    subgraph proposed["Proposed Reliability and Security Layer (design)"]
+        MOSS[Moss Retrieval - gRPC]
+        GUARD[Runtime Guardrails - Pydantic]
+        EVAL[Context Eval - faithfulness]
+        TRACE[Latency Tracing - OpenTelemetry, Prometheus]
+    end
+
+    SCR -. grounding context .-> MOSS
+    MOSS -. retrieved snippets .-> GROQ
+    GROQ -. raw response .-> GUARD
+    GUARD -. validated / repaired .-> SCORE
+    GUARD -. scored against context .-> EVAL
+    EVAL -. quarantine low-faithfulness .-> SCORE
+    TRACE -. spans .-> MOSS
+    TRACE -. spans .-> GROQ
+    TRACE -. spans .-> GUARD
+    TRACE -. spans .-> EVAL
+```
+
+**The Trust Loop:** `Moss (gRPC retrieval) -> LLM -> Runtime Guardrails (schema +
+hallucination check) -> Context Eval (faithfulness) -> persist or quarantine`, with
+Latency Tracing wrapping every hop. Nothing an LLM produces is written to the database
+until it has passed the guardrail schema check and cleared the faithfulness threshold.
+
+A conceptual diagram from the sprint design tool is kept at
+[`docs/architecture/proposed-reliability-layer.pdf`](./docs/architecture/proposed-reliability-layer.pdf)
+([PNG](./docs/architecture/proposed-reliability-layer.png)). Its "Existing Infrastructure"
+boxes are a generic template and differ from the real stack (e.g. the collector is Python,
+not Node.js; there is no Kong gateway) — the Mermaid diagram above is the accurate
+current-state reference.
+
+---
+
 ## 📸 Pages
 
 | Page | Description |
