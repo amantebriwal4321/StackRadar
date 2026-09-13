@@ -117,8 +117,11 @@ async def startup_event():
     # Warm the learning-resource cache in the background so roadmap steps and
     # tool pages show real video titles/thumbnails on first visit, not just a
     # URL. Non-blocking — startup returns immediately.
-    from app.services.resources import warm_resource_cache, CURATED_VIDEOS
-    asyncio.create_task(warm_resource_cache(SessionLocal, list(CURATED_VIDEOS.keys())))
+    # WARM_RESOURCE_CACHE=0 skips it, for the test suite, which must not reach
+    # YouTube from a CI runner.
+    if os.getenv("WARM_RESOURCE_CACHE", "1") == "1":
+        from app.services.resources import warm_resource_cache, CURATED_VIDEOS
+        asyncio.create_task(warm_resource_cache(SessionLocal, list(CURATED_VIDEOS.keys())))
 
 
 # ━━━ CORS ━━━
