@@ -8,7 +8,7 @@ reported a scraper that had stopped producing data.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 # Four missed 30-minute cycles. Long enough to ride out one slow run or a
 # free-tier cold start, short enough that a dead scraper is noticed same-day.
@@ -19,7 +19,7 @@ STALE_AFTER = timedelta(hours=2)
 FAILING_AFTER = 2
 
 
-def _parse(ts: Any) -> Optional[datetime]:
+def _parse(ts: Any) -> datetime | None:
     if ts is None:
         return None
     if isinstance(ts, datetime):
@@ -36,7 +36,7 @@ def assess_freshness(
     last_success: Any,
     last_snapshot: Any = None,
     consecutive_failures: int = 0,
-    now: Optional[datetime] = None,
+    now: datetime | None = None,
     stale_after: timedelta = STALE_AFTER,
 ) -> dict[str, Any]:
     """Classify the data as fresh, stale, failing or never.
