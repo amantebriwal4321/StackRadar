@@ -25,7 +25,6 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-import hashlib
 from datetime import date, timedelta, datetime, timezone
 from app.db.session import get_db
 from app.core.config import settings
@@ -34,6 +33,7 @@ from app.services.scheduler import scrape_status
 from app.services.scoring import calculate_star_velocity
 from app.services import resources as resources_svc
 from app.services import projects as projects_svc
+from app.services import health as health_svc
 from app.core.cache import get_cached, set_cached
 from app.core.auth import verified_clerk_user
 
@@ -638,14 +638,7 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
         # then has to re-fetch instead of serving the old query's winner for
         # up to 24h — which is exactly the trap that hid two generic results
         # behind a correct-looking fix.
-        w = project["walkthrough"]
-        qhash = hashlib.sha1(
-            repr((
-                search, w.get("must"), w.get("any"), w.get("deny"),
-                projects_svc.GATE_VERSION,
-            )).encode()
-        ).hexdigest()[:8]
-        cache_slug = f"project:{project['slug']}:{qhash}"
+        cache_slug = projects_svc.video_cache_slug(project)
         cached = (
             db.query(ToolResource)
             .filter(ToolResource.tool_slug == cache_slug)
@@ -1406,9 +1399,23 @@ def get_scraper_status():
     }
 
 
+def _freshness(db: Session) -> dict:
+    last_snapshot = db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
+    return health_svc.assess_freshness(
+        scrape_status.get("last_scraped_time"),
+        last_snapshot.recorded_at if last_snapshot else None,
+        scrape_status.get("consecutive_failures", 0),
+    )
+
+
 @router.get("/health")
 def health_check(db: Session = Depends(get_db)):
-    """Production health check — verifies DB connectivity and data freshness."""
+    """Liveness plus an honest report on the data.
+
+    Always 200, because a platform health check restarting the process over
+    stale data would not fix the data. The status field is no longer a constant:
+    it used to read "ok" even with the database unreachable.
+    """
     from sqlalchemy import text
     try:
         db.execute(text("SELECT 1"))
@@ -1416,20 +1423,36 @@ def health_check(db: Session = Depends(get_db)):
     except Exception:
         db_status = "error"
 
-    last_snapshot = db.query(ToolSnapshot)\
-        .order_by(ToolSnapshot.recorded_at.desc())\
-        .first()
-
-    tool_count = db.query(Tool).count()
+    freshness = _freshness(db) if db_status == "connected" else None
+    if db_status != "connected":
+        status = "error"
+    elif not freshness["healthy"]:
+        status = "degraded"
+    else:
+        status = "ok"
 
     return {
-        "status": "ok",
+        "status": status,
         "db": db_status,
-        "tools_tracked": tool_count,
-        "last_scrape": last_snapshot.recorded_at.isoformat() if last_snapshot else None,
+        "tools_tracked": db.query(Tool).count() if db_status == "connected" else None,
+        "last_scrape": freshness["last_success"] if freshness else None,
+        "data": freshness,
         "is_scraping": scrape_status.get("is_running", False),
         "version": "1.0.0",
     }
+
+
+@router.get("/health/data")
+def data_health(db: Session = Depends(get_db)):
+    """503 when the numbers on the site are not current. Point an uptime monitor here.
+
+    This is the alert /health deliberately is not: it fails on stale data, on
+    a scraper failing repeatedly, and on a database that has never been scraped.
+    """
+    freshness = _freshness(db)
+    if not freshness["healthy"]:
+        raise HTTPException(status_code=503, detail=freshness)
+    return freshness
 
 
 @router.get("/ready")

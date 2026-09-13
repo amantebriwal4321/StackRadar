@@ -9,18 +9,12 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install -r backend/requirements.txt
+        run: pip install -r backend/requirements-dev.txt
+      - name: Run tests
+        # Throwaway SQLite DB, no API keys, no network - see tests/conftest.py.
+        run: cd backend && python -m pytest tests -q
       - name: Check imports
         run: cd backend && python -c "from app.main import app; print('✅ App imports successfully')"
-      - name: Verify API routes
-        run: |
-          cd backend
-          python -c "
-          from app.main import app
-          routes = [r.path for r in app.routes]
-          assert '/api/v1/tools' in routes or any('/tools' in r for r in routes), 'Missing /tools route'
-          print(f'✅ {len(routes)} routes registered')
-          "
 
   docker-build:
     needs: lint-and-build

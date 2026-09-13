@@ -59,6 +59,10 @@ scrape_status = {
     "sentiment": {},
     "tools_updated": 0,
     "errors": [],
+    # Consecutive cycles that ended in a pipeline error. Reset to 0 by the
+    # next clean cycle; /health/data reads it so a broken scraper is loud.
+    "consecutive_failures": 0,
+    "last_failure_time": None,
 }
 
 
@@ -68,22 +72,43 @@ async def run_scraper_loop():
         logger.info("=" * 60)
         logger.info("SCRAPER LOOP STARTING")
         logger.info("=" * 60)
+        ok = False
         try:
-            await perform_full_scrape()
-            scrape_status["last_scraped_time"] = datetime.now(timezone.utc).isoformat()
-            scrape_status["next_scraped_time"] = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
-            logger.info("Scraping completed. Sleeping for 30 minutes.")
+            ok = await perform_full_scrape()
         except Exception as e:
             logger.error(f"Error in scraper loop: {e}", exc_info=True)
             scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
 
+        now = datetime.now(timezone.utc)
+        scrape_status["next_scraped_time"] = (now + timedelta(minutes=30)).isoformat()
+        # Only a clean cycle may stamp last_scraped_time. perform_full_scrape
+        # catches its own errors, so this used to run after a crashed pipeline
+        # too - and /overview reads this field, so the site said "Live" about
+        # data the scraper had just failed to refresh.
+        if ok:
+            scrape_status["last_scraped_time"] = now.isoformat()
+            scrape_status["consecutive_failures"] = 0
+            logger.info("Scraping completed. Sleeping for 30 minutes.")
+        else:
+            scrape_status["consecutive_failures"] += 1
+            scrape_status["last_failure_time"] = now.isoformat()
+            logger.error(
+                f"Scrape cycle FAILED ({scrape_status['consecutive_failures']} in a row). "
+                "Keeping the previous last_scraped_time."
+            )
+
         await asyncio.sleep(1800)  # 30 minutes
 
 
-async def perform_full_scrape():
+async def perform_full_scrape() -> bool:
     """
     Full scraping pipeline with Phase 1 + Phase 4 hardening.
+
+    Returns True when every step committed, False when the pipeline hit an
+    error and rolled back. It still never raises - the loop must survive - so
+    the return value is the only way a caller can tell the two apart.
     """
+    ok = False
     _start = time.time()
     scrape_status["is_running"] = True
     scrape_status["start_time"] = datetime.now(timezone.utc).isoformat()
@@ -417,6 +442,7 @@ async def perform_full_scrape():
         scrape_status["current_step"] = "8/8 · Saving to database"
         db.commit()
         logger.info(f"All {tools_updated} tools updated and saved successfully!")
+        ok = True
 
     except Exception as e:
         db.rollback()
@@ -428,3 +454,5 @@ async def perform_full_scrape():
         scrape_status["is_running"] = False
         scrape_status["current_step"] = None
         scrape_status["duration_seconds"] = round(time.time() - _start, 1)
+
+    return ok

@@ -1,13 +1,15 @@
+import asyncio
+import logging
+import os
+import sys
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
-import asyncio
-import sys
-import os
 
 # ━━━ Loguru Setup (TASK-011) ━━━
 from loguru import logger
-import logging
+
+from app.core.config import settings
 
 # Remove default loguru handler and re-add with our format
 logger.remove()
@@ -56,8 +58,8 @@ for noisy in ("httpx", "httpcore", "uvicorn.access"):
 
 # ━━━ Rate Limiting (TASK-009) ━━━
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -100,7 +102,7 @@ async def startup_event():
 
     # Seed database with tools, domains, and roadmaps if empty
     from app.db.session import SessionLocal
-    from app.services.seed import run_seed, reconcile_catalog
+    from app.services.seed import reconcile_catalog, run_seed
     db = SessionLocal()
     try:
         run_seed(db)
@@ -117,8 +119,11 @@ async def startup_event():
     # Warm the learning-resource cache in the background so roadmap steps and
     # tool pages show real video titles/thumbnails on first visit, not just a
     # URL. Non-blocking — startup returns immediately.
-    from app.services.resources import warm_resource_cache, CURATED_VIDEOS
-    asyncio.create_task(warm_resource_cache(SessionLocal, list(CURATED_VIDEOS.keys())))
+    # WARM_RESOURCE_CACHE=0 skips it, for the test suite, which must not reach
+    # YouTube from a CI runner.
+    if os.getenv("WARM_RESOURCE_CACHE", "1") == "1":
+        from app.services.resources import CURATED_VIDEOS, warm_resource_cache
+        asyncio.create_task(warm_resource_cache(SessionLocal, list(CURATED_VIDEOS.keys())))
 
 
 # ━━━ CORS ━━━
