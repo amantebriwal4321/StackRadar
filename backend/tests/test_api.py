@@ -78,3 +78,18 @@ def test_project_detail_without_keys_serves_docs_and_steps(client, monkeypatch):
 
 def test_unknown_project_is_404(client):
     assert client.get("/api/v1/projects/not-a-project").status_code == 404
+
+
+# The route contract the old inline CI script checked, as a test that says what
+# is missing instead of exiting 1 with no output.
+REQUIRED_ROUTES = [
+    "/api/v1/tools", "/api/v1/tools/{slug}", "/api/v1/tools/{slug}/resources",
+    "/api/v1/projects", "/api/v1/projects/{slug}", "/api/v1/roadmaps",
+    "/api/v1/overview", "/api/v1/status", "/api/v1/health", "/api/v1/health/data",
+]
+
+
+def test_public_routes_are_registered():
+    registered = {getattr(r, "path", None) for r in app.routes}
+    missing = [p for p in REQUIRED_ROUTES if p not in registered]
+    assert not missing, f"routes not registered: {missing}"
