@@ -9,7 +9,10 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install -r backend/requirements.txt
+        run: pip install -r backend/requirements-dev.txt
+      - name: Run tests
+        # Throwaway SQLite DB, no API keys, no network - see tests/conftest.py.
+        run: cd backend && python -m pytest tests -q
       - name: Check imports
         run: cd backend && python -c "from app.main import app; print('✅ App imports successfully')"
       - name: Verify API routes
