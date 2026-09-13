@@ -82,6 +82,12 @@ def test_unknown_project_is_404(client):
 
 # The route contract the old inline CI script checked, as a test that says what
 # is missing instead of exiting 1 with no output.
+#
+# Read from the OpenAPI schema, NOT app.routes. From FastAPI 0.141 an included
+# router shows up in app.routes as one path-less _IncludedRouter, so walking
+# app.routes finds no /api/v1 route at all while every request still works -
+# which is exactly why the inline check failed on CI (unpinned, 0.141) and
+# passed locally (0.135) for a week.
 REQUIRED_ROUTES = [
     "/api/v1/tools", "/api/v1/tools/{slug}", "/api/v1/tools/{slug}/resources",
     "/api/v1/projects", "/api/v1/projects/{slug}", "/api/v1/roadmaps",
@@ -90,6 +96,6 @@ REQUIRED_ROUTES = [
 
 
 def test_public_routes_are_registered():
-    registered = {getattr(r, "path", None) for r in app.routes}
+    registered = set(app.openapi()["paths"])
     missing = [p for p in REQUIRED_ROUTES if p not in registered]
     assert not missing, f"routes not registered: {missing}"
