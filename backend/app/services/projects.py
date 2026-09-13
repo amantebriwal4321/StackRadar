@@ -40,6 +40,7 @@ than producing a project attached to nothing.
 
 from __future__ import annotations
 
+import hashlib
 import re
 from typing import Any
 
@@ -771,6 +772,21 @@ def list_projects(
 GATE_VERSION = 2
 
 NEGATED = "(?:^|[^a-z])(?:no|not|without|instead of)[^a-z][^.,;:!?]{0,24}?%s"
+
+
+def video_cache_slug(project: dict[str, Any]) -> str:
+    """ToolResource key for a project's chosen walkthrough video.
+
+    The cached winner depends on the query, all three gate fields and the gate's
+    logic, so the key hashes every one of them. Each omission already shipped
+    once as a fix that looked like it changed nothing for 24 hours: the search
+    string, then `deny`, then the matching logic itself (hence GATE_VERSION).
+    """
+    w = project.get("walkthrough") or {}
+    digest = hashlib.sha1(
+        repr((w.get("search"), w.get("must"), w.get("any"), w.get("deny"), GATE_VERSION)).encode()
+    ).hexdigest()[:8]
+    return f"project:{project['slug']}:{digest}"
 
 
 def video_matches(title: str, walkthrough: dict[str, Any]) -> bool:

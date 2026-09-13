@@ -25,7 +25,6 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-import hashlib
 from datetime import date, timedelta, datetime, timezone
 from app.db.session import get_db
 from app.core.config import settings
@@ -639,14 +638,7 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
         # then has to re-fetch instead of serving the old query's winner for
         # up to 24h — which is exactly the trap that hid two generic results
         # behind a correct-looking fix.
-        w = project["walkthrough"]
-        qhash = hashlib.sha1(
-            repr((
-                search, w.get("must"), w.get("any"), w.get("deny"),
-                projects_svc.GATE_VERSION,
-            )).encode()
-        ).hexdigest()[:8]
-        cache_slug = f"project:{project['slug']}:{qhash}"
+        cache_slug = projects_svc.video_cache_slug(project)
         cached = (
             db.query(ToolResource)
             .filter(ToolResource.tool_slug == cache_slug)
