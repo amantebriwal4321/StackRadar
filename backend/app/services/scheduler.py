@@ -66,37 +66,49 @@ scrape_status = {
 }
 
 
+def record_cycle_result(ok: bool, now: datetime | None = None) -> None:
+    """The one place a finished scrape updates the freshness fields.
+
+    Only a clean cycle may stamp last_scraped_time: perform_full_scrape catches
+    its own errors, and stamping unconditionally reported a crashed pipeline as
+    a fresh scrape. Both the 30-minute loop and POST /admin/scrape go through
+    here - the admin trigger used to bypass it, so a manual scrape that fixed a
+    broken pipeline left /health/data failing until the next scheduled cycle.
+    """
+    now = now or datetime.now(timezone.utc)
+    if ok:
+        scrape_status["last_scraped_time"] = now.isoformat()
+        scrape_status["consecutive_failures"] = 0
+        logger.info("Scrape cycle completed.")
+    else:
+        scrape_status["consecutive_failures"] += 1
+        scrape_status["last_failure_time"] = now.isoformat()
+        logger.error(
+            f"Scrape cycle FAILED ({scrape_status['consecutive_failures']} in a row). "
+            "Keeping the previous last_scraped_time."
+        )
+
+
+async def run_one_cycle() -> bool:
+    """Run the pipeline once and record the outcome. Never raises."""
+    ok = False
+    try:
+        ok = await perform_full_scrape()
+    except Exception as e:
+        logger.error(f"Error in scraper loop: {e}", exc_info=True)
+        scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
+    record_cycle_result(ok)
+    return ok
+
+
 async def run_scraper_loop():
     """Main background loop — runs every 30 minutes."""
     while True:
         logger.info("=" * 60)
         logger.info("SCRAPER LOOP STARTING")
         logger.info("=" * 60)
-        ok = False
-        try:
-            ok = await perform_full_scrape()
-        except Exception as e:
-            logger.error(f"Error in scraper loop: {e}", exc_info=True)
-            scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
-
-        now = datetime.now(timezone.utc)
-        scrape_status["next_scraped_time"] = (now + timedelta(minutes=30)).isoformat()
-        # Only a clean cycle may stamp last_scraped_time. perform_full_scrape
-        # catches its own errors, so this used to run after a crashed pipeline
-        # too - and /overview reads this field, so the site said "Live" about
-        # data the scraper had just failed to refresh.
-        if ok:
-            scrape_status["last_scraped_time"] = now.isoformat()
-            scrape_status["consecutive_failures"] = 0
-            logger.info("Scraping completed. Sleeping for 30 minutes.")
-        else:
-            scrape_status["consecutive_failures"] += 1
-            scrape_status["last_failure_time"] = now.isoformat()
-            logger.error(
-                f"Scrape cycle FAILED ({scrape_status['consecutive_failures']} in a row). "
-                "Keeping the previous last_scraped_time."
-            )
-
+        await run_one_cycle()
+        scrape_status["next_scraped_time"] = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
         await asyncio.sleep(1800)  # 30 minutes
 
 

@@ -1489,7 +1489,9 @@ async def trigger_manual_scrape(
         return {"status": "already_running", "current_step": scrape_status.get("current_step")}
 
     # Trigger in background
-    from app.services.scheduler import perform_full_scrape
-    asyncio.create_task(perform_full_scrape())
+    # run_one_cycle, not perform_full_scrape: the outcome must reach the
+    # freshness fields /health/data reads, same as a scheduled cycle.
+    from app.services.scheduler import run_one_cycle
+    asyncio.create_task(run_one_cycle())
 
     return {"status": "accepted", "message": "Scrape cycle started in background. Check /api/v1/status for progress."}

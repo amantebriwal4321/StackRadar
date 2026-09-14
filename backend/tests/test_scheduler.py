@@ -62,3 +62,26 @@ def test_failures_accumulate_across_cycles(monkeypatch):
     asyncio.run(_one_cycle(monkeypatch, False))
     asyncio.run(_one_cycle(monkeypatch, False))
     assert scheduler.scrape_status["consecutive_failures"] == 2
+
+
+def test_manual_trigger_records_its_outcome(monkeypatch):
+    # POST /admin/scrape used to call perform_full_scrape directly, so a manual
+    # scrape that fixed a broken pipeline never cleared the failure count.
+    scheduler.scrape_status["consecutive_failures"] = 4
+
+    async def fake_scrape():
+        return True
+
+    monkeypatch.setattr(scheduler, "perform_full_scrape", fake_scrape)
+    assert asyncio.run(scheduler.run_one_cycle()) is True
+    assert scheduler.scrape_status["consecutive_failures"] == 0
+    assert scheduler.scrape_status["last_scraped_time"] != "2026-01-01T00:00:00+00:00"
+
+
+def test_admin_endpoint_uses_the_recording_path():
+    import inspect
+
+    from app.api.endpoints import mvp
+
+    src = inspect.getsource(mvp.trigger_manual_scrape)
+    assert "run_one_cycle()" in src and "perform_full_scrape()" not in src
