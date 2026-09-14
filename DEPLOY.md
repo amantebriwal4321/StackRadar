@@ -51,6 +51,31 @@ talks to one origin.
 - **Custom domain**: point it at Vercel, then update `NEXT_PUBLIC_SITE_URL` (and the
   backend `SITE_URL`) and redeploy so OG/canonical/sitemap URLs are correct.
 
+## 4. Monitoring — know when the data stops
+
+The scraper runs inside the API process and never crashes it, so a broken
+source, an expired key or a decommissioned model does **not** take the site
+down. The site keeps serving the last good numbers. Without an alert, nobody
+finds out.
+
+Two health endpoints, deliberately different:
+
+| Endpoint | Returns | Use it for |
+|---|---|---|
+| `GET /api/v1/health` | **Always 200.** `status` is `ok` / `degraded` / `error`, plus a `data` report | Platform health checks and the keep-awake pinger. Restarting the process would not fix stale data, so this must not fail on it. |
+| `GET /api/v1/health/data` | **503** when data is older than 2 hours, the scraper has failed 2+ cycles in a row, or nothing has ever been scraped | **Alerting.** Point an uptime monitor here. |
+
+Set up (free, ~5 minutes): create an HTTP monitor on
+[UptimeRobot](https://uptimerobot.com) or [cron-job.org](https://cron-job.org) for
+`https://<your-backend>/api/v1/health/data`, check every 30 minutes, alert on any
+non-2xx by email. Allow a 90-second timeout — on the free tier a sleeping service
+takes ~35s to answer.
+
+When it fires, `GET /api/v1/status` shows `consecutive_failures`, `last_failure_time`
+and the last five pipeline errors. After fixing the cause, `POST /api/v1/admin/scrape`
+with `X-Admin-Key` runs a cycle immediately, and a clean run clears the alert without
+waiting for the next scheduled one.
+
 ---
 
 ## Environment variables
