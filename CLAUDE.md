@@ -18,10 +18,12 @@ Brings up Postgres, the FastAPI backend (`:8000`, runs the scraper inline via `R
 ```bash
 cd backend
 .\venv\Scripts\Activate.ps1              # PowerShell; venv lives in backend/
-pip install -r requirements.txt
+pip install -r requirements.txt          # every version pinned - see below
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 Local uses **SQLite** (`backend/test.db`) automatically when no `DATABASE_URL` is set. Set `RUN_SCRAPER_INLINE=0` to boot the API without kicking off the 30-min scrape loop. Interactive API docs at `http://localhost:8000/api/v1/openapi.json` / `/docs`.
+
+**Dependencies are pinned** (`requirements.txt`, exact `==`). Unpinned, CI installed FastAPI 0.141 while local ran 0.135; 0.141 lists an included router in `app.routes` as one path-less `_IncludedRouter`, which kept Backend CI red for a week, and production could drift the same way with no commit. Bump versions deliberately, in their own commit, with the tests green; every pin must support **Python 3.10** (the `Dockerfile` base, and the version Backend CI tests on). To list routes, read `app.openapi()["paths"]`, never `app.routes`.
 
 **Practical local-dev notes (Windows):**
 - The venv interpreter is `backend/venv/Scripts/python.exe` — call it directly (`./venv/Scripts/python.exe -m uvicorn ...`) when a shell isn't activated. The bare `python` on PATH is a different install without the deps.
@@ -50,7 +52,7 @@ alembic upgrade head
 ```bash
 cd backend
 pip install -r requirements-dev.txt      # requirements.txt + pytest
-python -m pytest tests -q                # ~85 tests, ~1.5s
+python -m pytest tests -q                # ~88 tests, ~1.5s
 ```
 `tests/conftest.py` points `DATABASE_URL` at a **throwaway SQLite file** (never `backend/test.db`), blanks every API key, and sets `RUN_SCRAPER_INLINE=0` + `WARM_RESOURCE_CACHE=0`, all before `app` is imported — so the suite needs no database, secrets or network and gives the same answer in CI as locally. Backend CI (`.github/workflows/backend.yml`) runs it on every push/PR. Coverage today: the project video gate + cache key (`test_projects.py`, with the real titles that reached production as regressions), data freshness (`test_health.py`), the scheduler's success stamping (`test_scheduler.py`), the score's contract (`test_scoring.py`), and the booted app (`test_api.py`). Pure logic belongs in a service module where it can be tested without a request — `projects.video_cache_slug` was moved out of the endpoint for exactly that reason.
 
@@ -59,10 +61,10 @@ python -m pytest tests -q                # ~85 tests, ~1.5s
 ### Data flow (the core loop)
 ```
 scraper.py  →  scoring.py  →  models (Tool/ToolSnapshot)  →  mvp.py API  →  frontend/src/data/trends.ts  →  pages
- (sources)     (0–100 %ile)     (DB + time series)          (/api/v1/*)       (typed fetch layer)         (UI)
+ (sources)     (0–100 abs.)     (DB + time series)          (/api/v1/*)       (typed fetch layer)         (UI)
 ```
 
-1. **`app/services/scheduler.py`** — `run_scraper_loop()` runs every 30 min (started as an asyncio task at app startup). `perform_full_scrape()` is an 8-step pipeline: sync tool registry → fetch community sources → sentiment → GitHub repo stats → score → persist snapshots → update tools → recompute. Live progress is exposed via `GET /api/v1/status`. `perform_full_scrape` never raises (the loop must survive) but **returns True only when the final commit landed**; the loop stamps `last_scraped_time` on success alone and otherwise increments `consecutive_failures`. It used to stamp unconditionally, so a crashed pipeline was reported as a fresh scrape and the site said "Live".
+1. **`app/services/scheduler.py`** — `run_scraper_loop()` runs every 30 min (started as an asyncio task at app startup). `perform_full_scrape()` is an 8-step pipeline: sync tool registry → fetch community sources → sentiment → GitHub repo stats → score → persist snapshots → update tools → recompute. Live progress is exposed via `GET /api/v1/status`. `perform_full_scrape` never raises (the loop must survive) but **returns True only when the final commit landed**; `record_cycle_result` stamps `last_scraped_time` on success alone and otherwise increments `consecutive_failures`. Both the loop and `POST /admin/scrape` go through `run_one_cycle()` — the admin trigger used to call the pipeline directly, so a manual fix never cleared the alert. It used to stamp unconditionally, so a crashed pipeline was reported as a fresh scrape and the site said "Live".
 2. **`app/services/scraper.py`** — async fetchers: `fetch_github_repo_stats` (targeted per-repo, ETag caching + adaptive rate limiting), `fetch_hackernews`, `fetch_devto`, `fetch_reddit` (RSS, no auth), `fetch_tech_news` (RSS). `batch_sentiment_analysis` uses Groq (`llama-3.1-8b-instant`) — a no-op/skip when `GROQ_API_KEY` is empty.
 3. **`app/services/scoring.py`** — `calculate_all_tool_scores` scores each tool on an **absolute 0–100 scale** from its own signals only: floor-anchored log stars (60%) and forks (15%) plus community mentions saturating at 25 (25%). A tool's score does not move when an unrelated tool moves — `test_scoring.py` pins this. (This file used to say percentile ranks; `_percentile_rank` is unused.) Also classifies growth stage, trend, learning priority, and generates recommendation text.
 4. **`app/api/endpoints/mvp.py`** — the single router, mounted at `settings.API_V1_STR` (`/api/v1`). All endpoints live here: `/tools`, `/tools/{slug}`, `/tools/{slug}/history`, `/tools/{slug}/resources` (learning videos + platforms, see below), `/tools/compare`, `/tools/by-domain`, `/domains`, `/domains/{slug}/learning-path`, `/roadmaps`, `/roadmaps/{slug}` (steps hydrated with per-step tools + each tool's top video), `/progress/{summary,/{slug},toggle}` (learning progress, auth-gated), `/notifications/{subscribe,status,unsubscribe}` (daily-nudge opt-in), `/overview`, `/status`, `/health` (always 200; `status` is ok/degraded/error with a `data` freshness report), `/health/data` (**503 when data is stale >2h, the scraper has failed 2+ cycles running, or nothing was ever scraped — point an uptime monitor here**; logic in `app/services/health.py:assess_freshness`), `/ready`, `/admin/scrape` + `/admin/send-daily-digests` (gated by `ADMIN_API_KEY`).
