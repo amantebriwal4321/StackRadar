@@ -1,16 +1,22 @@
-fastapi
-uvicorn[standard]
-pydantic
-pydantic-settings
-sqlalchemy
-psycopg2-binary
-alembic
-requests
-httpx
-python-dotenv
-cachetools
-feedparser
-groq
-loguru
-slowapi
-PyJWT[crypto]>=2.8.0
+# Pinned. Unpinned, every Render build and CI run installed whatever was newest:
+# CI got FastAPI 0.141 while local ran 0.135, and 0.141 changed app.routes enough
+# to keep Backend CI red for a week. Production can change the same way with no
+# commit. These are the versions the test suite passes against; bump them on
+# purpose, in a commit of their own, with the tests green.
+# All support Python 3.10 (the production image, see Dockerfile).
+fastapi==0.135.1
+uvicorn[standard]==0.41.0
+pydantic==2.12.5
+pydantic-settings==2.13.1
+sqlalchemy==2.0.48
+psycopg2-binary==2.9.11
+alembic==1.13.1
+requests==2.32.5
+httpx==0.28.1
+python-dotenv==1.2.2
+cachetools==7.0.5
+feedparser==6.0.12
+groq==0.37.1
+loguru==0.7.3
+slowapi==0.1.9
+PyJWT[crypto]==2.13.0
