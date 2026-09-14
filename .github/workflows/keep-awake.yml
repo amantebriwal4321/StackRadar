@@ -59,7 +59,18 @@ jobs:
           INTERVAL=600          # 10 minutes, comfortably inside the 15-min window
           DEADLINE=$(( $(date +%s) + 330*60 ))
 
+          # The pinger already wakes the service, so it also reports whether the
+          # DATA is current. /health stays 200 on stale data by design;
+          # /health/data is the one that says so. Logged, never fatal - alerting
+          # belongs to an uptime monitor (see DEPLOY.md, Monitoring).
+          data_state() {
+            code=$(curl -s -m 90 -A "$UA" -o data.json -w "%{http_code}" "${URL}/data" || echo "000")
+            state=$(grep -o '"state": *"[a-z]*"' data.json 2>/dev/null | head -n1 | grep -o '[a-z]*"$' | tr -d '"')
+            echo "$(date -u +%H:%M:%S)  data: ${state:-unknown} (HTTP $code)"
+          }
+
           ok=0; fail=0
+          data_state
           while [ "$(date +%s)" -lt "$DEADLINE" ]; do
             # -m 90: a cold wake takes ~35s and Render holds the connection open
             # while it boots, so the request must be allowed to WAIT rather than
@@ -87,6 +98,7 @@ jobs:
           done
 
           echo "---"
+          data_state
           echo "run finished: $ok ok, $fail failed"
           # Never fail the workflow on a transient miss; the next run takes over.
           exit 0
