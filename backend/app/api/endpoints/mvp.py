@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import verified_clerk_user
 from app.core.cache import get_cached, set_cached
+from app.core.clock import utc_midnight_naive, utc_today, utcnow_naive
 from app.core.config import settings
 from app.db.session import get_db
 from app.models.all_models import (
@@ -97,7 +98,7 @@ def get_tools(
     id_to_slug = {t.id: t.slug for t in all_tools}
 
     # Phase 4.5: Batch-fetch last 7 daily scores for sparklines
-    seven_days_ago = datetime.now() - timedelta(days=7)
+    seven_days_ago = utcnow_naive() - timedelta(days=7)
     tool_ids = [t.id for t in all_tools]
     sparkline_map: dict[int, list[float]] = {tid: [] for tid in tool_ids}
     if tool_ids:
@@ -229,12 +230,12 @@ def compare_tools(
         raise HTTPException(status_code=404, detail=f"Not enough tools found. Found: {[t.slug for t in tools]}")
 
     # Fetch 30-day history for all tools
-    cutoff = date.today() - timedelta(days=30)
+    cutoff = utc_today() - timedelta(days=30)
     result = []
     for tool in tools:
         snapshots = (
             db.query(ToolSnapshot)
-            .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.recorded_at >= datetime(cutoff.year, cutoff.month, cutoff.day))
+            .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.recorded_at >= utc_midnight_naive(cutoff))
             .order_by(ToolSnapshot.recorded_at.asc())
             .all()
         )
@@ -384,13 +385,13 @@ def get_bulk_history(
     if not tools:
         return {"days": days, "dates": [], "tools": []}
 
-    cutoff = date.today() - timedelta(days=days)
+    cutoff = utc_today() - timedelta(days=days)
     by_id = {t.id: t for t in tools}
     snapshots = (
         db.query(ToolSnapshot)
         .filter(
             ToolSnapshot.tool_id.in_(list(by_id)),
-            ToolSnapshot.recorded_at >= datetime(cutoff.year, cutoff.month, cutoff.day),
+            ToolSnapshot.recorded_at >= utc_midnight_naive(cutoff),
         )
         .order_by(ToolSnapshot.recorded_at.asc())
         .all()
@@ -439,10 +440,10 @@ def get_tool_history(slug: str, days: int = Query(30, ge=1, le=90), db: Session 
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{slug}' not found")
 
-    cutoff = date.today() - timedelta(days=days)
+    cutoff = utc_today() - timedelta(days=days)
     snapshots = (
         db.query(ToolSnapshot)
-        .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.recorded_at >= datetime(cutoff.year, cutoff.month, cutoff.day))
+        .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.recorded_at >= utc_midnight_naive(cutoff))
         .order_by(ToolSnapshot.recorded_at.asc())
         .all()
     )
@@ -929,7 +930,7 @@ def _calculate_streak(dates: list) -> int:
     if not dates:
         return 0
     days = sorted({d.date() for d in dates}, reverse=True)
-    today = date.today()
+    today = utc_today()
     if (today - days[0]).days > 1:
         return 0
     streak, cursor = 0, days[0]
@@ -1001,7 +1002,7 @@ def build_progress_summary(db: Session, user_id: str) -> dict:
     # Most recently touched first — that's the one to offer resuming.
     active.sort(key=lambda a: a["last_active"] or "", reverse=True)
     completed_today = sum(
-        1 for r in rows if r.completed_at and r.completed_at.date() == date.today()
+        1 for r in rows if r.completed_at and r.completed_at.date() == utc_today()
     )
 
     return {
@@ -1345,7 +1346,7 @@ def get_overview(db: Session = Depends(get_db)):
 
     momentum_index = round(sum((t.score or 0) for t in curated) / tracked_count, 1) if tracked_count else 0.0
 
-    since = datetime.now() - timedelta(days=1)
+    since = utcnow_naive() - timedelta(days=1)
     signals_24h = (
         db.query(func.coalesce(func.sum(ToolSnapshot.mention_count), 0))
         .filter(ToolSnapshot.recorded_at >= since)

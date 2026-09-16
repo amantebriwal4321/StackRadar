@@ -27,12 +27,13 @@ Phase 4 improvements:
 import asyncio
 import logging
 import time
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.clock import utc_today
 from app.db.session import SessionLocal
 from app.models.all_models import Domain, Tool, ToolSnapshot
 from app.services.scoring import (
@@ -272,7 +273,7 @@ async def perform_full_scrape() -> bool:
         scrape_status["current_step"] = "5/8 · Computing scores"
         logger.info("Step 5: Computing scores, growth, and decision intelligence...")
 
-        today = date.today()
+        today = utc_today()
         tools_updated = 0
 
         # 5a. Count raw sentiment per tool
