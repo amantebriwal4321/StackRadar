@@ -339,7 +339,7 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
 
 @router.get("/tools/history/bulk")
 def get_bulk_history(
-    slugs: Optional[str] = Query(None, description="Comma-separated slugs. Omit for the top tools by score."),
+    slugs: str | None = Query(None, description="Comma-separated slugs. Omit for the top tools by score."),
     days: int = Query(30, ge=1, le=90),
     limit: int = Query(12, ge=2, le=31),
     db: Session = Depends(get_db),
@@ -731,9 +731,9 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
 
 @router.get("/projects")
 def list_projects(
-    tool: Optional[str] = Query(None, description="Filter to one tool slug"),
-    domain: Optional[str] = Query(None, description="Filter to one domain name"),
-    tier: Optional[str] = Query(None, pattern="^(beginner|intermediate|advanced)$"),
+    tool: str | None = Query(None, description="Filter to one tool slug"),
+    domain: str | None = Query(None, description="Filter to one domain name"),
+    tier: str | None = Query(None, pattern="^(beginner|intermediate|advanced)$"),
 ):
     """Every buildable project, filterable. Summaries only — no walkthrough."""
     if tool:
@@ -932,7 +932,7 @@ def _calculate_streak(dates: list) -> int:
     return streak
 
 
-def _require_user(verified: Optional[str], client_supplied: Optional[str]) -> str:
+def _require_user(verified: str | None, client_supplied: str | None) -> str:
     """Resolve the caller's user id.
 
     When Clerk is enforcing, `verified` is the id proven by a signed token (the
@@ -948,8 +948,8 @@ def _require_user(verified: Optional[str], client_supplied: Optional[str]) -> st
 
 @router.get("/progress/summary")
 def get_progress_summary(
-    user_id: Optional[str] = Query(None),
-    verified: Optional[str] = Depends(verified_clerk_user),
+    user_id: str | None = Query(None),
+    verified: str | None = Depends(verified_clerk_user),
     db: Session = Depends(get_db),
 ):
     """Everything the 'Continue learning' hero needs in one call."""
@@ -1008,8 +1008,8 @@ def build_progress_summary(db: Session, user_id: str) -> dict:
 @router.get("/progress/{roadmap_slug}")
 def get_progress(
     roadmap_slug: str,
-    user_id: Optional[str] = Query(None),
-    verified: Optional[str] = Depends(verified_clerk_user),
+    user_id: str | None = Query(None),
+    verified: str | None = Depends(verified_clerk_user),
     db: Session = Depends(get_db),
 ):
     """Completed steps for one roadmap."""
@@ -1038,7 +1038,7 @@ def _progress_for(db: Session, roadmap_slug: str, user_id: str) -> dict:
 @router.post("/progress/toggle")
 def toggle_progress(
     payload: dict,
-    verified: Optional[str] = Depends(verified_clerk_user),
+    verified: str | None = Depends(verified_clerk_user),
     db: Session = Depends(get_db),
 ):
     """Mark a step done / undone. Idempotent per (user, roadmap, step).
@@ -1086,8 +1086,8 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 @router.post("/notifications/subscribe")
 def subscribe_notifications(
     payload: dict,
-    user_id: Optional[str] = Query(None),
-    verified: Optional[str] = Depends(verified_clerk_user),
+    user_id: str | None = Query(None),
+    verified: str | None = Depends(verified_clerk_user),
     db: Session = Depends(get_db),
 ):
     """Opt the caller into the daily learning nudge (upsert their email)."""
@@ -1109,8 +1109,8 @@ def subscribe_notifications(
 
 @router.get("/notifications/status")
 def notification_status(
-    user_id: Optional[str] = Query(None),
-    verified: Optional[str] = Depends(verified_clerk_user),
+    user_id: str | None = Query(None),
+    verified: str | None = Depends(verified_clerk_user),
     db: Session = Depends(get_db),
 ):
     """Whether the caller is opted in, and to which email."""
@@ -1123,8 +1123,8 @@ def notification_status(
 @router.post("/notifications/unsubscribe")
 def unsubscribe_notifications(
     payload: dict = None,
-    user_id: Optional[str] = Query(None),
-    verified: Optional[str] = Depends(verified_clerk_user),
+    user_id: str | None = Query(None),
+    verified: str | None = Depends(verified_clerk_user),
     db: Session = Depends(get_db),
 ):
     """Turn off the daily nudge without deleting the record."""

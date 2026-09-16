@@ -28,7 +28,7 @@ from app.core.config import settings
 from app.models.all_models import NotificationPref
 
 
-def _digest_for(db: Session, user_id: str) -> Optional[dict[str, Any]]:
+def _digest_for(db: Session, user_id: str) -> dict[str, Any] | None:
     """The nudge content for one user, or None if they have nothing in progress
     (no point emailing "keep going" to someone who hasn't started)."""
     from app.api.endpoints.mvp import build_progress_summary  # avoid import cycle

@@ -34,11 +34,11 @@ from app.core.config import settings
 # almost-expired one) doesn't spuriously 401.
 _LEEWAY_SECONDS = 30
 
-_jwks_client: Optional[PyJWKClient] = None
-_issuer: Optional[str] = None
+_jwks_client: PyJWKClient | None = None
+_issuer: str | None = None
 
 
-def _frontend_api_host(publishable_key: str) -> Optional[str]:
+def _frontend_api_host(publishable_key: str) -> str | None:
     """Clerk encodes the Frontend API host in the publishable key:
     'pk_test_<base64(host + "$")>'. Decode it back out."""
     try:
@@ -98,13 +98,13 @@ def verify_clerk_token(token: str) -> str:
     return sub
 
 
-def _bearer(authorization: Optional[str]) -> Optional[str]:
+def _bearer(authorization: str | None) -> str | None:
     if authorization and authorization.lower().startswith("bearer "):
         return authorization[7:].strip() or None
     return None
 
 
-def verified_clerk_user(authorization: Optional[str] = Header(None)) -> Optional[str]:
+def verified_clerk_user(authorization: str | None = Header(None)) -> str | None:
     """FastAPI dependency → the verified Clerk user id, or None in dev mode.
 
     - Clerk configured: a valid Bearer token is REQUIRED; returns its `sub`.

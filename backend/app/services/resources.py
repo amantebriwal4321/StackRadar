@@ -66,7 +66,7 @@ HINDI_CHANNELS = {
 _ISO_DUR = re.compile(r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?")
 
 
-def _parse_duration(iso: str) -> Optional[int]:
+def _parse_duration(iso: str) -> int | None:
     """ISO-8601 duration ('PT1H23M45S') -> seconds."""
     if not iso:
         return None
@@ -77,7 +77,7 @@ def _parse_duration(iso: str) -> Optional[int]:
     return d * 86400 + h * 3600 + mi * 60 + s
 
 
-def _parse_ts(raw: str) -> Optional[datetime]:
+def _parse_ts(raw: str) -> datetime | None:
     if not raw:
         return None
     try:
@@ -98,7 +98,7 @@ def _norm_log(val: float, floor: float, ceil: float) -> float:
 # Ranking
 # ─────────────────────────────────────────────────────────────────────────────
 
-def rank_resource(item: dict[str, Any], release_at: Optional[datetime] = None) -> float:
+def rank_resource(item: dict[str, Any], release_at: datetime | None = None) -> float:
     """Score a candidate 0-100. Deliberately transparent — every term is
     explainable to a user who asks "why is this first?".
 
@@ -149,8 +149,8 @@ def rank_resource(item: dict[str, Any], release_at: Optional[datetime] = None) -
     return round(min(100.0, score), 2)
 
 
-def staleness(published: Optional[datetime], release_at: Optional[datetime],
-              version: Optional[str]) -> Optional[str]:
+def staleness(published: datetime | None, release_at: datetime | None,
+              version: str | None) -> str | None:
     """Human-readable warning when a tutorial predates the current release.
 
     This is the piece no other resource list has: StackRadar already tracks
@@ -171,7 +171,7 @@ def staleness(published: Optional[datetime], release_at: Optional[datetime],
 # YouTube Data API
 # ─────────────────────────────────────────────────────────────────────────────
 
-async def _yt_get(client: httpx.AsyncClient, path: str, params: dict) -> Optional[dict]:
+async def _yt_get(client: httpx.AsyncClient, path: str, params: dict) -> dict | None:
     params = {**params, "key": settings.YOUTUBE_API_KEY}
     try:
         r = await client.get(f"{YOUTUBE_API}/{path}", params=params, timeout=20)
@@ -191,9 +191,9 @@ async def fetch_youtube(
     tool_name: str,
     *,
     language: str = "en",
-    release_at: Optional[datetime] = None,
+    release_at: datetime | None = None,
     limit: int = 6,
-    query: Optional[str] = None,
+    query: str | None = None,
 ) -> list[dict[str, Any]]:
     """Search YouTube, hydrate real stats, rank, and return the top `limit`.
     Empty list if no key or the API fails.
@@ -316,8 +316,8 @@ async def fetch_youtube(
 # Curated platforms (always valid, no key required)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def curated_platforms(tool_name: str, slug: str, homepage: Optional[str] = None,
-                      github_repo: Optional[str] = None) -> list[dict[str, Any]]:
+def curated_platforms(tool_name: str, slug: str, homepage: str | None = None,
+                      github_repo: str | None = None) -> list[dict[str, Any]]:
     """Non-YouTube resources worth a learner's time.
 
     Every entry is a *deep-link into a search or listing page*, never a guessed
@@ -579,7 +579,7 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
 
 
 async def verify_youtube(client: httpx.AsyncClient, video_id: str, kind: str,
-                        keywords: list[str]) -> Optional[dict[str, Any]]:
+                        keywords: list[str]) -> dict[str, Any] | None:
     """Confirm a curated id points at a real, on-topic video via oEmbed.
 
     oEmbed needs no API key and no quota. It returns the video's real title,
@@ -655,7 +655,7 @@ async def curated_videos(slug: str, *, limit: int = 6) -> list[dict[str, Any]]:
     return out[:limit]
 
 
-def curated_first_url(slug: str) -> Optional[dict[str, Any]]:
+def curated_first_url(slug: str) -> dict[str, Any] | None:
     """The top curated video's URL for a tool, built synchronously (no network).
 
     Used to give a roadmap step an inline "watch" link the instant it loads,

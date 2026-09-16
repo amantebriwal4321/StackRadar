@@ -29,7 +29,8 @@ from __future__ import annotations
 import json
 import time
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Dict, List, Tuple
+from collections.abc import Iterator
 
 from loguru import logger
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -64,7 +65,7 @@ class GuardrailReport:
         self.quarantined = 0        # non-neutral but not grounded -> forced neutral
         self.batch_rejected = False  # response was not parseable JSON at all
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "accepted": self.accepted,
             "dropped": self.dropped,
@@ -92,7 +93,7 @@ def _strip_code_fence(raw: str) -> str:
     return raw.strip()
 
 
-def _is_grounded(item: Dict[str, Any]) -> bool:
+def _is_grounded(item: dict[str, Any]) -> bool:
     """A non-neutral verdict is only trustworthy if the text names a tracked tool.
 
     Imported lazily so this module has no import-time dependency on scoring
@@ -123,8 +124,8 @@ def traced(span: str) -> Iterator[None]:
 
 def validate_sentiment_batch(
     raw: str,
-    batch: List[Dict[str, Any]],
-) -> Tuple[Dict[int, str], GuardrailReport]:
+    batch: list[dict[str, Any]],
+) -> tuple[dict[int, str], GuardrailReport]:
     """Validate one model response against ``batch``.
 
     Returns ``(sentiment_map, report)`` where ``sentiment_map`` holds only the
@@ -132,7 +133,7 @@ def validate_sentiment_batch(
     absent from the map, so a partial or empty result is always safe.
     """
     report = GuardrailReport()
-    sentiment_map: Dict[int, str] = {}
+    sentiment_map: dict[int, str] = {}
 
     try:
         parsed = json.loads(_strip_code_fence(raw))

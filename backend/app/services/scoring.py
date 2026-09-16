@@ -39,7 +39,7 @@ import re
 # Pre-compile regex patterns for each tool keyword (Phase 5.1)
 # Short keywords (<=3 chars) use strict word boundaries to avoid false positives
 # (e.g. "go" matching every sentence containing "go to", "going", etc.)
-_TOOL_PATTERNS: Dict[str, List[re.Pattern]] = {}
+_TOOL_PATTERNS: dict[str, list[re.Pattern]] = {}
 for _slug, _data in TOOL_REGISTRY.items():
     _patterns = []
     for _kw in _data["keywords"]:
@@ -48,7 +48,7 @@ for _slug, _data in TOOL_REGISTRY.items():
     _TOOL_PATTERNS[_slug] = _patterns
 
 
-def classify_text_to_tools(text: str) -> Set[str]:
+def classify_text_to_tools(text: str) -> set[str]:
     """
     Classify a text string into matching tool slugs using word boundary regex.
 
@@ -60,7 +60,7 @@ def classify_text_to_tools(text: str) -> Set[str]:
     if not text:
         return set()
 
-    matched_tools: Set[str] = set()
+    matched_tools: set[str] = set()
 
     for tool_slug, patterns in _TOOL_PATTERNS.items():
         for pattern in patterns:
@@ -76,7 +76,7 @@ def classify_text_to_tools(text: str) -> Set[str]:
 # SENTIMENT WEIGHTING
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-SENTIMENT_WEIGHTS: Dict[str, float] = {
+SENTIMENT_WEIGHTS: dict[str, float] = {
     "positive": 1.0,    # Full credit — praise, adoption, excitement
     "neutral": 0.5,     # Half credit — informational, tutorial
     "negative": -0.3,   # Slight penalty — criticism, decline
@@ -84,17 +84,17 @@ SENTIMENT_WEIGHTS: Dict[str, float] = {
 
 
 def count_weighted_mentions(
-    items: List[Dict],
+    items: list[dict],
     source_key: str,
     all_tool_slugs: set,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Count sentiment-weighted mentions per tool from a list of content items.
 
     Each item must have "title" (str) and "sentiment" (str) keys.
     Returns {tool_slug: weighted_count} where weighted_count can be fractional.
     """
-    counts: Dict[str, float] = {slug: 0.0 for slug in all_tool_slugs}
+    counts: dict[str, float] = {slug: 0.0 for slug in all_tool_slugs}
 
     for item in items:
         text = _item_text(item)
@@ -110,7 +110,7 @@ def count_weighted_mentions(
     return counts
 
 
-def _item_text(item: Dict) -> str:
+def _item_text(item: dict) -> str:
     """Assemble the searchable text for a content item.
 
     Includes the Dev.to `description` and comma `tags` string in addition to
@@ -125,7 +125,7 @@ def _item_text(item: Dict) -> str:
     return f"{title} {tags} {subreddit} {description}".strip()
 
 
-def count_mentions(items: List[Dict], all_tool_slugs: set) -> Dict[str, int]:
+def count_mentions(items: list[dict], all_tool_slugs: set) -> dict[str, int]:
     """Raw mention counts — how many items mention each tool.
 
     Unlike `count_weighted_mentions`, this returns integer counts (one per
@@ -134,7 +134,7 @@ def count_mentions(items: List[Dict], all_tool_slugs: set) -> Dict[str, int]:
     still count as 1 (the old code multiplied by the 0.5 neutral weight and then
     `round()`-ed, so isolated mentions silently became 0).
     """
-    counts: Dict[str, int] = {slug: 0 for slug in all_tool_slugs}
+    counts: dict[str, int] = {slug: 0 for slug in all_tool_slugs}
     for item in items:
         matched = classify_text_to_tools(_item_text(item))
         for slug in matched:
@@ -147,7 +147,7 @@ def count_mentions(items: List[Dict], all_tool_slugs: set) -> Dict[str, int]:
 # SCORING — Percentile-based normalization
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def _percentile_rank(values: List[float]) -> List[float]:
+def _percentile_rank(values: list[float]) -> list[float]:
     """
     Rank a list of values into 0–100 percentile scores.
     Ties get the average rank (fractional ranking).
@@ -181,9 +181,9 @@ def _norm_log(val: float, floor: float, ceil: float) -> float:
 
 
 def calculate_star_velocity(
-    history: List[Dict[str, Any]],
+    history: list[dict[str, Any]],
     min_days: float = 3.0,
-) -> Optional[float]:
+) -> float | None:
     """
     Real momentum: percent star growth per week, from absolute star history.
 
@@ -212,8 +212,8 @@ def calculate_star_velocity(
 
 
 def calculate_all_tool_scores(
-    tool_data: List[Dict[str, Any]],
-) -> List[float]:
+    tool_data: list[dict[str, Any]],
+) -> list[float]:
     """
     Score every tool on an ABSOLUTE 0-100 scale.
 

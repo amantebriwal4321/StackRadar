@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ETag cache: {owner_repo: (etag_value, cached_response_dict)}
-_etag_cache: Dict[str, Tuple[str, Dict[str, Any]]] = {}
+_etag_cache: dict[str, tuple[str, dict[str, Any]]] = {}
 
 # Rate budget tracker (updated per-request from response headers)
 _rate_remaining: int = 5000
@@ -49,7 +49,7 @@ MAX_RETRIES = 2
 RETRY_BACKOFF = [2.0, 5.0]
 
 
-def _build_github_headers() -> Dict[str, str]:
+def _build_github_headers() -> dict[str, str]:
     """Build GitHub API headers with optional auth token."""
     headers = {
         "Accept": "application/vnd.github.v3+json",
@@ -86,7 +86,7 @@ def _update_rate_budget(response: httpx.Response) -> None:
         _rate_limit = int(limit_str)
 
 
-async def validate_github_token(client: httpx.AsyncClient) -> Dict[str, Any]:
+async def validate_github_token(client: httpx.AsyncClient) -> dict[str, Any]:
     """
     Validate GitHub token by hitting the rate_limit endpoint.
     Returns rate limit info. Called once at the start of each scrape cycle.
@@ -119,8 +119,8 @@ async def validate_github_token(client: httpx.AsyncClient) -> Dict[str, Any]:
 
 async def fetch_github_repo_stats(
     owner_repo: str,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Optional[Dict[str, Any]]:
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any] | None:
     """
     Fetch stats for a specific GitHub repo (e.g. 'facebook/react').
 
@@ -224,8 +224,8 @@ async def fetch_github_repo_stats(
 
 async def fetch_github_latest_release(
     owner_repo: str,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Optional[Dict[str, Any]]:
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any] | None:
     """Latest published release tag + date for a repo.
 
     Used by the learning-resource feature: knowing that React is on v19 and a
@@ -265,7 +265,7 @@ async def fetch_github_latest_release(
 # HACKERNEWS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-async def fetch_hackernews() -> List[Dict[str, Any]]:
+async def fetch_hackernews() -> list[dict[str, Any]]:
     """Fetch top 100 stories from HackerNews Firebase API (concurrent batches).
 
     Volume raised 50 -> 100 and the story body is now surfaced as `description`.
@@ -281,7 +281,7 @@ async def fetch_hackernews() -> List[Dict[str, Any]]:
             response.raise_for_status()
             story_ids = response.json()[:100]
 
-            async def fetch_story(story_id: int) -> Optional[Dict[str, Any]]:
+            async def fetch_story(story_id: int) -> dict[str, Any] | None:
                 try:
                     story_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
                     story_res = await client.get(story_url, timeout=5.0)
@@ -296,7 +296,7 @@ async def fetch_hackernews() -> List[Dict[str, Any]]:
                 return None
 
             # Fetch in batches of 10
-            stories: List[Dict[str, Any]] = []
+            stories: list[dict[str, Any]] = []
             for i in range(0, len(story_ids), 10):
                 batch = story_ids[i:i + 10]
                 results = await asyncio.gather(*[fetch_story(sid) for sid in batch])
@@ -312,7 +312,7 @@ async def fetch_hackernews() -> List[Dict[str, Any]]:
 # DEV.TO
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-async def fetch_devto() -> List[Dict[str, Any]]:
+async def fetch_devto() -> list[dict[str, Any]]:
     """Fetch latest articles from Dev.to API."""
     url = "https://dev.to/api/articles"
     params = {"per_page": 100, "top": 1}
@@ -353,9 +353,9 @@ REDDIT_SUBREDDITS = [
     "ethdev", "solidity", "cryptocurrency",
 ]
 
-async def fetch_reddit() -> List[Dict[str, Any]]:
+async def fetch_reddit() -> list[dict[str, Any]]:
     """Fetch hot posts from tech subreddits using RSS feeds (no auth needed)."""
-    posts: List[Dict[str, Any]] = []
+    posts: list[dict[str, Any]] = []
     consecutive_429 = 0
     backoff = 5.0
 
@@ -424,9 +424,9 @@ RSS_FEEDS = [
     "https://css-tricks.com/feed/",
 ]
 
-async def fetch_tech_news() -> List[Dict[str, Any]]:
+async def fetch_tech_news() -> list[dict[str, Any]]:
     """Fetch latest tech articles from RSS feeds."""
-    articles: List[Dict[str, Any]] = []
+    articles: list[dict[str, Any]] = []
 
     async with httpx.AsyncClient() as client:
         for feed_url in RSS_FEEDS:
@@ -479,10 +479,10 @@ _GROQ_MODEL_CANDIDATES = [
 ]
 
 # Resolved once per process so a dead model is not re-probed every batch.
-_groq_model: Optional[str] = None
+_groq_model: str | None = None
 
 
-def _resolve_groq_model(client) -> Optional[str]:
+def _resolve_groq_model(client) -> str | None:
     """Ask Groq which of our candidates it actually serves. None if none do."""
     global _groq_model
     if _groq_model:
@@ -511,7 +511,7 @@ def _resolve_groq_model(client) -> Optional[str]:
         return _groq_model
 
 
-async def batch_sentiment_analysis(items: List[Dict[str, Any]], batch_size: int = 20) -> List[Dict[str, Any]]:
+async def batch_sentiment_analysis(items: list[dict[str, Any]], batch_size: int = 20) -> list[dict[str, Any]]:
     """
     Analyze sentiment of content items using a Groq-hosted LLM.
 
