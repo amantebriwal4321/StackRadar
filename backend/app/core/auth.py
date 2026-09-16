@@ -21,11 +21,10 @@ turns on automatically.
 from __future__ import annotations
 
 import base64
-from typing import Optional
 
 import jwt
-from jwt import PyJWKClient
 from fastapi import Header, HTTPException
+from jwt import PyJWKClient
 from loguru import logger
 
 from app.core.config import settings

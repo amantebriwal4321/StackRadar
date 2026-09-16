@@ -27,23 +27,36 @@ Phase 4 improvements:
 import asyncio
 import logging
 import time
+from datetime import date, datetime, timedelta, timezone
+
 import httpx
-from datetime import datetime, timezone, timedelta, date
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from app.db.session import SessionLocal
-from app.models.all_models import Tool, ToolSnapshot, Domain
-from app.services.scraper import (
-    fetch_github_repo_stats, fetch_hackernews, fetch_devto,
-    fetch_reddit, fetch_tech_news, batch_sentiment_analysis,
-    validate_github_token, _adaptive_delay, _rate_remaining, _rate_limit,
-    fetch_github_latest_release,
-)
+from app.models.all_models import Domain, Tool, ToolSnapshot
 from app.services.scoring import (
-    count_mentions, calculate_tool_score, calculate_all_tool_scores,
-    classify_growth_stage, generate_tool_summary, TOOL_REGISTRY,
-    classify_trend, generate_recommendation, classify_learning_priority,
+    TOOL_REGISTRY,
+    calculate_all_tool_scores,
+    classify_growth_stage,
+    classify_learning_priority,
     classify_text_to_tools,
+    classify_trend,
+    count_mentions,
+    generate_recommendation,
+)
+from app.services.scraper import (
+    _adaptive_delay,
+    _rate_limit,
+    _rate_remaining,
+    batch_sentiment_analysis,
+    fetch_devto,
+    fetch_github_latest_release,
+    fetch_github_repo_stats,
+    fetch_hackernews,
+    fetch_reddit,
+    fetch_tech_news,
+    validate_github_token,
 )
 
 logger = logging.getLogger(__name__)

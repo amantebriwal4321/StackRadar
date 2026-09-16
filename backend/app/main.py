@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # ━━━ Loguru Setup (TASK-011) ━━━

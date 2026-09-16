@@ -13,9 +13,9 @@ only: it never drops, renames, or retypes a column, so it cannot destroy data.
 Anything beyond adding a nullable column is Alembic's job.
 """
 
+from loguru import logger
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Engine
-from loguru import logger
 
 from app.db.base import Base
 

@@ -1,6 +1,18 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Text, Date, UniqueConstraint, Boolean
-from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import relationship
+
 from app.db.base_class import Base
 
 

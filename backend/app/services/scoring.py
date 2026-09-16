@@ -10,9 +10,9 @@ Responsibilities:
   6. Decision Intelligence: trend classification, recommendations, learning priority
 """
 
-import math
 import logging
-from typing import Set, Dict, List, Any, Optional
+import math
+from typing import Any
 
 from app.services.catalog import TOOLS
 

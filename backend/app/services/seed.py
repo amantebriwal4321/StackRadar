@@ -11,9 +11,12 @@ Called once on startup if the tools table is empty.
 
 import json
 import logging
+
 from sqlalchemy.orm import Session
-from app.models.all_models import Domain, Tool, ToolRoadmap, ToolSnapshot
-from app.services.catalog import TOOLS as SEED_TOOLS, CATALOG_SLUGS
+
+from app.models.all_models import Domain, Tool, ToolRoadmap
+from app.services.catalog import CATALOG_SLUGS
+from app.services.catalog import TOOLS as SEED_TOOLS
 
 logger = logging.getLogger(__name__)
 

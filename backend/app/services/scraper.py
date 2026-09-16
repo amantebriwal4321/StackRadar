@@ -15,14 +15,16 @@ Phase 1 improvements:
   - Token validation on startup
 """
 
-import httpx
-import logging
 import asyncio
+import logging
 from datetime import datetime
+from typing import Any
+
 import feedparser
-from typing import List, Dict, Any, Optional, Tuple
+import httpx
+
 from app.core.config import settings
-from app.services.guardrails import validate_sentiment_batch, traced
+from app.services.guardrails import traced, validate_sentiment_batch
 
 logger = logging.getLogger(__name__)
 
@@ -522,6 +524,7 @@ async def batch_sentiment_analysis(items: list[dict[str, Any]], batch_size: int 
     Falls back to "neutral" on any failure — the pipeline never breaks.
     """
     from groq import Groq
+
     from app.core.config import settings
 
     api_key = settings.GROQ_API_KEY

@@ -21,11 +21,11 @@ fresh clone with an empty .env.
 
 from __future__ import annotations
 
-import re
-import math
 import asyncio
-from datetime import datetime, timezone, timedelta
-from typing import Any, Optional
+import math
+import re
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import httpx
 from loguru import logger

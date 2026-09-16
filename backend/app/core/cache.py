@@ -1,6 +1,6 @@
 from functools import wraps
+
 from cachetools import TTLCache
-import json
 
 # In-memory TTL cache — no Redis required
 # Max 256 entries, 5-minute TTL

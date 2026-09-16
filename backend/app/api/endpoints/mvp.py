@@ -15,27 +15,37 @@ Endpoints:
   POST /admin/scrape             — Manually trigger a scrape cycle
 """
 
-import json
-import re
-import os
 import asyncio
+import json
+import os
+import re
+from datetime import date, datetime, timedelta, timezone
+
 import httpx
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from loguru import logger
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
-from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import date, timedelta, datetime, timezone
-from app.db.session import get_db
+from sqlalchemy.orm import Session
+
+from app.core.auth import verified_clerk_user
+from app.core.cache import get_cached, set_cached
 from app.core.config import settings
-from app.models.all_models import Tool, ToolSnapshot, ToolRoadmap, Domain, UserProgress, ToolResource, NotificationPref, WaitlistSignup
+from app.db.session import get_db
+from app.models.all_models import (
+    Domain,
+    NotificationPref,
+    Tool,
+    ToolResource,
+    ToolRoadmap,
+    ToolSnapshot,
+    UserProgress,
+    WaitlistSignup,
+)
+from app.services import health as health_svc
+from app.services import projects as projects_svc
+from app.services import resources as resources_svc
 from app.services.scheduler import scrape_status
 from app.services.scoring import calculate_star_velocity
-from app.services import resources as resources_svc
-from app.services import projects as projects_svc
-from app.services import health as health_svc
-from app.core.cache import get_cached, set_cached
-from app.core.auth import verified_clerk_user
 
 router = APIRouter()
 
