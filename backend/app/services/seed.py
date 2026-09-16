@@ -26,14 +26,14 @@ logger = logging.getLogger(__name__)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 SEED_DOMAINS = [
-    {"name": "AI / ML",              "slug": "ai-ml",           "icon": "🧠"},
-    {"name": "Web Development",      "slug": "web-development", "icon": "🌐"},
-    {"name": "Cloud Native",         "slug": "cloud-native",    "icon": "☁️"},
-    {"name": "DevOps",               "slug": "devops",          "icon": "🔧"},
-    {"name": "Systems Programming",  "slug": "systems",         "icon": "⚙️"},
-    {"name": "Cybersecurity",        "slug": "cybersecurity",   "icon": "🛡️"},
-    {"name": "Web3 / Blockchain",    "slug": "web3",            "icon": "⛓️"},
-    {"name": "Data & Databases",     "slug": "data-databases",  "icon": "🗄️"},
+    {"name": "AI / ML", "slug": "ai-ml", "icon": "🧠"},
+    {"name": "Web Development", "slug": "web-development", "icon": "🌐"},
+    {"name": "Cloud Native", "slug": "cloud-native", "icon": "☁️"},
+    {"name": "DevOps", "slug": "devops", "icon": "🔧"},
+    {"name": "Systems Programming", "slug": "systems", "icon": "⚙️"},
+    {"name": "Cybersecurity", "slug": "cybersecurity", "icon": "🛡️"},
+    {"name": "Web3 / Blockchain", "slug": "web3", "icon": "⛓️"},
+    {"name": "Data & Databases", "slug": "data-databases", "icon": "🗄️"},
 ]
 
 
@@ -43,7 +43,6 @@ SEED_DOMAINS = [
 # that used to live here was removed so the display catalog and the scraper's
 # mention-tracking registry can never drift apart again.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -58,12 +57,96 @@ SEED_ROADMAPS = [
         "icon": "🧠",
         "estimated_weeks": 24,
         "steps": [
-            {"step": 1, "title": "Python Programming Fundamentals", "level": "Beginner", "description": "Master Python syntax, data structures, OOP, and essential libraries like NumPy and Pandas.", "resources": [{"label": "Python Official Tutorial", "url": "https://docs.python.org/3/tutorial/"}, {"label": "Automate the Boring Stuff", "url": "https://automatetheboringstuff.com/"}]},
-            {"step": 2, "title": "Mathematics for ML", "level": "Beginner", "description": "Linear algebra, calculus, probability, and statistics.", "resources": [{"label": "3Blue1Brown Linear Algebra", "url": "https://www.3blue1brown.com/topics/linear-algebra"}, {"label": "Khan Academy Statistics", "url": "https://www.khanacademy.org/math/statistics-probability"}]},
-            {"step": 3, "title": "Core ML Algorithms", "level": "Intermediate", "description": "Supervised and unsupervised learning: regression, classification, clustering, decision trees.", "resources": [{"label": "Scikit-learn Documentation", "url": "https://scikit-learn.org/stable/user_guide.html"}, {"label": "Andrew Ng's ML Course", "url": "https://www.coursera.org/learn/machine-learning"}]},
-            {"step": 4, "title": "Deep Learning & Neural Networks", "level": "Intermediate", "description": "CNNs, RNNs, Transformers — build and train neural networks with PyTorch or TensorFlow.", "resources": [{"label": "Fast.ai Practical DL", "url": "https://course.fast.ai/"}, {"label": "PyTorch Tutorials", "url": "https://pytorch.org/tutorials/"}]},
-            {"step": 5, "title": "LLMs & Prompt Engineering", "level": "Advanced", "description": "Work with large language models, fine-tuning, RAG pipelines, and AI agents.", "resources": [{"label": "Hugging Face Course", "url": "https://huggingface.co/course"}, {"label": "LangChain Documentation", "url": "https://docs.langchain.com/"}]},
-            {"step": 6, "title": "MLOps & Deployment", "level": "Advanced", "description": "Model serving, monitoring, CI/CD for ML, and production deployment patterns.", "resources": [{"label": "MLflow Documentation", "url": "https://mlflow.org/docs/latest/index.html"}, {"label": "Made With ML - MLOps", "url": "https://madewithml.com/"}]},
+            {
+                "step": 1,
+                "title": "Python Programming Fundamentals",
+                "level": "Beginner",
+                "description": "Master Python syntax, data structures, OOP, and essential libraries like NumPy and Pandas.",
+                "resources": [
+                    {
+                        "label": "Python Official Tutorial",
+                        "url": "https://docs.python.org/3/tutorial/",
+                    },
+                    {
+                        "label": "Automate the Boring Stuff",
+                        "url": "https://automatetheboringstuff.com/",
+                    },
+                ],
+            },
+            {
+                "step": 2,
+                "title": "Mathematics for ML",
+                "level": "Beginner",
+                "description": "Linear algebra, calculus, probability, and statistics.",
+                "resources": [
+                    {
+                        "label": "3Blue1Brown Linear Algebra",
+                        "url": "https://www.3blue1brown.com/topics/linear-algebra",
+                    },
+                    {
+                        "label": "Khan Academy Statistics",
+                        "url": "https://www.khanacademy.org/math/statistics-probability",
+                    },
+                ],
+            },
+            {
+                "step": 3,
+                "title": "Core ML Algorithms",
+                "level": "Intermediate",
+                "description": "Supervised and unsupervised learning: regression, classification, clustering, decision trees.",
+                "resources": [
+                    {
+                        "label": "Scikit-learn Documentation",
+                        "url": "https://scikit-learn.org/stable/user_guide.html",
+                    },
+                    {
+                        "label": "Andrew Ng's ML Course",
+                        "url": "https://www.coursera.org/learn/machine-learning",
+                    },
+                ],
+            },
+            {
+                "step": 4,
+                "title": "Deep Learning & Neural Networks",
+                "level": "Intermediate",
+                "description": "CNNs, RNNs, Transformers — build and train neural networks with PyTorch or TensorFlow.",
+                "resources": [
+                    {"label": "Fast.ai Practical DL", "url": "https://course.fast.ai/"},
+                    {
+                        "label": "PyTorch Tutorials",
+                        "url": "https://pytorch.org/tutorials/",
+                    },
+                ],
+            },
+            {
+                "step": 5,
+                "title": "LLMs & Prompt Engineering",
+                "level": "Advanced",
+                "description": "Work with large language models, fine-tuning, RAG pipelines, and AI agents.",
+                "resources": [
+                    {
+                        "label": "Hugging Face Course",
+                        "url": "https://huggingface.co/course",
+                    },
+                    {
+                        "label": "LangChain Documentation",
+                        "url": "https://docs.langchain.com/",
+                    },
+                ],
+            },
+            {
+                "step": 6,
+                "title": "MLOps & Deployment",
+                "level": "Advanced",
+                "description": "Model serving, monitoring, CI/CD for ML, and production deployment patterns.",
+                "resources": [
+                    {
+                        "label": "MLflow Documentation",
+                        "url": "https://mlflow.org/docs/latest/index.html",
+                    },
+                    {"label": "Made With ML - MLOps", "url": "https://madewithml.com/"},
+                ],
+            },
         ],
     },
     {
@@ -73,11 +156,74 @@ SEED_ROADMAPS = [
         "icon": "🌐",
         "estimated_weeks": 20,
         "steps": [
-            {"step": 1, "title": "HTML, CSS & JavaScript", "level": "Beginner", "description": "Core web technologies: semantic HTML, responsive CSS, and modern JavaScript (ES6+).", "resources": [{"label": "MDN Web Docs", "url": "https://developer.mozilla.org/"}, {"label": "freeCodeCamp", "url": "https://www.freecodecamp.org/"}]},
-            {"step": 2, "title": "React / Vue / Svelte", "level": "Intermediate", "description": "Component-based UI frameworks, state management, and build tooling.", "resources": [{"label": "React Official Docs", "url": "https://react.dev/"}, {"label": "Vue.js Guide", "url": "https://vuejs.org/guide/introduction.html"}]},
-            {"step": 3, "title": "Backend & APIs", "level": "Intermediate", "description": "REST and GraphQL APIs with Node.js, Python (FastAPI), or Go.", "resources": [{"label": "FastAPI Tutorial", "url": "https://fastapi.tiangolo.com/tutorial/"}, {"label": "Node.js Docs", "url": "https://nodejs.org/en/docs/guides"}]},
-            {"step": 4, "title": "Databases & ORMs", "level": "Intermediate", "description": "PostgreSQL, MongoDB, Prisma, and database design patterns.", "resources": [{"label": "Prisma Getting Started", "url": "https://www.prisma.io/docs/getting-started"}, {"label": "PostgreSQL Tutorial", "url": "https://www.postgresqltutorial.com/"}]},
-            {"step": 5, "title": "Full-Stack Deployment", "level": "Advanced", "description": "CI/CD, Docker, Vercel/AWS, monitoring, and production best practices.", "resources": [{"label": "Vercel Docs", "url": "https://vercel.com/docs"}, {"label": "Docker Getting Started", "url": "https://docs.docker.com/get-started/"}]},
+            {
+                "step": 1,
+                "title": "HTML, CSS & JavaScript",
+                "level": "Beginner",
+                "description": "Core web technologies: semantic HTML, responsive CSS, and modern JavaScript (ES6+).",
+                "resources": [
+                    {"label": "MDN Web Docs", "url": "https://developer.mozilla.org/"},
+                    {"label": "freeCodeCamp", "url": "https://www.freecodecamp.org/"},
+                ],
+            },
+            {
+                "step": 2,
+                "title": "React / Vue / Svelte",
+                "level": "Intermediate",
+                "description": "Component-based UI frameworks, state management, and build tooling.",
+                "resources": [
+                    {"label": "React Official Docs", "url": "https://react.dev/"},
+                    {
+                        "label": "Vue.js Guide",
+                        "url": "https://vuejs.org/guide/introduction.html",
+                    },
+                ],
+            },
+            {
+                "step": 3,
+                "title": "Backend & APIs",
+                "level": "Intermediate",
+                "description": "REST and GraphQL APIs with Node.js, Python (FastAPI), or Go.",
+                "resources": [
+                    {
+                        "label": "FastAPI Tutorial",
+                        "url": "https://fastapi.tiangolo.com/tutorial/",
+                    },
+                    {
+                        "label": "Node.js Docs",
+                        "url": "https://nodejs.org/en/docs/guides",
+                    },
+                ],
+            },
+            {
+                "step": 4,
+                "title": "Databases & ORMs",
+                "level": "Intermediate",
+                "description": "PostgreSQL, MongoDB, Prisma, and database design patterns.",
+                "resources": [
+                    {
+                        "label": "Prisma Getting Started",
+                        "url": "https://www.prisma.io/docs/getting-started",
+                    },
+                    {
+                        "label": "PostgreSQL Tutorial",
+                        "url": "https://www.postgresqltutorial.com/",
+                    },
+                ],
+            },
+            {
+                "step": 5,
+                "title": "Full-Stack Deployment",
+                "level": "Advanced",
+                "description": "CI/CD, Docker, Vercel/AWS, monitoring, and production best practices.",
+                "resources": [
+                    {"label": "Vercel Docs", "url": "https://vercel.com/docs"},
+                    {
+                        "label": "Docker Getting Started",
+                        "url": "https://docs.docker.com/get-started/",
+                    },
+                ],
+            },
         ],
     },
     {
@@ -87,10 +233,70 @@ SEED_ROADMAPS = [
         "icon": "☁️",
         "estimated_weeks": 18,
         "steps": [
-            {"step": 1, "title": "Docker & Containers", "level": "Beginner", "description": "Container fundamentals, Dockerfiles, multi-stage builds, Docker Compose.", "resources": [{"label": "Docker Getting Started", "url": "https://docs.docker.com/get-started/"}, {"label": "Play with Docker", "url": "https://labs.play-with-docker.com/"}]},
-            {"step": 2, "title": "Kubernetes Fundamentals", "level": "Intermediate", "description": "Pods, Services, Deployments, ConfigMaps, Secrets, and kubectl mastery.", "resources": [{"label": "Kubernetes Official Docs", "url": "https://kubernetes.io/docs/tutorials/"}, {"label": "KillerCoda Scenarios", "url": "https://killercoda.com/kubernetes"}]},
-            {"step": 3, "title": "Serverless & FaaS", "level": "Intermediate", "description": "AWS Lambda, Azure Functions, Vercel Edge Functions, and event-driven architectures.", "resources": [{"label": "Serverless Framework", "url": "https://www.serverless.com/framework/docs"}, {"label": "AWS Lambda Guide", "url": "https://docs.aws.amazon.com/lambda/"}]},
-            {"step": 4, "title": "Service Mesh & Observability", "level": "Advanced", "description": "Istio, Linkerd, distributed tracing, and cloud-native observability.", "resources": [{"label": "Istio Documentation", "url": "https://istio.io/latest/docs/"}, {"label": "OpenTelemetry Docs", "url": "https://opentelemetry.io/docs/"}]},
+            {
+                "step": 1,
+                "title": "Docker & Containers",
+                "level": "Beginner",
+                "description": "Container fundamentals, Dockerfiles, multi-stage builds, Docker Compose.",
+                "resources": [
+                    {
+                        "label": "Docker Getting Started",
+                        "url": "https://docs.docker.com/get-started/",
+                    },
+                    {
+                        "label": "Play with Docker",
+                        "url": "https://labs.play-with-docker.com/",
+                    },
+                ],
+            },
+            {
+                "step": 2,
+                "title": "Kubernetes Fundamentals",
+                "level": "Intermediate",
+                "description": "Pods, Services, Deployments, ConfigMaps, Secrets, and kubectl mastery.",
+                "resources": [
+                    {
+                        "label": "Kubernetes Official Docs",
+                        "url": "https://kubernetes.io/docs/tutorials/",
+                    },
+                    {
+                        "label": "KillerCoda Scenarios",
+                        "url": "https://killercoda.com/kubernetes",
+                    },
+                ],
+            },
+            {
+                "step": 3,
+                "title": "Serverless & FaaS",
+                "level": "Intermediate",
+                "description": "AWS Lambda, Azure Functions, Vercel Edge Functions, and event-driven architectures.",
+                "resources": [
+                    {
+                        "label": "Serverless Framework",
+                        "url": "https://www.serverless.com/framework/docs",
+                    },
+                    {
+                        "label": "AWS Lambda Guide",
+                        "url": "https://docs.aws.amazon.com/lambda/",
+                    },
+                ],
+            },
+            {
+                "step": 4,
+                "title": "Service Mesh & Observability",
+                "level": "Advanced",
+                "description": "Istio, Linkerd, distributed tracing, and cloud-native observability.",
+                "resources": [
+                    {
+                        "label": "Istio Documentation",
+                        "url": "https://istio.io/latest/docs/",
+                    },
+                    {
+                        "label": "OpenTelemetry Docs",
+                        "url": "https://opentelemetry.io/docs/",
+                    },
+                ],
+            },
         ],
     },
     {
@@ -100,10 +306,67 @@ SEED_ROADMAPS = [
         "icon": "🔧",
         "estimated_weeks": 16,
         "steps": [
-            {"step": 1, "title": "Linux & Shell Scripting", "level": "Beginner", "description": "Linux administration, Bash scripting, cron jobs, and system monitoring.", "resources": [{"label": "Linux Journey", "url": "https://linuxjourney.com/"}, {"label": "Shell Scripting Tutorial", "url": "https://www.shellscript.sh/"}]},
-            {"step": 2, "title": "CI/CD & Version Control", "level": "Beginner", "description": "Git workflows, GitHub Actions, Jenkins, and automated testing pipelines.", "resources": [{"label": "GitHub Actions Docs", "url": "https://docs.github.com/en/actions"}, {"label": "Learn Git Branching", "url": "https://learngitbranching.js.org/"}]},
-            {"step": 3, "title": "Infrastructure as Code", "level": "Intermediate", "description": "Terraform, Pulumi, Ansible — manage infrastructure declaratively.", "resources": [{"label": "Terraform Tutorials", "url": "https://developer.hashicorp.com/terraform/tutorials"}, {"label": "Ansible Getting Started", "url": "https://docs.ansible.com/ansible/latest/getting_started/"}]},
-            {"step": 4, "title": "Platform Engineering & IDP", "level": "Advanced", "description": "Build internal developer platforms with Backstage, golden paths, and developer portals.", "resources": [{"label": "Backstage by Spotify", "url": "https://backstage.io/docs/overview/what-is-backstage"}, {"label": "Platform Engineering Guide", "url": "https://platformengineering.org/"}]},
+            {
+                "step": 1,
+                "title": "Linux & Shell Scripting",
+                "level": "Beginner",
+                "description": "Linux administration, Bash scripting, cron jobs, and system monitoring.",
+                "resources": [
+                    {"label": "Linux Journey", "url": "https://linuxjourney.com/"},
+                    {
+                        "label": "Shell Scripting Tutorial",
+                        "url": "https://www.shellscript.sh/",
+                    },
+                ],
+            },
+            {
+                "step": 2,
+                "title": "CI/CD & Version Control",
+                "level": "Beginner",
+                "description": "Git workflows, GitHub Actions, Jenkins, and automated testing pipelines.",
+                "resources": [
+                    {
+                        "label": "GitHub Actions Docs",
+                        "url": "https://docs.github.com/en/actions",
+                    },
+                    {
+                        "label": "Learn Git Branching",
+                        "url": "https://learngitbranching.js.org/",
+                    },
+                ],
+            },
+            {
+                "step": 3,
+                "title": "Infrastructure as Code",
+                "level": "Intermediate",
+                "description": "Terraform, Pulumi, Ansible — manage infrastructure declaratively.",
+                "resources": [
+                    {
+                        "label": "Terraform Tutorials",
+                        "url": "https://developer.hashicorp.com/terraform/tutorials",
+                    },
+                    {
+                        "label": "Ansible Getting Started",
+                        "url": "https://docs.ansible.com/ansible/latest/getting_started/",
+                    },
+                ],
+            },
+            {
+                "step": 4,
+                "title": "Platform Engineering & IDP",
+                "level": "Advanced",
+                "description": "Build internal developer platforms with Backstage, golden paths, and developer portals.",
+                "resources": [
+                    {
+                        "label": "Backstage by Spotify",
+                        "url": "https://backstage.io/docs/overview/what-is-backstage",
+                    },
+                    {
+                        "label": "Platform Engineering Guide",
+                        "url": "https://platformengineering.org/",
+                    },
+                ],
+            },
         ],
     },
     {
@@ -113,11 +376,74 @@ SEED_ROADMAPS = [
         "icon": "🛡️",
         "estimated_weeks": 20,
         "steps": [
-            {"step": 1, "title": "Networking & Linux Fundamentals", "level": "Beginner", "description": "TCP/IP, DNS, HTTP, firewalls, and command-line Linux administration.", "resources": [{"label": "TryHackMe Pre-Security", "url": "https://tryhackme.com/path/outline/presecurity"}, {"label": "Linux Journey", "url": "https://linuxjourney.com/"}]},
-            {"step": 2, "title": "Security Concepts & Cryptography", "level": "Beginner", "description": "CIA triad, encryption, PKI, hashing, digital signatures.", "resources": [{"label": "OverTheWire Wargames", "url": "https://overthewire.org/wargames/"}, {"label": "Crypto101 Handbook", "url": "https://www.crypto101.io/"}]},
-            {"step": 3, "title": "Penetration Testing", "level": "Intermediate", "description": "OWASP Top 10, Burp Suite, Metasploit, and vulnerability assessment.", "resources": [{"label": "PortSwigger Web Security Academy", "url": "https://portswigger.net/web-security"}, {"label": "HackTheBox", "url": "https://www.hackthebox.com/"}]},
-            {"step": 4, "title": "SOC & Incident Response", "level": "Intermediate", "description": "SIEM tools, log analysis, threat hunting, and incident response.", "resources": [{"label": "Blue Team Labs", "url": "https://blueteamlabs.online/"}, {"label": "SANS Reading Room", "url": "https://www.sans.org/white-papers/"}]},
-            {"step": 5, "title": "Zero Trust & Cloud Security", "level": "Advanced", "description": "Zero-trust architecture, CSPM, and DevSecOps practices.", "resources": [{"label": "NIST Zero Trust Architecture", "url": "https://www.nist.gov/publications/zero-trust-architecture"}, {"label": "AWS Security Best Practices", "url": "https://docs.aws.amazon.com/security/"}]},
+            {
+                "step": 1,
+                "title": "Networking & Linux Fundamentals",
+                "level": "Beginner",
+                "description": "TCP/IP, DNS, HTTP, firewalls, and command-line Linux administration.",
+                "resources": [
+                    {
+                        "label": "TryHackMe Pre-Security",
+                        "url": "https://tryhackme.com/path/outline/presecurity",
+                    },
+                    {"label": "Linux Journey", "url": "https://linuxjourney.com/"},
+                ],
+            },
+            {
+                "step": 2,
+                "title": "Security Concepts & Cryptography",
+                "level": "Beginner",
+                "description": "CIA triad, encryption, PKI, hashing, digital signatures.",
+                "resources": [
+                    {
+                        "label": "OverTheWire Wargames",
+                        "url": "https://overthewire.org/wargames/",
+                    },
+                    {"label": "Crypto101 Handbook", "url": "https://www.crypto101.io/"},
+                ],
+            },
+            {
+                "step": 3,
+                "title": "Penetration Testing",
+                "level": "Intermediate",
+                "description": "OWASP Top 10, Burp Suite, Metasploit, and vulnerability assessment.",
+                "resources": [
+                    {
+                        "label": "PortSwigger Web Security Academy",
+                        "url": "https://portswigger.net/web-security",
+                    },
+                    {"label": "HackTheBox", "url": "https://www.hackthebox.com/"},
+                ],
+            },
+            {
+                "step": 4,
+                "title": "SOC & Incident Response",
+                "level": "Intermediate",
+                "description": "SIEM tools, log analysis, threat hunting, and incident response.",
+                "resources": [
+                    {"label": "Blue Team Labs", "url": "https://blueteamlabs.online/"},
+                    {
+                        "label": "SANS Reading Room",
+                        "url": "https://www.sans.org/white-papers/",
+                    },
+                ],
+            },
+            {
+                "step": 5,
+                "title": "Zero Trust & Cloud Security",
+                "level": "Advanced",
+                "description": "Zero-trust architecture, CSPM, and DevSecOps practices.",
+                "resources": [
+                    {
+                        "label": "NIST Zero Trust Architecture",
+                        "url": "https://www.nist.gov/publications/zero-trust-architecture",
+                    },
+                    {
+                        "label": "AWS Security Best Practices",
+                        "url": "https://docs.aws.amazon.com/security/",
+                    },
+                ],
+            },
         ],
     },
     {
@@ -127,10 +453,58 @@ SEED_ROADMAPS = [
         "icon": "⛓️",
         "estimated_weeks": 16,
         "steps": [
-            {"step": 1, "title": "Blockchain Fundamentals", "level": "Beginner", "description": "Distributed ledgers, consensus mechanisms, cryptographic hashing.", "resources": [{"label": "Bitcoin Whitepaper", "url": "https://bitcoin.org/bitcoin.pdf"}, {"label": "Blockchain Demo", "url": "https://andersbrownworth.com/blockchain/"}]},
-            {"step": 2, "title": "Solidity & Smart Contracts", "level": "Intermediate", "description": "Write, test, and deploy smart contracts on Ethereum using Solidity.", "resources": [{"label": "CryptoZombies", "url": "https://cryptozombies.io/"}, {"label": "Solidity by Example", "url": "https://solidity-by-example.org/"}]},
-            {"step": 3, "title": "DApp Development", "level": "Intermediate", "description": "Build full-stack decentralized applications with ethers.js and wagmi.", "resources": [{"label": "Ethereum.org Developers", "url": "https://ethereum.org/en/developers/"}, {"label": "wagmi Documentation", "url": "https://wagmi.sh/"}]},
-            {"step": 4, "title": "DeFi & Advanced Protocols", "level": "Advanced", "description": "AMMs, lending protocols, oracles, and cross-chain bridges.", "resources": [{"label": "Uniswap V3 Docs", "url": "https://docs.uniswap.org/"}, {"label": "Chainlink Docs", "url": "https://docs.chain.link/"}]},
+            {
+                "step": 1,
+                "title": "Blockchain Fundamentals",
+                "level": "Beginner",
+                "description": "Distributed ledgers, consensus mechanisms, cryptographic hashing.",
+                "resources": [
+                    {
+                        "label": "Bitcoin Whitepaper",
+                        "url": "https://bitcoin.org/bitcoin.pdf",
+                    },
+                    {
+                        "label": "Blockchain Demo",
+                        "url": "https://andersbrownworth.com/blockchain/",
+                    },
+                ],
+            },
+            {
+                "step": 2,
+                "title": "Solidity & Smart Contracts",
+                "level": "Intermediate",
+                "description": "Write, test, and deploy smart contracts on Ethereum using Solidity.",
+                "resources": [
+                    {"label": "CryptoZombies", "url": "https://cryptozombies.io/"},
+                    {
+                        "label": "Solidity by Example",
+                        "url": "https://solidity-by-example.org/",
+                    },
+                ],
+            },
+            {
+                "step": 3,
+                "title": "DApp Development",
+                "level": "Intermediate",
+                "description": "Build full-stack decentralized applications with ethers.js and wagmi.",
+                "resources": [
+                    {
+                        "label": "Ethereum.org Developers",
+                        "url": "https://ethereum.org/en/developers/",
+                    },
+                    {"label": "wagmi Documentation", "url": "https://wagmi.sh/"},
+                ],
+            },
+            {
+                "step": 4,
+                "title": "DeFi & Advanced Protocols",
+                "level": "Advanced",
+                "description": "AMMs, lending protocols, oracles, and cross-chain bridges.",
+                "resources": [
+                    {"label": "Uniswap V3 Docs", "url": "https://docs.uniswap.org/"},
+                    {"label": "Chainlink Docs", "url": "https://docs.chain.link/"},
+                ],
+            },
         ],
     },
     {
@@ -140,10 +514,58 @@ SEED_ROADMAPS = [
         "icon": "⚙️",
         "estimated_weeks": 20,
         "steps": [
-            {"step": 1, "title": "Memory & OS Fundamentals", "level": "Beginner", "description": "Stack vs heap, pointers, system calls, processes, and threads.", "resources": [{"label": "Operating Systems: Three Easy Pieces", "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/"}, {"label": "CS:APP", "url": "https://csapp.cs.cmu.edu/"}]},
-            {"step": 2, "title": "Rust Fundamentals", "level": "Intermediate", "description": "Ownership, borrowing, lifetimes, and building CLI tools in Rust.", "resources": [{"label": "The Rust Book", "url": "https://doc.rust-lang.org/book/"}, {"label": "Rustlings", "url": "https://rustlings.cool/"}]},
-            {"step": 3, "title": "Go for Backend Systems", "level": "Intermediate", "description": "Goroutines, channels, HTTP servers, and production Go patterns.", "resources": [{"label": "Go by Example", "url": "https://gobyexample.com/"}, {"label": "Effective Go", "url": "https://go.dev/doc/effective_go"}]},
-            {"step": 4, "title": "Distributed Systems", "level": "Advanced", "description": "Consensus algorithms, gRPC, event-driven architectures, and fault tolerance.", "resources": [{"label": "Designing Data-Intensive Applications", "url": "https://dataintensive.net/"}, {"label": "MIT 6.824 Labs", "url": "https://pdos.csail.mit.edu/6.824/"}]},
+            {
+                "step": 1,
+                "title": "Memory & OS Fundamentals",
+                "level": "Beginner",
+                "description": "Stack vs heap, pointers, system calls, processes, and threads.",
+                "resources": [
+                    {
+                        "label": "Operating Systems: Three Easy Pieces",
+                        "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+                    },
+                    {"label": "CS:APP", "url": "https://csapp.cs.cmu.edu/"},
+                ],
+            },
+            {
+                "step": 2,
+                "title": "Rust Fundamentals",
+                "level": "Intermediate",
+                "description": "Ownership, borrowing, lifetimes, and building CLI tools in Rust.",
+                "resources": [
+                    {
+                        "label": "The Rust Book",
+                        "url": "https://doc.rust-lang.org/book/",
+                    },
+                    {"label": "Rustlings", "url": "https://rustlings.cool/"},
+                ],
+            },
+            {
+                "step": 3,
+                "title": "Go for Backend Systems",
+                "level": "Intermediate",
+                "description": "Goroutines, channels, HTTP servers, and production Go patterns.",
+                "resources": [
+                    {"label": "Go by Example", "url": "https://gobyexample.com/"},
+                    {"label": "Effective Go", "url": "https://go.dev/doc/effective_go"},
+                ],
+            },
+            {
+                "step": 4,
+                "title": "Distributed Systems",
+                "level": "Advanced",
+                "description": "Consensus algorithms, gRPC, event-driven architectures, and fault tolerance.",
+                "resources": [
+                    {
+                        "label": "Designing Data-Intensive Applications",
+                        "url": "https://dataintensive.net/",
+                    },
+                    {
+                        "label": "MIT 6.824 Labs",
+                        "url": "https://pdos.csail.mit.edu/6.824/",
+                    },
+                ],
+            },
         ],
     },
     {
@@ -153,9 +575,48 @@ SEED_ROADMAPS = [
         "icon": "🗄️",
         "estimated_weeks": 12,
         "steps": [
-            {"step": 1, "title": "SQL Fundamentals", "level": "Beginner", "description": "Relational databases, SQL queries, joins, indexing, and normalization.", "resources": [{"label": "SQLBolt", "url": "https://sqlbolt.com/"}, {"label": "PostgreSQL Tutorial", "url": "https://www.postgresqltutorial.com/"}]},
-            {"step": 2, "title": "NoSQL & Document Databases", "level": "Intermediate", "description": "MongoDB, Redis, and when to choose NoSQL vs SQL.", "resources": [{"label": "MongoDB University", "url": "https://learn.mongodb.com/"}, {"label": "Redis University", "url": "https://university.redis.io/"}]},
-            {"step": 3, "title": "ORMs & Data Modeling", "level": "Intermediate", "description": "Prisma, SQLAlchemy, Drizzle, and practical schema design.", "resources": [{"label": "Prisma Docs", "url": "https://www.prisma.io/docs"}, {"label": "SQLAlchemy Tutorial", "url": "https://docs.sqlalchemy.org/en/20/tutorial/"}]},
+            {
+                "step": 1,
+                "title": "SQL Fundamentals",
+                "level": "Beginner",
+                "description": "Relational databases, SQL queries, joins, indexing, and normalization.",
+                "resources": [
+                    {"label": "SQLBolt", "url": "https://sqlbolt.com/"},
+                    {
+                        "label": "PostgreSQL Tutorial",
+                        "url": "https://www.postgresqltutorial.com/",
+                    },
+                ],
+            },
+            {
+                "step": 2,
+                "title": "NoSQL & Document Databases",
+                "level": "Intermediate",
+                "description": "MongoDB, Redis, and when to choose NoSQL vs SQL.",
+                "resources": [
+                    {
+                        "label": "MongoDB University",
+                        "url": "https://learn.mongodb.com/",
+                    },
+                    {
+                        "label": "Redis University",
+                        "url": "https://university.redis.io/",
+                    },
+                ],
+            },
+            {
+                "step": 3,
+                "title": "ORMs & Data Modeling",
+                "level": "Intermediate",
+                "description": "Prisma, SQLAlchemy, Drizzle, and practical schema design.",
+                "resources": [
+                    {"label": "Prisma Docs", "url": "https://www.prisma.io/docs"},
+                    {
+                        "label": "SQLAlchemy Tutorial",
+                        "url": "https://docs.sqlalchemy.org/en/20/tutorial/",
+                    },
+                ],
+            },
         ],
     },
 ]
@@ -163,25 +624,44 @@ SEED_ROADMAPS = [
 # Map each tool slug to the roadmap slug for its category
 TOOL_ROADMAP_MAP = {
     # AI / ML tools → ai-ml roadmap
-    "pytorch": "ai-ml", "tensorflow": "ai-ml", "langchain": "ai-ml",
-    "transformers": "ai-ml", "ollama": "ai-ml",
+    "pytorch": "ai-ml",
+    "tensorflow": "ai-ml",
+    "langchain": "ai-ml",
+    "transformers": "ai-ml",
+    "ollama": "ai-ml",
     # Web Dev tools → web-development roadmap
-    "react": "web-development", "nextjs": "web-development", "vuejs": "web-development",
-    "svelte": "web-development", "astro": "web-development", "vite": "web-development",
-    "tailwindcss": "web-development", "fastapi": "web-development", "trpc": "web-development",
-    "bun": "web-development", "deno": "web-development",
+    "react": "web-development",
+    "nextjs": "web-development",
+    "vuejs": "web-development",
+    "svelte": "web-development",
+    "astro": "web-development",
+    "vite": "web-development",
+    "tailwindcss": "web-development",
+    "fastapi": "web-development",
+    "trpc": "web-development",
+    "bun": "web-development",
+    "deno": "web-development",
     # Cloud Native → cloud-native roadmap
-    "kubernetes": "cloud-native", "terraform": "cloud-native", "supabase": "cloud-native",
+    "kubernetes": "cloud-native",
+    "terraform": "cloud-native",
+    "supabase": "cloud-native",
     # DevOps → devops roadmap
-    "docker": "devops", "grafana": "devops", "prometheus": "devops",
+    "docker": "devops",
+    "grafana": "devops",
+    "prometheus": "devops",
     # Systems → systems roadmap
-    "rust": "systems", "go": "systems",
+    "rust": "systems",
+    "go": "systems",
     # Data → data-databases roadmap
     "prisma": "data-databases",
     # Cybersecurity → cybersecurity roadmap
-    "wireshark": "cybersecurity", "metasploit": "cybersecurity", "owasp-zap": "cybersecurity",
+    "wireshark": "cybersecurity",
+    "metasploit": "cybersecurity",
+    "owasp-zap": "cybersecurity",
     # Web3 → web3 roadmap
-    "hardhat": "web3", "foundry": "web3", "ethersjs": "web3",
+    "hardhat": "web3",
+    "foundry": "web3",
+    "ethersjs": "web3",
 }
 
 
@@ -190,10 +670,14 @@ def run_seed(db: Session) -> None:
 
     existing_tools = db.query(Tool).count()
     if existing_tools > 0:
-        logger.info(f"Seed: Database already has {existing_tools} tools — skipping seed.")
+        logger.info(
+            f"Seed: Database already has {existing_tools} tools — skipping seed."
+        )
         return
 
-    logger.info("Seed: Empty database detected — seeding domains, tools, and roadmaps...")
+    logger.info(
+        "Seed: Empty database detected — seeding domains, tools, and roadmaps..."
+    )
 
     # 1. Seed Domains
     domain_map: dict[str, Domain] = {}
@@ -297,5 +781,3 @@ def reconcile_catalog(db: Session) -> None:
         f"Reconcile: removed {len(orphans)} non-catalog tools "
         f"(placeholder/duplicate rows): {', '.join(sorted(orphan_slugs))}"
     )
-
-

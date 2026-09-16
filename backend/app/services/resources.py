@@ -42,20 +42,44 @@ SEARCH_POOL = 25
 # Used only as a small ranking nudge — never as a filter, so good work from
 # unknown channels can still surface.
 TRUSTED_CHANNELS = {
-    "freecodecamp.org", "traversy media", "the net ninja", "fireship",
-    "academind", "programming with mosh", "corey schafer", "tech with tim",
-    "sentdex", "arjancodes", "theo - t3.gg", "web dev simplified",
-    "codewithharry", "apna college", "telusko", "code with harry",
-    "nptel-noc iitm", "gate smashers", "kunal kushwaha", "hitesh choudhary",
-    "chai aur code", "love babbar", "striver", "take u forward",
+    "freecodecamp.org",
+    "traversy media",
+    "the net ninja",
+    "fireship",
+    "academind",
+    "programming with mosh",
+    "corey schafer",
+    "tech with tim",
+    "sentdex",
+    "arjancodes",
+    "theo - t3.gg",
+    "web dev simplified",
+    "codewithharry",
+    "apna college",
+    "telusko",
+    "code with harry",
+    "nptel-noc iitm",
+    "gate smashers",
+    "kunal kushwaha",
+    "hitesh choudhary",
+    "chai aur code",
+    "love babbar",
+    "striver",
+    "take u forward",
 }
 
 # Hindi-first channels. India is StackRadar's primary market and a large share
 # of learners prefer Hindi explanation over English for first-pass learning —
 # this is surfaced as an explicit language toggle rather than mixed into one list.
 HINDI_CHANNELS = {
-    "codewithharry", "code with harry", "apna college", "telusko",
-    "love babbar", "chai aur code", "gate smashers", "cs geeks",
+    "codewithharry",
+    "code with harry",
+    "apna college",
+    "telusko",
+    "love babbar",
+    "chai aur code",
+    "gate smashers",
+    "cs geeks",
 }
 
 
@@ -98,6 +122,7 @@ def _norm_log(val: float, floor: float, ceil: float) -> float:
 # Ranking
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def rank_resource(item: dict[str, Any], release_at: datetime | None = None) -> float:
     """Score a candidate 0-100. Deliberately transparent — every term is
     explainable to a user who asks "why is this first?".
@@ -135,22 +160,23 @@ def rank_resource(item: dict[str, Any], release_at: datetime | None = None) -> f
             # a superseded API. Halve, don't exclude: fundamentals still hold.
             freshness *= 0.5
 
-    if items_n:                       # playlist: depth is course length
+    if items_n:  # playlist: depth is course length
         depth = min(1.0, items_n / 30.0) * 15.0
     elif duration:
-        depth = min(1.0, duration / 5400.0) * 15.0   # saturates at 90 min
+        depth = min(1.0, duration / 5400.0) * 15.0  # saturates at 90 min
     else:
         depth = 0.0
 
     score = reach + engagement + freshness + depth
     if channel in TRUSTED_CHANNELS:
-        score *= 1.08                 # small nudge, never a gate
+        score *= 1.08  # small nudge, never a gate
 
     return round(min(100.0, score), 2)
 
 
-def staleness(published: datetime | None, release_at: datetime | None,
-              version: str | None) -> str | None:
+def staleness(
+    published: datetime | None, release_at: datetime | None, version: str | None
+) -> str | None:
     """Human-readable warning when a tutorial predates the current release.
 
     This is the piece no other resource list has: StackRadar already tracks
@@ -171,6 +197,7 @@ def staleness(published: datetime | None, release_at: datetime | None,
 # YouTube Data API
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 async def _yt_get(client: httpx.AsyncClient, path: str, params: dict) -> dict | None:
     params = {**params, "key": settings.YOUTUBE_API_KEY}
     try:
@@ -182,7 +209,7 @@ async def _yt_get(client: httpx.AsyncClient, path: str, params: dict) -> dict | 
             return None
         r.raise_for_status()
         return r.json()
-    except Exception as e:                                    # noqa: BLE001
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"YouTube API {path} failed: {e}")
         return None
 
@@ -210,19 +237,27 @@ async def fetch_youtube(
     if query:
         query = query if language == "en" else f"{query} hindi"
     else:
-        query = f"{tool_name} tutorial" if language == "en" else f"{tool_name} tutorial hindi"
+        query = (
+            f"{tool_name} tutorial"
+            if language == "en"
+            else f"{tool_name} tutorial hindi"
+        )
 
     async with httpx.AsyncClient(follow_redirects=True) as client:
-        search = await _yt_get(client, "search", {
-            "part": "snippet",
-            "q": query,
-            "type": "video,playlist",
-            "maxResults": SEARCH_POOL,
-            "order": "relevance",
-            "relevanceLanguage": "hi" if language == "hi" else "en",
-            "safeSearch": "strict",
-            "videoEmbeddable": "any",
-        })
+        search = await _yt_get(
+            client,
+            "search",
+            {
+                "part": "snippet",
+                "q": query,
+                "type": "video,playlist",
+                "maxResults": SEARCH_POOL,
+                "order": "relevance",
+                "relevanceLanguage": "hi" if language == "hi" else "en",
+                "safeSearch": "strict",
+                "videoEmbeddable": "any",
+            },
+        )
         if not search:
             return []
 
@@ -250,7 +285,9 @@ async def fetch_youtube(
                 "title": sn.get("title", ""),
                 "channel": sn.get("channelTitle", ""),
                 "blurb": (sn.get("description") or "")[:280],
-                "thumbnail": (thumbs.get("medium") or thumbs.get("default") or {}).get("url"),
+                "thumbnail": (thumbs.get("medium") or thumbs.get("default") or {}).get(
+                    "url"
+                ),
                 "published_at": _parse_ts(sn.get("publishedAt", "")),
             }
 
@@ -258,15 +295,27 @@ async def fetch_youtube(
         # ranking on relevance alone would just mirror YouTube's own ordering.
         stats_calls = []
         if video_ids:
-            stats_calls.append(_yt_get(client, "videos", {
-                "part": "statistics,contentDetails",
-                "id": ",".join(video_ids[:50]),
-            }))
+            stats_calls.append(
+                _yt_get(
+                    client,
+                    "videos",
+                    {
+                        "part": "statistics,contentDetails",
+                        "id": ",".join(video_ids[:50]),
+                    },
+                )
+            )
         if playlist_ids:
-            stats_calls.append(_yt_get(client, "playlists", {
-                "part": "contentDetails",
-                "id": ",".join(playlist_ids[:50]),
-            }))
+            stats_calls.append(
+                _yt_get(
+                    client,
+                    "playlists",
+                    {
+                        "part": "contentDetails",
+                        "id": ",".join(playlist_ids[:50]),
+                    },
+                )
+            )
         results = await asyncio.gather(*stats_calls) if stats_calls else []
 
     for payload in results:
@@ -295,18 +344,23 @@ async def fetch_youtube(
             continue
         if kind == "playlist" and m.get("item_count") is None:
             continue
-        url = (f"https://www.youtube.com/watch?v={iid}" if kind == "video"
-               else f"https://www.youtube.com/playlist?list={iid}")
+        url = (
+            f"https://www.youtube.com/watch?v={iid}"
+            if kind == "video"
+            else f"https://www.youtube.com/playlist?list={iid}"
+        )
         ch = (m.get("channel") or "").strip().lower()
-        out.append({
-            **m,
-            "kind": kind,
-            "source": "youtube",
-            "url": url,
-            "language": "hi" if ch in HINDI_CHANNELS else language,
-            "rank_score": rank_resource(m, release_at),
-            "staleness": staleness(m.get("published_at"), release_at, None),
-        })
+        out.append(
+            {
+                **m,
+                "kind": kind,
+                "source": "youtube",
+                "url": url,
+                "language": "hi" if ch in HINDI_CHANNELS else language,
+                "rank_score": rank_resource(m, release_at),
+                "staleness": staleness(m.get("published_at"), release_at, None),
+            }
+        )
 
     out.sort(key=lambda r: r["rank_score"], reverse=True)
     return out[:limit]
@@ -316,8 +370,13 @@ async def fetch_youtube(
 # Curated platforms (always valid, no key required)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def curated_platforms(tool_name: str, slug: str, homepage: str | None = None,
-                      github_repo: str | None = None) -> list[dict[str, Any]]:
+
+def curated_platforms(
+    tool_name: str,
+    slug: str,
+    homepage: str | None = None,
+    github_repo: str | None = None,
+) -> list[dict[str, Any]]:
     """Non-YouTube resources worth a learner's time.
 
     Every entry is a *deep-link into a search or listing page*, never a guessed
@@ -328,12 +387,14 @@ def curated_platforms(tool_name: str, slug: str, homepage: str | None = None,
     out: list[dict[str, Any]] = []
 
     if homepage:
-        out.append({
-            "title": f"{tool_name} — official documentation",
-            "url": homepage,
-            "blurb": "The primary source. Usually the fastest path once you know the basics.",
-            "channel": "Official",
-        })
+        out.append(
+            {
+                "title": f"{tool_name} — official documentation",
+                "url": homepage,
+                "blurb": "The primary source. Usually the fastest path once you know the basics.",
+                "channel": "Official",
+            }
+        )
 
     out += [
         {
@@ -373,12 +434,14 @@ def curated_platforms(tool_name: str, slug: str, homepage: str | None = None,
     ]
 
     if github_repo:
-        out.append({
-            "title": f"{tool_name} source & issues",
-            "url": f"https://github.com/{github_repo}",
-            "blurb": "Reading real issues and PRs is the fastest way past intermediate.",
-            "channel": "GitHub",
-        })
+        out.append(
+            {
+                "title": f"{tool_name} source & issues",
+                "url": f"https://github.com/{github_repo}",
+                "blurb": "Reading real issues and PRs is the fastest way past intermediate.",
+                "channel": "GitHub",
+            }
+        )
 
     for r in out:
         r.setdefault("kind", "platform")
@@ -395,7 +458,9 @@ def curated_platforms(tool_name: str, slug: str, homepage: str | None = None,
     return out
 
 
-def youtube_search_fallback(tool_name: str, language: str = "en") -> list[dict[str, Any]]:
+def youtube_search_fallback(
+    tool_name: str, language: str = "en"
+) -> list[dict[str, Any]]:
     """Used when no API key is configured: scoped YouTube searches the user can
     run themselves. Honest about being a search, not a recommendation."""
     q = tool_name.replace(" ", "+")
@@ -405,33 +470,71 @@ def youtube_search_fallback(tool_name: str, language: str = "en") -> list[dict[s
         # Hindi learners search in Hinglish, so the queries are built that way
         # rather than being a transliteration of the English ones.
         specs = [
-            (f"{tool_name} full course (Hindi)", f"{q}+full+course+hindi",
-             "पूरा कोर्स — long-form Hindi courses on this technology."),
-            (f"{tool_name} tutorial for beginners (Hindi)", f"{q}+tutorial+hindi+for+beginners",
-             "Beginner-friendly Hindi explanation, good for a first pass."),
-            (f"{tool_name} project (Hindi)", f"{q}+project+hindi",
-             "Build-along projects explained in Hindi."),
-            (f"{tool_name} interview questions (Hindi)", f"{q}+interview+questions+hindi",
-             "What Indian interviewers actually ask on this stack."),
+            (
+                f"{tool_name} full course (Hindi)",
+                f"{q}+full+course+hindi",
+                "पूरा कोर्स — long-form Hindi courses on this technology.",
+            ),
+            (
+                f"{tool_name} tutorial for beginners (Hindi)",
+                f"{q}+tutorial+hindi+for+beginners",
+                "Beginner-friendly Hindi explanation, good for a first pass.",
+            ),
+            (
+                f"{tool_name} project (Hindi)",
+                f"{q}+project+hindi",
+                "Build-along projects explained in Hindi.",
+            ),
+            (
+                f"{tool_name} interview questions (Hindi)",
+                f"{q}+interview+questions+hindi",
+                "What Indian interviewers actually ask on this stack.",
+            ),
         ]
     else:
         specs = [
-            (f"{tool_name} full course", f"{q}+full+course",
-             "Long-form courses — sorted by YouTube relevance."),
-            (f"{tool_name} crash course", f"{q}+crash+course",
-             "Sub-2-hour overviews to decide if this is worth learning."),
-            (f"{tool_name} project tutorial", f"{q}+project+tutorial",
-             "Build-along videos — the fastest way to retain a new tool."),
-            (f"{tool_name} interview questions", f"{q}+interview+questions",
-             "What gets asked once you claim this on a CV."),
+            (
+                f"{tool_name} full course",
+                f"{q}+full+course",
+                "Long-form courses — sorted by YouTube relevance.",
+            ),
+            (
+                f"{tool_name} crash course",
+                f"{q}+crash+course",
+                "Sub-2-hour overviews to decide if this is worth learning.",
+            ),
+            (
+                f"{tool_name} project tutorial",
+                f"{q}+project+tutorial",
+                "Build-along videos — the fastest way to retain a new tool.",
+            ),
+            (
+                f"{tool_name} interview questions",
+                f"{q}+interview+questions",
+                "What gets asked once you claim this on a CV.",
+            ),
         ]
 
-    return [{
-        "title": t, "url": base + s, "blurb": b, "channel": "YouTube search",
-        "kind": "search", "source": "curated", "language": language,
-        "rank_score": 0.0, "staleness": None, "thumbnail": None, "views": None,
-        "likes": None, "duration_s": None, "item_count": None, "published_at": None,
-    } for t, s, b in specs]
+    return [
+        {
+            "title": t,
+            "url": base + s,
+            "blurb": b,
+            "channel": "YouTube search",
+            "kind": "search",
+            "source": "curated",
+            "language": language,
+            "rank_score": 0.0,
+            "staleness": None,
+            "thumbnail": None,
+            "views": None,
+            "likes": None,
+            "duration_s": None,
+            "item_count": None,
+            "published_at": None,
+        }
+        for t, s, b in specs
+    ]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -456,12 +559,12 @@ def youtube_search_fallback(tool_name: str, language: str = "en") -> list[dict[s
 
 CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
     "react": [
-        ("bMknfKXIFA8", "video", ["react"]),          # freeCodeCamp full course
-        ("SqcY0GlETPk", "video", ["react"]),          # Programming with Mosh
+        ("bMknfKXIFA8", "video", ["react"]),  # freeCodeCamp full course
+        ("SqcY0GlETPk", "video", ["react"]),  # Programming with Mosh
     ],
     "nextjs": [
-        ("wm5gMKuwSYk", "video", ["next"]),           # Next.js full course
-        ("ZVnjOPwW4ZA", "video", ["next"]),           # Next.js 14
+        ("wm5gMKuwSYk", "video", ["next"]),  # Next.js full course
+        ("ZVnjOPwW4ZA", "video", ["next"]),  # Next.js 14
     ],
     "vuejs": [
         ("VeNfHj6MhgA", "video", ["vue"]),
@@ -489,11 +592,11 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
         ("TQUy8ENesGY", "video", ["deno"]),
     ],
     "pytorch": [
-        ("V_xro1bcAuA", "video", ["pytorch"]),         # freeCodeCamp
+        ("V_xro1bcAuA", "video", ["pytorch"]),  # freeCodeCamp
         ("GIsg-ZUy0MY", "video", ["pytorch"]),
     ],
     "tensorflow": [
-        ("tPYj3fFJGjk", "video", ["tensorflow"]),      # freeCodeCamp
+        ("tPYj3fFJGjk", "video", ["tensorflow"]),  # freeCodeCamp
         ("qFJeN9V1ZsI", "video", ["tensorflow"]),
     ],
     "langchain": [
@@ -504,30 +607,30 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
         ("90ozfdsQOKo", "video", ["ollama"]),
     ],
     "docker": [
-        ("fqMOX6JJhGo", "video", ["docker"]),          # freeCodeCamp
-        ("pg19Z8LL06w", "video", ["docker"]),          # TechWorld with Nana
+        ("fqMOX6JJhGo", "video", ["docker"]),  # freeCodeCamp
+        ("pg19Z8LL06w", "video", ["docker"]),  # TechWorld with Nana
     ],
     "kubernetes": [
-        ("X48VuDVv0do", "video", ["kubernetes"]),      # TechWorld with Nana
-        ("s_o8dwzRlu4", "video", ["kubernetes"]),      # freeCodeCamp
+        ("X48VuDVv0do", "video", ["kubernetes"]),  # TechWorld with Nana
+        ("s_o8dwzRlu4", "video", ["kubernetes"]),  # freeCodeCamp
     ],
     "terraform": [
-        ("SLB_c_ayRMo", "video", ["terraform"]),       # TechWorld with Nana
-        ("7xngnjfIlK4", "video", ["terraform"]),       # freeCodeCamp
+        ("SLB_c_ayRMo", "video", ["terraform"]),  # TechWorld with Nana
+        ("7xngnjfIlK4", "video", ["terraform"]),  # freeCodeCamp
     ],
     "prometheus": [
-        ("h4Sl21AKiDg", "video", ["prometheus"]),      # TechWorld with Nana
+        ("h4Sl21AKiDg", "video", ["prometheus"]),  # TechWorld with Nana
     ],
     "rust": [
-        ("BpPEoZW5IiY", "video", ["rust"]),            # freeCodeCamp
-        ("zF34dRivLOw", "video", ["rust"]),            # Let's Get Rusty intro
+        ("BpPEoZW5IiY", "video", ["rust"]),  # freeCodeCamp
+        ("zF34dRivLOw", "video", ["rust"]),  # Let's Get Rusty intro
     ],
     "go": [
-        ("un6ZyFkqFKo", "video", ["go", "golang"]),    # freeCodeCamp Learn Go
+        ("un6ZyFkqFKo", "video", ["go", "golang"]),  # freeCodeCamp Learn Go
         ("YS4e4q9oBaU", "video", ["go", "golang"]),
     ],
     "wireshark": [
-        ("lb1Dw0elw0Q", "video", ["wireshark"]),       # freeCodeCamp
+        ("lb1Dw0elw0Q", "video", ["wireshark"]),  # freeCodeCamp
     ],
     "metasploit": [
         ("8lR27r8Y_ik", "video", ["metasploit"]),
@@ -563,12 +666,16 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
         ("yk7nVp5HTCk", "video", ["ethers"]),
     ],
     "bun": [
-        ("eTB0UCDnMQo", "video", ["bun"]),             # freeCodeCamp full course
-        ("U4JVw8K19uY", "video", ["bun"]),             # Traversy crash course
+        ("eTB0UCDnMQo", "video", ["bun"]),  # freeCodeCamp full course
+        ("U4JVw8K19uY", "video", ["bun"]),  # Traversy crash course
     ],
     "transformers": [
-        ("R8h_gpSpEVU", "video", ["transformer", "hugging"]),   # freeCodeCamp
-        ("PLc2rvfiptPSTGfTp0nhC71ksTY1p5ooCW", "playlist", ["transformer", "hugging"]),  # KGP Talkie series
+        ("R8h_gpSpEVU", "video", ["transformer", "hugging"]),  # freeCodeCamp
+        (
+            "PLc2rvfiptPSTGfTp0nhC71ksTY1p5ooCW",
+            "playlist",
+            ["transformer", "hugging"],
+        ),  # KGP Talkie series
     ],
     "owasp-zap": [
         ("D2reRMTihVo", "video", ["zap", "owasp"]),
@@ -578,8 +685,9 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
 }
 
 
-async def verify_youtube(client: httpx.AsyncClient, video_id: str, kind: str,
-                        keywords: list[str]) -> dict[str, Any] | None:
+async def verify_youtube(
+    client: httpx.AsyncClient, video_id: str, kind: str, keywords: list[str]
+) -> dict[str, Any] | None:
     """Confirm a curated id points at a real, on-topic video via oEmbed.
 
     oEmbed needs no API key and no quota. It returns the video's real title,
@@ -598,7 +706,8 @@ async def verify_youtube(client: httpx.AsyncClient, video_id: str, kind: str,
         r = await client.get(
             "https://www.youtube.com/oembed",
             params={"url": oembed_url, "format": "json"},
-            timeout=15, follow_redirects=True,
+            timeout=15,
+            follow_redirects=True,
         )
         if r.status_code != 200:
             return None
@@ -621,8 +730,11 @@ async def verify_youtube(client: httpx.AsyncClient, video_id: str, kind: str,
         "channel": data.get("author_name"),
         "thumbnail": data.get("thumbnail_url"),
         "blurb": None,
-        "views": None, "likes": None, "duration_s": None,
-        "item_count": None, "published_at": None,
+        "views": None,
+        "likes": None,
+        "duration_s": None,
+        "item_count": None,
+        "published_at": None,
         "language": "en",
         "staleness": None,
     }
@@ -640,9 +752,9 @@ async def curated_videos(slug: str, *, limit: int = 6) -> list[dict[str, Any]]:
         return []
 
     async with httpx.AsyncClient(follow_redirects=True) as client:
-        checked = await asyncio.gather(*[
-            verify_youtube(client, vid, kind, kw) for vid, kind, kw in candidates
-        ])
+        checked = await asyncio.gather(
+            *[verify_youtube(client, vid, kind, kw) for vid, kind, kw in candidates]
+        )
 
     out = []
     for i, res in enumerate(checked):
@@ -668,8 +780,11 @@ def curated_first_url(slug: str) -> dict[str, Any] | None:
     if not candidates:
         return None
     vid, kind, _ = candidates[0]
-    url = (f"https://www.youtube.com/playlist?list={vid}" if kind == "playlist"
-           else f"https://www.youtube.com/watch?v={vid}")
+    url = (
+        f"https://www.youtube.com/playlist?list={vid}"
+        if kind == "playlist"
+        else f"https://www.youtube.com/watch?v={vid}"
+    )
     return {"url": url, "kind": kind}
 
 
@@ -690,8 +805,10 @@ async def warm_resource_cache(session_factory, slugs: list[str]) -> None:
         try:
             has_rows = (
                 db.query(ToolResource)
-                .filter(ToolResource.tool_slug == slug,
-                        ToolResource.kind.in_(["video", "playlist"]))
+                .filter(
+                    ToolResource.tool_slug == slug,
+                    ToolResource.kind.in_(["video", "playlist"]),
+                )
                 .count()
             )
             if has_rows:
@@ -701,13 +818,21 @@ async def warm_resource_cache(session_factory, slugs: list[str]) -> None:
                 continue
             now = datetime.now(timezone.utc)
             for f in vids:
-                db.add(ToolResource(
-                    tool_slug=slug, kind=f["kind"], source=f["source"],
-                    title=f["title"], url=f["url"], channel=f.get("channel"),
-                    thumbnail=f.get("thumbnail"), blurb=f.get("blurb"),
-                    language=f.get("language", "en"),
-                    rank_score=f.get("rank_score", 0.0), fetched_at=now,
-                ))
+                db.add(
+                    ToolResource(
+                        tool_slug=slug,
+                        kind=f["kind"],
+                        source=f["source"],
+                        title=f["title"],
+                        url=f["url"],
+                        channel=f.get("channel"),
+                        thumbnail=f.get("thumbnail"),
+                        blurb=f.get("blurb"),
+                        language=f.get("language", "en"),
+                        rank_score=f.get("rank_score", 0.0),
+                        fetched_at=now,
+                    )
+                )
             db.commit()
             warmed += 1
             await asyncio.sleep(0.3)

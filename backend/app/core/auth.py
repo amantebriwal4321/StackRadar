@@ -47,7 +47,9 @@ def _frontend_api_host(publishable_key: str) -> str | None:
         decoded = base64.b64decode(padded).decode("utf-8")
         return decoded.rstrip("$") or None
     except Exception as e:  # noqa: BLE001
-        logger.warning(f"Could not derive Clerk frontend host from publishable key: {e}")
+        logger.warning(
+            f"Could not derive Clerk frontend host from publishable key: {e}"
+        )
         return None
 
 

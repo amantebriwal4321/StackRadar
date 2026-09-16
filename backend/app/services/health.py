@@ -5,6 +5,7 @@ current. That used to be impossible to get wrong-looking: /health returned
 "status": "ok" unconditionally, even with the database unreachable, and nothing
 reported a scraper that had stopped producing data.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -49,8 +50,13 @@ def assess_freshness(
     last = _parse(last_success) or _parse(last_snapshot)
 
     if last is None:
-        return {"state": "never", "healthy": False, "last_success": None,
-                "age_minutes": None, "consecutive_failures": consecutive_failures}
+        return {
+            "state": "never",
+            "healthy": False,
+            "last_success": None,
+            "age_minutes": None,
+            "consecutive_failures": consecutive_failures,
+        }
 
     age = now - last
     if age > stale_after:

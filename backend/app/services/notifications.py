@@ -52,7 +52,8 @@ def _render_email(digest: dict[str, Any]) -> tuple[str, str]:
     streak = digest["streak"]
     streak_line = (
         f"🔥 You're on a {streak}-day streak — keep it alive."
-        if streak > 0 else "A few minutes today keeps the momentum going."
+        if streak > 0
+        else "A few minutes today keeps the momentum going."
     )
     subject = f"Today: {digest['title']}"
     html = f"""\
@@ -61,9 +62,9 @@ def _render_email(digest: dict[str, Any]) -> tuple[str, str]:
   <p style="color:#5A6072;font-size:14px;margin:4px 0 24px">{streak_line}</p>
   <div style="border:1px solid #E6E2EC;border-radius:16px;padding:24px">
     <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#7C2D4A;font-weight:700">Today&#39;s focus</div>
-    <div style="font-weight:800;font-size:20px;margin:6px 0 8px">{digest['title']}</div>
-    <p style="color:#5A6072;font-size:14px;line-height:1.5;margin:0 0 20px">{digest['description']}</p>
-    <a href="{digest['url']}" style="display:inline-block;background:linear-gradient(135deg,#7C2D4A,#C23E6E);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px">Study this now →</a>
+    <div style="font-weight:800;font-size:20px;margin:6px 0 8px">{digest["title"]}</div>
+    <p style="color:#5A6072;font-size:14px;line-height:1.5;margin:0 0 20px">{digest["description"]}</p>
+    <a href="{digest["url"]}" style="display:inline-block;background:linear-gradient(135deg,#7C2D4A,#C23E6E);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px">Study this now →</a>
   </div>
   <p style="color:#8A8398;font-size:12px;margin-top:24px">You&#39;re getting this because you turned on daily nudges on StackRadar.</p>
 </div>"""
@@ -80,11 +81,18 @@ async def send_email(to: str, subject: str, html: str) -> bool:
             r = await client.post(
                 "https://api.resend.com/emails",
                 headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}"},
-                json={"from": settings.DIGEST_FROM, "to": [to], "subject": subject, "html": html},
+                json={
+                    "from": settings.DIGEST_FROM,
+                    "to": [to],
+                    "subject": subject,
+                    "html": html,
+                },
                 timeout=20,
             )
             if r.status_code >= 300:
-                logger.warning(f"[digest] Resend {r.status_code} for {to}: {r.text[:200]}")
+                logger.warning(
+                    f"[digest] Resend {r.status_code} for {to}: {r.text[:200]}"
+                )
                 return False
             return True
     except Exception as e:  # noqa: BLE001
@@ -100,7 +108,10 @@ async def run_daily_digests(db: Session) -> dict[str, int]:
     """
     prefs = (
         db.query(NotificationPref)
-        .filter(NotificationPref.daily_opt_in == True, NotificationPref.unsubscribed_at.is_(None))
+        .filter(
+            NotificationPref.daily_opt_in == True,
+            NotificationPref.unsubscribed_at.is_(None),
+        )
         .all()
     )
     built = sent = skipped = 0
@@ -118,6 +129,11 @@ async def run_daily_digests(db: Session) -> dict[str, int]:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"[digest] error for {pref.user_id}: {e}")
     db.commit()
-    result = {"opted_in": len(prefs), "digests_built": built, "emails_sent": sent, "skipped_no_progress": skipped}
+    result = {
+        "opted_in": len(prefs),
+        "digests_built": built,
+        "emails_sent": sent,
+        "skipped_no_progress": skipped,
+    }
     logger.info(f"[digest] run complete: {result}")
     return result

@@ -714,7 +714,9 @@ def _validate() -> None:
                 f"'{p['tool_slug']}'. Add it to catalog.TOOLS or fix the slug."
             )
         if p["tier"] not in TIERS:
-            raise ValueError(f"projects.py: '{p['slug']}' has invalid tier '{p['tier']}'.")
+            raise ValueError(
+                f"projects.py: '{p['slug']}' has invalid tier '{p['tier']}'."
+            )
         if p["slug"] in seen:
             raise ValueError(f"projects.py: duplicate project slug '{p['slug']}'.")
         seen.add(p["slug"])
@@ -784,7 +786,9 @@ def video_cache_slug(project: dict[str, Any]) -> str:
     """
     w = project.get("walkthrough") or {}
     digest = hashlib.sha1(
-        repr((w.get("search"), w.get("must"), w.get("any"), w.get("deny"), GATE_VERSION)).encode()
+        repr(
+            (w.get("search"), w.get("must"), w.get("any"), w.get("deny"), GATE_VERSION)
+        ).encode()
     ).hexdigest()[:8]
     return f"project:{project['slug']}:{digest}"
 
@@ -840,12 +844,14 @@ def normalise_steps(steps: list[Any] | None) -> list[dict[str, Any]]:
             out.append({"do": st, "detail": None, "doc": None, "gotcha": None})
         else:
             doc = st.get("doc")
-            out.append({
-                "do": st.get("do", ""),
-                "detail": st.get("detail"),
-                "doc": {"label": doc[0], "url": doc[1]} if doc else None,
-                "gotcha": st.get("gotcha"),
-            })
+            out.append(
+                {
+                    "do": st.get("do", ""),
+                    "detail": st.get("detail"),
+                    "doc": {"label": doc[0], "url": doc[1]} if doc else None,
+                    "gotcha": st.get("gotcha"),
+                }
+            )
     return out
 
 

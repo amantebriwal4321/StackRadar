@@ -12,6 +12,7 @@ code change.
 compared against a naive UTC value; aware columns compare by date via
 utc_today().
 """
+
 from datetime import date, datetime, timezone
 
 

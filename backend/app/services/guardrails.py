@@ -56,13 +56,19 @@ class SentimentVerdict(BaseModel):
 class GuardrailReport:
     """Tally of what the guardrail did to one batch, for logging + tests."""
 
-    __slots__ = ("accepted", "batch_rejected", "dropped", "hallucinated_index", "quarantined")
+    __slots__ = (
+        "accepted",
+        "batch_rejected",
+        "dropped",
+        "hallucinated_index",
+        "quarantined",
+    )
 
     def __init__(self) -> None:
-        self.accepted = 0            # passed every check
-        self.dropped = 0            # failed the schema check
+        self.accepted = 0  # passed every check
+        self.dropped = 0  # failed the schema check
         self.hallucinated_index = 0  # i outside the batch
-        self.quarantined = 0        # non-neutral but not grounded -> forced neutral
+        self.quarantined = 0  # non-neutral but not grounded -> forced neutral
         self.batch_rejected = False  # response was not parseable JSON at all
 
     def as_dict(self) -> dict[str, Any]:

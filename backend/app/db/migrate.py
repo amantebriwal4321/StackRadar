@@ -37,7 +37,11 @@ def ensure_columns(engine: Engine) -> list[str]:
 
             # A NOT NULL column with no default can't be added to a table with
             # existing rows. Skip loudly rather than crash the boot.
-            if not column.nullable and column.default is None and column.server_default is None:
+            if (
+                not column.nullable
+                and column.default is None
+                and column.server_default is None
+            ):
                 logger.warning(
                     f"Schema drift: {table.name}.{column.name} is missing and NOT NULL "
                     f"with no default — needs a real Alembic migration. Skipping."
@@ -47,11 +51,15 @@ def ensure_columns(engine: Engine) -> list[str]:
             ddl = column.type.compile(engine.dialect)
             try:
                 with engine.begin() as conn:
-                    conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN {column.name} {ddl}'))
+                    conn.execute(
+                        text(f"ALTER TABLE {table.name} ADD COLUMN {column.name} {ddl}")
+                    )
                 added.append(f"{table.name}.{column.name}")
             except Exception as e:  # noqa: BLE001
                 logger.warning(f"Could not add {table.name}.{column.name}: {e}")
 
     if added:
-        logger.info(f"Schema reconcile: added {len(added)} column(s) -> {', '.join(added)}")
+        logger.info(
+            f"Schema reconcile: added {len(added)} column(s) -> {', '.join(added)}"
+        )
     return added

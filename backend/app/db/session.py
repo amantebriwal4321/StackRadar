@@ -12,8 +12,11 @@ else:
     engine_kwargs["max_overflow"] = 20
     engine_kwargs["pool_timeout"] = 30
 
-engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True, **engine_kwargs)
+engine = create_engine(
+    settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True, **engine_kwargs
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def get_db():
     db = SessionLocal()

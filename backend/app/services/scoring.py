@@ -44,7 +44,7 @@ for _slug, _data in TOOL_REGISTRY.items():
     _patterns = []
     for _kw in _data["keywords"]:
         # Use word boundaries for all keywords
-        _patterns.append(re.compile(r'\b' + re.escape(_kw) + r'\b', re.IGNORECASE))
+        _patterns.append(re.compile(r"\b" + re.escape(_kw) + r"\b", re.IGNORECASE))
     _TOOL_PATTERNS[_slug] = _patterns
 
 
@@ -71,15 +71,14 @@ def classify_text_to_tools(text: str) -> set[str]:
     return matched_tools
 
 
-
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # SENTIMENT WEIGHTING
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 SENTIMENT_WEIGHTS: dict[str, float] = {
-    "positive": 1.0,    # Full credit — praise, adoption, excitement
-    "neutral": 0.5,     # Half credit — informational, tutorial
-    "negative": -0.3,   # Slight penalty — criticism, decline
+    "positive": 1.0,  # Full credit — praise, adoption, excitement
+    "neutral": 0.5,  # Half credit — informational, tutorial
+    "negative": -0.3,  # Slight penalty — criticism, decline
 }
 
 
@@ -119,7 +118,11 @@ def _item_text(item: dict) -> str:
     """
     title = item.get("title", "") or ""
     tag_list = item.get("tag_list", [])
-    tags = " ".join(tag_list) if isinstance(tag_list, list) else (item.get("tags", "") or "")
+    tags = (
+        " ".join(tag_list)
+        if isinstance(tag_list, list)
+        else (item.get("tags", "") or "")
+    )
     subreddit = item.get("subreddit", "") or ""
     description = item.get("description", "") or ""
     return f"{title} {tags} {subreddit} {description}".strip()
@@ -146,6 +149,7 @@ def count_mentions(items: list[dict], all_tool_slugs: set) -> dict[str, int]:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # SCORING — Percentile-based normalization
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 def _percentile_rank(values: list[float]) -> list[float]:
     """
@@ -263,11 +267,7 @@ def calculate_all_tool_scores(
         # Weighting: GitHub adoption is the reliable signal and anchors the score;
         # forks is largely a restatement of stars so it is deliberately light.
         # No flat base — a tool has to earn its number.
-        score = (
-            stars_norm * 0.60 +
-            forks_norm * 0.15 +
-            activity_norm * 0.25
-        )
+        score = stars_norm * 0.60 + forks_norm * 0.15 + activity_norm * 0.25
         scores.append(round(max(0.0, min(score, 100.0)), 1))
 
     return scores
@@ -286,6 +286,7 @@ def calculate_tool_score(
     Used only when percentile ranking is not possible (e.g., single tool insert).
     Prefer calculate_all_tool_scores() for batch scoring.
     """
+
     def normalize(count: int, saturation: int) -> float:
         if count <= 0:
             return 0.0
@@ -299,13 +300,13 @@ def calculate_tool_score(
     news_norm = normalize(news_count, 5)
 
     score = (
-        stars_norm * 0.25 +
-        forks_norm * 0.05 +
-        hn_norm * 0.25 +
-        devto_norm * 0.10 +
-        reddit_norm * 0.20 +
-        news_norm * 0.10 +
-        5.0
+        stars_norm * 0.25
+        + forks_norm * 0.05
+        + hn_norm * 0.25
+        + devto_norm * 0.10
+        + reddit_norm * 0.20
+        + news_norm * 0.10
+        + 5.0
     )
 
     return round(min(score, 100.0), 1)
@@ -330,6 +331,7 @@ def classify_growth_stage(score: float) -> str:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # DECISION INTELLIGENCE LAYER
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 def classify_trend(growth_pct: float) -> str:
     """
@@ -396,6 +398,7 @@ def classify_learning_priority(trend_stage: str) -> str:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # SUMMARIES
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 def generate_tool_summary(
     tool_name: str,

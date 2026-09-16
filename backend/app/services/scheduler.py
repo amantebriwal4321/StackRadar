@@ -110,7 +110,9 @@ async def run_one_cycle() -> bool:
         ok = await perform_full_scrape()
     except Exception as e:
         logger.exception("Error in scraper loop")
-        scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
+        scrape_status["errors"].append(
+            {"time": datetime.now(timezone.utc).isoformat(), "error": str(e)}
+        )
     record_cycle_result(ok)
     return ok
 
@@ -122,7 +124,9 @@ async def run_scraper_loop():
         logger.info("SCRAPER LOOP STARTING")
         logger.info("=" * 60)
         await run_one_cycle()
-        scrape_status["next_scraped_time"] = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
+        scrape_status["next_scraped_time"] = (
+            datetime.now(timezone.utc) + timedelta(minutes=30)
+        ).isoformat()
         await asyncio.sleep(1800)  # 30 minutes
 
 
@@ -205,10 +209,16 @@ async def perform_full_scrape() -> bool:
         news_articles = all_content[reddit_end:]
 
         # Log sentiment distribution
-        total_pos = sum(1 for item in all_content if item.get("sentiment") == "positive")
-        total_neg = sum(1 for item in all_content if item.get("sentiment") == "negative")
+        total_pos = sum(
+            1 for item in all_content if item.get("sentiment") == "positive"
+        )
+        total_neg = sum(
+            1 for item in all_content if item.get("sentiment") == "negative"
+        )
         total_neu = sum(1 for item in all_content if item.get("sentiment") == "neutral")
-        logger.info(f"Sentiment totals: +{total_pos} positive, -{total_neg} negative, ~{total_neu} neutral")
+        logger.info(
+            f"Sentiment totals: +{total_pos} positive, -{total_neg} negative, ~{total_neu} neutral"
+        )
 
         scrape_status["sentiment"] = {
             "positive": total_pos,
@@ -230,18 +240,23 @@ async def perform_full_scrape() -> bool:
         news_weighted = count_mentions(news_articles, all_slugs)
 
         _cycle_mentions = sum(
-            sum(src.values()) for src in (hn_weighted, devto_weighted, reddit_weighted, news_weighted)
+            sum(src.values())
+            for src in (hn_weighted, devto_weighted, reddit_weighted, news_weighted)
         )
         logger.info(f"Step 3: matched {_cycle_mentions} tool mentions this cycle.")
 
         # ━━━ STEP 4: Fetch GitHub stats (Phase 1 — shared client + adaptive delay) ━━━
         scrape_status["current_step"] = "4/8 · Fetching GitHub stats"
-        logger.info("Step 4: Fetching GitHub repo stats (shared client, adaptive delays)...")
+        logger.info(
+            "Step 4: Fetching GitHub repo stats (shared client, adaptive delays)..."
+        )
 
         github_stats: dict[str, dict] = {}
         for tool in all_tools:
             if tool.github_repo:
-                stats = await fetch_github_repo_stats(tool.github_repo, client=github_client)
+                stats = await fetch_github_repo_stats(
+                    tool.github_repo, client=github_client
+                )
                 if stats:
                     github_stats[tool.slug] = stats
 
@@ -251,10 +266,13 @@ async def perform_full_scrape() -> bool:
                 # per repo against the same rate budget.
                 rel_age = (
                     (datetime.now(timezone.utc) - tool.latest_release_at).days
-                    if tool.latest_release_at else 999
+                    if tool.latest_release_at
+                    else 999
                 )
                 if rel_age > 7:
-                    rel = await fetch_github_latest_release(tool.github_repo, client=github_client)
+                    rel = await fetch_github_latest_release(
+                        tool.github_repo, client=github_client
+                    )
                     if rel:
                         tool.latest_version = rel["version"]
                         tool.latest_release_at = rel["published_at"]
@@ -283,7 +301,11 @@ async def perform_full_scrape() -> bool:
         for item in all_content:
             sentiment = item.get("sentiment", "neutral")
             title = item.get("title", "")
-            tags = " ".join(item.get("tag_list", [])) if isinstance(item.get("tag_list"), list) else ""
+            tags = (
+                " ".join(item.get("tag_list", []))
+                if isinstance(item.get("tag_list"), list)
+                else ""
+            )
             subreddit = item.get("subreddit", "")
             text = f"{title} {tags} {subreddit}".strip()
             matched = classify_text_to_tools(text)
@@ -309,15 +331,17 @@ async def perform_full_scrape() -> bool:
             reddit_count = reddit_weighted.get(slug, 0)
             news_count = news_weighted.get(slug, 0)
 
-            tool_signals.append({
-                "stars": new_stars,
-                "forks": new_forks,
-                "hn_count": hn_count,
-                "devto_count": devto_count,
-                "reddit_count": reddit_count,
-                "news_count": news_count,
-                "mention_count": hn_count + devto_count + reddit_count + news_count,
-            })
+            tool_signals.append(
+                {
+                    "stars": new_stars,
+                    "forks": new_forks,
+                    "hn_count": hn_count,
+                    "devto_count": devto_count,
+                    "reddit_count": reddit_count,
+                    "news_count": news_count,
+                    "mention_count": hn_count + devto_count + reddit_count + news_count,
+                }
+            )
 
         # 5c. Calculate ALL scores at once (percentile-based)
         all_scores = calculate_all_tool_scores(tool_signals)
@@ -340,13 +364,19 @@ async def perform_full_scrape() -> bool:
 
             # Phase 4.3: 7-day rolling average growth calculation
             seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
-            avg_result = db.query(func.avg(ToolSnapshot.score)).filter(
-                ToolSnapshot.tool_id == tool.id,
-                ToolSnapshot.recorded_at >= seven_days_ago,
-            ).scalar()
+            avg_result = (
+                db.query(func.avg(ToolSnapshot.score))
+                .filter(
+                    ToolSnapshot.tool_id == tool.id,
+                    ToolSnapshot.recorded_at >= seven_days_ago,
+                )
+                .scalar()
+            )
 
             if avg_result and avg_result > 0:
-                growth_pct = round(((new_score - float(avg_result)) / float(avg_result)) * 100, 1)
+                growth_pct = round(
+                    ((new_score - float(avg_result)) / float(avg_result)) * 100, 1
+                )
             else:
                 growth_pct = 0.0
 
@@ -402,10 +432,17 @@ async def perform_full_scrape() -> bool:
             # ━━━ STEP 7: Insert daily snapshot ━━━
             total_mentions = hn_count + devto_count + reddit_count + news_count
 
-            existing_snapshot = db.query(ToolSnapshot).filter(
-                ToolSnapshot.tool_id == tool.id,
-                ToolSnapshot.recorded_at >= datetime(today.year, today.month, today.day, tzinfo=timezone.utc),
-            ).first()
+            existing_snapshot = (
+                db.query(ToolSnapshot)
+                .filter(
+                    ToolSnapshot.tool_id == tool.id,
+                    ToolSnapshot.recorded_at
+                    >= datetime(
+                        today.year, today.month, today.day, tzinfo=timezone.utc
+                    ),
+                )
+                .first()
+            )
 
             if existing_snapshot:
                 existing_snapshot.score = new_score
@@ -414,7 +451,9 @@ async def perform_full_scrape() -> bool:
                 # Absolute star count — the basis for real momentum (stars/week).
                 existing_snapshot.stars = tool.stars
                 # Phase 4.2: Accumulate mentions throughout the day
-                existing_snapshot.mention_count = (existing_snapshot.mention_count or 0) + total_mentions
+                existing_snapshot.mention_count = (
+                    existing_snapshot.mention_count or 0
+                ) + total_mentions
                 existing_snapshot.sentiment_score = sentiment_score
             else:
                 snapshot = ToolSnapshot(
@@ -453,16 +492,27 @@ async def perform_full_scrape() -> bool:
                 for t in domain_tools:
                     stage = t.stage
                     top_stage_counts[stage] = top_stage_counts.get(stage, 0) + 1
-                domain.stage = max(top_stage_counts, key=top_stage_counts.get) if top_stage_counts else "Emerging"
+                domain.stage = (
+                    max(top_stage_counts, key=top_stage_counts.get)
+                    if top_stage_counts
+                    else "Emerging"
+                )
 
-                tool_names = [t.name for t in sorted(domain_tools, key=lambda x: x.score, reverse=True)[:3]]
+                tool_names = [
+                    t.name
+                    for t in sorted(domain_tools, key=lambda x: x.score, reverse=True)[
+                        :3
+                    ]
+                ]
                 domain.summary = (
                     f"{domain.name} domain (avg score: {domain.score}) "
                     f"led by {', '.join(tool_names)}."
                 )
                 domain.updated_at = datetime.now(timezone.utc)
 
-                logger.info(f"  {domain.name}: avg_score={domain.score} stage={domain.stage}")
+                logger.info(
+                    f"  {domain.name}: avg_score={domain.score} stage={domain.stage}"
+                )
 
         scrape_status["tools_updated"] = tools_updated
         scrape_status["current_step"] = "8/8 · Saving to database"
@@ -473,7 +523,9 @@ async def perform_full_scrape() -> bool:
     except Exception as e:
         db.rollback()
         logger.exception("Scraper pipeline error")
-        scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
+        scrape_status["errors"].append(
+            {"time": datetime.now(timezone.utc).isoformat(), "error": str(e)}
+        )
     finally:
         db.close()
         await github_client.aclose()

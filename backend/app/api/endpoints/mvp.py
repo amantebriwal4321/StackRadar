@@ -53,12 +53,13 @@ router = APIRouter()
 # Valid slug pattern: lowercase letters, numbers, hyphens, dots
 SLUG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 
+
 def validate_slug(slug: str) -> str:
     """Validate that a slug is safe for DB queries."""
     if not SLUG_PATTERN.match(slug):
         raise HTTPException(
             status_code=422,
-            detail=f"Invalid slug '{slug}'. Slugs must be lowercase alphanumeric with hyphens/dots only."
+            detail=f"Invalid slug '{slug}'. Slugs must be lowercase alphanumeric with hyphens/dots only.",
         )
     return slug
 
@@ -66,6 +67,7 @@ def validate_slug(slug: str) -> str:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # TOOLS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 @router.get("/tools")
 def get_tools(
@@ -104,13 +106,18 @@ def get_tools(
     if tool_ids:
         snapshots = (
             db.query(ToolSnapshot.tool_id, ToolSnapshot.score, ToolSnapshot.recorded_at)
-            .filter(ToolSnapshot.tool_id.in_(tool_ids), ToolSnapshot.recorded_at >= seven_days_ago)
+            .filter(
+                ToolSnapshot.tool_id.in_(tool_ids),
+                ToolSnapshot.recorded_at >= seven_days_ago,
+            )
             .order_by(ToolSnapshot.recorded_at.asc())
             .all()
         )
         for snap in snapshots:
             if snap.tool_id in sparkline_map:
-                sparkline_map[snap.tool_id].append(round(snap.score, 1) if snap.score else 0.0)
+                sparkline_map[snap.tool_id].append(
+                    round(snap.score, 1) if snap.score else 0.0
+                )
 
     # Filter if category specified
     if category:
@@ -147,14 +154,21 @@ def get_tools(
             "level": t.level,
             "is_entry_point": t.is_entry_point,
             "learning_sequence_score": t.learning_sequence_score,
-            "parent_slug": id_to_slug.get(t.parent_tool_id) if t.parent_tool_id else None,
+            "parent_slug": id_to_slug.get(t.parent_tool_id)
+            if t.parent_tool_id
+            else None,
             "sentiment_label": t.sentiment_label or "neutral",
             "sentiment_positive": t.sentiment_positive or 0,
             "sentiment_negative": t.sentiment_negative or 0,
             "rank": rank_map.get(t.id, 0),
             "rank_in_category": cat_rank_map.get(t.id, (0, 0))[0],
             "category_size": cat_rank_map.get(t.id, (0, 0))[1],
-            "percentile": round((1 - (rank_map.get(t.id, total_tools) - 1) / max(total_tools - 1, 1)) * 100) if total_tools > 1 else 50,
+            "percentile": round(
+                (1 - (rank_map.get(t.id, total_tools) - 1) / max(total_tools - 1, 1))
+                * 100
+            )
+            if total_tools > 1
+            else 50,
             "last_7_scores": sparkline_map.get(t.id, []),
             "updated_at": t.updated_at.isoformat() if t.updated_at else None,
         }
@@ -174,6 +188,7 @@ def get_tools(
 # TOOLS BY DOMAIN (Phase 3.1 — for Explore page)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+
 @router.get("/tools/by-domain")
 def get_tools_by_domain(db: Session = Depends(get_db)):
     """Get all tools grouped by domain. Used by the Explore page."""
@@ -186,26 +201,28 @@ def get_tools_by_domain(db: Session = Depends(get_db)):
             .order_by(Tool.score.desc())
             .all()
         )
-        result.append({
-            "name": domain.name,
-            "slug": domain.slug,
-            "icon": domain.icon,
-            "score": domain.score,
-            "tools": [
-                {
-                    "slug": t.slug,
-                    "name": t.name,
-                    "icon": t.icon,
-                    "score": t.score,
-                    "stars": t.stars,
-                    "stage": t.stage,
-                    "growth_pct": t.growth_pct,
-                    "learning_priority": t.learning_priority,
-                    "description": t.description,
-                }
-                for t in domain_tools
-            ],
-        })
+        result.append(
+            {
+                "name": domain.name,
+                "slug": domain.slug,
+                "icon": domain.icon,
+                "score": domain.score,
+                "tools": [
+                    {
+                        "slug": t.slug,
+                        "name": t.name,
+                        "icon": t.icon,
+                        "score": t.score,
+                        "stars": t.stars,
+                        "stage": t.stage,
+                        "growth_pct": t.growth_pct,
+                        "learning_priority": t.learning_priority,
+                        "description": t.description,
+                    }
+                    for t in domain_tools
+                ],
+            }
+        )
     return {"domains": result}
 
 
@@ -213,21 +230,31 @@ def get_tools_by_domain(db: Session = Depends(get_db)):
 # COMPARE (must be before /tools/{slug} to avoid slug capture)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+
 @router.get("/tools/compare")
 def compare_tools(
-    slugs: str = Query(..., description="Comma-separated tool slugs (2-5), e.g. 'react,vuejs,svelte'"),
+    slugs: str = Query(
+        ..., description="Comma-separated tool slugs (2-5), e.g. 'react,vuejs,svelte'"
+    ),
     db: Session = Depends(get_db),
 ):
     """Compare multiple tools side by side with their history data."""
     slug_list = [s.strip() for s in slugs.split(",") if s.strip()]
     if len(slug_list) < 2:
-        raise HTTPException(status_code=400, detail="Provide at least 2 tool slugs to compare")
+        raise HTTPException(
+            status_code=400, detail="Provide at least 2 tool slugs to compare"
+        )
     if len(slug_list) > 5:
-        raise HTTPException(status_code=400, detail="Maximum 5 tools can be compared at once")
+        raise HTTPException(
+            status_code=400, detail="Maximum 5 tools can be compared at once"
+        )
 
     tools = db.query(Tool).filter(Tool.slug.in_(slug_list)).all()
     if len(tools) < 2:
-        raise HTTPException(status_code=404, detail=f"Not enough tools found. Found: {[t.slug for t in tools]}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Not enough tools found. Found: {[t.slug for t in tools]}",
+        )
 
     # Fetch 30-day history for all tools
     cutoff = utc_today() - timedelta(days=30)
@@ -235,34 +262,45 @@ def compare_tools(
     for tool in tools:
         snapshots = (
             db.query(ToolSnapshot)
-            .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.recorded_at >= utc_midnight_naive(cutoff))
+            .filter(
+                ToolSnapshot.tool_id == tool.id,
+                ToolSnapshot.recorded_at >= utc_midnight_naive(cutoff),
+            )
             .order_by(ToolSnapshot.recorded_at.asc())
             .all()
         )
-        result.append({
-            "slug": tool.slug,
-            "name": tool.name,
-            "icon": tool.icon,
-            "category": tool.category,
-            "score": tool.score,
-            "stage": tool.stage,
-            "stars": tool.stars,
-            "forks": tool.forks,
-            "growth_pct": tool.growth_pct,
-            "hn_count": tool.hn_count,
-            "devto_count": tool.devto_count,
-            "reddit_count": tool.reddit_count,
-            "news_count": tool.news_count,
-            "sentiment_label": tool.sentiment_label or "neutral",
-            "sentiment_positive": tool.sentiment_positive or 0,
-            "sentiment_negative": tool.sentiment_negative or 0,
-            "learning_priority": tool.learning_priority,
-            "recommendation": tool.recommendation,
-            "history": [
-                {"date": s.recorded_at.isoformat(), "score": s.score, "github_stars_delta": s.github_stars_delta, "mention_count": s.mention_count, "sentiment_score": s.sentiment_score}
-                for s in snapshots
-            ],
-        })
+        result.append(
+            {
+                "slug": tool.slug,
+                "name": tool.name,
+                "icon": tool.icon,
+                "category": tool.category,
+                "score": tool.score,
+                "stage": tool.stage,
+                "stars": tool.stars,
+                "forks": tool.forks,
+                "growth_pct": tool.growth_pct,
+                "hn_count": tool.hn_count,
+                "devto_count": tool.devto_count,
+                "reddit_count": tool.reddit_count,
+                "news_count": tool.news_count,
+                "sentiment_label": tool.sentiment_label or "neutral",
+                "sentiment_positive": tool.sentiment_positive or 0,
+                "sentiment_negative": tool.sentiment_negative or 0,
+                "learning_priority": tool.learning_priority,
+                "recommendation": tool.recommendation,
+                "history": [
+                    {
+                        "date": s.recorded_at.isoformat(),
+                        "score": s.score,
+                        "github_stars_delta": s.github_stars_delta,
+                        "mention_count": s.mention_count,
+                        "sentiment_score": s.sentiment_score,
+                    }
+                    for s in snapshots
+                ],
+            }
+        )
 
     return {"tools": result}
 
@@ -281,9 +319,15 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
     if not roadmap:
         roadmap = db.query(ToolRoadmap).filter(ToolRoadmap.tool_id == tool.id).first()
     if not roadmap and tool.domain_rel:
-        roadmap = db.query(ToolRoadmap).filter(ToolRoadmap.slug == tool.domain_rel.slug).first()
+        roadmap = (
+            db.query(ToolRoadmap)
+            .filter(ToolRoadmap.slug == tool.domain_rel.slug)
+            .first()
+        )
 
-    total_mentions = tool.hn_count + tool.devto_count + tool.reddit_count + tool.news_count
+    total_mentions = (
+        tool.hn_count + tool.devto_count + tool.reddit_count + tool.news_count
+    )
 
     # Look up parent tool slug
     parent_tool_slug = None
@@ -293,7 +337,12 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
             parent_tool_slug = parent.slug
 
     # Compute rank within category
-    cat_tools = db.query(Tool).filter(Tool.category == tool.category).order_by(Tool.score.desc()).all()
+    cat_tools = (
+        db.query(Tool)
+        .filter(Tool.category == tool.category)
+        .order_by(Tool.score.desc())
+        .all()
+    )
     rank_in_cat = next((i + 1 for i, t in enumerate(cat_tools) if t.id == tool.id), 0)
 
     # Global rank
@@ -318,10 +367,14 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
         # Real momentum: % star growth per week, derived from absolute star
         # history. null = not enough history yet (render "building history",
         # NOT 0% — "no data" and "no growth" are different claims).
-        "star_velocity_pct_per_week": calculate_star_velocity([
-            {"recorded_at": s.recorded_at, "stars": s.stars}
-            for s in db.query(ToolSnapshot).filter(ToolSnapshot.tool_id == tool.id).all()
-        ]),
+        "star_velocity_pct_per_week": calculate_star_velocity(
+            [
+                {"recorded_at": s.recorded_at, "stars": s.stars}
+                for s in db.query(ToolSnapshot)
+                .filter(ToolSnapshot.tool_id == tool.id)
+                .all()
+            ]
+        ),
         "total_mentions": total_mentions,
         "hn_count": tool.hn_count,
         "devto_count": tool.devto_count,
@@ -343,14 +396,18 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
         "rank": global_rank,
         "rank_in_category": rank_in_cat,
         "category_size": len(cat_tools),
-        "percentile": round((1 - (global_rank - 1) / max(total_tools - 1, 1)) * 100) if total_tools > 1 else 50,
+        "percentile": round((1 - (global_rank - 1) / max(total_tools - 1, 1)) * 100)
+        if total_tools > 1
+        else 50,
         "updated_at": tool.updated_at.isoformat() if tool.updated_at else None,
     }
 
 
 @router.get("/tools/history/bulk")
 def get_bulk_history(
-    slugs: str | None = Query(None, description="Comma-separated slugs. Omit for the top tools by score."),
+    slugs: str | None = Query(
+        None, description="Comma-separated slugs. Omit for the top tools by score."
+    ),
     days: int = Query(30, ge=1, le=90),
     limit: int = Query(12, ge=2, le=31),
     db: Session = Depends(get_db),
@@ -368,7 +425,9 @@ def get_bulk_history(
     invent a value to fill a gap.
     """
     if slugs:
-        wanted = [validate_slug(s.strip()) for s in slugs.split(",") if s.strip()][:limit]
+        wanted = [validate_slug(s.strip()) for s in slugs.split(",") if s.strip()][
+            :limit
+        ]
         tools = db.query(Tool).filter(Tool.slug.in_(wanted)).all()
         # Preserve the caller's order rather than the DB's.
         order = {s: i for i, s in enumerate(wanted)}
@@ -433,7 +492,9 @@ def get_bulk_history(
 
 
 @router.get("/tools/{slug}/history")
-def get_tool_history(slug: str, days: int = Query(30, ge=1, le=90), db: Session = Depends(get_db)):
+def get_tool_history(
+    slug: str, days: int = Query(30, ge=1, le=90), db: Session = Depends(get_db)
+):
     """Get time-series data for a tool (last N days)."""
     validate_slug(slug)
     tool = db.query(Tool).filter(Tool.slug == slug).first()
@@ -443,7 +504,10 @@ def get_tool_history(slug: str, days: int = Query(30, ge=1, le=90), db: Session 
     cutoff = utc_today() - timedelta(days=days)
     snapshots = (
         db.query(ToolSnapshot)
-        .filter(ToolSnapshot.tool_id == tool.id, ToolSnapshot.recorded_at >= utc_midnight_naive(cutoff))
+        .filter(
+            ToolSnapshot.tool_id == tool.id,
+            ToolSnapshot.recorded_at >= utc_midnight_naive(cutoff),
+        )
         .order_by(ToolSnapshot.recorded_at.asc())
         .all()
     )
@@ -548,20 +612,32 @@ async def get_tool_resources(
                 db.delete(old)
             db.flush()
             for f in found:
-                db.add(ToolResource(
-                    tool_slug=slug, kind=f["kind"], source=f["source"],
-                    title=f["title"], url=f["url"], channel=f.get("channel"),
-                    thumbnail=f.get("thumbnail"), blurb=f.get("blurb"),
-                    views=f.get("views"), likes=f.get("likes"),
-                    duration_s=f.get("duration_s"), item_count=f.get("item_count"),
-                    published_at=f.get("published_at"),
-                    language=f.get("language", language),
-                    rank_score=f.get("rank_score", 0.0), fetched_at=now,
-                ))
+                db.add(
+                    ToolResource(
+                        tool_slug=slug,
+                        kind=f["kind"],
+                        source=f["source"],
+                        title=f["title"],
+                        url=f["url"],
+                        channel=f.get("channel"),
+                        thumbnail=f.get("thumbnail"),
+                        blurb=f.get("blurb"),
+                        views=f.get("views"),
+                        likes=f.get("likes"),
+                        duration_s=f.get("duration_s"),
+                        item_count=f.get("item_count"),
+                        published_at=f.get("published_at"),
+                        language=f.get("language", language),
+                        rank_score=f.get("rank_score", 0.0),
+                        fetched_at=now,
+                    )
+                )
             db.commit()
             cached = (
                 db.query(ToolResource)
-                .filter(ToolResource.tool_slug == slug, ToolResource.language == language)
+                .filter(
+                    ToolResource.tool_slug == slug, ToolResource.language == language
+                )
                 .order_by(ToolResource.rank_score.desc())
                 .all()
             )
@@ -591,7 +667,9 @@ async def get_tool_resources(
         # Kept for back-compat: true only when the list is a live-stats ranking.
         "videos_live": videos_source == "youtube_api",
         "latest_version": tool.latest_version,
-        "latest_release_at": tool.latest_release_at.isoformat() if tool.latest_release_at else None,
+        "latest_release_at": tool.latest_release_at.isoformat()
+        if tool.latest_release_at
+        else None,
         "videos": videos or resources_svc.youtube_search_fallback(tool.name, language),
         "platforms": platforms,
     }
@@ -608,6 +686,7 @@ async def get_tool_resources(
 # why briefs are written but every walkthrough link is verified. These endpoints
 # read from it and never author anything themselves.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 async def _verified_walkthrough(project: dict, db: Session) -> dict:
     """Resolve a project's walkthrough, dropping any video that no longer exists.
@@ -657,11 +736,17 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
             .first()
         )
         now = datetime.now(timezone.utc)
-        fresh = cached and (now - (cached.fetched_at or now).replace(tzinfo=timezone.utc)) <= RESOURCE_TTL
+        fresh = (
+            cached
+            and (now - (cached.fetched_at or now).replace(tzinfo=timezone.utc))
+            <= RESOURCE_TTL
+        )
         if fresh:
             out["video"] = {
-                "url": cached.url, "title": cached.title,
-                "channel": cached.channel, "thumbnail": cached.thumbnail,
+                "url": cached.url,
+                "title": cached.title,
+                "channel": cached.channel,
+                "thumbnail": cached.thumbnail,
             }
             out["video_verified"] = True
             out["videos_live"] = True
@@ -680,7 +765,8 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
             found = []
 
         found = [
-            f for f in found
+            f
+            for f in found
             if projects_svc.video_matches(f.get("title") or "", project["walkthrough"])
         ]
 
@@ -689,16 +775,25 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
             db.query(ToolResource).filter(
                 ToolResource.tool_slug.like(f"project:{project['slug']}%")
             ).delete(synchronize_session=False)
-            db.add(ToolResource(
-                tool_slug=cache_slug, kind=top.get("kind", "video"), source="youtube",
-                title=top.get("title") or "", url=top.get("url") or "",
-                channel=top.get("channel"), thumbnail=top.get("thumbnail"),
-                rank_score=top.get("rank_score") or 0.0, fetched_at=now,
-            ))
+            db.add(
+                ToolResource(
+                    tool_slug=cache_slug,
+                    kind=top.get("kind", "video"),
+                    source="youtube",
+                    title=top.get("title") or "",
+                    url=top.get("url") or "",
+                    channel=top.get("channel"),
+                    thumbnail=top.get("thumbnail"),
+                    rank_score=top.get("rank_score") or 0.0,
+                    fetched_at=now,
+                )
+            )
             db.commit()
             out["video"] = {
-                "url": top.get("url"), "title": top.get("title"),
-                "channel": top.get("channel"), "thumbnail": top.get("thumbnail"),
+                "url": top.get("url"),
+                "title": top.get("title"),
+                "channel": top.get("channel"),
+                "thumbnail": top.get("thumbnail"),
             }
             out["video_verified"] = True
             out["videos_live"] = True
@@ -718,7 +813,9 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
 
     try:
         async with httpx.AsyncClient(follow_redirects=True) as client:
-            found = await resources_svc.verify_youtube(client, video_id, "video", keywords)
+            found = await resources_svc.verify_youtube(
+                client, video_id, "video", keywords
+            )
     except Exception as e:  # noqa: BLE001
         logger.debug(f"walkthrough verify failed for {video_id}: {e}")
         found = None
@@ -814,13 +911,18 @@ def get_roadmaps(db: Session = Depends(get_db)):
 # editorial (a tool is "used" at a given concept stage); names/scores/stars are
 # hydrated live from the Tool table at request time, so nothing here is stale.
 ROADMAP_STEP_TOOLS: dict[str, dict[int, list[str]]] = {
-    "ai-ml":          {4: ["pytorch", "tensorflow"], 5: ["transformers", "langchain", "ollama"]},
-    "web-development": {1: ["tailwindcss", "vite"], 2: ["react", "vuejs", "svelte", "nextjs", "astro"], 3: ["fastapi", "trpc"], 5: ["bun", "deno"]},
-    "cloud-native":   {2: ["kubernetes", "terraform"], 3: ["supabase"]},
-    "devops":         {2: ["docker"], 4: ["grafana", "prometheus"]},
-    "cybersecurity":  {1: ["wireshark"], 3: ["metasploit", "owasp-zap"]},
-    "web3":           {2: ["hardhat", "foundry"], 3: ["ethersjs"]},
-    "systems":        {2: ["rust"], 3: ["go"]},
+    "ai-ml": {4: ["pytorch", "tensorflow"], 5: ["transformers", "langchain", "ollama"]},
+    "web-development": {
+        1: ["tailwindcss", "vite"],
+        2: ["react", "vuejs", "svelte", "nextjs", "astro"],
+        3: ["fastapi", "trpc"],
+        5: ["bun", "deno"],
+    },
+    "cloud-native": {2: ["kubernetes", "terraform"], 3: ["supabase"]},
+    "devops": {2: ["docker"], 4: ["grafana", "prometheus"]},
+    "cybersecurity": {1: ["wireshark"], 3: ["metasploit", "owasp-zap"]},
+    "web3": {2: ["hardhat", "foundry"], 3: ["ethersjs"]},
+    "systems": {2: ["rust"], 3: ["go"]},
     "data-databases": {3: ["prisma"]},
 }
 
@@ -841,8 +943,11 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
     if needed_slugs:
         for t in db.query(Tool).filter(Tool.slug.in_(needed_slugs)).all():
             tools_by_slug[t.slug] = {
-                "slug": t.slug, "name": t.name, "icon": t.icon,
-                "score": t.score, "stars": t.stars,
+                "slug": t.slug,
+                "name": t.name,
+                "icon": t.icon,
+                "score": t.score,
+                "stars": t.stars,
             }
 
         # Attach the single best learning video per tool so a learner can watch
@@ -863,22 +968,30 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
         for r in vid_rows:
             if r.tool_slug not in top_video:
                 top_video[r.tool_slug] = {
-                    "title": r.title, "url": r.url, "channel": r.channel,
-                    "thumbnail": r.thumbnail, "kind": r.kind,
+                    "title": r.title,
+                    "url": r.url,
+                    "channel": r.channel,
+                    "thumbnail": r.thumbnail,
+                    "kind": r.kind,
                 }
         for s, info in tools_by_slug.items():
             if s not in top_video:
                 fallback = resources_svc.curated_first_url(s)
                 if fallback:
                     top_video[s] = {
-                        "title": None, "url": fallback["url"], "channel": None,
-                        "thumbnail": None, "kind": fallback["kind"],
+                        "title": None,
+                        "url": fallback["url"],
+                        "channel": None,
+                        "thumbnail": None,
+                        "kind": fallback["kind"],
                     }
             info["video"] = top_video.get(s)
 
     # A project per step, so a checkbox has something to prove behind it.
     # Grouped in one pass rather than a lookup per step.
-    projects_by_tool = projects_svc.projects_for_tools(needed_slugs) if needed_slugs else {}
+    projects_by_tool = (
+        projects_svc.projects_for_tools(needed_slugs) if needed_slugs else {}
+    )
 
     for step in steps:
         slugs = step_tool_map.get(step.get("step"), [])
@@ -913,6 +1026,7 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
 # account's progress. With no key configured the endpoints fall back to a
 # client-supplied id for local dev. Set the key in any real deployment.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 def _roadmap_steps(db: Session, slug: str) -> list:
     rm = db.query(ToolRoadmap).filter(ToolRoadmap.slug == slug).first()
@@ -987,17 +1101,21 @@ def build_progress_summary(db: Session, user_id: str) -> dict:
         steps = json.loads(rm.steps_json) if rm.steps_json else []
         done = {e.step for e in entries}
         remaining = [s for s in steps if s.get("step") not in done]
-        last_touched = max((e.completed_at for e in entries if e.completed_at), default=None)
-        active.append({
-            "roadmap_slug": slug,
-            "title": rm.title,
-            "icon": rm.icon,
-            "completed": len(done),
-            "total": len(steps),
-            "percent": round(len(done) / len(steps) * 100) if steps else 0,
-            "next_step": remaining[0] if remaining else None,
-            "last_active": last_touched.isoformat() if last_touched else None,
-        })
+        last_touched = max(
+            (e.completed_at for e in entries if e.completed_at), default=None
+        )
+        active.append(
+            {
+                "roadmap_slug": slug,
+                "title": rm.title,
+                "icon": rm.icon,
+                "completed": len(done),
+                "total": len(steps),
+                "percent": round(len(done) / len(steps) * 100) if steps else 0,
+                "next_step": remaining[0] if remaining else None,
+                "last_active": last_touched.isoformat() if last_touched else None,
+            }
+        )
 
     # Most recently touched first — that's the one to offer resuming.
     active.sort(key=lambda a: a["last_active"] or "", reverse=True)
@@ -1011,7 +1129,9 @@ def build_progress_summary(db: Session, user_id: str) -> dict:
         "completed_today": completed_today,
         "active": active,
         # The single next thing to do — the daily hook.
-        "todays_focus": active[0]["next_step"] if active and active[0]["next_step"] else None,
+        "todays_focus": active[0]["next_step"]
+        if active and active[0]["next_step"]
+        else None,
         "focus_roadmap": active[0]["roadmap_slug"] if active else None,
     }
 
@@ -1034,7 +1154,9 @@ def _progress_for(db: Session, roadmap_slug: str, user_id: str) -> dict:
     steps = _roadmap_steps(db, roadmap_slug)
     rows = (
         db.query(UserProgress)
-        .filter(UserProgress.user_id == user_id, UserProgress.roadmap_slug == roadmap_slug)
+        .filter(
+            UserProgress.user_id == user_id, UserProgress.roadmap_slug == roadmap_slug
+        )
         .all()
     )
     done = sorted({r.step for r in rows})
@@ -1062,7 +1184,9 @@ def toggle_progress(
     roadmap_slug = (payload or {}).get("roadmap_slug")
     step = (payload or {}).get("step")
     if roadmap_slug is None or step is None:
-        raise HTTPException(status_code=422, detail="roadmap_slug and step are required")
+        raise HTTPException(
+            status_code=422, detail="roadmap_slug and step are required"
+        )
 
     existing = (
         db.query(UserProgress)
@@ -1081,7 +1205,11 @@ def toggle_progress(
         completed = True
     db.commit()
 
-    return {**_progress_for(db, roadmap_slug, user_id), "step": step, "completed": completed}
+    return {
+        **_progress_for(db, roadmap_slug, user_id),
+        "step": step,
+        "completed": completed,
+    }
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1161,13 +1289,20 @@ async def send_daily_digests(
     """
     expected = os.getenv("ADMIN_API_KEY", "")
     if not expected:
-        raise HTTPException(status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY.")
+        raise HTTPException(
+            status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY."
+        )
     if x_admin_key != expected:
         raise HTTPException(status_code=403, detail="Invalid admin key.")
 
     from app.services.notifications import run_daily_digests
+
     result = await run_daily_digests(db)
-    return {"status": "ok", "provider_configured": bool(settings.RESEND_API_KEY), **result}
+    return {
+        "status": "ok",
+        "provider_configured": bool(settings.RESEND_API_KEY),
+        **result,
+    }
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1189,12 +1324,14 @@ def join_waitlist(payload: dict | None = None, db: Session = Depends(get_db)):
     """
     data = payload or {}
     email = str(data.get("email", "")).strip().lower()
-    source = (str(data.get("source", "")).strip() or None)
+    source = str(data.get("source", "")).strip() or None
     if source:
         source = source[:64]
 
     if not email or len(email) > 254 or not EMAIL_RE.match(email):
-        raise HTTPException(status_code=422, detail="Please enter a valid email address.")
+        raise HTTPException(
+            status_code=422, detail="Please enter a valid email address."
+        )
 
     existing = db.query(WaitlistSignup).filter(WaitlistSignup.email == email).first()
     if existing:
@@ -1213,7 +1350,9 @@ def list_waitlist(
     """Export the waitlist (owner only). Gate with the X-Admin-Key header."""
     expected = os.getenv("ADMIN_API_KEY", "")
     if not expected:
-        raise HTTPException(status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY.")
+        raise HTTPException(
+            status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY."
+        )
     if x_admin_key != expected:
         raise HTTPException(status_code=403, detail="Invalid admin key.")
 
@@ -1221,8 +1360,11 @@ def list_waitlist(
     return {
         "count": len(rows),
         "signups": [
-            {"email": r.email, "source": r.source,
-             "created_at": r.created_at.isoformat() if r.created_at else None}
+            {
+                "email": r.email,
+                "source": r.source,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
             for r in rows
         ],
     }
@@ -1232,6 +1374,7 @@ def list_waitlist(
 # DOMAINS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+
 @router.get("/domains")
 def get_domains(db: Session = Depends(get_db)):
     """Get all technology domains with aggregated scores."""
@@ -1240,16 +1383,18 @@ def get_domains(db: Session = Depends(get_db)):
     result = []
     for d in domains:
         tool_count = db.query(Tool).filter(Tool.domain_id == d.id).count()
-        result.append({
-            "slug": d.slug,
-            "name": d.name,
-            "icon": d.icon,
-            "score": d.score,
-            "stage": d.stage,
-            "summary": d.summary,
-            "tool_count": tool_count,
-            "updated_at": d.updated_at.isoformat() if d.updated_at else None,
-        })
+        result.append(
+            {
+                "slug": d.slug,
+                "name": d.name,
+                "icon": d.icon,
+                "score": d.score,
+                "stage": d.stage,
+                "summary": d.summary,
+                "tool_count": tool_count,
+                "updated_at": d.updated_at.isoformat() if d.updated_at else None,
+            }
+        )
 
     return result
 
@@ -1257,6 +1402,7 @@ def get_domains(db: Session = Depends(get_db)):
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # LEARNING PATHS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 @router.get("/domains/{domain_slug}/learning-path")
 def get_learning_path(domain_slug: str, db: Session = Depends(get_db)):
@@ -1302,11 +1448,25 @@ def get_learning_path(domain_slug: str, db: Session = Depends(get_db)):
 
     path = []
     if levels["beginner"]:
-        path.append({"level": "beginner", "label": "🟢 Start Here", "tools": levels["beginner"]})
+        path.append(
+            {"level": "beginner", "label": "🟢 Start Here", "tools": levels["beginner"]}
+        )
     if levels["intermediate"]:
-        path.append({"level": "intermediate", "label": "🟡 Build Foundations", "tools": levels["intermediate"]})
+        path.append(
+            {
+                "level": "intermediate",
+                "label": "🟡 Build Foundations",
+                "tools": levels["intermediate"],
+            }
+        )
     if levels["advanced"]:
-        path.append({"level": "advanced", "label": "🔴 Advanced Tools", "tools": levels["advanced"]})
+        path.append(
+            {
+                "level": "advanced",
+                "label": "🔴 Advanced Tools",
+                "tools": levels["advanced"],
+            }
+        )
 
     return {
         "domain": domain.name,
@@ -1316,9 +1476,11 @@ def get_learning_path(domain_slug: str, db: Session = Depends(get_db)):
         "path": path,
     }
 
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # STATUS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 @router.get("/overview")
 def get_overview(db: Session = Depends(get_db)):
@@ -1335,7 +1497,10 @@ def get_overview(db: Session = Depends(get_db)):
     roadmap_count = db.query(ToolRoadmap).count()
 
     total_mentions = sum(
-        (t.hn_count or 0) + (t.devto_count or 0) + (t.reddit_count or 0) + (t.news_count or 0)
+        (t.hn_count or 0)
+        + (t.devto_count or 0)
+        + (t.reddit_count or 0)
+        + (t.news_count or 0)
         for t in curated
     )
     total_stars = sum((t.stars or 0) for t in curated)
@@ -1344,7 +1509,11 @@ def get_overview(db: Session = Depends(get_db)):
     neg = sum((t.sentiment_negative or 0) for t in curated)
     sentiment_ratio = round((pos / (pos + neg)) * 100, 1) if (pos + neg) > 0 else None
 
-    momentum_index = round(sum((t.score or 0) for t in curated) / tracked_count, 1) if tracked_count else 0.0
+    momentum_index = (
+        round(sum((t.score or 0) for t in curated) / tracked_count, 1)
+        if tracked_count
+        else 0.0
+    )
 
     since = utcnow_naive() - timedelta(days=1)
     signals_24h = (
@@ -1353,7 +1522,7 @@ def get_overview(db: Session = Depends(get_db)):
         .scalar()
     ) or 0
 
-    movers = sorted(curated, key=lambda t: (t.growth_pct or 0), reverse=True)
+    movers = sorted(curated, key=lambda t: t.growth_pct or 0, reverse=True)
     top_mover = movers[0] if movers and (movers[0].growth_pct or 0) > 0 else None
 
     # WHEN THE DATA WAS LAST REFRESHED.
@@ -1373,8 +1542,12 @@ def get_overview(db: Session = Depends(get_db)):
     # Fall back to the snapshot only when no scrape has completed in this
     # process, which is the case on a fresh boot before the first cycle.
     last_scraped = scrape_status.get("last_scraped_time")
-    last_snapshot = db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
-    last_updated = last_scraped or (last_snapshot.recorded_at.isoformat() if last_snapshot else None)
+    last_snapshot = (
+        db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
+    )
+    last_updated = last_scraped or (
+        last_snapshot.recorded_at.isoformat() if last_snapshot else None
+    )
 
     return {
         "tools_tracked": tracked_count,
@@ -1393,7 +1566,9 @@ def get_overview(db: Session = Depends(get_db)):
             "icon": top_mover.icon,
             "score": top_mover.score,
             "growth_pct": top_mover.growth_pct,
-        } if top_mover else None,
+        }
+        if top_mover
+        else None,
         "last_updated": last_updated,
         "is_scraping": scrape_status.get("is_running", False),
         "next_cycle": scrape_status.get("next_scraped_time"),
@@ -1411,7 +1586,9 @@ def get_scraper_status():
 
 
 def _freshness(db: Session) -> dict:
-    last_snapshot = db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
+    last_snapshot = (
+        db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
+    )
     return health_svc.assess_freshness(
         scrape_status.get("last_scraped_time"),
         last_snapshot.recorded_at if last_snapshot else None,
@@ -1428,6 +1605,7 @@ def health_check(db: Session = Depends(get_db)):
     it used to read "ok" even with the database unreachable.
     """
     from sqlalchemy import text
+
     try:
         db.execute(text("SELECT 1"))
         db_status = "connected"
@@ -1471,13 +1649,16 @@ def readiness_check(db: Session = Depends(get_db)):
     """Kubernetes readiness probe — returns 503 until enough tools are seeded."""
     tool_count = db.query(Tool).count()
     if tool_count < 10:
-        raise HTTPException(status_code=503, detail=f"Not enough tools seeded yet ({tool_count}/10)")
+        raise HTTPException(
+            status_code=503, detail=f"Not enough tools seeded yet ({tool_count}/10)"
+        )
     return {"ready": True, "tools": tool_count}
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ADMIN
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 @router.post("/admin/scrape")
 async def trigger_manual_scrape(
@@ -1491,18 +1672,28 @@ async def trigger_manual_scrape(
     # Auth check
     expected_key = os.getenv("ADMIN_API_KEY", "")
     if not expected_key:
-        raise HTTPException(status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY env var.")
+        raise HTTPException(
+            status_code=503,
+            detail="Admin API key not configured. Set ADMIN_API_KEY env var.",
+        )
     if x_admin_key != expected_key:
         raise HTTPException(status_code=403, detail="Invalid admin key.")
 
     # Check if already running
     if scrape_status.get("is_running"):
-        return {"status": "already_running", "current_step": scrape_status.get("current_step")}
+        return {
+            "status": "already_running",
+            "current_step": scrape_status.get("current_step"),
+        }
 
     # Trigger in background
     # run_one_cycle, not perform_full_scrape: the outcome must reach the
     # freshness fields /health/data reads, same as a scheduled cycle.
     from app.services.scheduler import run_one_cycle
+
     asyncio.create_task(run_one_cycle())
 
-    return {"status": "accepted", "message": "Scrape cycle started in background. Check /api/v1/status for progress."}
+    return {
+        "status": "accepted",
+        "message": "Scrape cycle started in background. Check /api/v1/status for progress.",
+    }

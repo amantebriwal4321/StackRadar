@@ -45,7 +45,9 @@ _gh_token = settings.GITHUB_TOKEN
 if _gh_token:
     logger.info(f"GitHub token loaded: {_gh_token[:8]}*** (len={len(_gh_token)})")
 else:
-    logger.warning("⚠️  GITHUB_TOKEN is empty — GitHub API will use unauthenticated rate limit (60 req/hr)")
+    logger.warning(
+        "⚠️  GITHUB_TOKEN is empty — GitHub API will use unauthenticated rate limit (60 req/hr)"
+    )
 
 MAX_RETRIES = 2
 RETRY_BACKOFF = [2.0, 5.0]
@@ -95,7 +97,9 @@ async def validate_github_token(client: httpx.AsyncClient) -> dict[str, Any]:
     global _rate_remaining, _rate_limit
     try:
         headers = _build_github_headers()
-        response = await client.get("https://api.github.com/rate_limit", headers=headers, timeout=10.0)
+        response = await client.get(
+            "https://api.github.com/rate_limit", headers=headers, timeout=10.0
+        )
         if response.status_code == 200:
             data = response.json()
             core = data.get("resources", {}).get("core", {})
@@ -147,7 +151,9 @@ async def fetch_github_repo_stats(
                 # follow_redirects: GitHub answers 301 for repos that have been
                 # renamed or transferred (e.g. facebook/react). Without this the
                 # request fails all retries and the tool silently loses its stats.
-                response = await client.get(url, headers=headers, timeout=15.0, follow_redirects=True)
+                response = await client.get(
+                    url, headers=headers, timeout=15.0, follow_redirects=True
+                )
                 _update_rate_budget(response)
 
                 if response.status_code == 304:
@@ -195,17 +201,25 @@ async def fetch_github_repo_stats(
                     continue
 
                 elif response.status_code >= 500:
-                    logger.error(f"GitHub {response.status_code} server error for '{owner_repo}'")
+                    logger.error(
+                        f"GitHub {response.status_code} server error for '{owner_repo}'"
+                    )
                 else:
-                    logger.error(f"GitHub unexpected {response.status_code} for '{owner_repo}'")
+                    logger.error(
+                        f"GitHub unexpected {response.status_code} for '{owner_repo}'"
+                    )
 
             except httpx.TimeoutException:
-                logger.warning(f"GitHub timeout for '{owner_repo}' (attempt {attempt + 1})")
+                logger.warning(
+                    f"GitHub timeout for '{owner_repo}' (attempt {attempt + 1})"
+                )
             except httpx.ConnectError as e:
                 logger.error(f"GitHub connection error for '{owner_repo}': {e}")
                 return None
             except Exception as e:
-                logger.error(f"GitHub unexpected error for '{owner_repo}': {type(e).__name__}: {e}")
+                logger.error(
+                    f"GitHub unexpected error for '{owner_repo}': {type(e).__name__}: {e}"
+                )
 
             # Backoff before retry
             if attempt < MAX_RETRIES:
@@ -213,7 +227,9 @@ async def fetch_github_repo_stats(
                 logger.info(f"GitHub: retrying '{owner_repo}' in {delay}s...")
                 await asyncio.sleep(delay)
 
-        logger.error(f"GitHub: all {MAX_RETRIES + 1} attempts failed for '{owner_repo}'")
+        logger.error(
+            f"GitHub: all {MAX_RETRIES + 1} attempts failed for '{owner_repo}'"
+        )
         return None
 
     finally:
@@ -238,7 +254,9 @@ async def fetch_github_latest_release(
     try:
         r = await client.get(
             f"https://api.github.com/repos/{owner_repo}/releases/latest",
-            headers=_build_github_headers(), timeout=15.0, follow_redirects=True,
+            headers=_build_github_headers(),
+            timeout=15.0,
+            follow_redirects=True,
         )
         _update_rate_budget(r)
         if r.status_code != 200:
@@ -249,7 +267,8 @@ async def fetch_github_latest_release(
             "version": data.get("tag_name") or data.get("name"),
             "published_at": (
                 datetime.fromisoformat(published.replace("Z", "+00:00"))
-                if published else None
+                if published
+                else None
             ),
         }
     except Exception as e:
@@ -263,6 +282,7 @@ async def fetch_github_latest_release(
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # HACKERNEWS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 async def fetch_hackernews() -> list[dict[str, Any]]:
     """Fetch top 100 stories from HackerNews Firebase API (concurrent batches).
@@ -282,7 +302,9 @@ async def fetch_hackernews() -> list[dict[str, Any]]:
 
             async def fetch_story(story_id: int) -> dict[str, Any] | None:
                 try:
-                    story_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
+                    story_url = (
+                        f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
+                    )
                     story_res = await client.get(story_url, timeout=5.0)
                     if story_res.status_code == 200:
                         story_data = story_res.json()
@@ -298,7 +320,7 @@ async def fetch_hackernews() -> list[dict[str, Any]]:
             # Fetch in batches of 10
             stories: list[dict[str, Any]] = []
             for i in range(0, len(story_ids), 10):
-                batch = story_ids[i:i + 10]
+                batch = story_ids[i : i + 10]
                 results = await asyncio.gather(*[fetch_story(sid) for sid in batch])
                 stories.extend([s for s in results if s])
 
@@ -311,6 +333,7 @@ async def fetch_hackernews() -> list[dict[str, Any]]:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # DEV.TO
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 async def fetch_devto() -> list[dict[str, Any]]:
     """Fetch latest articles from Dev.to API."""
@@ -336,22 +359,50 @@ async def fetch_devto() -> list[dict[str, Any]]:
 # Ollama/LangChain/HuggingFace mentions than r/artificial.
 REDDIT_SUBREDDITS = [
     # general
-    "programming", "webdev", "learnprogramming", "ExperiencedDevs", "opensource",
+    "programming",
+    "webdev",
+    "learnprogramming",
+    "ExperiencedDevs",
+    "opensource",
     # AI / ML
-    "MachineLearning", "LocalLLaMA", "learnmachinelearning", "artificial", "datascience",
+    "MachineLearning",
+    "LocalLLaMA",
+    "learnmachinelearning",
+    "artificial",
+    "datascience",
     # web
-    "reactjs", "javascript", "typescript", "node", "sveltejs", "vuejs", "nextjs", "tailwindcss",
+    "reactjs",
+    "javascript",
+    "typescript",
+    "node",
+    "sveltejs",
+    "vuejs",
+    "nextjs",
+    "tailwindcss",
     # systems
-    "rust", "golang", "python",
+    "rust",
+    "golang",
+    "python",
     # cloud / devops
-    "devops", "kubernetes", "docker", "aws", "selfhosted", "cloudcomputing",
+    "devops",
+    "kubernetes",
+    "docker",
+    "aws",
+    "selfhosted",
+    "cloudcomputing",
     # data
-    "Database", "PostgreSQL",
+    "Database",
+    "PostgreSQL",
     # security
-    "netsec", "cybersecurity", "AskNetsec",
+    "netsec",
+    "cybersecurity",
+    "AskNetsec",
     # web3
-    "ethdev", "solidity", "cryptocurrency",
+    "ethdev",
+    "solidity",
+    "cryptocurrency",
 ]
+
 
 async def fetch_reddit() -> list[dict[str, Any]]:
     """Fetch hot posts from tech subreddits using RSS feeds (no auth needed)."""
@@ -369,16 +420,20 @@ async def fetch_reddit() -> list[dict[str, Any]]:
                 if response.status_code == 200:
                     feed = feedparser.parse(response.text)
                     for entry in feed.entries[:25]:
-                        posts.append({
-                            "title": entry.get("title", ""),
-                            "url": entry.get("link", ""),
-                            "subreddit": subreddit,
-                            # Post body — previously dropped, so only titles were
-                            # ever matched against the tool keywords.
-                            "description": entry.get("summary", "") or "",
-                            "source": "reddit",
-                        })
-                    logger.info(f"Reddit r/{subreddit}: {len(feed.entries[:25])} posts via RSS")
+                        posts.append(
+                            {
+                                "title": entry.get("title", ""),
+                                "url": entry.get("link", ""),
+                                "subreddit": subreddit,
+                                # Post body — previously dropped, so only titles were
+                                # ever matched against the tool keywords.
+                                "description": entry.get("summary", "") or "",
+                                "source": "reddit",
+                            }
+                        )
+                    logger.info(
+                        f"Reddit r/{subreddit}: {len(feed.entries[:25])} posts via RSS"
+                    )
                     consecutive_429 = 0
                     backoff = 5.0
                 elif response.status_code == 429:
@@ -387,14 +442,20 @@ async def fetch_reddit() -> list[dict[str, Any]]:
                     # subreddit — with a wider list that threw away most of the feed.
                     consecutive_429 += 1
                     if consecutive_429 >= 3:
-                        logger.warning("Reddit rate limiting persistently; ending Reddit pass")
+                        logger.warning(
+                            "Reddit rate limiting persistently; ending Reddit pass"
+                        )
                         break
-                    logger.warning(f"Reddit rate limited on r/{subreddit}, backing off {backoff}s")
+                    logger.warning(
+                        f"Reddit rate limited on r/{subreddit}, backing off {backoff}s"
+                    )
                     await asyncio.sleep(backoff)
                     backoff = min(backoff * 2, 30.0)
                     continue
                 else:
-                    logger.warning(f"Reddit r/{subreddit} returned {response.status_code}")
+                    logger.warning(
+                        f"Reddit r/{subreddit} returned {response.status_code}"
+                    )
 
                 # Courtesy delay — unauthenticated RSS is rate limited fairly tightly.
                 await asyncio.sleep(2.0)
@@ -424,6 +485,7 @@ RSS_FEEDS = [
     "https://css-tricks.com/feed/",
 ]
 
+
 async def fetch_tech_news() -> list[dict[str, Any]]:
     """Fetch latest tech articles from RSS feeds."""
     articles: list[dict[str, Any]] = []
@@ -437,15 +499,17 @@ async def fetch_tech_news() -> list[dict[str, Any]]:
 
                 feed = feedparser.parse(response.text)
                 for entry in feed.entries[:25]:
-                    articles.append({
-                        "title": entry.get("title", ""),
-                        "url": entry.get("link", ""),
-                        # Article summary — previously dropped; article blurbs name
-                        # tools far more often than headlines do.
-                        "description": entry.get("summary", "") or "",
-                        "source": "news",
-                        "feed": feed_url,
-                    })
+                    articles.append(
+                        {
+                            "title": entry.get("title", ""),
+                            "url": entry.get("link", ""),
+                            # Article summary — previously dropped; article blurbs name
+                            # tools far more often than headlines do.
+                            "description": entry.get("summary", "") or "",
+                            "source": "news",
+                            "feed": feed_url,
+                        }
+                    )
             except Exception as e:
                 logger.error(f"RSS feed error ({feed_url}): {e}")
                 continue
@@ -488,7 +552,9 @@ def _resolve_groq_model(client) -> str | None:
     if _groq_model:
         return _groq_model
 
-    pinned = getattr(__import__("app.core.config", fromlist=["settings"]).settings, "GROQ_MODEL", "")
+    pinned = getattr(
+        __import__("app.core.config", fromlist=["settings"]).settings, "GROQ_MODEL", ""
+    )
     candidates = [pinned] if pinned else _GROQ_MODEL_CANDIDATES
 
     try:
@@ -511,7 +577,9 @@ def _resolve_groq_model(client) -> str | None:
         return _groq_model
 
 
-async def batch_sentiment_analysis(items: list[dict[str, Any]], batch_size: int = 20) -> list[dict[str, Any]]:
+async def batch_sentiment_analysis(
+    items: list[dict[str, Any]], batch_size: int = 20
+) -> list[dict[str, Any]]:
     """
     Analyze sentiment of content items using a Groq-hosted LLM.
 
@@ -527,7 +595,9 @@ async def batch_sentiment_analysis(items: list[dict[str, Any]], batch_size: int 
 
     api_key = settings.GROQ_API_KEY
     if not api_key:
-        logger.warning("GROQ_API_KEY not set — skipping sentiment analysis, defaulting all to 'neutral'")
+        logger.warning(
+            "GROQ_API_KEY not set — skipping sentiment analysis, defaulting all to 'neutral'"
+        )
         for item in items:
             item["sentiment"] = "neutral"
         return items
@@ -542,12 +612,11 @@ async def batch_sentiment_analysis(items: list[dict[str, Any]], batch_size: int 
         return items
 
     for batch_start in range(0, len(items), batch_size):
-        batch = items[batch_start:batch_start + batch_size]
+        batch = items[batch_start : batch_start + batch_size]
 
         # Build the prompt with numbered titles
         numbered_titles = "\n".join(
-            f"{i}: {item.get('title', '(no title)')}"
-            for i, item in enumerate(batch)
+            f"{i}: {item.get('title', '(no title)')}" for i, item in enumerate(batch)
         )
 
         prompt = (
@@ -593,7 +662,9 @@ async def batch_sentiment_analysis(items: list[dict[str, Any]], batch_size: int 
             )
 
         except Exception as e:
-            logger.warning(f"Sentiment analysis failed for batch {batch_start // batch_size + 1}: {e}")
+            logger.warning(
+                f"Sentiment analysis failed for batch {batch_start // batch_size + 1}: {e}"
+            )
             for item in batch:
                 if "sentiment" not in item:
                     item["sentiment"] = "neutral"
