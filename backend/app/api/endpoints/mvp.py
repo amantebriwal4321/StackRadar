@@ -90,7 +90,7 @@ def get_tools(
     for t in all_tools:
         cat_tools.setdefault(t.category, []).append(t)
     cat_rank_map = {}
-    for cat, tools_in_cat in cat_tools.items():
+    for tools_in_cat in cat_tools.values():
         for idx, t in enumerate(tools_in_cat):
             cat_rank_map[t.id] = (idx + 1, len(tools_in_cat))
 
@@ -1133,7 +1133,7 @@ def notification_status(
 
 @router.post("/notifications/unsubscribe")
 def unsubscribe_notifications(
-    payload: dict = None,
+    payload: dict | None = None,
     user_id: str | None = Query(None),
     verified: str | None = Depends(verified_clerk_user),
     db: Session = Depends(get_db),
@@ -1180,7 +1180,7 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 @router.post("/waitlist")
-def join_waitlist(payload: dict = None, db: Session = Depends(get_db)):
+def join_waitlist(payload: dict | None = None, db: Session = Depends(get_db)):
     """Add an email to the 'personalized version' waitlist.
 
     Public (no auth). Idempotent — re-submitting an existing email succeeds and
@@ -1431,7 +1431,7 @@ def health_check(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception:
+    except Exception:  # noqa: BLE001 - any failure here IS the answer: report "error", never 500
         db_status = "error"
 
     freshness = _freshness(db) if db_status == "connected" else None

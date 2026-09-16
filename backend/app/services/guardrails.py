@@ -56,7 +56,7 @@ class SentimentVerdict(BaseModel):
 class GuardrailReport:
     """Tally of what the guardrail did to one batch, for logging + tests."""
 
-    __slots__ = ("accepted", "dropped", "hallucinated_index", "quarantined", "batch_rejected")
+    __slots__ = ("accepted", "batch_rejected", "dropped", "hallucinated_index", "quarantined")
 
     def __init__(self) -> None:
         self.accepted = 0            # passed every check
@@ -88,8 +88,7 @@ def _strip_code_fence(raw: str) -> str:
     raw = raw.strip()
     if "```" in raw:
         raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
+        raw = raw.removeprefix("json")
     return raw.strip()
 
 

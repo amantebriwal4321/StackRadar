@@ -65,7 +65,6 @@ def _build_github_headers() -> dict[str, str]:
 
 def _adaptive_delay() -> float:
     """Calculate delay based on remaining rate limit budget."""
-    global _rate_remaining
     if _rate_remaining < 10:
         return 60.0
     elif _rate_remaining < 50:
@@ -129,8 +128,6 @@ async def fetch_github_repo_stats(
     Uses conditional requests (If-None-Match/ETag) to avoid consuming
     rate limit on unchanged repos. Returns cached data on 304.
     """
-    global _rate_remaining
-
     headers = _build_github_headers()
 
     # Add ETag for conditional request (Phase 1.1)
@@ -255,7 +252,7 @@ async def fetch_github_latest_release(
                 if published else None
             ),
         }
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.debug(f"GitHub releases for '{owner_repo}' unavailable: {e}")
         return None
     finally:
@@ -293,8 +290,9 @@ async def fetch_hackernews() -> list[dict[str, Any]]:
                             # Map the self-post body into `description` so it is matched.
                             story_data["description"] = story_data.get("text", "") or ""
                             return story_data
-                except Exception:
-                    pass
+                except Exception as e:
+                    # This used to be a bare `pass`: failures left no trace at all.
+                    logger.debug(f"HN story {story_id} skipped: {e}")
                 return None
 
             # Fetch in batches of 10
@@ -505,7 +503,7 @@ def _resolve_groq_model(client) -> str | None:
             f"Offered: {sorted(available)[:8]}... — set GROQ_MODEL to one of them."
         )
         return None
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         # Listing failed (network, auth). Fall back to trying the first
         # candidate directly rather than giving up on sentiment entirely.
         logger.warning(f"Could not list Groq models ({e}); trying {candidates[0]}")

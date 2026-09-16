@@ -12,3 +12,10 @@ target-version = "py310"
 # `db: Session = Depends(get_db)` is FastAPI's dependency-injection idiom, not
 # a mutable default evaluated once. Every B008 finding in app/ was this.
 extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]
+
+[lint.per-file-ignores]
+# Each fetcher's job is to return "no data from this source" rather than raise:
+# one source timing out, changing its JSON shape or rate-limiting must never
+# abort a scrape of the other four. A blind catch is the contract here, and
+# every one of them logs. Anywhere else, BLE001 stands.
+"app/services/scraper.py" = ["BLE001"]

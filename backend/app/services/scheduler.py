@@ -109,7 +109,7 @@ async def run_one_cycle() -> bool:
     try:
         ok = await perform_full_scrape()
     except Exception as e:
-        logger.error(f"Error in scraper loop: {e}", exc_info=True)
+        logger.exception("Error in scraper loop")
         scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
     record_cycle_result(ok)
     return ok
@@ -472,7 +472,7 @@ async def perform_full_scrape() -> bool:
 
     except Exception as e:
         db.rollback()
-        logger.error(f"Scraper pipeline error: {e}", exc_info=True)
+        logger.exception("Scraper pipeline error")
         scrape_status["errors"].append({"time": datetime.now(timezone.utc).isoformat(), "error": str(e)})
     finally:
         db.close()

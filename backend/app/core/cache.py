@@ -14,7 +14,7 @@ def cache_response(expiration: int = 300):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            cache_key = f"{func.__name__}:{str(kwargs)}"
+            cache_key = f"{func.__name__}:{kwargs!s}"
             
             # Check cache
             cached = _cache.get(cache_key)

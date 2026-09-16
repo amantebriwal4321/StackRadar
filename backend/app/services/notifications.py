@@ -100,7 +100,7 @@ async def run_daily_digests(db: Session) -> dict[str, int]:
     """
     prefs = (
         db.query(NotificationPref)
-        .filter(NotificationPref.daily_opt_in == True, NotificationPref.unsubscribed_at.is_(None))  # noqa: E712
+        .filter(NotificationPref.daily_opt_in == True, NotificationPref.unsubscribed_at.is_(None))
         .all()
     )
     built = sent = skipped = 0
