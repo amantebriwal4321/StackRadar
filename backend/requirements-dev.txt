@@ -1,3 +1,4 @@
 # Test-only dependencies. The production image installs requirements.txt alone.
 -r requirements.txt
 pytest==9.1.1
+ruff==0.16.7

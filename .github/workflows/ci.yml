@@ -22,8 +22,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip install ruff
+          # requirements-dev.txt pins ruff; an unpinned install could change the
+          # rule set between two pushes with no commit. Config: backend/ruff.toml.
+          pip install -r requirements-dev.txt
 
       - name: Ruff lint
         run: ruff check app/ --output-format github
@@ -55,7 +56,9 @@ jobs:
       - name: Next.js build test
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000
+          # NEXT_PUBLIC_API_URL was removed in favour of the same-origin proxy;
+          # BACKEND_ORIGIN is what next.config.ts reads at build time.
+          BACKEND_ORIGIN: http://localhost:8000
 
   docker-build:
     name: Docker Build Test
@@ -68,4 +71,4 @@ jobs:
         run: docker build ./backend -t stackradar-backend:test
 
       - name: Build frontend image
-        run: docker build ./frontend -t stackradar-frontend:test --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000
+        run: docker build ./frontend -t stackradar-frontend:test --build-arg BACKEND_ORIGIN=http://localhost:8000

@@ -1,0 +1,14 @@
+# Ruff configuration for the backend.
+#
+# Before this file existed, ruff ran on its built-in defaults, and CI installed
+# whichever ruff was newest - so the rule set could change between two pushes
+# with no commit. The version is pinned in requirements-dev.txt and ci.yml.
+
+# The production image is python:3.10-slim (see Dockerfile). Upgrade
+# suggestions must stay valid there: `X | None` yes, 3.11-only syntax no.
+target-version = "py310"
+
+[lint.flake8-bugbear]
+# `db: Session = Depends(get_db)` is FastAPI's dependency-injection idiom, not
+# a mutable default evaluated once. Every B008 finding in app/ was this.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]
