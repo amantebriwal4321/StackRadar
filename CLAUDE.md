@@ -25,6 +25,10 @@ Local uses **SQLite** (`backend/test.db`) automatically when no `DATABASE_URL` i
 
 **Dependencies are pinned** (`requirements.txt`, exact `==`). Unpinned, CI installed FastAPI 0.141 while local ran 0.135; 0.141 lists an included router in `app.routes` as one path-less `_IncludedRouter`, which kept Backend CI red for a week, and production could drift the same way with no commit. Bump versions deliberately, in their own commit, with the tests green; every pin must support **Python 3.10** (the `Dockerfile` base, and the version Backend CI tests on). To list routes, read `app.openapi()["paths"]`, never `app.routes`.
 
+**Lint:** `ruff check app/` and `ruff format --check app/` both pass and CI enforces them (`.github/workflows/ci.yml`). Config is `backend/ruff.toml` (target `py310`; FastAPI's `Depends` whitelisted for B008; blind `except` allowed only in `scraper.py`, where returning "no data from this source" is the fetcher contract). Ruff is pinned in `requirements-dev.txt`. **Never run `ruff check --fix` with a narrow `--select` that includes RUF100** — it treats every `noqa` for a rule outside that selection as unused and deletes them repo-wide; run the fix without `--select`. The one bulk reformat is listed in `.git-blame-ignore-revs`.
+
+**Time:** stored timestamps are UTC. Use `app/core/clock.py` (`utcnow_naive()` for the naive `ToolSnapshot.recorded_at`, `utc_today()`, `utc_midnight_naive()`) — never `datetime.now()` / `date.today()`, which read the server's local clock and were correct in production only because Render runs on UTC.
+
 **Practical local-dev notes (Windows):**
 - The venv interpreter is `backend/venv/Scripts/python.exe` — call it directly (`./venv/Scripts/python.exe -m uvicorn ...`) when a shell isn't activated. The bare `python` on PATH is a different install without the deps.
 - To start with a live scrape: `RUN_SCRAPER_INLINE=1 ./venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000`. Startup logs token status + a Reconcile line; the scrape runs Steps 0–8 (~1–2 min for 31 repos).
@@ -52,7 +56,7 @@ alembic upgrade head
 ```bash
 cd backend
 pip install -r requirements-dev.txt      # requirements.txt + pytest
-python -m pytest tests -q                # ~88 tests, ~1.5s
+python -m pytest tests -q                # ~92 tests, ~1.5s
 ```
 `tests/conftest.py` points `DATABASE_URL` at a **throwaway SQLite file** (never `backend/test.db`), blanks every API key, and sets `RUN_SCRAPER_INLINE=0` + `WARM_RESOURCE_CACHE=0`, all before `app` is imported — so the suite needs no database, secrets or network and gives the same answer in CI as locally. Backend CI (`.github/workflows/backend.yml`) runs it on every push/PR. Coverage today: the project video gate + cache key (`test_projects.py`, with the real titles that reached production as regressions), data freshness (`test_health.py`), the scheduler's success stamping (`test_scheduler.py`), the score's contract (`test_scoring.py`), and the booted app (`test_api.py`). Pure logic belongs in a service module where it can be tested without a request — `projects.video_cache_slug` was moved out of the endpoint for exactly that reason.
 
