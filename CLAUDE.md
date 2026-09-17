@@ -56,6 +56,80 @@ alembic upgrade head
 ```bash
 cd backend
 pip install -r requirements-dev.txt      # requirements.txt + pytest
+python -m pytest tests -q                # ~106 tests, ~1.5s
+```
+`tests/conftest.py` points `DATABASE_URL` at a **throwaway SQLite file** (never `backend/test.db`), blanks every API key, and sets `RUN_SCRAPER_INLINE=0` + `WARM_RESOURCE_CACHE=0`, all before `app` is imported — so the suite needs no database, secrets or network and gives the same answer in CI as locally. Backend CI (`.github/workflows/backend.yml`) runs it on every push/PR. Coverage today: the project video gate + cache key (`test_projects.py`, with the real titles that reached production as regressions), data freshness (`test_health.py`), the scheduler's success stamping (`test_scheduler.py`), the score's contract (`test_scoring.py`), and the booted app (`test_api.py`). Pure logic belongs in a service module where it can be tested without a request — `projects.video_cache_slug` was moved out of the endpoint for exactly that reason.
+
+## Architecture
+
+### Data flow (the core loop)
+```
+scraper.py  →  scoring.py  →  models (Tool/ToolSnapshot)  →  mvp.py API  →  frontend/src/data/trends.ts  →  pages
+ (sources)     (0–100 abs.)     (DB + time series)          (/api/v1/*)       (typed fetch layer)         (UI)
+```
+
+1. **`app/services/scheduler.py`** — `run_scraper_loop()` runs every 30 min (started as an asyncio task at app startup). `perform_full_scrape()` is an 8-step pipeline: sync tool registry → fetch community sources → sentiment → GitHub repo stats → score → persist snapshots → update tools → recompute. Live progress is exposed via `GET /api/v1/status`. `perform_full_scrape` never raises (the loop must survive) but **returns True only when the final commit landed**; `record_cycle_result` stamps `last_scraped_time` on success alone and otherwise increments `consecutive_failures`. Both the loop and `POST /admin/scrape` go through `run_one_cycle()` — the admin trigger used to call the pipeline directly, so a manual fix never cleared the alert. It used to stamp unconditionally, so a crashed pipeline was reported as a fresh scrape and the site said "Live".
+2. **`app/services/scraper.py`** — async fetchers: `fetch_github_repo_stats` (targeted per-repo, ETag caching + adaptive rate limiting), `fetch_hackernews`, `fetch_devto`, `fetch_reddit` (RSS, no auth), `fetch_tech_news` (RSS). `batch_sentiment_analysis` uses Groq (`llama-3.1-8b-instant`) — a no-op/skip when `GROQ_API_KEY` is empty.
+3. **`app/services/scoring.py`** — `calculate_all_tool_scores` scores each tool on an **absolute 0–100 scale** from its own signals only: floor-anchored log stars (60%) and forks (15%) plus community mentions saturating at 25 (25%). A tool's score does not move when an unrelated tool moves — `test_scoring.py` pins this. (This file used to say percentile ranks; `_percentile_rank` is unused.) Also classifies growth stage, trend, learning priority, and generates recommendation text.
+4. **`app/api/endpoints/mvp.py`** — the single router, mounted at `settings.API_V1_STR` (`/api/v1`). All endpoints live here: `/tools`, `/tools/{slug}`, `/tools/{slug}/history`, `/tools/{slug}/resources` (learning videos + platforms, see below), `/tools/compare`, `/tools/by-domain`, `/domains`, `/domains/{slug}/learning-path`, `/roadmaps`, `/roadmaps/{slug}` (steps hydrated with per-step tools + each tool's top video), `/progress/{summary,/{slug},toggle}` (learning progress, auth-gated), `/notifications/{subscribe,status,unsubscribe}` (daily-nudge opt-in), `/overview`, `/status`, `/health` (always 200; `status` is ok/degraded/error with a `data` freshness report), `/health/data` (**503 when data is stale >2h, the scraper has failed 2+ cycles running, or nothing was ever scraped — point an uptime monitor here**; logic in `app/services/health.py:assess_freshness`), `/ready`, `/admin/scrape` + `/admin/send-daily-digests` (gated by `ADMIN_API_KEY`).
+5. **`app/models/all_models.py`** — tables: `Domain`, `Tool` (now also carries `homepage`/`latest_version`/`latest_release_at` for the resource docs-link + stale-tutorial warning), `ToolSnapshot` (time series, incl. `stars`), `ToolRoadmap`, `UserProgress` (completed roadmap steps per user), `ToolResource` (cached learning videos/platforms), `NotificationPref` (daily-nudge opt-in). Roadmaps are keyed by **domain slug**. New model fields are reconciled onto existing DBs at startup by `app/db/migrate.py:ensure_columns` (additive `ALTER TABLE ADD COLUMN` only — `create_all` never adds columns to an existing table).
+
+### Learning layer (the retention + growth product)
+- **Resources — `app/services/resources.py`** (`GET /tools/{slug}/resources`). Best videos/playlists + platform links per tool. **Nothing is model-generated:** video links come from the YouTube Data API (ranked by `rank_resource`: reach/engagement/freshness/depth) when `YOUTUBE_API_KEY` is set, else from a hand-curated `CURATED_VIDEOS` list where **every id is verified live via YouTube oEmbed** (`verify_youtube`) before it ships — a bad/unrelated id fails closed. `videos_source` = `youtube_api` | `curated` | `search`. `warm_resource_cache` pre-warms on startup; results cached in `ToolResource` (24h TTL). Curated platform links are always-valid search/listing deep-links (DevDocs, freeCodeCamp, NPTEL/SWAYAM…). Release data (for the "predates current version" warning) comes from `scraper.fetch_github_latest_release`.
+- **Progress — `/progress/*`.** `UserProgress` rows exist only for COMPLETED steps; `build_progress_summary` computes streak + active roadmaps + today's focus. **Auth: `app/core/auth.py` verifies the Clerk session JWT** (issuer/JWKS derived from the public `CLERK_PUBLISHABLE_KEY`, no secret) and uses its `sub`; a client-supplied `user_id` is ignored when Clerk is configured, and falls back only in keyless dev.
+- **Daily nudge — `app/services/notifications.py`.** Opt-in only (`NotificationPref`). `run_daily_digests` builds each user's "next lesson" digest (reusing the progress summary) and sends via Resend, or logs a no-op when `RESEND_API_KEY` is empty. Triggered by an external daily cron hitting `POST /admin/send-daily-digests` (`X-Admin-Key`).
+
+### Projects — learning turned into evidence
+**`app/services/projects.py` is the ONE place projects are defined**, the same rule `catalog.py` follows for tools. Each brief carries `slug`, `tool_slug`, `tier` (beginner/intermediate/advanced), `summary`, `brief`, `requirements[]`, `skills[]`, `est_hours` and a `walkthrough` (`video_id` + `keywords`, `docs[]`, `steps[]`). `_validate()` runs at import and raises on an unknown `tool_slug`, a bad tier or a duplicate slug, so a typo fails at boot rather than rendering an orphan card. **No table** — these are static hand-authored content like `catalog.TOOLS`, not cached remote data like `ToolResource`, so there is nothing to migrate; walkthrough verification results (negatives included) live in `app/core/cache.py` via the `get_cached`/`set_cached` helpers.
+
+**The honesty line, and it is the whole design.** A brief is a SPECIFICATION and is authored by hand. A walkthrough link is a CLAIM and is verified: every `video_id` goes through `resources.verify_youtube` (oEmbed — no key, no quota) at serve time and **fails closed**, leaving the docs and written steps rather than a dead link. `verify_youtube` also rejects a live id whose real title misses the keywords, which is what catches a typo resolving to some unrelated real video. `walkthrough.video_verified` reports this to the UI, mirroring `videos_live`.
+
+Endpoints: `/projects` (`tool`, `domain`, `tier` filters), `/projects/{slug}` (verified walkthrough), `/tools/{slug}/projects` (404s on an unknown tool, so a URL typo stays distinguishable from a tool with no brief yet). `/roadmaps/{slug}` hydrates a `projects` array onto each step. Frontend: `/projects`, `/projects/[slug]`, `components/ProjectCard.tsx` (exports `TIER_BADGE`, reused by the roadmap so tiers and step levels share one palette), `components/ToolProjects.tsx` on the tool profile. **Coverage is deliberately partial** — 13 briefs across react/nextjs/fastapi/docker/pytorch/rust; everything else gets a visible empty state, never a generated filler.
+
+### One unified tool catalog (single source of truth)
+**`app/services/catalog.py` is the ONE place tools are defined.** Its `TOOLS` list carries all three concerns per tool: display (name, slug, icon, category, description), learning (level, is_entry_point, seq, parent_slug), and scraping (github_repo, keywords). To add/edit/remove a tracked tool, edit this file and nothing else.
+
+- `seed.py` imports it as `SEED_TOOLS` (seeds the DB from it).
+- `scoring.py` derives `TOOL_REGISTRY` (repo + keywords + category) and the mention-matching regex patterns from it.
+- `scheduler.py` Step 0 **never creates tool rows** — it only warns if a catalog tool is missing. Creating rows there was the old bug.
+- `seed.reconcile_catalog(db)` runs on every startup (after `run_seed`) and **deletes any `tools` row whose slug isn't in the catalog** — this purges legacy placeholder/duplicate rows so the live DB always matches the catalog.
+
+`category` **must** match a `Domain` name in `SEED_DOMAINS` (domain pages / learning paths resolve by it). This replaced a prior dual-catalog bug where `SEED_TOOLS` and a separate hardcoded `TOOL_REGISTRY` disagreed on slugs/repos and spawned ~23 null-category placeholder rows (e.g. "Python #1"). History: `memory/stackradar-data-integrity.md`.
+
+All 31 tools now carry real GitHub stars + percentile scores (a live authenticated scrape ran 2026-07-13). The catalog membership is the curated 31; widen it later by adding entries to `catalog.py` (+ a matching `Domain` if the category is new).
+
+### Signal quality — the "mentions" pipeline
+The GitHub half of the score always worked; the **developer-conversation half** used to read `0` for every tool. Two root causes were fixed (2026-07-13):
+1. **Rounding sink (fixed).** Mentions were sentiment-weighted floats (neutral `0.5`) then `round()`-ed → `round(0.5) = 0`, so isolated mentions vanished. `scheduler.py` Step 3 now uses `scoring.count_mentions` → **raw integer counts** (one per matching item), no rounding.
+2. **Under-used text (fixed).** Matching now runs over `title + tag_list/tags + subreddit + description` via `scoring._item_text`. Dev.to's `description` was previously ignored and is where most matches now come from.
+3. **Reddit was read two subreddits deep (fixed 2026-09-17).** Unauthenticated Reddit RSS allows about one request per rate-limit window (`x-ratelimit-remaining: 0`, `x-ratelimit-reset: 27–51`, measured). Fetching 35 subreddits one by one 429'd on the second request, so production read ~50 posts. `fetch_reddit` now requests `REDDIT_SUBREDDIT_GROUPS` as four combined feeds (`r/a+b+c`, up to 100 posts each), waits out the advertised reset, retries a 429 once, and stops at `REDDIT_DEADLINE` (300s). Measured live: 400 posts from 31/35 subreddits, 161 mentions, ~3 min. Parsing and wait rules are pure functions tested in `tests/test_reddit.py`; don't go back to per-subreddit requests or fixed sleeps.
+4. **Volume by source, one live cycle (2026-09-17):** Reddit ~160 mentions, RSS news ~25, Dev.to ~20, Hacker News ~4 (top stories rarely name the tracked tools). Mentions **accumulate across cycles** in `ToolSnapshot.mention_count`; `tool.hn_count`/`devto_count`/etc. hold the latest cycle's raw counts. `count_weighted_mentions` + `SENTIMENT_WEIGHTS` remain in `scoring.py` for future sentiment work but are not on the scrape path.
+
+**Changing the signal? Move `scoring.SIGNAL_EPOCH`.** Growth compares a score with the average of recent snapshot scores, and >+15% is labelled "rising". When the inputs to the score change materially (a new source, a fixed fetcher, a reweighting), old and new scores are not comparable, and growth would report the step as momentum for a week. `growth_baseline_since()` stops the average at `SIGNAL_EPOCH`; set it to the next UTC midnight after the change ships and say why in the comment. Until comparable snapshots exist, growth reads 0.
+
+To grow the signal further: Hacker News is the weakest source (Algolia search by tool keyword would target it), or widen keywords in `catalog.py` — and move the epoch when you do.
+
+### Frontend (local)
+```bash
+cd frontend
+npm install
+npm run dev        # Next dev server on :3000 (Turbopack)
+npm run build      # production build
+npm run lint       # eslint
+```
+
+### Migrations
+Alembic is configured (`backend/alembic.ini`, versions in `backend/alembic/versions/`), but the app **also auto-creates tables** on startup via `Base.metadata.create_all` and seeds them. Because `create_all` never adds a column to a table that already exists, `app/db/migrate.py:ensure_columns` runs on startup and additively `ALTER TABLE ADD COLUMN`s any missing model fields (nullable/defaulted only — it never drops/retypes). Adding a plain nullable column to a model needs no Alembic step; anything structural still does. For schema changes:
+```bash
+cd backend
+alembic revision --autogenerate -m "message"
+alembic upgrade head
+```
+
+### Tests
+```bash
+cd backend
+pip install -r requirements-dev.txt      # requirements.txt + pytest
 python -m pytest tests -q                # ~92 tests, ~1.5s
 ```
 `tests/conftest.py` points `DATABASE_URL` at a **throwaway SQLite file** (never `backend/test.db`), blanks every API key, and sets `RUN_SCRAPER_INLINE=0` + `WARM_RESOURCE_CACHE=0`, all before `app` is imported — so the suite needs no database, secrets or network and gives the same answer in CI as locally. Backend CI (`.github/workflows/backend.yml`) runs it on every push/PR. Coverage today: the project video gate + cache key (`test_projects.py`, with the real titles that reached production as regressions), data freshness (`test_health.py`), the scheduler's success stamping (`test_scheduler.py`), the score's contract (`test_scoring.py`), and the booted app (`test_api.py`). Pure logic belongs in a service module where it can be tested without a request — `projects.video_cache_slug` was moved out of the endpoint for exactly that reason.
