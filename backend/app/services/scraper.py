@@ -17,6 +17,7 @@ Phase 1 improvements:
 
 import asyncio
 import logging
+import time
 from datetime import datetime
 from typing import Any
 
@@ -357,111 +358,162 @@ async def fetch_devto() -> list[dict[str, Any]]:
 # Chosen to cover the catalog's domains. Communities where the tracked tools are
 # actually discussed by name beat broad ones — r/LocalLLaMA alone carries far more
 # Ollama/LangChain/HuggingFace mentions than r/artificial.
-REDDIT_SUBREDDITS = [
+#
+# GROUPED, because each group is ONE request. Reddit's unauthenticated budget is
+# about one request per rate-limit window: after a 200 it sends
+# x-ratelimit-remaining: 0 and x-ratelimit-reset: 27-51 (measured). The old code
+# fetched 35 subreddits one at a time with a fixed 2s pause, hit 429 on the
+# second, and quit after three - production read 50 posts a cycle out of a
+# possible 875. A combined feed (r/a+b+c) returns up to 100 posts drawn from
+# every subreddit in it (verified: 100 entries across all 13 of a 13-sub group).
+REDDIT_SUBREDDIT_GROUPS: list[list[str]] = [
     # general
-    "programming",
-    "webdev",
-    "learnprogramming",
-    "ExperiencedDevs",
-    "opensource",
-    # AI / ML
-    "MachineLearning",
-    "LocalLLaMA",
-    "learnmachinelearning",
-    "artificial",
-    "datascience",
+    ["programming", "webdev", "learnprogramming", "ExperiencedDevs", "opensource"],
     # web
-    "reactjs",
-    "javascript",
-    "typescript",
-    "node",
-    "sveltejs",
-    "vuejs",
-    "nextjs",
-    "tailwindcss",
-    # systems
-    "rust",
-    "golang",
-    "python",
-    # cloud / devops
-    "devops",
-    "kubernetes",
-    "docker",
-    "aws",
-    "selfhosted",
-    "cloudcomputing",
-    # data
-    "Database",
-    "PostgreSQL",
-    # security
-    "netsec",
-    "cybersecurity",
-    "AskNetsec",
-    # web3
-    "ethdev",
-    "solidity",
-    "cryptocurrency",
+    [
+        "reactjs",
+        "javascript",
+        "typescript",
+        "node",
+        "sveltejs",
+        "vuejs",
+        "nextjs",
+        "tailwindcss",
+    ],
+    # AI / ML + systems
+    [
+        "MachineLearning",
+        "LocalLLaMA",
+        "learnmachinelearning",
+        "artificial",
+        "datascience",
+        "rust",
+        "golang",
+        "python",
+    ],
+    # cloud / devops, data, security, web3
+    [
+        "devops",
+        "kubernetes",
+        "docker",
+        "aws",
+        "selfhosted",
+        "cloudcomputing",
+        "Database",
+        "PostgreSQL",
+        "netsec",
+        "cybersecurity",
+        "AskNetsec",
+        "ethdev",
+        "solidity",
+        "cryptocurrency",
+    ],
 ]
+REDDIT_SUBREDDITS = [sub for group in REDDIT_SUBREDDIT_GROUPS for sub in group]
+
+REDDIT_POSTS_PER_GROUP = 100  # the RSS maximum
+REDDIT_MAX_WAIT = 65.0  # never trust a reset header further than one window
+REDDIT_DEADLINE = 300.0  # the whole Reddit pass; sources are fetched in parallel
+
+
+def _reddit_clock() -> float:
+    """Monotonic seconds. A seam so tests can advance time along with sleeps."""
+    return time.monotonic()
+
+
+def _reddit_wait_seconds(headers: Any) -> float:
+    """How long to wait before the next Reddit request, from its rate-limit headers.
+
+    0 while budget remains. When it is spent, the advertised reset plus a second
+    of margin, capped at one window so a malformed header cannot stall the scrape.
+    """
+    try:
+        remaining = float(headers.get("x-ratelimit-remaining", "1"))
+    except (TypeError, ValueError):
+        remaining = 1.0
+    if remaining >= 1:
+        return 0.0
+    try:
+        reset = float(headers.get("x-ratelimit-reset", "60"))
+    except (TypeError, ValueError):
+        reset = 60.0
+    return min(max(reset, 0.0) + 1.0, REDDIT_MAX_WAIT)
+
+
+def _reddit_posts_from_feed(xml: str, fallback_subreddit: str) -> list[dict[str, Any]]:
+    """Turn a (possibly multi-subreddit) Reddit RSS feed into post dicts.
+
+    The subreddit comes from each entry's category term, not the request - in a
+    combined feed the request names a dozen of them.
+    """
+    feed = feedparser.parse(xml)
+    posts: list[dict[str, Any]] = []
+    for entry in feed.entries[:REDDIT_POSTS_PER_GROUP]:
+        tags = entry.get("tags") or []
+        subreddit = (tags[0].get("term") if tags else None) or fallback_subreddit
+        posts.append(
+            {
+                "title": entry.get("title", ""),
+                "url": entry.get("link", ""),
+                "subreddit": subreddit,
+                # Post body - matched as well as the title.
+                "description": entry.get("summary", "") or "",
+                "source": "reddit",
+            }
+        )
+    return posts
 
 
 async def fetch_reddit() -> list[dict[str, Any]]:
-    """Fetch hot posts from tech subreddits using RSS feeds (no auth needed)."""
+    """Hot posts from the tech subreddits, one combined RSS request per group."""
     posts: list[dict[str, Any]] = []
-    consecutive_429 = 0
-    backoff = 5.0
+    deadline = _reddit_clock() + REDDIT_DEADLINE
+    headers = {"User-Agent": "StackRadar/2.0 (Tech Trend Analyzer)"}
 
-    async with httpx.AsyncClient() as client:
-        for subreddit in REDDIT_SUBREDDITS:
-            try:
-                url = f"https://www.reddit.com/r/{subreddit}/hot.rss"
-                headers = {"User-Agent": "StackRadar/2.0 (Tech Trend Analyzer)"}
-                response = await client.get(url, headers=headers, timeout=10.0)
+    async with httpx.AsyncClient(follow_redirects=True) as client:
+        wait = 0.0
+        for group in REDDIT_SUBREDDIT_GROUPS:
+            label = "+".join(group)
+            url = f"https://www.reddit.com/r/{label}/hot.rss?limit={REDDIT_POSTS_PER_GROUP}"
 
+            # One retry: a 429 carries its own reset, so waiting it out and asking
+            # again usually succeeds. A second 429 skips just this group.
+            for attempt in (1, 2):
+                if wait and _reddit_clock() + wait > deadline:
+                    logger.warning(
+                        f"Reddit pass hit its {REDDIT_DEADLINE:.0f}s cap; {len(posts)} posts kept"
+                    )
+                    return posts
+                if wait:
+                    await asyncio.sleep(wait)
+                try:
+                    response = await client.get(url, headers=headers, timeout=20.0)
+                except Exception as e:
+                    logger.error(f"Reddit group {group[0]}+{len(group) - 1}: {e}")
+                    wait = 5.0
+                    break
+
+                wait = _reddit_wait_seconds(response.headers)
                 if response.status_code == 200:
-                    feed = feedparser.parse(response.text)
-                    for entry in feed.entries[:25]:
-                        posts.append(
-                            {
-                                "title": entry.get("title", ""),
-                                "url": entry.get("link", ""),
-                                "subreddit": subreddit,
-                                # Post body — previously dropped, so only titles were
-                                # ever matched against the tool keywords.
-                                "description": entry.get("summary", "") or "",
-                                "source": "reddit",
-                            }
-                        )
+                    batch = _reddit_posts_from_feed(
+                        response.text, fallback_subreddit=group[0]
+                    )
+                    posts.extend(batch)
                     logger.info(
-                        f"Reddit r/{subreddit}: {len(feed.entries[:25])} posts via RSS"
+                        f"Reddit {len(group)} subreddits ({group[0]}...): {len(batch)} posts via RSS"
                     )
-                    consecutive_429 = 0
-                    backoff = 5.0
-                elif response.status_code == 429:
-                    # Back off and carry on rather than abandoning the run. The old
-                    # `break` here meant one early 429 discarded every remaining
-                    # subreddit — with a wider list that threw away most of the feed.
-                    consecutive_429 += 1
-                    if consecutive_429 >= 3:
-                        logger.warning(
-                            "Reddit rate limiting persistently; ending Reddit pass"
-                        )
-                        break
+                    break
+                if response.status_code == 429 and attempt == 1:
+                    wait = wait or 30.0
                     logger.warning(
-                        f"Reddit rate limited on r/{subreddit}, backing off {backoff}s"
+                        f"Reddit rate limited on {group[0]}+{len(group) - 1}; retrying in {wait:.0f}s"
                     )
-                    await asyncio.sleep(backoff)
-                    backoff = min(backoff * 2, 30.0)
                     continue
-                else:
-                    logger.warning(
-                        f"Reddit r/{subreddit} returned {response.status_code}"
-                    )
-
-                # Courtesy delay — unauthenticated RSS is rate limited fairly tightly.
-                await asyncio.sleep(2.0)
-            except Exception as e:
-                logger.error(f"Reddit r/{subreddit} Error: {e}")
-                continue
+                logger.warning(
+                    f"Reddit {group[0]}+{len(group) - 1} returned {response.status_code}; skipping group"
+                )
+                wait = wait or 5.0
+                break
 
     return posts
 
