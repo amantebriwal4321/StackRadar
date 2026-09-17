@@ -12,6 +12,7 @@ Responsibilities:
 
 import logging
 import math
+from datetime import datetime, timedelta
 from typing import Any
 
 from app.services.catalog import TOOLS
@@ -310,6 +311,28 @@ def calculate_tool_score(
     )
 
     return round(min(score, 100.0), 1)
+
+
+# When the SIGNAL changes, scores before and after are not comparable.
+#
+# Growth is "this score vs the 7-day average of snapshot scores", and above +15%
+# a tool is labelled rising. On 2026-09-17 the Reddit fetcher went from reading
+# 2 subreddits (50 posts, ~1 tool mention) to 31 (400 posts, ~160 mentions).
+# Community mentions carry 25% of the score, so the next cycle would lift many
+# scores by several points - and growth would call that momentum for a week.
+# Svelte, for one, went from 0 to 12 Reddit mentions in a single measurement.
+#
+# Growth therefore only averages snapshots taken after the latest methodology
+# change. Until one exists the baseline is empty and growth reads 0 ("stable"):
+# no comparable data, rather than an invented spike. Move this forward, with a
+# note, whenever the inputs to calculate_all_tool_scores change materially. It is
+# naive UTC midnight, to compare against ToolSnapshot.recorded_at.
+SIGNAL_EPOCH = datetime(2026, 9, 18)  # noqa: DTZ001 - naive UTC, like recorded_at
+
+
+def growth_baseline_since(now_naive_utc: datetime) -> datetime:
+    """Earliest snapshot the growth average may include: 7 days back, never before SIGNAL_EPOCH."""
+    return max(now_naive_utc - timedelta(days=7), SIGNAL_EPOCH)
 
 
 def classify_growth_stage(score: float) -> str:

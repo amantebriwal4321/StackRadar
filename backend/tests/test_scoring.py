@@ -116,3 +116,30 @@ def test_growth_stage_boundaries(score, stage):
                                         (-5, "stable"), (-5.1, "declining")])
 def test_trend_boundaries(pct, trend):
     assert S.classify_trend(pct) == trend
+
+
+# --- growth baseline across a methodology change --------------------------------
+
+from datetime import datetime, timedelta  # noqa: E402
+
+
+def test_growth_baseline_is_seven_days_back_after_the_epoch():
+    now = S.SIGNAL_EPOCH + timedelta(days=30)
+    assert S.growth_baseline_since(now) == now - timedelta(days=7)
+
+
+def test_growth_baseline_never_reaches_before_the_epoch():
+    # Two days after the Reddit fix: a 7-day window would average old-method
+    # scores and read the measurement change as momentum.
+    now = S.SIGNAL_EPOCH + timedelta(days=2)
+    assert S.growth_baseline_since(now) == S.SIGNAL_EPOCH
+
+
+def test_before_the_epoch_there_is_no_comparable_baseline():
+    now = S.SIGNAL_EPOCH - timedelta(hours=3)
+    assert S.growth_baseline_since(now) > now  # nothing recorded yet can qualify
+
+
+def test_signal_epoch_is_naive_like_recorded_at():
+    assert S.SIGNAL_EPOCH.tzinfo is None
+    assert isinstance(S.SIGNAL_EPOCH, datetime)

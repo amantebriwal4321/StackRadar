@@ -33,7 +33,7 @@ import httpx
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.core.clock import utc_today
+from app.core.clock import utc_today, utcnow_naive
 from app.db.session import SessionLocal
 from app.models.all_models import Domain, Tool, ToolSnapshot
 from app.services.scoring import (
@@ -45,6 +45,7 @@ from app.services.scoring import (
     classify_trend,
     count_mentions,
     generate_recommendation,
+    growth_baseline_since,
 )
 from app.services.scraper import (
     _adaptive_delay,
@@ -362,13 +363,14 @@ async def perform_full_scrape() -> bool:
             reddit_count = signals["reddit_count"]
             news_count = signals["news_count"]
 
-            # Phase 4.3: 7-day rolling average growth calculation
-            seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+            # Growth vs the rolling average of comparable snapshots: the last 7
+            # days, but never across a signal-methodology change (SIGNAL_EPOCH).
+            baseline_since = growth_baseline_since(utcnow_naive())
             avg_result = (
                 db.query(func.avg(ToolSnapshot.score))
                 .filter(
                     ToolSnapshot.tool_id == tool.id,
-                    ToolSnapshot.recorded_at >= seven_days_ago,
+                    ToolSnapshot.recorded_at >= baseline_since,
                 )
                 .scalar()
             )
