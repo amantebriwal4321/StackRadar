@@ -50,6 +50,27 @@ else:
         "⚠️  GITHUB_TOKEN is empty — GitHub API will use unauthenticated rate limit (60 req/hr)"
     )
 
+# Set when GitHub answers 401. One rejected token rejects all 31 repos, so the
+# rest of the cycle skips the calls instead of repeating the same failure.
+_gh_auth_failed: bool = False
+
+
+def _note_github_auth_failure() -> None:
+    global _gh_auth_failed
+    _gh_auth_failed = True
+
+
+def github_auth_failed() -> bool:
+    """Did GitHub reject our credentials during this cycle?"""
+    return _gh_auth_failed
+
+
+def reset_github_auth_state() -> None:
+    """Call at the start of a cycle: a rotated token must get a fresh chance."""
+    global _gh_auth_failed
+    _gh_auth_failed = False
+
+
 MAX_RETRIES = 2
 RETRY_BACKOFF = [2.0, 5.0]
 
@@ -133,6 +154,9 @@ async def fetch_github_repo_stats(
     Uses conditional requests (If-None-Match/ETag) to avoid consuming
     rate limit on unchanged repos. Returns cached data on 304.
     """
+    if _gh_auth_failed:
+        return None
+
     headers = _build_github_headers()
 
     # Add ETag for conditional request (Phase 1.1)
@@ -191,12 +215,36 @@ async def fetch_github_repo_stats(
                     logger.error(f"GitHub 404: repo '{owner_repo}' not found")
                     return None
 
-                elif response.status_code in (401, 403, 429):
+                elif response.status_code == 401:
+                    # Credentials rejected. NOT a rate limit: retrying cannot
+                    # help, and sleeping 60s per attempt per repo is how a
+                    # scrape hangs for two hours. Production sat on
+                    # "4/8 Fetching GitHub stats" for 90+ minutes this way,
+                    # logging "rate limit hit (rate: 5000/5000)" - a
+                    # contradiction that hid an expired token.
+                    _note_github_auth_failure()
+                    logger.error(
+                        f"GITHUB_TOKEN REJECTED (401) on '{owner_repo}'. Not a rate limit - "
+                        "the token is missing, expired or revoked. Skipping GitHub stats for "
+                        "this cycle; stars and forks will hold their previous values."
+                    )
+                    return None
+
+                elif response.status_code in (403, 429):
+                    # A real rate limit says so in the headers. A 403 without an
+                    # exhausted budget is a permissions/abuse response, and
+                    # waiting on it is just as pointless as waiting on a 401.
+                    if _rate_remaining > 0:
+                        logger.error(
+                            f"GitHub {response.status_code} for '{owner_repo}' with "
+                            f"{_rate_remaining} requests still budgeted - not a rate limit; skipping."
+                        )
+                        return None
                     wait = 60
                     logger.warning(
-                        f"GitHub rate limit hit (HTTP {response.status_code}) for '{owner_repo}' "
-                        f"(rate: {_rate_remaining}/{_rate_limit}, attempt {attempt + 1}). "
-                        f"Sleeping {wait}s..."
+                        f"GitHub rate limit exhausted (HTTP {response.status_code}) for "
+                        f"'{owner_repo}' (rate: {_rate_remaining}/{_rate_limit}, "
+                        f"attempt {attempt + 1}). Sleeping {wait}s..."
                     )
                     await asyncio.sleep(wait)
                     continue
@@ -249,6 +297,9 @@ async def fetch_github_latest_release(
     recommendation and six wasted hours. Returns None for repos that don't cut
     GitHub releases (many don't) — the UI simply omits the warning then.
     """
+    if _gh_auth_failed:
+        return None
+
     owns_client = client is None
     if owns_client:
         client = httpx.AsyncClient()

@@ -60,8 +60,10 @@ from app.services.scraper import (
     fetch_hackernews_search,
     fetch_reddit,
     fetch_tech_news,
+    github_auth_failed,
     hn_search_since,
     merge_hn_sources,
+    reset_github_auth_state,
     validate_github_token,
 )
 
@@ -267,6 +269,8 @@ async def perform_full_scrape() -> bool:
             "Step 4: Fetching GitHub repo stats (shared client, adaptive delays)..."
         )
 
+        # A rotated token deserves a fresh chance each cycle.
+        reset_github_auth_state()
         github_stats: dict[str, dict] = {}
         for tool in all_tools:
             if tool.github_repo:
@@ -302,6 +306,19 @@ async def perform_full_scrape() -> bool:
             f"GitHub: Fetched stats for {len(github_stats)}/{len(all_tools)} repos "
             f"(rate remaining: {_rate_remaining}/{_rate_limit})"
         )
+
+        if github_auth_failed():
+            # Surfaced on /status so the cause is visible rather than inferred
+            # from stars that quietly stopped moving.
+            scrape_status["errors"].append(
+                {
+                    "time": datetime.now(timezone.utc).isoformat(),
+                    "error": "GITHUB_TOKEN rejected (401): GitHub stats skipped this cycle",
+                }
+            )
+            logger.error(
+                f"GitHub stats skipped for all {len(all_tools)} tools - token rejected."
+            )
 
         # ━━━ STEP 5: Calculate scores + Decision Intelligence ━━━
         scrape_status["current_step"] = "5/8 · Computing scores"
