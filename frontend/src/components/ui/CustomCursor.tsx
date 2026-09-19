@@ -1,31 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+const FINE_POINTER = "(pointer: fine)";
+
+/** Re-render when the pointer type changes — plugging in a mouse, or a tablet
+ *  switching between touch and trackpad. */
+function subscribeToPointerType(onChange: () => void) {
+  const mq = window.matchMedia(FINE_POINTER);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
 
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const [hasPlus, setHasPlus] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(true);
+  // Read the media query as an external store rather than mirroring it into
+  // state from an effect: setState synchronously inside an effect triggers the
+  // cascading render the repo's lint rule forbids, and it renders one frame
+  // with the wrong answer. The server snapshot is `true` (assume touch, render
+  // nothing), which is what the old initial state said too.
+  const isTouchDevice = useSyncExternalStore(
+    subscribeToPointerType,
+    () => !window.matchMedia(FINE_POINTER).matches,
+    () => true,
+  );
 
   const mousePos = useRef({ x: 0, y: 0 });
   const ringPos = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    // Check if device supports fine pointer (mouse)
-    const mediaQuery = window.matchMedia("(pointer: fine)");
-    setIsTouchDevice(!mediaQuery.matches);
-
-    const handleMediaChange = (e: MediaQueryListEvent) => {
-      setIsTouchDevice(!e.matches);
-    };
-    mediaQuery.addEventListener("change", handleMediaChange);
-
-    return () => {
-      mediaQuery.removeEventListener("change", handleMediaChange);
-    };
-  }, []);
 
   useEffect(() => {
     if (isTouchDevice) return;
