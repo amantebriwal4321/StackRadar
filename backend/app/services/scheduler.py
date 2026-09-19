@@ -46,6 +46,7 @@ from app.services.scoring import (
     count_mentions,
     generate_recommendation,
     growth_baseline_since,
+    primary_keywords,
 )
 from app.services.scraper import (
     _adaptive_delay,
@@ -56,8 +57,11 @@ from app.services.scraper import (
     fetch_github_latest_release,
     fetch_github_repo_stats,
     fetch_hackernews,
+    fetch_hackernews_search,
     fetch_reddit,
     fetch_tech_news,
+    hn_search_since,
+    merge_hn_sources,
     validate_github_token,
 )
 
@@ -173,15 +177,26 @@ async def perform_full_scrape() -> bool:
         scrape_status["current_step"] = "1/8 · Fetching community sources"
         logger.info("Step 1: Fetching from community sources...")
 
-        hn_stories, devto_articles, reddit_posts, news_articles = await asyncio.gather(
+        # Hacker News twice: the front page, and a targeted search per tool.
+        # The front page alone named a tracked tool in 4 of 99 stories.
+        (
+            hn_top,
+            hn_searched,
+            devto_articles,
+            reddit_posts,
+            news_articles,
+        ) = await asyncio.gather(
             fetch_hackernews(),
+            fetch_hackernews_search(primary_keywords(), hn_search_since()),
             fetch_devto(),
             fetch_reddit(),
             fetch_tech_news(),
         )
+        hn_stories = merge_hn_sources(hn_top, hn_searched)
 
         scrape_status["sources"] = {
             "hackernews": len(hn_stories),
+            "hackernews_search": len(hn_searched),
             "devto": len(devto_articles),
             "reddit": len(reddit_posts),
             "news": len(news_articles),

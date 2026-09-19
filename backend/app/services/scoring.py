@@ -49,6 +49,24 @@ for _slug, _data in TOOL_REGISTRY.items():
     _TOOL_PATTERNS[_slug] = _patterns
 
 
+def primary_keywords() -> list[str]:
+    """One search term per tool - the catalog's first keyword, deduplicated.
+
+    Used to ask Hacker News which stories mention each tool, rather than hoping
+    the front page happens to.
+    """
+    seen, out = set(), []
+    for data in TOOL_REGISTRY.values():
+        kws = data.get("keywords") or []
+        if not kws:
+            continue
+        kw = kws[0].strip().lower()
+        if kw and kw not in seen:
+            seen.add(kw)
+            out.append(kw)
+    return out
+
+
 def classify_text_to_tools(text: str) -> set[str]:
     """
     Classify a text string into matching tool slugs using word boundary regex.
@@ -322,12 +340,16 @@ def calculate_tool_score(
 # scores by several points - and growth would call that momentum for a week.
 # Svelte, for one, went from 0 to 12 Reddit mentions in a single measurement.
 #
+# 2026-09-19 moved it again: Hacker News is now searched per tool instead of
+# read off the front page, taking HN from 3 mentions a cycle to 67 and from 2
+# tools seen to 19 of 31.
+#
 # Growth therefore only averages snapshots taken after the latest methodology
 # change. Until one exists the baseline is empty and growth reads 0 ("stable"):
 # no comparable data, rather than an invented spike. Move this forward, with a
 # note, whenever the inputs to calculate_all_tool_scores change materially. It is
 # naive UTC midnight, to compare against ToolSnapshot.recorded_at.
-SIGNAL_EPOCH = datetime(2026, 9, 18)  # noqa: DTZ001 - naive UTC, like recorded_at
+SIGNAL_EPOCH = datetime(2026, 9, 20)  # noqa: DTZ001 - naive UTC, like recorded_at
 
 
 def growth_baseline_since(now_naive_utc: datetime) -> datetime:

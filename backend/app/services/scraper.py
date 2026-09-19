@@ -18,7 +18,7 @@ Phase 1 improvements:
 import asyncio
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import feedparser
@@ -329,6 +329,120 @@ async def fetch_hackernews() -> list[dict[str, Any]]:
         except Exception as e:
             logger.error(f"HackerNews API Error: {e}")
             return []
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# HACKER NEWS — targeted search (Algolia)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# The top-100 front page is a poor tool signal: measured, 4 of 99 stories named
+# any tracked tool. HN's Algolia index can be asked the opposite question -
+# "which recent stories mention Rust?" - for free and without a key.
+HN_SEARCH_API = "https://hn.algolia.com/api/v1/search_by_date"
+HN_SEARCH_WINDOW_HOURS = 48
+HN_SEARCH_HITS = 20  # per tool
+HN_SEARCH_PAUSE = 0.3  # courtesy gap between queries
+
+
+def _hn_search_params(keyword: str, since_ts: int) -> dict[str, Any]:
+    """Query parameters for one tool keyword.
+
+    EXACT matching, deliberately. Algolia is typo-tolerant by default, which on
+    a measured sample returned "US and Denmark reach deal over Greenland's
+    security" for `react` and an unrelated VSCode post for `prisma`: 18 useful
+    hits against 56 junk ones. Quoting the phrase, disabling typo tolerance and
+    restricting the searchable attributes gave 34 useful and zero junk.
+    """
+    return {
+        "query": f'"{keyword}"',
+        "tags": "story",
+        "numericFilters": f"created_at_i>{since_ts}",
+        "hitsPerPage": HN_SEARCH_HITS,
+        "restrictSearchableAttributes": "title,story_text",
+        "typoTolerance": "false",
+        "advancedSyntax": "true",
+    }
+
+
+def _hn_items_from_hits(hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Algolia hits -> the item shape the scoring pipeline reads."""
+    items = []
+    for hit in hits:
+        story_id = hit.get("objectID")
+        if not story_id:
+            continue
+        items.append(
+            {
+                "id": story_id,
+                "title": hit.get("title") or "",
+                "url": hit.get("url")
+                or f"https://news.ycombinator.com/item?id={story_id}",
+                # scoring._item_text reads `description`, never `story_text`.
+                "description": hit.get("story_text") or "",
+                "points": hit.get("points") or 0,
+                "source": "hackernews",
+            }
+        )
+    return items
+
+
+def hn_search_since(hours: int = HN_SEARCH_WINDOW_HOURS) -> int:
+    """Unix timestamp `hours` ago, for Algolia's created_at_i filter."""
+    return int(datetime.now(timezone.utc).timestamp()) - hours * 3600
+
+
+def merge_hn_sources(
+    top: list[dict[str, Any]], searched: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Front page plus targeted search, each story once.
+
+    The front page is kept first: a story can appear in both, and its top-stories
+    record is the richer one.
+    """
+    merged = list(top)
+    seen = {str(item.get("id")) for item in top if item.get("id") is not None}
+    for item in searched:
+        key = str(item.get("id"))
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(item)
+    return merged
+
+
+async def fetch_hackernews_search(
+    keywords: list[str], since_ts: int
+) -> list[dict[str, Any]]:
+    """Recent HN stories that actually name each keyword. Deduplicated by story id."""
+    seen: set[str] = set()
+    items: list[dict[str, Any]] = []
+
+    async with httpx.AsyncClient() as client:
+        for keyword in keywords:
+            try:
+                response = await client.get(
+                    HN_SEARCH_API,
+                    params=_hn_search_params(keyword, since_ts),
+                    timeout=15.0,
+                )
+                if response.status_code != 200:
+                    logger.warning(
+                        f"HN search '{keyword}' returned {response.status_code}"
+                    )
+                    continue
+                for item in _hn_items_from_hits(response.json().get("hits", [])):
+                    if item["id"] in seen:
+                        continue
+                    seen.add(item["id"])
+                    items.append(item)
+            except Exception as e:
+                logger.warning(f"HN search '{keyword}' failed: {e}")
+            await asyncio.sleep(HN_SEARCH_PAUSE)
+
+    logger.info(
+        f"HN search: {len(items)} distinct stories across {len(keywords)} keywords"
+    )
+    return items
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
