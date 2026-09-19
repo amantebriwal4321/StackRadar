@@ -78,8 +78,8 @@ export default function RoadmapPage() {
       try {
         const data = await fetchRoadmap(slug);
         setRoadmap(data);
-      } catch (err: any) {
-        setError(err.message || "Roadmap profile not found");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Roadmap profile not found");
       } finally {
         setIsLoading(false);
       }

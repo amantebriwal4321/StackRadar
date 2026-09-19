@@ -69,8 +69,8 @@ export default function ToolDetailPage() {
         setTool(toolData);
         setHistory(historyData.data);
         setOverview(ov);
-      } catch (err: any) {
-        setError(err.message || "Failed to load detailed telemetry.");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load detailed telemetry.");
       } finally {
         setIsLoading(false);
       }

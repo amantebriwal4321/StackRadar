@@ -134,7 +134,9 @@ export default function ComparePage() {
     ];
     const vals: Record<string, number> = {};
     keys.forEach(k => {
-      vals[k] = Math.max(...compareData.map(t => Number((t as any)[k] ?? 0)));
+      vals[k] = Math.max(
+        ...compareData.map((t) => Number((t as unknown as Record<string, unknown>)[k] ?? 0)),
+      );
     });
     return vals;
   }, [compareData]);
@@ -147,7 +149,7 @@ export default function ComparePage() {
     const dates = Array.from(dateSet).sort();
 
     return dates.map((d) => {
-      const point: Record<string, any> = { date: d.slice(5) }; // "MM-DD"
+      const point: Record<string, string | number | null> = { date: d.slice(5) }; // "MM-DD"
       compareData.forEach((t) => {
         const snap = t.history.find((h) => h.date === d);
         point[t.name] = snap ? snap.score : null;
