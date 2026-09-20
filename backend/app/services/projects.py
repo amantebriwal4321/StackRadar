@@ -694,6 +694,197 @@ PROJECTS: list[dict[str, Any]] = [
             ],
         },
     },
+    # ── AI / ML ────────────────────────────────────────────────────────────
+    {
+        "slug": "ollama-local-assistant",
+        "tool_slug": "ollama",
+        "tier": "beginner",
+        "title": "A local assistant that runs on your own machine",
+        "est_hours": 4,
+        "summary": "Run a model locally and put a small streaming API in front of it.",
+        "brief": (
+            "Pull a model with Ollama and build a tiny FastAPI service that streams "
+            "answers back. No API bill, no key, and the model runs on your laptop - "
+            "which is the point: you learn what a model actually costs in memory and "
+            "latency before you ever rent one."
+        ),
+        "requirements": [
+            "One endpoint that takes a question and streams the answer back",
+            "A system prompt you wrote, not a default",
+            "A clear error when the model has not been pulled yet",
+            "README records the model, its size, and tokens/sec on your machine",
+        ],
+        "skills": ["local inference", "streaming responses", "prompt design", "measuring latency"],
+        "starter": "ollama pull llama3.2 && pip install fastapi uvicorn httpx",
+        "stack": ["ollama", "fastapi", "httpx", "uvicorn"],
+        "walkthrough": {
+            "search": "ollama api python fastapi streaming tutorial",
+            "must": ["ollama"],
+            "any": ["api", "python", "local", "llm"],
+            "docs": [
+                ["Ollama README", "https://github.com/ollama/ollama/blob/main/README.md"],
+                ["Ollama API reference", "https://github.com/ollama/ollama/blob/main/docs/api.md"],
+            ],
+            "steps": [
+                {
+                    "do": "Pull a model and talk to it from the terminal",
+                    "detail": "ollama pull llama3.2, then ollama run llama3.2. Watch memory while it loads - a 3B model at 4-bit is roughly 2GB resident, and that number is the whole reason people rent GPUs.",
+                    "doc": ["Ollama README", "https://github.com/ollama/ollama/blob/main/README.md"],
+                },
+                {
+                    "do": "Call it over HTTP instead of the terminal",
+                    "detail": "Ollama serves on http://localhost:11434. POST /api/generate with {model, prompt, stream: false} and read the `response` field.",
+                    "doc": ["Ollama API reference", "https://github.com/ollama/ollama/blob/main/docs/api.md"],
+                    "gotcha": "The default is stream: true, which returns newline-delimited JSON objects rather than one JSON body. json.loads() on the whole response fails with 'Extra data' - decode line by line, or set stream: false.",
+                },
+                {
+                    "do": "Put FastAPI in front and stream to the client",
+                    "detail": "Return a StreamingResponse that yields each chunk as it arrives, passing stream=True through to Ollama.",
+                    "doc": ["Ollama API reference", "https://github.com/ollama/ollama/blob/main/docs/api.md"],
+                    "gotcha": "Buffering the whole answer before returning it throws away the only advantage streaming has: the first token arrives in about 200ms, the last can be twenty seconds later.",
+                },
+                {
+                    "do": "Write a real system prompt and keep the conversation",
+                    "detail": "Use /api/chat with a messages array and a system message describing what the assistant will refuse to do. Keep the last N turns rather than the whole history.",
+                    "doc": ["Ollama API reference", "https://github.com/ollama/ollama/blob/main/docs/api.md"],
+                    "gotcha": "Context windows are small on local models. Past the limit the model silently drops the OLDEST messages - including your system prompt, unless you re-send it every turn.",
+                },
+                {
+                    "do": "Measure it, and write the numbers down",
+                    "detail": "Time to first token and tokens/sec, on your hardware, for two model sizes. Both go in the README.",
+                    "doc": ["Ollama README", "https://github.com/ollama/ollama/blob/main/README.md"],
+                    "gotcha": "The first request after a pull includes loading weights into memory and can take thirty seconds. Measure the second one, and say which you measured.",
+                },
+            ],
+        },
+    },
+    {
+        "slug": "langchain-rag-over-your-docs",
+        "tool_slug": "langchain",
+        "tier": "intermediate",
+        "title": "Answer questions from your own documents",
+        "est_hours": 8,
+        "summary": "Retrieval-augmented generation over files you actually own.",
+        "brief": (
+            "Index a folder of your own notes, PDFs or lecture slides, retrieve the "
+            "passages that matter, and let a model answer using only those. Every "
+            "answer cites the chunk it came from - an answer with no citation is the "
+            "bug, not a feature."
+        ),
+        "requirements": [
+            "Ingests a folder and reports how many chunks it created",
+            "Every answer shows the source passages it used",
+            "Says 'not in these documents' rather than inventing an answer",
+            "Re-running ingestion does not duplicate the index",
+        ],
+        "skills": ["chunking", "embeddings", "vector search", "grounded generation"],
+        "starter": "pip install langchain langchain-community langchain-chroma langchain-ollama",
+        "stack": ["langchain", "langchain-chroma", "chromadb", "langchain-ollama"],
+        "walkthrough": {
+            "search": "langchain rag tutorial vector store retrieval python",
+            "must": ["rag"],
+            "any": ["langchain", "retrieval", "vector", "embeddings"],
+            "docs": [
+                ["LangChain RAG tutorial", "https://python.langchain.com/docs/tutorials/rag/"],
+                ["Text splitters", "https://python.langchain.com/docs/concepts/text_splitters/"],
+            ],
+            "steps": [
+                {
+                    "do": "Load the documents and split them into chunks",
+                    "detail": "RecursiveCharacterTextSplitter with chunk_size around 1000 and chunk_overlap around 150. Print the chunk count, then read three of them.",
+                    "doc": ["Text splitters", "https://python.langchain.com/docs/concepts/text_splitters/"],
+                    "gotcha": "Splitting mid-sentence with no overlap is the most common reason retrieval returns nonsense: the sentence that answers the question ends up half in one chunk and half in another, so neither matches it.",
+                },
+                {
+                    "do": "Embed the chunks into a vector store",
+                    "detail": "OllamaEmbeddings with nomic-embed-text, persisted into Chroma with a directory so the index survives a restart.",
+                    "doc": ["Chroma integration", "https://python.langchain.com/docs/integrations/vectorstores/chroma/"],
+                    "gotcha": "The embedding model used at query time must be the one used at index time. Mixing them puts the vectors in different spaces and the search returns confident garbage rather than an error.",
+                },
+                {
+                    "do": "Retrieve first, and look at what came back",
+                    "detail": "similarity_search(question, k=4) and print the passages. Judge retrieval on its own before any model sees it.",
+                    "doc": ["LangChain RAG tutorial", "https://python.langchain.com/docs/tutorials/rag/"],
+                    "gotcha": "If the right passage is not in the top k, nothing downstream can save the answer. Most 'the LLM hallucinated' bugs are retrieval bugs.",
+                },
+                {
+                    "do": "Ground the answer and force citations",
+                    "detail": "Put the retrieved chunks in the prompt and instruct the model to answer ONLY from them and quote the passage it used.",
+                    "doc": ["LangChain RAG tutorial", "https://python.langchain.com/docs/tutorials/rag/"],
+                    "gotcha": "Without an explicit 'say you do not know' instruction, a model asked something outside the documents answers from its training data - fluently, wrongly, with your documents attached as decoration.",
+                },
+                {
+                    "do": "Make ingestion repeatable, then test it",
+                    "detail": "Hash each chunk and skip ones already stored, or drop the collection and rebuild. Then ask five questions you know the answers to and record which fail.",
+                    "doc": ["Chroma integration", "https://python.langchain.com/docs/integrations/vectorstores/chroma/"],
+                    "gotcha": "Re-running ingestion normally appends, so the same passage is stored three times and crowds everything else out of the top k.",
+                },
+            ],
+        },
+    },
+    {
+        "slug": "transformers-finetune-classifier",
+        "tool_slug": "transformers",
+        "tier": "advanced",
+        "title": "Fine-tune a classifier and prove it beat the baseline",
+        "est_hours": 10,
+        "summary": "Take a pretrained model, train it on your labels, and measure honestly.",
+        "brief": (
+            "Fine-tune DistilBERT on a small labelled dataset and show, with numbers, "
+            "that it beats a dumb baseline. The model is the easy half; the split, the "
+            "metric and the failure cases are the half that gets you hired."
+        ),
+        "requirements": [
+            "A baseline score written down before any training",
+            "Train/validation/test split made once, with test touched once",
+            "Accuracy AND per-class F1, not accuracy alone",
+            "Ten misclassified examples, read and commented on",
+        ],
+        "skills": ["fine-tuning", "evaluation", "class imbalance", "reading failures"],
+        "starter": "pip install transformers datasets evaluate accelerate torch",
+        "stack": ["transformers", "datasets", "evaluate", "torch"],
+        "walkthrough": {
+            "search": "fine tune distilbert text classification transformers tutorial",
+            "must": ["fine"],
+            "any": ["transformers", "bert", "classification", "hugging face"],
+            "docs": [
+                ["Fine-tuning a pretrained model", "https://huggingface.co/docs/transformers/en/training"],
+                ["Text classification task guide", "https://huggingface.co/docs/transformers/en/tasks/sequence_classification"],
+            ],
+            "steps": [
+                {
+                    "do": "Load the data and write down the baseline",
+                    "detail": "load_dataset, then score always predicting the most common class. That number is what your model has to beat.",
+                    "doc": ["Loading datasets", "https://huggingface.co/docs/datasets/en/loading"],
+                    "gotcha": "On a 90/10 dataset, always guessing the majority class scores 90% accuracy. Without the baseline written down first, a 91% model looks like a success.",
+                },
+                {
+                    "do": "Tokenise with the model's own tokenizer",
+                    "detail": "AutoTokenizer.from_pretrained(checkpoint), truncation=True, and pad per batch with DataCollatorWithPadding.",
+                    "doc": ["Text classification task guide", "https://huggingface.co/docs/transformers/en/tasks/sequence_classification"],
+                    "gotcha": "A tokenizer from a different checkpoint maps words to different ids. Training appears to run and the model never learns - the input is effectively scrambled.",
+                },
+                {
+                    "do": "Fine-tune with a Trainer",
+                    "detail": "AutoModelForSequenceClassification with num_labels set, two or three epochs, learning rate around 2e-5, evaluating each epoch.",
+                    "doc": ["Fine-tuning a pretrained model", "https://huggingface.co/docs/transformers/en/training"],
+                    "gotcha": "Learning rates that suit training from scratch (1e-3) destroy pretrained weights in one epoch. Fine-tuning lives between 1e-5 and 5e-5.",
+                },
+                {
+                    "do": "Evaluate on the test split, once",
+                    "detail": "Accuracy plus per-class precision, recall and F1 via evaluate. Compare every number against the baseline.",
+                    "doc": ["Evaluate", "https://huggingface.co/docs/evaluate/en/index"],
+                    "gotcha": "Tuning until the test score improves turns the test set into a second validation set, and the number stops predicting anything about new data. Choose on validation; touch test once.",
+                },
+                {
+                    "do": "Read ten things it got wrong",
+                    "detail": "Print the ten worst misclassifications with their true labels, and write a sentence about each in the README.",
+                    "doc": ["Text classification task guide", "https://huggingface.co/docs/transformers/en/tasks/sequence_classification"],
+                    "gotcha": "Some will be mislabelled in the data rather than wrong. Finding that is the most valuable thing in this project, and the thing interviewers ask about.",
+                },
+            ],
+        },
+    },
 ]
 # fmt: on
 
