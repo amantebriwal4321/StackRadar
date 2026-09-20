@@ -56,7 +56,7 @@ alembic upgrade head
 ```bash
 cd backend
 pip install -r requirements-dev.txt      # requirements.txt + pytest
-python -m pytest tests -q                # ~167 tests, ~2s
+python -m pytest tests -q                # ~173 tests, ~2s
 ```
 `tests/conftest.py` points `DATABASE_URL` at a **throwaway SQLite file** (never `backend/test.db`), blanks every API key, and sets `RUN_SCRAPER_INLINE=0` + `WARM_RESOURCE_CACHE=0`, all before `app` is imported — so the suite needs no database, secrets or network and gives the same answer in CI as locally. Backend CI (`.github/workflows/backend.yml`) runs it on every push/PR. Coverage today: the project video gate + cache key (`test_projects.py`, with the real titles that reached production as regressions), data freshness (`test_health.py`), the scheduler's success stamping (`test_scheduler.py`), the score's contract (`test_scoring.py`), and the booted app (`test_api.py`). Pure logic belongs in a service module where it can be tested without a request — `projects.video_cache_slug` was moved out of the endpoint for exactly that reason.
 
@@ -109,6 +109,25 @@ The GitHub half of the score always worked; the **developer-conversation half** 
 **Changing the signal? Move `scoring.SIGNAL_EPOCH`.** Growth compares a score with the average of recent snapshot scores, and >+15% is labelled "rising". When the inputs to the score change materially (a new source, a fixed fetcher, a reweighting), old and new scores are not comparable, and growth would report the step as momentum for a week. `growth_baseline_since()` stops the average at `SIGNAL_EPOCH`; set it to the next UTC midnight after the change ships and say why in the comment. Until comparable snapshots exist, growth reads 0.
 
 To grow the signal further: only the first keyword per tool is searched on HN (`primary_keywords()`), and 12 tools still saw zero mentions in the 2026-09-19 cycle — widening `catalog.py` keywords is the next lever. Move the epoch when you pull one.
+
+### Demand — the one measured career signal
+**`app/services/jobs.py`** counts how many recent job posts name each tracked tool, from the monthly **Ask HN "Who is hiring?"** threads (free, no key). Measured live 2026-09-21: **756 posts across Jul–Sep 2026, 24 of 31 tools named** — React 171, Kubernetes 72, Rust 65, Docker 50, Terraform 43.
+
+- **Never scored.** It is displayed beside the momentum score, never folded into `calculate_all_tool_scores`, so `SIGNAL_EPOCH` does not move. The score measures attention; this measures hiring. Keep them separate.
+- The companion **"Who WANTS to be hired?"** thread is excluded by title — it is candidates, and counting it would measure supply and label it demand. Only **top-level** comments count; replies are discussion.
+- Stored on `Tool` as `jobs_mentions` / `jobs_sample` / `jobs_period` / `jobs_updated_at`, all **nullable on purpose**: `NULL` is "not measured yet", `0` is "measured, nobody asked". Never render `?? 0`, and never hide a zero — say "not named in this sample".
+- Refreshed **once every 24h** from the scraper (`_refresh_job_demand`), following the `latest_release_at` precedent. A failed fetch keeps the previous values rather than publishing zeroes.
+- Always shown **with its denominator and period**. The bare number would be a claim about "the job market" that three threads from one US-centric community cannot carry.
+
+### Careers — authored, and labelled as such
+**`app/services/careers.py`** holds one hand-written brief per focus domain (`web-development`, `ai-ml`, `devops`): role title, the honest `reality` paragraph, what postings ask, what a portfolio needs, and the first 90 days. Static content validated at import like `catalog.py` and `projects.py` — no table.
+
+Served on `/roadmaps/{slug}` as `career`, carrying `authored: true` and a `reviewed` date beside the **measured** per-tool counts, so `CareerBriefPanel` can style judgement and measurement differently. **The five roadmaps with no brief return `null` and render nothing** — never a generic one. The briefs say the unwelcome things out loud (AI/ML has far fewer junior roles than the hype; DevOps is rarely a first job).
+
+### Depth over breadth — three domains are deep, the rest are tracked
+Learning surfaces lead with **Web Development, AI/ML and DevOps**; all 31 tools keep their scores and trends. Projects: **19 briefs** — Web Development 7, AI/ML 5, DevOps 5 (a deliberate chain: containerise → deploy → provision → observe), Systems 2. Project summaries carry `roadmap_slug` as well as `category`, and `/projects?domain=` accepts either, because the two taxonomies disagree on purpose (Kubernetes and Terraform are *Cloud Native* tools met on the *DevOps* path).
+
+**`seed.reconcile_roadmaps(db)`** runs on startup beside `reconcile_catalog`. Before it, editing `SEED_ROADMAPS` changed nothing on a live database — `run_seed` returns early once any tool row exists, so roadmaps were frozen as first written. **It is append-only and enforces that:** `user_progress` is keyed `(user_id, roadmap_slug, step)` by step NUMBER, so a roadmap whose new step numbers are not a superset of the old is refused and logged. **Add steps at the end; never reorder or renumber them.** `ROADMAP_STEP_TOOLS` (`mvp.py`) is the editorial step→tool map and may cross catalog categories.
 
 ### Frontend
 - **App Router** (`frontend/src/app/`). Key routes: `/` (landing — **six editorial chapters on the `scrollcraft` engine, "chaptered editorial" grammar**; see below), `/explore`, `/trends`, `/compare`, `/tools/[slug]` (renders `LearningResources`), `/roadmap/[technology]` (interactive path — per-step "Watch on YouTube" + per-tool "Best course" videos, progress check-off), `/roadmaps`, `/watchlist`, plus the growth surfaces: `/plan/[slug]` (public shareable career-plan landing, per-goal OG preview), `/learn/[slug]` (SSR SEO guide "How to Learn X in 2026" with Course/FAQ JSON-LD), and `/api/og` (dynamic Open Graph card via `next/og`). `ShareButton` (native share + copy) drives the acquisition loop; goal→roadmap mapping lives in `src/data/goals.ts`. `sitemap.ts` lists all learn/roadmap/plan/tool pages. Set `NEXT_PUBLIC_SITE_URL` in production so OG/canonical/sitemap URLs are absolute.
