@@ -45,6 +45,7 @@ import re
 from typing import Any
 
 from app.services.catalog import TOOLS
+from app.services.seed import TOOL_ROADMAP_MAP
 
 TIERS = ("beginner", "intermediate", "advanced")
 
@@ -1128,6 +1129,10 @@ def _decorate(p: dict[str, Any]) -> dict[str, Any]:
         "tool_name": tool.get("name"),
         "tool_icon": tool.get("icon"),
         "category": tool.get("category"),
+        # The learning domain, which is NOT the catalog category: Kubernetes and
+        # Terraform are "Cloud Native" tools that belong to the DevOps path. The
+        # roadmap is what a learner is actually following, so group by it.
+        "roadmap_slug": TOOL_ROADMAP_MAP.get(p["tool_slug"]),
         "starter": p.get("starter"),
         "stack": p.get("stack") or [],
         "has_video": bool(p.get("walkthrough", {}).get("video_id")),
@@ -1150,7 +1155,15 @@ def list_projects(
     ]
     if category:
         low = category.lower()
-        out = [p for p in out if (p.get("category") or "").lower() == low]
+        # Accept either a catalog category ("DevOps") or a roadmap slug
+        # ("devops"). The two disagree on purpose - see roadmap_slug above - and
+        # callers should not have to know which one they hold.
+        out = [
+            p
+            for p in out
+            if (p.get("category") or "").lower() == low
+            or (p.get("roadmap_slug") or "").lower() == low
+        ]
     return sorted(out, key=lambda p: (_TIER_RANK[p["tier"]], p["title"]))
 
 
