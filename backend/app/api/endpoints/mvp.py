@@ -920,15 +920,28 @@ def get_roadmaps(db: Session = Depends(get_db)):
 # editorial (a tool is "used" at a given concept stage); names/scores/stars are
 # hydrated live from the Tool table at request time, so nothing here is stale.
 ROADMAP_STEP_TOOLS: dict[str, dict[int, list[str]]] = {
-    "ai-ml": {4: ["pytorch", "tensorflow"], 5: ["transformers", "langchain", "ollama"]},
+    # Editorial, and deliberately NOT the catalog category: Kubernetes and
+    # Terraform are "Cloud Native" tools that a learner meets on the DevOps
+    # path, so they appear on both. A step with no tracked tool (Linux, maths)
+    # simply has none - the UI renders nothing rather than a filler.
+    "ai-ml": {
+        4: ["pytorch", "tensorflow"],
+        5: ["transformers", "langchain", "ollama"],
+        6: ["fastapi", "docker", "kubernetes"],  # MLOps: serve it, ship it
+    },
     "web-development": {
         1: ["tailwindcss", "vite"],
         2: ["react", "vuejs", "svelte", "nextjs", "astro"],
         3: ["fastapi", "trpc"],
+        4: ["prisma", "supabase"],  # Databases & ORMs — was empty
         5: ["bun", "deno"],
     },
     "cloud-native": {2: ["kubernetes", "terraform"], 3: ["supabase"]},
-    "devops": {2: ["docker"], 4: ["grafana", "prometheus"]},
+    "devops": {
+        2: ["docker"],
+        3: ["terraform"],  # Infrastructure as Code — was empty
+        4: ["kubernetes", "grafana", "prometheus"],  # Platform engineering
+    },
     "cybersecurity": {1: ["wireshark"], 3: ["metasploit", "owasp-zap"]},
     "web3": {2: ["hardhat", "foundry"], 3: ["ethersjs"]},
     "systems": {2: ["rust"], 3: ["go"]},

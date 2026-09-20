@@ -781,3 +781,63 @@ def reconcile_catalog(db: Session) -> None:
         f"Reconcile: removed {len(orphans)} non-catalog tools "
         f"(placeholder/duplicate rows): {', '.join(sorted(orphan_slugs))}"
     )
+
+
+def reconcile_roadmaps(db: Session) -> None:
+    """Push edits to SEED_ROADMAPS into an existing database.
+
+    WHY THIS EXISTS. run_seed returns early the moment any tool row exists, so
+    on every deployment after the first, editing SEED_ROADMAPS changed nothing:
+    the roadmaps in production were whatever was written the day the database
+    was created. Deepening a roadmap was therefore a no-op that looked like a
+    commit.
+
+    APPEND-ONLY, ENFORCED. `user_progress` is keyed (user_id, roadmap_slug,
+    step) where `step` is the step NUMBER. Renumbering or dropping a step would
+    silently reassign somebody's completed work to a different lesson, so a
+    roadmap whose new step numbers are not a superset of the old ones is left
+    untouched and logged loudly. Add steps at the end; never reorder them.
+    """
+    changed = 0
+    for spec in SEED_ROADMAPS:
+        row = db.query(ToolRoadmap).filter(ToolRoadmap.slug == spec["slug"]).first()
+        if not row:
+            continue  # run_seed creates rows; this only updates them
+
+        try:
+            old_steps = json.loads(row.steps_json) if row.steps_json else []
+        except (TypeError, ValueError):
+            old_steps = []
+        old_numbers = {s.get("step") for s in old_steps}
+        new_numbers = {s.get("step") for s in spec["steps"]}
+
+        if not old_numbers <= new_numbers:
+            logger.error(
+                f"Roadmap '{spec['slug']}' would lose steps {sorted(old_numbers - new_numbers)}; "
+                "refusing to update. Completed progress is keyed by step number - "
+                "append steps, never renumber them."
+            )
+            continue
+
+        fields_changed = (
+            row.title != spec["title"]
+            or row.description != spec["description"]
+            or row.icon != spec["icon"]
+            or row.estimated_weeks != spec["estimated_weeks"]
+            or old_steps != spec["steps"]
+        )
+        if not fields_changed:
+            continue
+
+        row.title = spec["title"]
+        row.description = spec["description"]
+        row.icon = spec["icon"]
+        row.estimated_weeks = spec["estimated_weeks"]
+        row.steps_json = json.dumps(spec["steps"])
+        changed += 1
+
+    if changed:
+        db.commit()
+        logger.info(f"Reconcile: updated {changed} roadmap(s) from SEED_ROADMAPS.")
+    else:
+        logger.info("Reconcile: roadmaps already match SEED_ROADMAPS.")
