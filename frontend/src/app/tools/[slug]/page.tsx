@@ -195,6 +195,34 @@ export default function ToolDetailPage() {
                 {tool.growth_pct >= 0 ? "+" : ""}{tool.growth_pct.toFixed(1)}% GROWTH
               </div>
             </div>
+            {/* Hiring demand, beside momentum because it answers the question
+                momentum cannot: is anyone paying for this? Always shown with
+                its denominator and period — the number alone would be a claim
+                about "the job market", which one community's threads are not. */}
+            {tool.jobs_sample ? (
+              <div className="tech-panel p-4 rounded-2xl text-center">
+                <span className="block text-[9px] text-[var(--c-ink-2)]/60 uppercase font-mono tracking-widest mb-1">
+                  Hiring mentions
+                </span>
+                {tool.jobs_mentions ? (
+                  <>
+                    <span className="text-3xl font-normal text-[var(--c-ink)] font-mono">
+                      {tool.jobs_mentions.toLocaleString("en-US")}
+                    </span>
+                    <span className="text-xs text-[var(--c-ink-2)]/60 font-mono">
+                      {" "}/ {tool.jobs_sample.toLocaleString("en-US")}
+                    </span>
+                  </>
+                ) : (
+                  <span className="block text-[13px] font-medium leading-snug text-[var(--c-ink-2)]">
+                    Not named in this sample
+                  </span>
+                )}
+                <span className="mt-1.5 block text-[10px] leading-snug text-[var(--c-ink-2)]/70 font-mono">
+                  Ask HN: Who is hiring · {tool.jobs_period}
+                </span>
+              </div>
+            ) : null}
             <WatchlistButton toolSlug={tool.slug} showLabel className="justify-center" />
           </div>
         </div>

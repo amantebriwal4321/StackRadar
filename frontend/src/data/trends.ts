@@ -34,6 +34,14 @@ export interface Tool {
   percentile: number;
   last_7_scores: number[];
   updated_at: string | null;
+  /** How many recent Ask HN "Who is hiring?" posts named this tool.
+   *  `null` means not measured yet — which is NOT the same as a measured 0,
+   *  so never render `?? 0` here. */
+  jobs_mentions: number | null;
+  /** Posts read, i.e. the denominator the count is out of. */
+  jobs_sample: number | null;
+  /** The span sampled, e.g. "Jul-Sep 2026". */
+  jobs_period: string | null;
 }
 
 export interface ToolDetail extends Tool {
