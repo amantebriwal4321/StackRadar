@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Play, ListVideo, CheckCircle2, Clock, TrendingUp } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
 import FaqAccordion from "@/components/FaqAccordion";
+import CareerBriefPanel from "@/components/CareerBriefPanel";
 import { fetchRoadmap, fetchRoadmaps, type Roadmap } from "@/data/trends";
 import { SITE_URL as SITE } from "@/lib/site";
 
@@ -205,6 +206,15 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
             ))}
           </ol>
         </Reveal>
+
+        {/* What the first job asks for — before the FAQ, because it is the
+            question the FAQ keeps circling. Server-rendered on purpose: the
+            /roadmap twin is a client component and invisible to crawlers. */}
+        {r.career && (
+          <Reveal as="div" variant="rise" className="mb-12">
+            <CareerBriefPanel career={r.career} domain={subj} />
+          </Reveal>
+        )}
 
         {/* FAQ */}
         <Reveal as="section" variant="rise" className="mb-12">

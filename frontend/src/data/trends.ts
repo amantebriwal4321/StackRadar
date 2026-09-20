@@ -61,6 +61,31 @@ export interface ToolHistoryPoint {
   sentiment_score: number;
 }
 
+/** What the first job in this domain asks for.
+ *
+ *  Two kinds of claim in one object, kept apart on purpose: everything except
+ *  `demand` is AUTHORED (hence `authored` and `reviewed`), while `demand`
+ *  carries MEASURED counts from hiring threads. Render them differently. */
+export interface CareerBrief {
+  role_title: string;
+  /** The honest paragraph — including where junior roles are scarce. */
+  reality: string;
+  postings_ask: string[];
+  portfolio_expects: string[];
+  first_90_days: string[];
+  authored: true;
+  /** ISO date the brief was last reviewed against the measured counts. */
+  reviewed: string;
+  demand: {
+    slug: string;
+    name: string;
+    icon: string;
+    jobs_mentions: number | null;
+    jobs_sample: number | null;
+    jobs_period: string | null;
+  }[];
+}
+
 export interface Roadmap {
   slug: string;
   title: string;
@@ -69,6 +94,8 @@ export interface Roadmap {
   estimated_weeks: number;
   step_count?: number;
   steps?: RoadmapStep[];
+  /** null for the roadmaps with no brief written yet — say so, never invent one. */
+  career?: CareerBrief | null;
 }
 
 export interface RoadmapStep {

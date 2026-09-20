@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import { TIER_BADGE } from "@/components/ProjectCard";
+import CareerBriefPanel from "@/components/CareerBriefPanel";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2, Calendar, Award, BookOpen, Sparkles, Check, Flame, Play, ListVideo, Youtube, Hammer } from "lucide-react";
 import { useUser, useAuth, SignInButton } from "@clerk/nextjs";
@@ -291,6 +292,14 @@ export default function RoadmapPage() {
             </div>
           </div>
         </header>
+
+        {/* What the first job asks for. Null for roadmaps with no brief yet,
+            which renders nothing rather than a generic one. */}
+        {roadmap.career && (
+          <div className="mb-8">
+            <CareerBriefPanel career={roadmap.career} domain={roadmap.title} />
+          </div>
+        )}
 
         {/* Timeline track container */}
         <div ref={timelineRef} className="relative pl-12 md:pl-20 pr-2 space-y-6">
