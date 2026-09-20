@@ -885,6 +885,202 @@ PROJECTS: list[dict[str, Any]] = [
             ],
         },
     },
+    # ── DevOps / platform ──────────────────────────────────────────────────
+    # A deliberate chain on top of docker-containerize-app: deploy the image,
+    # provision what it runs on, then watch it. Each brief names the previous
+    # one, so a learner ends with one system rather than three demos.
+    {
+        "slug": "kubernetes-deploy-your-container",
+        "tool_slug": "kubernetes",
+        "tier": "intermediate",
+        "title": "Deploy the container you built, and survive killing a pod",
+        "est_hours": 6,
+        "summary": "Take your own image to a local cluster: Deployment, Service, probes, limits.",
+        "brief": (
+            "Run the image from 'Containerise an app you already wrote' on a real "
+            "cluster (kind or minikube). Two replicas, a Service in front, health "
+            "probes that mean something, and resource limits. You are finished when "
+            "you can delete a pod mid-request and the service stays up."
+        ),
+        "requirements": [
+            "A Deployment with two replicas and a Service you can curl",
+            "Readiness and liveness probes pointing at real endpoints",
+            "CPU and memory requests and limits set deliberately",
+            "Deleting one pod does not drop a request",
+        ],
+        "skills": ["Deployments and Services", "health probes", "resource limits", "debugging pods"],
+        "starter": "kind create cluster --name stackradar && kubectl cluster-info",
+        "stack": ["kubernetes", "kind", "kubectl"],
+        "walkthrough": {
+            "search": "kubernetes deploy your own docker image kind tutorial",
+            "must": ["kubernetes"],
+            "any": ["deploy", "deployment", "kind", "minikube", "pod"],
+            "docs": [
+                ["Deployments", "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"],
+                ["Services", "https://kubernetes.io/docs/concepts/services-networking/service/"],
+            ],
+            "steps": [
+                {
+                    "do": "Get your image onto the cluster and running",
+                    "detail": "kind load docker-image myapp:0.1 puts a local image into the cluster, then a Deployment with replicas: 2 and imagePullPolicy: IfNotPresent.",
+                    "doc": ["Deployments", "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"],
+                    "gotcha": "Without loading the image, the pod sits in ErrImagePull forever: the cluster is a separate Docker context and cannot see the image your laptop just built.",
+                },
+                {
+                    "do": "Put a Service in front and reach it",
+                    "detail": "A ClusterIP Service selecting your pod labels, then kubectl port-forward svc/myapp 8080:80 to curl it.",
+                    "doc": ["Services", "https://kubernetes.io/docs/concepts/services-networking/service/"],
+                    "gotcha": "The Service selector must match the POD labels from the template, not the Deployment's own labels. When they differ you get a Service with no endpoints and connections that hang rather than fail.",
+                },
+                {
+                    "do": "Add probes that answer honestly",
+                    "detail": "readinessProbe on an endpoint that checks dependencies; livenessProbe on a cheap one that only says the process is alive.",
+                    "doc": ["Liveness and readiness probes", "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/"],
+                    "gotcha": "Pointing liveness at a dependency-checking endpoint means a slow database restarts your pods in a loop, turning a degradation into an outage.",
+                },
+                {
+                    "do": "Set requests and limits on purpose",
+                    "detail": "Requests are what the scheduler reserves; limits are where you get throttled or OOM-killed. Set both, then watch kubectl top pods.",
+                    "doc": ["Resource management", "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"],
+                    "gotcha": "A memory limit below real usage gets the container OOM-killed and restarted with no application error anywhere - the only evidence is OOMKilled in kubectl describe pod.",
+                },
+                {
+                    "do": "Break it on purpose",
+                    "detail": "Run a curl loop, kubectl delete pod one replica, and count failed requests. Then read kubectl describe and kubectl logs --previous on a crashed pod.",
+                    "doc": ["Debugging pods", "https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/"],
+                    "gotcha": "With one replica, or without readiness probes, the delete drops live requests. The whole point of the exercise is seeing that difference yourself.",
+                },
+            ],
+        },
+    },
+    {
+        "slug": "terraform-provision-the-stack",
+        "tool_slug": "terraform",
+        "tier": "advanced",
+        "title": "Provision the infrastructure in code, and destroy it cleanly",
+        "est_hours": 8,
+        "summary": "Define what your app runs on as code: plan, apply, remote state, destroy.",
+        "brief": (
+            "Stop clicking in a console. Define the network, the machine or cluster "
+            "and its firewall rules in Terraform, apply from nothing, then destroy it "
+            "and apply again and get the same thing. Use a free-tier resource or "
+            "LocalStack - the discipline is identical and the bill is not."
+        ),
+        "requirements": [
+            "terraform apply from an empty state produces a working environment",
+            "State stored remotely, not on your laptop",
+            "No secrets in the repository - variables and a tfvars file that is gitignored",
+            "terraform destroy leaves nothing behind, and apply rebuilds it",
+        ],
+        "skills": ["infrastructure as code", "plan vs apply", "remote state", "variables and secrets"],
+        "starter": "terraform init && terraform plan -out=tfplan",
+        "stack": ["terraform"],
+        "walkthrough": {
+            "search": "terraform tutorial provision infrastructure remote state beginners",
+            "must": ["terraform"],
+            "any": ["infrastructure", "provision", "state", "aws", "iac"],
+            "docs": [
+                ["Terraform get started", "https://developer.hashicorp.com/terraform/tutorials/aws-get-started"],
+                ["Remote state", "https://developer.hashicorp.com/terraform/language/state/remote"],
+            ],
+            "steps": [
+                {
+                    "do": "Declare one resource and read the plan before applying",
+                    "detail": "A provider block and a single resource. Run terraform plan -out=tfplan and read every line before terraform apply tfplan.",
+                    "doc": ["Terraform get started", "https://developer.hashicorp.com/terraform/tutorials/aws-get-started"],
+                    "gotcha": "plan and apply can disagree if you apply without the saved plan file: the world may have changed in between. Applying a saved plan is what makes the review meaningful.",
+                },
+                {
+                    "do": "Move state off your laptop",
+                    "detail": "A remote backend (S3 with state locking, or Terraform Cloud's free tier) so state is shared and locked.",
+                    "doc": ["Remote state", "https://developer.hashicorp.com/terraform/language/state/remote"],
+                    "gotcha": "terraform.tfstate contains resource ids and often secrets in plain text. Committing it is both a leak and a collision waiting for the second person who runs apply.",
+                },
+                {
+                    "do": "Parameterise instead of hardcoding",
+                    "detail": "variables.tf with types and descriptions, values in terraform.tfvars, and that file gitignored. Outputs for anything you need afterwards.",
+                    "doc": ["Input variables", "https://developer.hashicorp.com/terraform/language/values/variables"],
+                    "gotcha": "Marking a variable sensitive keeps it out of CLI output but NOT out of state. Sensitive values belong in a secret manager referenced by the config.",
+                },
+                {
+                    "do": "Change something and watch the plan",
+                    "detail": "Edit a value and read whether the plan says update in-place or destroy and replace. The difference is whether your data survives.",
+                    "doc": ["terraform plan", "https://developer.hashicorp.com/terraform/cli/commands/plan"],
+                    "gotcha": "A -/+ in the plan means destroy then create. On anything holding data, that line is the only warning you get before it is gone.",
+                },
+                {
+                    "do": "Destroy it, then build it again",
+                    "detail": "terraform destroy, confirm the console is empty, then apply from scratch and check the app still comes up.",
+                    "doc": ["Terraform get started", "https://developer.hashicorp.com/terraform/tutorials/aws-get-started"],
+                    "gotcha": "Anything created by hand outside Terraform survives destroy and quietly keeps costing money - and the rebuild then fails on a name that is still taken.",
+                },
+            ],
+        },
+    },
+    {
+        "slug": "prometheus-grafana-alert-on-it",
+        "tool_slug": "prometheus",
+        "tier": "intermediate",
+        "title": "Instrument the service, then alert on something real",
+        "est_hours": 6,
+        "summary": "Expose metrics from your own app, graph them, and fire one alert that matters.",
+        "brief": (
+            "Instrument the service you deployed, scrape it with Prometheus, build a "
+            "dashboard that answers 'is it healthy?' in five seconds, and write one "
+            "alert you would be willing to be woken by. One good alert beats twenty "
+            "that everyone mutes."
+        ),
+        "requirements": [
+            "A /metrics endpoint exposing request count, latency and error count",
+            "Prometheus scraping it, with the target showing UP",
+            "A dashboard with request rate, error rate and p95 latency",
+            "One alert rule with a threshold you can justify in a sentence",
+        ],
+        "skills": ["instrumentation", "PromQL", "dashboards", "alert design"],
+        "starter": "pip install prometheus-client && docker compose up prometheus grafana",
+        "stack": ["prometheus", "grafana", "prometheus-client"],
+        "walkthrough": {
+            "search": "prometheus grafana monitor your own application tutorial",
+            "must": ["prometheus"],
+            "any": ["grafana", "metrics", "monitoring", "alert"],
+            "docs": [
+                ["Prometheus getting started", "https://prometheus.io/docs/prometheus/latest/getting_started/"],
+                ["Instrumentation practices", "https://prometheus.io/docs/practices/instrumentation/"],
+            ],
+            "steps": [
+                {
+                    "do": "Expose metrics from your own app",
+                    "detail": "prometheus_client: a Counter for requests by route and status, and a Histogram for latency. Serve them on /metrics.",
+                    "doc": ["Instrumentation practices", "https://prometheus.io/docs/practices/instrumentation/"],
+                    "gotcha": "Putting anything unbounded in a label - a user id, a URL with an id in it - creates a new time series per value and will eat the memory of the Prometheus server.",
+                },
+                {
+                    "do": "Scrape it and confirm the target is UP",
+                    "detail": "A scrape_config pointing at your service, then check Status > Targets in the Prometheus UI before believing any graph.",
+                    "doc": ["Prometheus getting started", "https://prometheus.io/docs/prometheus/latest/getting_started/"],
+                    "gotcha": "Inside Docker, localhost is the Prometheus container itself. The target must be the service name on the compose network, or every graph is silently empty.",
+                },
+                {
+                    "do": "Name the metrics the way everyone else does",
+                    "detail": "http_requests_total, http_request_duration_seconds. Counters end in _total, durations in _seconds, base units only.",
+                    "doc": ["Metric naming", "https://prometheus.io/docs/practices/naming/"],
+                    "gotcha": "Recording milliseconds in a metric named _seconds makes every later query and every shared dashboard wrong by a factor of a thousand.",
+                },
+                {
+                    "do": "Build the dashboard that answers one question",
+                    "detail": "rate(http_requests_total[5m]) for traffic, the same filtered to 5xx for errors, and histogram_quantile(0.95, ...) for p95 latency.",
+                    "doc": ["Build dashboards", "https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/"],
+                    "gotcha": "Graphing a counter directly gives a line that only ever climbs. Counters are always wrapped in rate() - the increase is the signal, not the total.",
+                },
+                {
+                    "do": "Write one alert you would answer at 3am",
+                    "detail": "Error ratio above a threshold you can defend, sustained for five minutes (for: 5m). Write in the annotation what the responder should do first.",
+                    "doc": ["Alerting rules", "https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/"],
+                    "gotcha": "An alert with no `for` duration fires on a single scrape blip, gets muted within a week, and is then useless on the day it matters.",
+                },
+            ],
+        },
+    },
 ]
 # fmt: on
 
