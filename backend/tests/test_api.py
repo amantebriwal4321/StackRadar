@@ -99,3 +99,26 @@ def test_public_routes_are_registered():
     registered = set(app.openapi()["paths"])
     missing = [p for p in REQUIRED_ROUTES if p not in registered]
     assert not missing, f"routes not registered: {missing}"
+
+
+# --- hiring demand fields -------------------------------------------------------
+
+JOB_FIELDS = ("jobs_mentions", "jobs_sample", "jobs_period")
+
+
+def test_both_tool_serializers_expose_the_hiring_fields(client):
+    # There is no shared Tool serializer; /tools and /tools/{slug} are written
+    # separately, which is exactly how they drift.
+    listed = client.get("/api/v1/tools?per_page=1").json()["tools"][0]
+    detail = client.get(f"/api/v1/tools/{listed['slug']}").json()
+    for field in JOB_FIELDS:
+        assert field in listed, f"/tools is missing {field}"
+        assert field in detail, f"/tools/{{slug}} is missing {field}"
+
+
+def test_unmeasured_demand_is_null_not_zero(client):
+    # A fresh database has never read a hiring thread. NULL says "not measured";
+    # 0 would claim "measured, nobody asked for it".
+    listed = client.get("/api/v1/tools?per_page=1").json()["tools"][0]
+    assert listed["jobs_mentions"] is None
+    assert listed["jobs_sample"] is None

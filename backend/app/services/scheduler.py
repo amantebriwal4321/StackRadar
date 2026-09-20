@@ -36,6 +36,7 @@ from sqlalchemy.orm import Session
 from app.core.clock import utc_today, utcnow_naive
 from app.db.session import SessionLocal
 from app.models.all_models import Domain, Tool, ToolSnapshot
+from app.services.jobs import fetch_job_demand
 from app.services.scoring import (
     TOOL_REGISTRY,
     calculate_all_tool_scores,
@@ -135,6 +136,40 @@ async def run_scraper_loop():
             datetime.now(timezone.utc) + timedelta(minutes=30)
         ).isoformat()
         await asyncio.sleep(1800)  # 30 minutes
+
+
+JOB_DEMAND_TTL_HOURS = 24
+
+
+async def _refresh_job_demand(all_tools: list[Tool]) -> None:
+    """Refresh hiring counts onto every tool, at most once a day.
+
+    Failure is silent by design: tools keep the numbers they had, and a tool
+    never measured keeps NULL rather than gaining a 0 that would read as
+    "nobody is hiring for this".
+    """
+    newest = max(
+        (t.jobs_updated_at for t in all_tools if t.jobs_updated_at), default=None
+    )
+    if newest and (datetime.now(timezone.utc) - newest) < timedelta(
+        hours=JOB_DEMAND_TTL_HOURS
+    ):
+        logger.info("Job demand is fresh; skipping this cycle.")
+        return
+
+    demand = await fetch_job_demand({t.slug for t in all_tools})
+    if not demand:
+        logger.warning("Job demand unavailable this cycle; keeping previous values.")
+        return
+
+    for tool in all_tools:
+        tool.jobs_mentions = demand["counts"].get(tool.slug, 0)
+        tool.jobs_sample = demand["sample_size"]
+        tool.jobs_period = demand["period"]
+        tool.jobs_updated_at = demand["fetched_at"]
+    logger.info(
+        f"Job demand: {demand['sample_size']} posts ({demand['period']}) applied to {len(all_tools)} tools."
+    )
 
 
 async def perform_full_scrape() -> bool:
@@ -268,6 +303,12 @@ async def perform_full_scrape() -> bool:
         logger.info(
             "Step 4: Fetching GitHub repo stats (shared client, adaptive delays)..."
         )
+
+        # Hiring demand, refreshed daily rather than every 30 minutes: the
+        # source is three monthly threads, so a fresh read inside the same day
+        # returns the same posts. Same shape as the release-metadata block
+        # below - a staleness check on a column, not a separate schedule.
+        await _refresh_job_demand(all_tools)
 
         # A rotated token deserves a fresh chance each cycle.
         reset_github_auth_state()

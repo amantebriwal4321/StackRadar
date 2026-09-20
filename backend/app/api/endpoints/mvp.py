@@ -169,6 +169,11 @@ def get_tools(
             )
             if total_tools > 1
             else 50,
+            # Hiring demand. NULL until the first measurement - the UI must
+            # distinguish "not measured yet" from a measured zero.
+            "jobs_mentions": t.jobs_mentions,
+            "jobs_sample": t.jobs_sample,
+            "jobs_period": t.jobs_period,
             "last_7_scores": sparkline_map.get(t.id, []),
             "updated_at": t.updated_at.isoformat() if t.updated_at else None,
         }
@@ -390,6 +395,9 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
         "parent_name": parent.name if tool.parent_tool_id and parent else None,
         "has_roadmap": roadmap is not None,
         "roadmap_slug": roadmap.slug if roadmap else None,
+        "jobs_mentions": tool.jobs_mentions,
+        "jobs_sample": tool.jobs_sample,
+        "jobs_period": tool.jobs_period,
         "sentiment_label": tool.sentiment_label or "neutral",
         "sentiment_positive": tool.sentiment_positive or 0,
         "sentiment_negative": tool.sentiment_negative or 0,

@@ -77,6 +77,15 @@ class Tool(Base):
     latest_version = Column(String, nullable=True)  # "v19.2.0"
     latest_release_at = Column(DateTime(timezone=True), nullable=True)
 
+    # Hiring demand — how many recent Ask HN "Who is hiring?" posts name this
+    # tool. Nullable on purpose: NULL means "not measured yet", which is not the
+    # same claim as 0 ("measured, nobody asked for it"). Never scored; the
+    # momentum score's inputs are fixed (see scoring.SIGNAL_EPOCH).
+    jobs_mentions = Column(Integer, nullable=True)
+    jobs_sample = Column(Integer, nullable=True)  # posts read, for the denominator
+    jobs_period = Column(String, nullable=True)  # "Jul-Sep 2026"
+    jobs_updated_at = Column(DateTime(timezone=True), nullable=True)
+
     # Computed
     score = Column(Float, default=0.0)
     growth_pct = Column(Float, default=0.0)
