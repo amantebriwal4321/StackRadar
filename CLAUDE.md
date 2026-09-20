@@ -56,7 +56,7 @@ alembic upgrade head
 ```bash
 cd backend
 pip install -r requirements-dev.txt      # requirements.txt + pytest
-python -m pytest tests -q                # ~106 tests, ~1.5s
+python -m pytest tests -q                # ~167 tests, ~2s
 ```
 `tests/conftest.py` points `DATABASE_URL` at a **throwaway SQLite file** (never `backend/test.db`), blanks every API key, and sets `RUN_SCRAPER_INLINE=0` + `WARM_RESOURCE_CACHE=0`, all before `app` is imported — so the suite needs no database, secrets or network and gives the same answer in CI as locally. Backend CI (`.github/workflows/backend.yml`) runs it on every push/PR. Coverage today: the project video gate + cache key (`test_projects.py`, with the real titles that reached production as regressions), data freshness (`test_health.py`), the scheduler's success stamping (`test_scheduler.py`), the score's contract (`test_scoring.py`), and the booted app (`test_api.py`). Pure logic belongs in a service module where it can be tested without a request — `projects.video_cache_slug` was moved out of the endpoint for exactly that reason.
 

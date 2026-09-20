@@ -42,6 +42,7 @@ from app.models.all_models import (
     UserProgress,
     WaitlistSignup,
 )
+from app.services import careers as careers_svc
 from app.services import health as health_svc
 from app.services import projects as projects_svc
 from app.services import resources as resources_svc
@@ -935,6 +936,36 @@ ROADMAP_STEP_TOOLS: dict[str, dict[int, list[str]]] = {
 }
 
 
+def _career_block(db: Session, roadmap_slug: str) -> dict | None:
+    """The career brief for a roadmap, hydrated with live hiring counts.
+
+    None for the five roadmaps with no brief written yet - the UI says so
+    rather than showing a generic one.
+    """
+    career = careers_svc.get_career(roadmap_slug)
+    if not career:
+        return None
+
+    tools = db.query(Tool).filter(Tool.slug.in_(career["tool_slugs"])).all()
+    by_slug = {t.slug: t for t in tools}
+    demand = []
+    for slug in career["tool_slugs"]:
+        tool = by_slug.get(slug)
+        if not tool:
+            continue
+        demand.append(
+            {
+                "slug": tool.slug,
+                "name": tool.name,
+                "icon": tool.icon,
+                "jobs_mentions": tool.jobs_mentions,
+                "jobs_sample": tool.jobs_sample,
+                "jobs_period": tool.jobs_period,
+            }
+        )
+    return {**{k: v for k, v in career.items() if k != "tool_slugs"}, "demand": demand}
+
+
 @router.get("/roadmaps/{slug}")
 def get_roadmap(slug: str, db: Session = Depends(get_db)):
     """Get a full roadmap with all steps, each hydrated with the live tools it uses."""
@@ -1021,6 +1052,11 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
         "description": roadmap.description,
         "icon": roadmap.icon,
         "estimated_weeks": roadmap.estimated_weeks,
+        # What the first job asks for: an AUTHORED brief (careers.py) carrying
+        # its own `authored` flag and review date, plus the MEASURED hiring
+        # counts for its tools. The two are kept separate in the payload so the
+        # UI can label them differently - opinion must never render as data.
+        "career": _career_block(db, slug),
         "steps": steps,
     }
 
