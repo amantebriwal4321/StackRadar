@@ -422,22 +422,46 @@ def generate_recommendation(tool_name: str, trend_stage: str, score: float) -> s
     return templates.get(trend_stage, f"{tool_name} is being tracked (score: {score}).")
 
 
-def classify_learning_priority(trend_stage: str) -> str:
-    """
-    Map trend stage to learning priority for students.
+# Share of sampled hiring posts that must name a tool for it to count as in
+# demand. 5% of 756 posts is ~38 employers; 1% is ~8.
+DEMAND_HIGH_SHARE = 0.05
+DEMAND_MEDIUM_SHARE = 0.01
 
-    rising   → HIGH
-    growing  → MEDIUM
-    stable   → LOW
-    declining → AVOID
+
+def classify_learning_priority(
+    trend_stage: str,
+    jobs_mentions: int | None = None,
+    jobs_sample: int | None = None,
+) -> str:
+    """How strongly to recommend learning a tool. Hiring demand first, trend second.
+
+    This used to be the trend alone - rising HIGH, growing MEDIUM, stable LOW -
+    which told students that React, named in 171 of 756 hiring posts, was LOW
+    priority, exactly like Wireshark with 0. Established tools are "stable" BY
+    DEFINITION, so a trend-only rule marks the most employable skills lowest.
+    Trend answers "is it heating up?"; a learner asking what to learn is asking
+    "will someone pay me for it?".
+
+    Measured demand therefore sets a floor: >=5% of sampled posts -> HIGH,
+    >=1% -> at least MEDIUM. Unmeasured tools (None) fall back to the trend
+    exactly as before, and a measured zero never lifts anything.
     """
-    priority_map = {
+    by_trend = {
         "rising": "HIGH",
         "growing": "MEDIUM",
         "stable": "LOW",
         "declining": "AVOID",
-    }
-    return priority_map.get(trend_stage, "MEDIUM")
+    }.get(trend_stage, "MEDIUM")
+
+    if not jobs_sample or jobs_mentions is None:
+        return by_trend
+
+    share = jobs_mentions / jobs_sample
+    if share >= DEMAND_HIGH_SHARE:
+        return "HIGH"
+    if share >= DEMAND_MEDIUM_SHARE and by_trend in ("LOW", "AVOID"):
+        return "MEDIUM"
+    return by_trend
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

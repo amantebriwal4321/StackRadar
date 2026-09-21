@@ -56,7 +56,7 @@ alembic upgrade head
 ```bash
 cd backend
 pip install -r requirements-dev.txt      # requirements.txt + pytest
-python -m pytest tests -q                # ~173 tests, ~2s
+python -m pytest tests -q                # ~181 tests, ~2s
 ```
 `tests/conftest.py` points `DATABASE_URL` at a **throwaway SQLite file** (never `backend/test.db`), blanks every API key, and sets `RUN_SCRAPER_INLINE=0` + `WARM_RESOURCE_CACHE=0`, all before `app` is imported — so the suite needs no database, secrets or network and gives the same answer in CI as locally. Backend CI (`.github/workflows/backend.yml`) runs it on every push/PR. Coverage today: the project video gate + cache key (`test_projects.py`, with the real titles that reached production as regressions), data freshness (`test_health.py`), the scheduler's success stamping (`test_scheduler.py`), the score's contract (`test_scoring.py`), and the booted app (`test_api.py`). Pure logic belongs in a service module where it can be tested without a request — `projects.video_cache_slug` was moved out of the endpoint for exactly that reason.
 
@@ -84,7 +84,7 @@ scraper.py  →  scoring.py  →  models (Tool/ToolSnapshot)  →  mvp.py API  �
 
 **The honesty line, and it is the whole design.** A brief is a SPECIFICATION and is authored by hand. A walkthrough link is a CLAIM and is verified: every `video_id` goes through `resources.verify_youtube` (oEmbed — no key, no quota) at serve time and **fails closed**, leaving the docs and written steps rather than a dead link. `verify_youtube` also rejects a live id whose real title misses the keywords, which is what catches a typo resolving to some unrelated real video. `walkthrough.video_verified` reports this to the UI, mirroring `videos_live`.
 
-Endpoints: `/projects` (`tool`, `domain`, `tier` filters), `/projects/{slug}` (verified walkthrough), `/tools/{slug}/projects` (404s on an unknown tool, so a URL typo stays distinguishable from a tool with no brief yet). `/roadmaps/{slug}` hydrates a `projects` array onto each step. Frontend: `/projects`, `/projects/[slug]`, `components/ProjectCard.tsx` (exports `TIER_BADGE`, reused by the roadmap so tiers and step levels share one palette), `components/ToolProjects.tsx` on the tool profile. **Coverage is deliberately partial** — 13 briefs across react/nextjs/fastapi/docker/pytorch/rust; everything else gets a visible empty state, never a generated filler.
+Endpoints: `/projects` (`tool`, `domain`, `tier` filters), `/projects/{slug}` (verified walkthrough), `/tools/{slug}/projects` (404s on an unknown tool, so a URL typo stays distinguishable from a tool with no brief yet). `/roadmaps/{slug}` hydrates a `projects` array onto each step. Frontend: `/projects`, `/projects/[slug]`, `components/ProjectCard.tsx` (exports `TIER_BADGE`, reused by the roadmap so tiers and step levels share one palette), `components/ToolProjects.tsx` on the tool profile. **Coverage is deliberately partial** — 19 briefs, concentrated in the three focus domains (see *Depth over breadth*); everything else gets a visible empty state, never a generated filler.
 
 ### One unified tool catalog (single source of truth)
 **`app/services/catalog.py` is the ONE place tools are defined.** Its `TOOLS` list carries all three concerns per tool: display (name, slug, icon, category, description), learning (level, is_entry_point, seq, parent_slug), and scraping (github_repo, keywords). To add/edit/remove a tracked tool, edit this file and nothing else.
@@ -113,6 +113,7 @@ To grow the signal further: only the first keyword per tool is searched on HN (`
 ### Demand — the one measured career signal
 **`app/services/jobs.py`** counts how many recent job posts name each tracked tool, from the monthly **Ask HN "Who is hiring?"** threads (free, no key). Measured live 2026-09-21: **756 posts across Jul–Sep 2026, 24 of 31 tools named** — React 171, Kubernetes 72, Rust 65, Docker 50, Terraform 43.
 
+- **Sets the learning-priority floor.** `scoring.classify_learning_priority` puts measured demand before trend: named in ≥5% of sampled posts → HIGH, ≥1% → at least MEDIUM; unmeasured tools fall back to the trend. The trend-only rule marked every established tool LOW ("stable"), so React — in 171 of 756 posts — was told to students as LOW, same as Wireshark with 0.
 - **Never scored.** It is displayed beside the momentum score, never folded into `calculate_all_tool_scores`, so `SIGNAL_EPOCH` does not move. The score measures attention; this measures hiring. Keep them separate.
 - The companion **"Who WANTS to be hired?"** thread is excluded by title — it is candidates, and counting it would measure supply and label it demand. Only **top-level** comments count; replies are discussion.
 - Stored on `Tool` as `jobs_mentions` / `jobs_sample` / `jobs_period` / `jobs_updated_at`, all **nullable on purpose**: `NULL` is "not measured yet", `0` is "measured, nobody asked". Never render `?? 0`, and never hide a zero — say "not named in this sample".

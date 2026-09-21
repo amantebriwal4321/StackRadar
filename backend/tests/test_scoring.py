@@ -143,3 +143,33 @@ def test_before_the_epoch_there_is_no_comparable_baseline():
 def test_signal_epoch_is_naive_like_recorded_at():
     assert S.SIGNAL_EPOCH.tzinfo is None
     assert isinstance(S.SIGNAL_EPOCH, datetime)
+
+
+# --- learning priority: demand before trend ----------------------------------
+
+@pytest.mark.parametrize(
+    "slug, mentions, expected",
+    [
+        ("react", 171, "HIGH"),        # was LOW in production: stable trend
+        ("kubernetes", 72, "HIGH"),
+        ("terraform", 43, "HIGH"),     # 5.7% of 756
+        ("fastapi", 19, "MEDIUM"),     # 2.5%
+        ("wireshark", 0, "LOW"),       # a measured zero lifts nothing
+    ],
+)
+def test_measured_demand_sets_the_priority_floor(slug, mentions, expected):
+    assert S.classify_learning_priority("stable", mentions, 756) == expected
+
+
+def test_unmeasured_tools_fall_back_to_the_trend_exactly_as_before():
+    for trend, want in [("rising", "HIGH"), ("growing", "MEDIUM"), ("stable", "LOW"), ("declining", "AVOID")]:
+        assert S.classify_learning_priority(trend) == want
+        assert S.classify_learning_priority(trend, None, None) == want
+
+
+def test_demand_never_lowers_a_rising_tool():
+    assert S.classify_learning_priority("rising", 1, 756) == "HIGH"
+
+
+def test_a_declining_tool_employers_still_ask_for_is_not_avoid():
+    assert S.classify_learning_priority("declining", 20, 756) == "MEDIUM"
