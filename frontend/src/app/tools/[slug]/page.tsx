@@ -174,6 +174,14 @@ export default function ToolDetailPage() {
               </span>
               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wider ${priorityColors[tool.learning_priority] || "bg-amber-500/10 text-amber-600"}`}>
                 LEARNING PRIORITY: {tool.learning_priority}
+                {/* Say WHY. The priority is set by measured hiring demand
+                    before trend, so the number that set it belongs next to it
+                    rather than in a doc nobody reads. */}
+                {tool.jobs_sample ? (
+                  <span className="ml-1.5 font-normal opacity-70">
+                    · {tool.jobs_mentions ? `${tool.jobs_mentions} of ${tool.jobs_sample.toLocaleString("en-US")} hiring posts` : "not named in hiring posts"}
+                  </span>
+                ) : null}
               </span>
               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wider border ${levelBadge[tool.level] || "border-indigo-500/10 text-[var(--c-ink-2)]"}`}>
                 STAGE: {tool.level?.toUpperCase()}

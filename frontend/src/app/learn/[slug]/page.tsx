@@ -75,10 +75,22 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
   const allTools = steps.flatMap((s) => s.tools || []);
   const weeks = r.estimated_weeks || 10;
 
+  // Ground the demand claim in the measured counts, or make no claim at all.
+  // "Remain in strong demand" with nothing behind it is the habit this product
+  // exists to replace.
+  const topDemand = (r.career?.demand || [])
+    .filter((d) => d.jobs_mentions && d.jobs_sample)
+    .sort((a, b) => (b.jobs_mentions || 0) - (a.jobs_mentions || 0))[0];
+  const demandLine = topDemand
+    ? `In the ${topDemand.jobs_sample?.toLocaleString("en-US")} job posts we read from the Ask HN hiring threads (${topDemand.jobs_period}), ${topDemand.jobs_mentions} named ${topDemand.name}.`
+    : null;
+
   const faqs = [
     {
       q: `Is ${subj} worth learning in 2026?`,
-      a: `Yes. StackRadar scores every tool in this path by live momentum from GitHub, Hacker News and developer communities, and ${subj} tools remain in strong demand. This roadmap tracks that data, so you learn what the industry is actually using — not a syllabus from years ago.`,
+      a: demandLine
+        ? `${demandLine} StackRadar also scores every tool in this path by live momentum from GitHub, Hacker News and developer communities, so you learn what the industry is actually using — not a syllabus from years ago.`
+        : `StackRadar scores every tool in this path by live momentum from GitHub, Hacker News and developer communities, so you learn what the industry is actually using — not a syllabus from years ago.`,
     },
     {
       q: `How long does it take to learn ${subj}?`,
