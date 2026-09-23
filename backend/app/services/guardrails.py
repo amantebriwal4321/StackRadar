@@ -17,9 +17,12 @@ Scope today: the single Groq sentiment call in
    sentiment about a headline that names none of our tools cannot be grounded in
    this domain, so it is quarantined to ``neutral`` rather than persisted.
 
-Production targets for this layer (designed, not yet wired — see README):
-**Enkrypt AI** for the runtime guardrail / hallucination checks, **Qdrant** for
-low-latency gRPC context retrieval to ground the model, and **Mastra** for
+**Fast Retrieval is wired** (``app/services/retrieval.py``, the Moss SDK — see
+README "Hackathon Architecture"): a semantic query against the tool catalog
+grounds each verdict and feeds the prompt real context, falling back to the
+regex check below when Moss isn't configured. Remaining production targets for
+this layer (designed, not yet wired — see README): **Enkrypt AI** for
+hallucination / PII detectors on this same seam, and **Mastra** for
 agent-level evals + tracing. ``traced`` here is a dependency-free stand-in that
 logs span durations until a real OpenTelemetry exporter replaces it.
 """
@@ -101,9 +104,18 @@ def _strip_code_fence(raw: str) -> str:
 def _is_grounded(item: dict[str, Any]) -> bool:
     """A non-neutral verdict is only trustworthy if the text names a tracked tool.
 
+    Checks the Moss semantic-retrieval verdict first — set by
+    ``scraper.batch_sentiment_analysis`` via ``app/services/retrieval.py``,
+    which catches paraphrases the regex below can't ("k8s", "the Rust
+    compiler") — and falls back to the substring regex when Moss found no
+    high-confidence match or isn't configured for this run.
+
     Imported lazily so this module has no import-time dependency on scoring
     (and vice versa).
     """
+    if item.get("_moss_grounded"):
+        return True
+
     from app.services.scoring import _item_text, classify_text_to_tools
 
     text = _item_text(item)

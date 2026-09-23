@@ -36,6 +36,7 @@ from sqlalchemy.orm import Session
 from app.core.clock import utc_today, utcnow_naive
 from app.db.session import SessionLocal
 from app.models.all_models import Domain, Tool, ToolSnapshot
+from app.services import retrieval
 from app.services.jobs import fetch_job_demand
 from app.services.scoring import (
     TOOL_REGISTRY,
@@ -79,6 +80,7 @@ scrape_status = {
     "duration_seconds": None,
     "sources": {},
     "sentiment": {},
+    "retrieval": {},
     "tools_updated": 0,
     "errors": [],
     # Consecutive cycles that ended in a pipeline error. Reset to 0 by the
@@ -249,6 +251,7 @@ async def perform_full_scrape() -> bool:
         logger.info("Step 2: Running sentiment analysis via Groq LLM...")
 
         all_content = hn_stories + devto_articles + reddit_posts + news_articles
+        retrieval.reset_stats()
         all_content = await batch_sentiment_analysis(all_content)
 
         # Split back into sources
@@ -279,6 +282,11 @@ async def perform_full_scrape() -> bool:
             "neutral": total_neu,
             "total": len(all_content),
         }
+
+        # Fast Retrieval (Trust Loop) — this cycle's Moss query stats, or
+        # {"configured": False, ...} when MOSS_PROJECT_ID/KEY are unset.
+        scrape_status["retrieval"] = retrieval.last_run_stats()
+        logger.info(f"Moss retrieval this cycle: {scrape_status['retrieval']}")
 
         # ━━━ STEP 3: Count mentions per tool (raw, from all source text) ━━━
         scrape_status["current_step"] = "3/8 · Counting mentions"

@@ -60,6 +60,15 @@ class Settings(BaseSettings):
     # back to curated platform deep-links and the app boots exactly the same.
     YOUTUBE_API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
 
+    # MOSS (sub-10ms semantic search — the Trust Loop's Fast Retrieval layer,
+    # app/services/retrieval.py). Optional, like every other key here: with
+    # both set, sentiment grounding runs a semantic query against the tool
+    # catalog before the Groq call and feeds the match into the prompt as
+    # context; without them, that step is skipped and grounding falls back to
+    # the existing regex check. Free project at https://moss.dev.
+    MOSS_PROJECT_ID: str = os.getenv("MOSS_PROJECT_ID", "")
+    MOSS_PROJECT_KEY: str = os.getenv("MOSS_PROJECT_KEY", "")
+
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:3000",

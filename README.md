@@ -61,12 +61,19 @@ Each tool gets a **composite score (0–100)** using logarithmic normalization w
 
 ## 🛡️ Hackathon Architecture: Agent Reliability & Security
 
-> Produced for the **MOSS Zero-Latency Builder Sprint** — track *Agent Reliability,
-> Security and Evaluation*. Scoped honestly: the **runtime guardrail** and the
-> grounding half of **Context Eval** are a working prototype in this repo
-> (`app/services/guardrails.py`); the named third-party stack — **Enkrypt AI**
-> (guardrails), **Qdrant** (gRPC retrieval), **Mastra** (agent evals + tracing) — is
-> **designed in, not yet wired**. Each row below is tagged with its real status.
+> Produced for the **Moss Zero-Latency Builder Sprint** — track *Agent Reliability,
+> Security and Evaluation*. Scoped honestly: the **runtime guardrail**, **Context
+> Eval** grounding, and **Fast Retrieval** are a working prototype in this repo
+> (`app/services/guardrails.py`, `app/services/retrieval.py`); the remaining
+> named third-party stack — **Enkrypt AI** (guardrails), **Mastra** (agent evals +
+> tracing) — is **designed in, not yet wired**. Each row below is tagged with its
+> real status.
+>
+> *Correction:* an earlier draft of this section (and the PRD) called "Moss" the
+> sprint arena's codename for a Qdrant placeholder. That was wrong — Moss is the
+> sprint's actual sponsor product (a sub-10ms semantic search runtime, no vector
+> database to run or tune) — and Fast Retrieval below now runs on the real
+> `moss` SDK instead of the Qdrant placeholder.
 
 ### Where the LLM actually sits today
 
@@ -86,7 +93,7 @@ feature (e.g. an "explain this trend" agent) would pass through.
 |-----------|------|--------|------|
 | **Runtime Guardrails** | Pydantic v2 → **Enkrypt AI** | ✅ prototype in repo | Every model response is validated against a strict schema (`SentimentVerdict`) before any sentiment reaches `scoring.py`. Malformed rows are dropped, a fully unparseable response rejects the whole batch, and a verdict whose index is outside the batch (a hallucinated index) is discarded. Anything not explicitly accepted stays at the safe `neutral` default. Enkrypt AI would add hallucination / safety / PII detectors on the same seam. |
 | **Context Eval** (grounding) | Python `scoring` regex → **Mastra evals** | ✅ prototype in repo | A non-neutral verdict is kept only if the source headline actually mentions a tracked tool (`scoring.classify_text_to_tools`). Sentiment that can't be grounded in our domain is quarantined to `neutral` rather than persisted. Faithfulness scoring against retrieved context is the proposed extension. |
-| **Fast Retrieval** | — → **Qdrant** (gRPC) | ○ designed, not wired | Low-latency vector retrieval — would serve grounding snippets (tool docs, prior snapshots) to the LLM call over gRPC instead of dumping raw scrape text into the prompt, and back the faithfulness score above. |
+| **Fast Retrieval** | **Moss** (`pip install moss`, `app/services/retrieval.py`) | ✅ shipped | Every scraped headline is semantically queried against a Moss index of the 31-tool catalog before the Groq call. A high-confidence match grounds the verdict (catching paraphrases the regex misses — "k8s", "the Rust compiler", "Next") and its text is folded into the classification prompt as context instead of the bare headline. No-op, falling back to the regex-only check, when `MOSS_PROJECT_ID`/`MOSS_PROJECT_KEY` are unset — same degrade-gracefully contract as every other key in this repo. Per-cycle stats (`configured`, `queried`, `grounded`, `avg_latency_ms`) are on `GET /api/v1/status` → `retrieval`. Offline proof: `backend/scripts/check_retrieval.py`. |
 | **Latency Tracing** | `guardrails.traced()` → **OpenTelemetry** / Mastra | ◑ stub in repo | Wraps the inference and validation hops and logs span durations today; swapping in a real exporter leaves the call sites unchanged. |
 
 ```mermaid
@@ -102,36 +109,48 @@ flowchart LR
     end
 
     subgraph trustloop["Trust Loop"]
+        MOSS[Moss - sub-10ms semantic retrieval - SHIPPED]
         GUARD[Runtime Guardrails - Pydantic schema + index check - SHIPPED - Enkrypt AI proposed]
         EVAL[Context Eval - grounding check SHIPPED - faithfulness / Mastra evals proposed]
-        QDRANT[Qdrant - gRPC vector retrieval - PROPOSED]
         TRACE[Latency Tracing - traced stub now - OpenTelemetry proposed]
     end
 
-    QDRANT -. retrieved snippets .-> GROQ
+    MOSS -. retrieved tool context .-> GROQ
+    MOSS -. grounding verdict .-> EVAL
     GROQ -- raw response --> GUARD
     GUARD -- validated --> EVAL
     EVAL -- accepted --> SCORE
     EVAL -- ungrounded, forced neutral --> SCORE
+    TRACE -. spans .-> MOSS
     TRACE -. spans .-> GROQ
     TRACE -. spans .-> GUARD
 ```
 
-**The loop:** `Qdrant (gRPC retrieval) → LLM → runtime guardrails (schema + index) →
-Context Eval (grounding) → persist or quarantine`, with tracing around every hop.
-Nothing the LLM produces is written to the database until it has passed the guardrail
-schema check and cleared the grounding check. Offline proof:
+**The loop:** `Moss (semantic retrieval, sub-10ms) → LLM → runtime guardrails
+(schema + index) → Context Eval (grounding) → persist or quarantine`, with tracing
+around every hop. Nothing the LLM produces is written to the database until it has
+passed the guardrail schema check and cleared the grounding check. Offline proof:
 `backend/scripts/check_guardrails.py` runs the guardrail against well-formed,
-malformed, hallucinated-index and ungrounded responses with no network or API key.
+malformed, hallucinated-index and ungrounded responses with no network or API key;
+`backend/scripts/check_retrieval.py` does the same for Moss retrieval, and prints
+live per-query latency when real credentials are present.
 
 Full requirements, milestones and open risks: [`docs/architecture/PRD.md`](./docs/architecture/PRD.md).
 
-A conceptual diagram from the sprint design tool is kept at
+**Submission architecture diagram:**
+
+![StackRadar Trust Loop — Moss Fast Retrieval in the sentiment pipeline](./docs/architecture/trust-loop-moss.png)
+
+Source (hand-authored SVG, edit directly rather than regenerating):
+[`docs/architecture/trust-loop-moss.svg`](./docs/architecture/trust-loop-moss.svg).
+
+An earlier conceptual diagram from the sprint design tool is kept at
 [`docs/architecture/proposed-reliability-layer.pdf`](./docs/architecture/proposed-reliability-layer.pdf)
-([PNG](./docs/architecture/proposed-reliability-layer.png)). Its "Existing Infrastructure"
-boxes are a generic template and differ from the real stack (e.g. the collector is Python,
-not Node.js; there is no Kong gateway) — the Mermaid diagram above is the accurate
-current-state reference.
+([PNG](./docs/architecture/proposed-reliability-layer.png)) for history only — it predates
+the real Moss integration, still shows the retired Qdrant placeholder, and its "Existing
+Infrastructure" boxes are a generic template that differs from the real stack (e.g. the
+collector is Python, not Node.js; there is no Kong gateway). The diagram above and the
+Mermaid diagram earlier in this section are the accurate current-state reference.
 
 ---
 

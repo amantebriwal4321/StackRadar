@@ -25,7 +25,9 @@ import feedparser
 import httpx
 
 from app.core.config import settings
+from app.services import retrieval
 from app.services.guardrails import traced, validate_sentiment_batch
+from app.services.scoring import _item_text
 
 logger = logging.getLogger(__name__)
 
@@ -831,9 +833,31 @@ async def batch_sentiment_analysis(
     for batch_start in range(0, len(items), batch_size):
         batch = items[batch_start : batch_start + batch_size]
 
-        # Build the prompt with numbered titles
+        # Fast Retrieval (Trust Loop): semantic-ground each headline against
+        # the tool catalog before the LLM sees it. No-op when MOSS_PROJECT_ID
+        # / MOSS_PROJECT_KEY are unset (see app/services/retrieval.py) — the
+        # regex-only check in guardrails._is_grounded still runs either way.
+        if retrieval.is_configured():
+            with traced(f"moss.retrieval.batch{batch_start // batch_size + 1}"):
+                for item in batch:
+                    text = _item_text(item)
+                    if not text or text == "(no title)":
+                        continue
+                    matches, _latency_ms = await retrieval.retrieve(text, top_k=1)
+                    if matches and matches[0].score >= retrieval.GROUND_SCORE_THRESHOLD:
+                        item["_moss_grounded"] = True
+                        item["_moss_context"] = matches[0].tool_text
+                        retrieval.mark_grounded()
+
+        # Build the prompt with numbered titles (+ Moss-retrieved tool context)
         numbered_titles = "\n".join(
-            f"{i}: {item.get('title', '(no title)')}" for i, item in enumerate(batch)
+            f"{i}: {item.get('title', '(no title)')}"
+            + (
+                f"  [likely about: {item['_moss_context']}]"
+                if item.get("_moss_context")
+                else ""
+            )
+            for i, item in enumerate(batch)
         )
 
         prompt = (
