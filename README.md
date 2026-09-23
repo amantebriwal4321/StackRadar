@@ -17,6 +17,26 @@
 
 ---
 
+<div align="center">
+
+### 🏆 Moss Zero-Latency Builder Sprint — submission
+
+**Track: Agent Reliability, Security and Evaluation** · Trust Loop wired with the real **Moss** SDK for sub-10ms semantic retrieval.
+
+**▶️ 2-minute demo — [see SUBMISSION.md](./SUBMISSION.md)**  ·  **[📐 Architecture](./docs/architecture/trust-loop-moss.svg)**  ·  **[📄 Submission details](./SUBMISSION.md)**
+
+</div>
+
+![StackRadar Trust Loop — Moss Fast Retrieval in the sentiment pipeline](./docs/architecture/trust-loop-moss.png)
+
+> How Moss is used, in one line: before StackRadar's one LLM call classifies community
+> sentiment, every headline is semantically matched against a Moss index of the tool
+> catalog — grounding the verdict and giving the model real context, sub-10ms, with no
+> vector database. Full write-up in [`SUBMISSION.md`](./SUBMISSION.md) and the "Hackathon
+> Architecture" section below.
+
+---
+
 ## 🎯 What is StackRadar?
 
 StackRadar automatically monitors the developer ecosystem every 30 minutes, fetching signals from:
