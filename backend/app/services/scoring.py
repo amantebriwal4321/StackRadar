@@ -397,29 +397,56 @@ def classify_trend(growth_pct: float) -> str:
         return "declining"
 
 
-def generate_recommendation(tool_name: str, trend_stage: str, score: float) -> str:
+def generate_recommendation(
+    tool_name: str,
+    trend_stage: str,
+    score: float,
+    jobs_mentions: int | None = None,
+    jobs_sample: int | None = None,
+) -> str:
+    """The tool page's headline prose. Momentum from the trend, demand only if measured.
+
+    Every template used to assert employment from a TREND score: rising claimed
+    "High demand in the job market", growing "shows steady demand", stable
+    "Reliable for career investment" - none of which the momentum score knows
+    anything about. It is built from GitHub stars and forum mentions.
+
+    Now the momentum half says only what momentum can support, and the demand
+    half is a measured count or absent. A measured zero is stated with its
+    sample, not hidden and not spun.
     """
-    Generate a human-readable recommendation based on trend stage.
-    """
-    templates = {
+    momentum = {
         "rising": (
-            f"🚀 {tool_name} is experiencing strong growth with significant momentum "
-            f"(score: {score}). High demand in the job market — consider prioritizing this skill."
+            f"🚀 {tool_name} is gaining attention fast - stars and developer "
+            f"conversation are both climbing (momentum {score}/100)."
         ),
         "growing": (
-            f"📈 {tool_name} shows steady demand and consistent community engagement "
-            f"(score: {score}). A solid choice for skill development."
+            f"📈 {tool_name} is picking up steady attention across GitHub and the "
+            f"developer forums we read (momentum {score}/100)."
         ),
         "stable": (
-            f"📊 {tool_name} is a mature, established tool with stable adoption "
-            f"(score: {score}). Reliable for career investment with proven industry use."
+            f"📊 {tool_name} is established: adoption is broad and not moving much "
+            f"either way (momentum {score}/100)."
         ),
         "declining": (
-            f"⚠️ {tool_name} shows reduced activity and waning interest "
-            f"(score: {score}). Consider alternatives unless already deeply invested."
+            f"⚠️ {tool_name} is losing attention - fewer mentions and slower star "
+            f"growth than before (momentum {score}/100)."
         ),
-    }
-    return templates.get(trend_stage, f"{tool_name} is being tracked (score: {score}).")
+    }.get(trend_stage, f"{tool_name} is being tracked (momentum {score}/100).")
+
+    if not jobs_sample or jobs_mentions is None:
+        return momentum  # no measurement, so no claim about jobs
+
+    if jobs_mentions:
+        return (
+            f"{momentum} {jobs_mentions} of the {jobs_sample:,} recent "
+            f'"Who is hiring?" posts we read named it.'
+        )
+    return (
+        f'{momentum} None of the {jobs_sample:,} recent "Who is hiring?" posts we '
+        f"read named it - one community's threads, so read that as thin evidence "
+        f"rather than none."
+    )
 
 
 # Share of sampled hiring posts that must name a tool for it to count as in

@@ -457,7 +457,9 @@ async def perform_full_scrape() -> bool:
 
             # Decision Intelligence
             trend_stage = classify_trend(growth_pct)
-            recommendation = generate_recommendation(tool.name, trend_stage, new_score)
+            recommendation = generate_recommendation(
+                tool.name, trend_stage, new_score, tool.jobs_mentions, tool.jobs_sample
+            )
             # Hiring demand sets a floor under the trend - see the function.
             learning_priority = classify_learning_priority(
                 trend_stage, tool.jobs_mentions, tool.jobs_sample

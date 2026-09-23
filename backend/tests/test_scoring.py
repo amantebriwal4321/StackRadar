@@ -173,3 +173,30 @@ def test_demand_never_lowers_a_rising_tool():
 
 def test_a_declining_tool_employers_still_ask_for_is_not_avoid():
     assert S.classify_learning_priority("declining", 20, 756) == "MEDIUM"
+
+
+# --- recommendation prose: no invented employment claims ------------------------
+
+def test_no_job_claim_without_a_measurement():
+    text = S.generate_recommendation("React", "rising", 92.8)
+    assert "hiring" not in text.lower() and "job" not in text.lower()
+    assert "momentum" in text.lower()
+
+
+def test_a_measured_count_is_quoted_with_its_sample():
+    text = S.generate_recommendation("React", "stable", 92.8, 171, 756)
+    assert "171 of the 756" in text
+
+
+def test_a_measured_zero_is_stated_not_hidden():
+    text = S.generate_recommendation("Wireshark", "stable", 35.7, 0, 756)
+    assert "None of the 756" in text
+    assert "thin evidence" in text, "a small sample is not proof of no demand"
+
+
+@pytest.mark.parametrize("trend", ["rising", "growing", "stable", "declining"])
+def test_momentum_prose_never_asserts_the_job_market(trend):
+    # The score is stars plus forum mentions; it knows nothing about hiring.
+    text = S.generate_recommendation("Thing", trend, 50.0)
+    for phrase in ("job market", "career investment", "steady demand", "high demand"):
+        assert phrase not in text.lower()
