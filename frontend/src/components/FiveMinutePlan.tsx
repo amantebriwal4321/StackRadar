@@ -130,7 +130,7 @@ export default function FiveMinutePlan() {
                   <h2 className="text-2xl md:text-4xl font-normal font-display text-[var(--c-ink)] leading-tight">
                     {picked.label}
                   </h2>
-                  <p className="text-sm text-[var(--c-ink-2)] font-medium mt-1">{picked.outcome} · {picked.weeks}</p>
+                  <p className="text-sm text-[var(--c-ink-2)] font-medium mt-1">{picked.outcome} · {roadmap?.estimated_weeks ? `~${roadmap.estimated_weeks} weeks` : picked.weeks}</p>
                 </div>
               </div>
 

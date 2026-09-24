@@ -15,18 +15,23 @@ export type Goal = {
 };
 
 export const GOALS: Goal[] = [
+  // `weeks` is a FALLBACK for before the roadmap has loaded. Every surface that
+  // can reach the API renders the roadmap's own estimated_weeks instead, because
+  // these constants had drifted to about HALF the real figure — "Land a
+  // developer job · ~10 weeks" led to a roadmap that says 20. Promising a
+  // beginner half the time it takes is the kind of thing that makes them quit.
   { icon: "💼", label: "Land a developer job", slug: "web-development",
-    outcome: "Ship full-stack apps employers hire for", weeks: "~10 weeks" },
+    outcome: "Ship full-stack apps employers hire for", weeks: "~20 weeks" },
   { icon: "🧠", label: "Break into AI / ML", slug: "ai-ml",
-    outcome: "Go from Python to training and shipping models", weeks: "~12 weeks" },
+    outcome: "Go from Python to training and shipping models", weeks: "~24 weeks" },
   { icon: "🔐", label: "Get into cybersecurity", slug: "cybersecurity",
-    outcome: "Learn the tools real security teams use daily", weeks: "~10 weeks" },
+    outcome: "Learn the tools real security teams use daily", weeks: "~20 weeks" },
   { icon: "☁️", label: "DevOps & cloud", slug: "devops",
-    outcome: "Master Docker, CI/CD and cloud deployment", weeks: "~9 weeks" },
+    outcome: "Master Docker, CI/CD and cloud deployment", weeks: "~16 weeks" },
   { icon: "⛓️", label: "Web3 / blockchain", slug: "web3",
-    outcome: "Build and deploy smart contracts", weeks: "~8 weeks" },
+    outcome: "Build and deploy smart contracts", weeks: "~16 weeks" },
   { icon: "⚙️", label: "Low-level / systems", slug: "systems",
-    outcome: "Get fluent in Rust and Go", weeks: "~9 weeks" },
+    outcome: "Get fluent in Rust and Go", weeks: "~20 weeks" },
 ];
 
 export function goalBySlug(slug: string): Goal | undefined {

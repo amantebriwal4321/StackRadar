@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2, PlayCircle, Flame } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
 import ShareButton from "@/components/ShareButton";
 import { goalBySlug, GOALS } from "@/data/goals";
+import { fetchRoadmap } from "@/data/trends";
 
 /**
  * Public, shareable landing for a career plan.
@@ -57,6 +58,12 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
   const goal = goalBySlug(slug);
   if (!goal) notFound();
 
+  // Read the duration from the roadmap itself. The constant in goals.ts is only
+  // a fallback for when the API is unreachable: the two had drifted to about
+  // half the real figure, which is a promise a beginner would quit over.
+  const roadmap = await fetchRoadmap(slug).catch(() => null);
+  const weeksLabel = roadmap?.estimated_weeks ? `~${roadmap.estimated_weeks} weeks` : goal.weeks;
+
   const features = [
     { icon: CheckCircle2, t: "Sequenced steps", d: "The right order, not a random pile of links" },
     { icon: PlayCircle, t: "Best free video each", d: "Hand-picked and checked to be live" },
@@ -81,7 +88,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
                   {goal.label}
                 </h1>
                 <p className="text-sm md:text-base text-[var(--c-ink-2)] font-medium mt-1.5">
-                  {goal.outcome} · {goal.weeks}
+                  {goal.outcome} · {weeksLabel}
                 </p>
               </div>
             </div>
