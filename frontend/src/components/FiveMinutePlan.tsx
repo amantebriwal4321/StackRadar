@@ -86,7 +86,7 @@ export default function FiveMinutePlan() {
               </h2>
               <p className="text-sm md:text-base text-[var(--c-ink-2)] font-medium max-w-xl mb-6">
                 Pick where you want to go. We&apos;ll hand you the exact path — the right tools
-                in the right order, each with the single best free video.
+                in the right order, with a verified free course where one exists.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

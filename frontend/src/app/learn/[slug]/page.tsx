@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!r) return { title: "Learning guide · StackRadar" };
   const subj = subject(r);
   const title = `How to Learn ${subj} in 2026 — Free Step-by-Step Roadmap`;
-  const description = `The complete free roadmap to learn ${subj}: the exact tools in the right order, the single best free video for each, and a plan you can track. Ranked by live industry data.`;
+  const description = `The complete free roadmap to learn ${subj}: the exact tools in the right order, a verified free course where one exists, and a plan you can track. Ranked by live industry data.`;
   const og = `/api/og?title=${encodeURIComponent(`How to learn ${subj}`)}&subtitle=${encodeURIComponent(`Free step-by-step roadmap · best video per step`)}&emoji=${encodeURIComponent(r.icon || "🧭")}`;
   return {
     title,
@@ -98,7 +98,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
     },
     {
       q: `Do I need to pay for a course to learn ${subj}?`,
-      a: `No. Every step here links the single best free video we could find — hand-picked and checked to be live — plus free documentation and practice resources. The whole path is free.`,
+      a: `No. Where a step has a tracked tool we link a free course chosen by reach, engagement and freshness, then checked to still be live before it is shown. Steps without one link official documentation and a search instead — we would rather show nothing than a dead link. The whole path is free.`,
     },
     {
       q: `What should I learn first in ${subj}?`,
@@ -151,7 +151,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
             How to Learn {subj} in 2026
           </h1>
           <p className="text-base md:text-lg text-[var(--c-ink-2)] font-medium leading-relaxed">
-            A complete, free roadmap — the exact tools in the right order, the single best free video for each,
+            A complete, free roadmap — the exact tools in the right order, a verified free course where one exists,
             and a plan you can actually track. Ranked by live industry momentum, so you learn what teams use today.
           </p>
 

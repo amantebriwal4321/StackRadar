@@ -151,7 +151,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             initial={canAnimate ? { opacity: 0, y: 16 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }}
             className="text-[15px] text-[var(--c-ink-2)] leading-relaxed font-medium mb-6"
           >
-            <span className="font-semibold text-[var(--c-ink)]">Live momentum data, turned into a step-by-step roadmap</span> — the right tools in the right order, each with the single best free video.
+            <span className="font-semibold text-[var(--c-ink)]">Live momentum data, turned into a step-by-step roadmap</span> — the right tools in the right order, with a verified free course where one exists.
           </motion.p>
 
           {/* Primary CTA — big, full-width, thumb-reachable */}

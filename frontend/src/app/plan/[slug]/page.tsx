@@ -32,7 +32,7 @@ export async function generateMetadata(
   if (!goal) return { title: "Learning plan · StackRadar" };
 
   const title = `Your path to ${goal.label.replace(/^(Land a|Get into|Break into) /i, "")}`;
-  const desc = `${goal.outcome} — the right tools in the right order, each with the single best free video. Free on StackRadar.`;
+  const desc = `${goal.outcome} — the right tools in the right order, with a verified free course where one exists. Free on StackRadar.`;
   const og = `/api/og?title=${encodeURIComponent(title)}&subtitle=${encodeURIComponent(goal.outcome)}&emoji=${encodeURIComponent(goal.icon)}`;
 
   return {
