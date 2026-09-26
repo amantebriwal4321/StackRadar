@@ -60,7 +60,7 @@ export default function AboutPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
             </span>
-            Real-time tech intelligence
+            Measured tech intelligence
           </motion.span>
 
           <motion.h1
@@ -211,10 +211,15 @@ export default function AboutPage() {
             </h3>
             <ul className="space-y-3 text-text-primary/90">
               {[
-                <>A live <b className="text-text-primary">0–100 momentum score</b> per tool, refreshed continuously.</>,
+                <>A <b className="text-text-primary">0–100 momentum score</b> per tool, recomputed every 30 minutes.</>,
                 <>Signal from <b className="text-text-primary">GitHub, Hacker News, Reddit, Dev.to &amp; tech RSS</b> — fused.</>,
-                <>Growth stage and trajectory, not just today&apos;s star count.</>,
-                <>A one-click jump from “this is rising” to <b className="text-text-primary">a learning roadmap</b>.</>,
+                // The score is 60% stars, 15% forks, 25% developer conversation.
+                // It used to claim "not just today's star count", which is an
+                // odd thing to say about a number that is three-quarters stars
+                // and forks. Describe the real weighting instead.
+                <>Adoption weighted with <b className="text-text-primary">developer conversation</b>, plus a growth stage — stars alone would only tell you what is already big.</>,
+                <>How many recent <b className="text-text-primary">“Who is hiring?” posts</b> name each tool — the score measures attention, this measures hiring.</>,
+                <>A one-click jump from “this is rising” to <b className="text-text-primary">a learning roadmap</b>, and a project to prove it.</>,
               ].map((t, i) => (
                 <li key={i} className="flex gap-2.5">
                   <span className="text-accent-primary mt-0.5">→</span>
@@ -238,7 +243,7 @@ export default function AboutPage() {
           next step.
         </p>
         <div className="font-mono text-xs tracking-[0.2em] uppercase text-accent-cyan mt-6">
-          Category · Real-time developer tech intelligence
+          Category · Measured developer tech intelligence
         </div>
       </motion.section>
 
