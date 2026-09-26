@@ -12,10 +12,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const tool = await fetchToolDetail(slug);
     return {
       title: `${tool.name} — Score ${tool.score}/100 | StackRadar`,
-      description: `${tool.name} has a real-time momentum score of ${tool.score}/100 based on GitHub activity, developer community sentiment, and tech news. Track ${tool.name}'s trend across GitHub, HackerNews, Dev.to, and Reddit.`,
+      // What the score is actually built from: stars and forks, plus developer
+      // conversation. Sentiment is displayed but is NOT an input, and "real-time"
+      // is a 30-minute loop. When hiring demand has been measured it is the most
+      // useful sentence in the snippet, so lead with it, with its denominator.
+      description:
+        `${tool.name} scores ${tool.score}/100 on momentum, built from GitHub stars and forks plus developer conversation on Hacker News, Reddit, Dev.to and tech news.` +
+        (tool.jobs_sample && tool.jobs_mentions
+          ? ` ${tool.jobs_mentions} of ${tool.jobs_sample.toLocaleString("en-US")} recent "Who is hiring?" posts name it.`
+          : ""),
       openGraph: {
         title: `${tool.name} — ${tool.score}/100 on StackRadar`,
-        description: `Track ${tool.name}'s real-time trend across GitHub, HackerNews, Dev.to, and Reddit.`,
+        description: `Track ${tool.name}'s momentum across GitHub, Hacker News, Reddit and Dev.to.`,
         type: "website",
       },
       twitter: {

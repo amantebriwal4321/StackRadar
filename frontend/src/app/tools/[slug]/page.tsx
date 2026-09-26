@@ -162,7 +162,7 @@ export default function ToolDetailPage() {
                   {tool.name}
                 </h1>
                 <p className="text-sm text-[var(--c-ink-2)] leading-relaxed max-w-2xl font-medium">
-                  {tool.description || "Continuous scans are ongoing for this technology index. Real-time mentions are captured below."}
+                  {tool.description || `${tool.name} is tracked by StackRadar.`}
                 </p>
               </div>
             </div>

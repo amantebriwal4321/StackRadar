@@ -56,7 +56,7 @@ export default function ContinueLearning() {
             </h3>
             <p className="text-sm text-[var(--c-ink-2)] font-medium max-w-lg">
               Track every module you finish, keep a streak, and get told exactly what to study
-              next — on a syllabus that updates itself from live momentum data.
+              next — on a sequenced syllabus, with the tools on each step ranked by live momentum.
             </p>
           </div>
           <SignInButton mode="modal">
