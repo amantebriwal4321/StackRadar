@@ -122,3 +122,12 @@ def test_unmeasured_demand_is_null_not_zero(client):
     listed = client.get("/api/v1/tools?per_page=1").json()["tools"][0]
     assert listed["jobs_mentions"] is None
     assert listed["jobs_sample"] is None
+
+
+def test_openapi_tells_a_reader_how_to_check_freshness_and_how_scoring_works():
+    # /docs is what someone probing the API sees first. It was a bare title.
+    info = app.openapi()["info"]
+    text = info["description"]
+    assert "/health/data" in text, "the freshness endpoint has to be discoverable"
+    assert "absolute" in text.lower(), "scores are absolute, not percentile ranks"
+    assert info["version"] == "1.0.0"

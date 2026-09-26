@@ -1,18 +1,39 @@
 """
-API Endpoints — Tool-based tech intelligence platform.
+API Endpoints - tool-based tech intelligence.
 
-Endpoints:
-  GET  /tools                    — All tools sorted by score (optional ?category= filter, pagination)
-  GET  /tools/{slug}             — Single tool detail with decision intelligence
-  GET  /tools/{slug}/history     — Last 30 days of time-series data
-  GET  /tools/compare            — Side-by-side tool comparison (2-5 tools)
-  GET  /roadmaps                 — All available roadmaps
-  GET  /roadmaps/{slug}          — Single roadmap with full steps
-  GET  /domains                  — Domain-level summaries
-  GET  /domains/{slug}/learning-path — Learning path for a domain
-  GET  /status                   — Scraper status with real-time progress
-  GET  /health                   — Quick health check
-  POST /admin/scrape             — Manually trigger a scrape cycle
+Everything lives on one router, mounted at /api/v1. Grouped by what it is for:
+
+Tools and scores
+  GET  /tools                    - all tools by score (?category=, pagination)
+  GET  /tools/{slug}             - one tool: score, decision intelligence, hiring demand
+  GET  /tools/{slug}/history     - time series of score, stars and mentions
+  GET  /tools/history/bulk       - the same for many tools at once
+  GET  /tools/compare            - side-by-side comparison (2-5 tools)
+  GET  /tools/by-domain          - tools grouped by domain
+  GET  /domains                  - domain-level summaries
+  GET  /overview                 - headline figures and the last successful scrape
+
+Learning
+  GET  /roadmaps                 - all roadmaps
+  GET  /roadmaps/{slug}          - steps hydrated with tools, projects and a career brief
+  GET  /domains/{slug}/learning-path
+  GET  /tools/{slug}/resources   - best videos and platform links, verified live
+  GET  /projects                 - project briefs (?tool= ?domain= ?tier=)
+  GET  /projects/{slug}          - one brief with its verified walkthrough
+  GET  /tools/{slug}/projects    - briefs for one tool
+
+Progress and nudges (Clerk-authenticated in production)
+  GET  /progress/summary, GET /progress/{roadmap_slug}, POST /progress/toggle
+  GET  /notifications/status, POST /notifications/subscribe|unsubscribe
+  POST /waitlist
+
+Health and operations
+  GET  /health                   - liveness; always 200, with a data-freshness report
+  GET  /health/data              - 503 when the data is stale or the scraper is failing
+  GET  /ready                    - readiness probe
+  GET  /status                   - scraper step, per-source counts, failures, errors
+  POST /admin/scrape             - trigger a scrape now (X-Admin-Key)
+  POST /admin/send-daily-digests, GET /admin/waitlist   (X-Admin-Key)
 """
 
 import asyncio
@@ -1634,7 +1655,7 @@ def get_overview(db: Session = Depends(get_db)):
 
 @router.get("/status")
 def get_scraper_status():
-    """Get the current scraper pipeline status with real-time progress."""
+    """The scraper's current step, per-source counts, failure count and recent errors."""
     return {
         **scrape_status,
         "errors_count": len(scrape_status.get("errors", [])),

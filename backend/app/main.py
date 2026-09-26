@@ -71,8 +71,32 @@ limiter = Limiter(key_func=get_remote_address)
 # ━━━ App Initialization ━━━
 from app.services.scheduler import run_scraper_loop
 
+API_DESCRIPTION = """
+Measured tech intelligence: momentum scores for 31 developer tools, learning
+roadmaps, buildable project briefs, and a hiring-demand signal.
+
+**Where the numbers come from.** GitHub (stars, forks, releases), Hacker News,
+Reddit, Dev.to and ten tech RSS feeds, re-read every 30 minutes. Hiring demand
+is counted from the monthly Ask HN "Who is hiring?" threads, always with its
+sample size, and is never part of the score.
+
+**Scores are absolute, 0-100** - built from a tool's own stars, forks and
+mentions - not percentile ranks. A tool's score does not move when an unrelated
+tool moves.
+
+**Is the data current?** `GET /health/data` answers that directly: it returns
+503 when the data is more than two hours old, the scraper has failed twice in a
+row, or nothing has ever been scraped. `GET /health` is liveness only.
+
+Progress endpoints need a Clerk session token in production; `/admin/*` needs
+an `X-Admin-Key` header.
+"""
+
 app = FastAPI(
-    title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title=settings.PROJECT_NAME,
+    description=API_DESCRIPTION,
+    version="1.0.0",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
 # Attach rate limiter to app
