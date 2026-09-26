@@ -52,7 +52,7 @@ export default function ChOrder({
           n={5}
           id="ch-order-h"
           title="Then learn them in order."
-          thesis="Every step tied to the tools that are actually moving."
+          thesis="Each path tied to the tracked tools it teaches."
         />
 
         <ul className="ed-grid mt-16">

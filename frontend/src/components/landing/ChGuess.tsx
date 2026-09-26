@@ -62,7 +62,7 @@ export default function ChGuess({ tools }: { tools: Tool[] }) {
               className="h-auto w-full"
             />
             <figcaption className="on-accent bg-[#2BA0FF] px-5 py-3 text-[13px] font-medium">
-              The trends board, updated daily from live readings.
+              The trends board. This is a screenshot; the live board recomputes every 30 minutes.
             </figcaption>
           </figure>
         </div>
