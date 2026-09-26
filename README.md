@@ -228,12 +228,18 @@ npm run dev
 | `GET` | `/api/v1/tools/compare?slugs=react,rust` | Compare 2–5 tools side by side |
 | `GET` | `/api/v1/tools/{slug}` | Tool detail with decision intelligence |
 | `GET` | `/api/v1/tools/{slug}/history?days=30` | Time-series score data (30/90/365 days) |
+| `GET` | `/api/v1/tools/{slug}/resources` | Best free videos and platform links for a tool (ranked by reach, engagement, freshness; verified live) |
+| `GET` | `/api/v1/tools/{slug}/projects` | Buildable project briefs for a tool |
 | `GET` | `/api/v1/domains` | Domain-level summaries |
 | `GET` | `/api/v1/domains/{slug}/learning-path` | Ordered learning path for a domain |
 | `GET` | `/api/v1/roadmaps` | All learning roadmaps |
-| `GET` | `/api/v1/roadmaps/{slug}` | Full roadmap with steps and resources |
-| `GET` | `/api/v1/status` | Scraper status with real-time progress |
-| `GET` | `/api/v1/health` | Health check (DB connectivity + last scrape time) |
+| `GET` | `/api/v1/roadmaps/{slug}` | Full roadmap: steps, tools, projects, and a career brief with measured hiring counts for the focus domains |
+| `GET` | `/api/v1/projects` | Project briefs, filterable by `tool`, `domain` (category or roadmap slug) and `tier` |
+| `GET` | `/api/v1/projects/{slug}` | One brief with its step-by-step walkthrough, docs and a verified video |
+| `GET` | `/api/v1/overview` | Headline figures and the time of the last successful scrape |
+| `GET` | `/api/v1/status` | Scraper status: current step, per-source counts, consecutive failures, recent errors |
+| `GET` | `/api/v1/health` | Liveness. Always 200; `status` is `ok` / `degraded` / `error` with a data-freshness report |
+| `GET` | `/api/v1/health/data` | **503 when the data is stale (>2h), the scraper has failed twice running, or nothing was ever scraped.** Point an uptime monitor here |
 | `GET` | `/api/v1/ready` | Readiness probe (503 if < 10 tools seeded) |
 | `POST` | `/api/v1/admin/scrape` | Manual scrape trigger (requires `X-Admin-Key` header) |
 
@@ -303,6 +309,12 @@ StackRadar/
 ```bash
 # Run backend with hot reload
 cd backend && python -m uvicorn app.main:app --reload
+
+# Backend tests: ~190, ~2s, no database, keys or network needed
+cd backend && pip install -r requirements-dev.txt && python -m pytest tests -q
+
+# Backend lint + format (CI enforces both)
+cd backend && ruff check app/ && ruff format --check app/
 
 # Production build check (frontend)
 cd frontend && npm run build
