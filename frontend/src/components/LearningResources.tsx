@@ -125,21 +125,28 @@ function VideoCard({ r, topPick = false }: { r: LearningResource; topPick?: bool
 }
 
 export default function LearningResources({ slug }: { slug: string }) {
-  const [data, setData] = useState<ToolResources | null>(null);
   const [lang, setLang] = useState<"en" | "hi">("en");
-  const [loading, setLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
+
+  // Each result is stored with the key it answers, and loading is DERIVED: it is
+  // true whenever the stored result is not for the current slug and language.
+  // The old version reset loading/failed by calling setState at the top of the
+  // effect on every change - the cascading render the lint rule forbids - and
+  // mirrored a fact React could simply compute.
+  const key = `${slug}:${lang}`;
+  const [result, setResult] = useState<{ key: string; data: ToolResources | null; failed: boolean } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setFailed(false);
     fetchToolResources(slug, lang)
-      .then((d) => { if (!cancelled) setData(d); })
-      .catch(() => { if (!cancelled) setFailed(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      .then((d) => { if (!cancelled) setResult({ key, data: d, failed: false }); })
+      .catch(() => { if (!cancelled) setResult({ key, data: null, failed: true }); });
     return () => { cancelled = true; };
-  }, [slug, lang]);
+  }, [slug, lang, key]);
+
+  const current = result?.key === key ? result : null;
+  const loading = current === null;
+  const data = current?.data ?? null;
+  const failed = current?.failed ?? false;
 
   if (loading) {
     return (

@@ -35,7 +35,14 @@ export default function FiveMinutePlan() {
   useEffect(() => {
     if (typeof document === "undefined") return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    if (document.visibilityState === "visible") { setCanAnimate(true); return; }
+    // Deferred a tick rather than set in the effect body: a synchronous setState
+    // here is the cascading render the lint rule forbids. setTimeout, not
+    // rAF - rAF never fires in a hidden tab, which is exactly the case this
+    // gate exists for.
+    if (document.visibilityState === "visible") {
+      const t = setTimeout(() => setCanAnimate(true), 0);
+      return () => clearTimeout(t);
+    }
     const onVis = () => { if (document.visibilityState === "visible") setCanAnimate(true); };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
@@ -56,7 +63,10 @@ export default function FiveMinutePlan() {
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get("plan");
     const goal = slug && GOALS.find((g) => g.slug === slug);
-    if (goal) pick(goal);
+    if (!goal) return;
+    // Deferred for the same reason: pick() sets state.
+    const t = setTimeout(() => pick(goal), 0);
+    return () => clearTimeout(t);
   }, [pick]);
 
   return (
