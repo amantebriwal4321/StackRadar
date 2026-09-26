@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-  <strong>Real-time tech intelligence engine</strong> — tracks 30+ tools across GitHub, HackerNews, Dev.to & Reddit, scored by an AI-powered pipeline with user authentication and personal watchlists.
+  <strong>Measured tech intelligence</strong> — scores 31 developer tools from GitHub, Hacker News, Reddit, Dev.to and tech RSS, then turns the ranking into learning roadmaps, buildable projects and a hiring-demand signal. User authentication and personal watchlists included.
 </p>
 
 <p align="center">
@@ -19,16 +19,17 @@
 
 ## 🎯 What is StackRadar?
 
-StackRadar automatically monitors the developer ecosystem every 30 minutes, fetching signals from:
+StackRadar re-reads the developer ecosystem every 30 minutes:
 
-- ⭐ **GitHub** — Stars, forks, open issues, growth rate (authenticated API with rate limit handling)
-- 🟠 **HackerNews** — Front-page mentions with sentiment
-- 📝 **Dev.to** — Article mentions with engagement
-- 🔴 **Reddit** — r/programming hot post mentions
-- 📰 **Tech News** — TechCrunch, Ars Technica, The Verge RSS feeds
-- 🤖 **AI Sentiment** — Groq LLM (Llama 3) analyzes community sentiment per tool
+- ⭐ **GitHub** — stars, forks, open issues and the latest release (authenticated API, ETag caching, rate-limit handling)
+- 🟠 **Hacker News** — the front page, plus a search for each tool over the last 48 hours
+- 📝 **Dev.to** — the day's 100 top articles
+- 🔴 **Reddit** — 35 developer subreddits, read as RSS in four combined requests
+- 📰 **Tech news** — ten tech and developer RSS feeds
+- 🤖 **Sentiment** — a Groq-hosted LLM classifies community sentiment per tool. It is displayed; it is **not** an input to the score.
+- 💼 **Hiring demand** — how many recent Ask HN "Who is hiring?" posts name each tool (Jul–Sep 2026: 756 posts, 24 of 31 tools named). Shown beside the score, always with its sample size; never part of the score.
 
-Each tool gets a **composite score (0–100)** using logarithmic normalization weighted by GitHub Stars (45%), Forks (20%), and community mentions (5% per source), with AI-generated recommendations and learning priority classification.
+Each tool gets a **0–100 momentum score from its own signals only**: log-normalised GitHub stars (60%) and forks (15%), and community mentions across the four discussion sources (25%). The scale is absolute, not a percentile rank, so a tool's score does not move when an unrelated tool moves. Trend, growth stage and the recommendation text come from fixed rules and templates in `scoring.py`, and the learning-priority rating puts measured hiring demand before trend.
 
 ---
 
@@ -71,7 +72,7 @@ Each tool gets a **composite score (0–100)** using logarithmic normalization w
 ### Where the LLM actually sits today
 
 StackRadar is mostly deterministic. Scoring (`app/services/scoring.py`) is pure
-percentile math over GitHub + community signals — no model involved. The **only** LLM
+arithmetic over GitHub + community signals — no model involved. The **only** LLM
 call on the live path is a single Groq request per scrape cycle that classifies
 community sentiment (`batch_sentiment_analysis` in `app/services/scraper.py`), and it
 is a no-op when `GROQ_API_KEY` is unset. There is no agent, no retrieval-augmented
@@ -95,7 +96,7 @@ flowchart LR
         SC[Scheduler loop - 30 min]
         SCR[Scraper - GitHub, HN, Reddit, Dev.to, RSS]
         GROQ[Groq LLM - sentiment classification]
-        SCORE[Scoring engine - deterministic percentile]
+        SCORE[Scoring engine - deterministic, absolute 0-100]
         DB[(PostgreSQL / SQLite)]
         SC --> SCR --> GROQ
         SCORE --> DB
