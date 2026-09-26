@@ -73,7 +73,7 @@ export default function ChMeasure({
           n={3}
           id="ch-measure-h"
           title="So we measure it instead."
-          thesis="Five public sources, read every day and scored against each other."
+          thesis="Five public sources, read every day. Every tool scored on its own evidence."
         />
 
         <div className="ed-grid mt-16">
@@ -130,13 +130,13 @@ export default function ChMeasure({
               data-sc-in
               data-sc-reveal="right"
             >
-              A tool does not rise because it got louder. It rises because it
-              got louder than the others: every score is a percentile rank,
-              recomputed across all{" "}
+              A tool does not rise because the internet got loud once. Each of
+              the{" "}
               <span className="ed-fig text-[var(--c-ink)]">
                 {overview?.tools_tracked ?? tools.length}
               </span>{" "}
-              at once.
+              is scored on its own evidence — adoption first, conversation
+              second — so a score only moves when that tool’s own signals do.
             </p>
 
             {/* The product, shown rather than described.

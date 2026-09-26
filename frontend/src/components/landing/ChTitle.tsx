@@ -86,9 +86,9 @@ export default function ChTitle({
             className="col-span-4 mt-8 text-[18px] font-medium leading-relaxed text-[var(--c-ink-2)] md:col-span-5 md:mt-10"
             data-sc-in
           >
-            StackRadar scores {tracked} technologies against each other every
-            day, from five public sources, then hands you the order to learn
-            them in.
+            StackRadar scores {tracked} technologies from five public sources
+            every day, each on its own evidence, then hands you the order to
+            learn them in.
           </p>
 
           {/* Two paths, not one. The hero previously offered a single CTA, which
