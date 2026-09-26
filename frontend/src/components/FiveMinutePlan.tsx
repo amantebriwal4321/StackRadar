@@ -164,7 +164,7 @@ export default function FiveMinutePlan() {
                   )}
                   {/* Trust row — what comes attached to every step */}
                   <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-4 text-[11px] font-mono text-[var(--c-ink-2)]">
-                    <span className="flex items-center gap-1.5"><PlayCircle className="w-3.5 h-3.5 text-indigo-600" /> best free video each step</span>
+                    <span className="flex items-center gap-1.5"><PlayCircle className="w-3.5 h-3.5 text-indigo-600" /> a free course where one exists</span>
                     <span className="flex items-center gap-1.5"><Flame className="w-3.5 h-3.5 text-[#B54708]" /> streak tracking</span>
                     <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-[#12B76A]" /> check off as you go</span>
                   </div>
@@ -175,7 +175,7 @@ export default function FiveMinutePlan() {
                 <div className="grid sm:grid-cols-3 gap-3 mb-6">
                   {[
                     { icon: CheckCircle2, t: "Sequenced steps", d: "The right order, not a random pile" },
-                    { icon: PlayCircle, t: "Best free video each", d: "Hand-picked, checked to be live" },
+                    { icon: PlayCircle, t: "A free course per tool", d: "Ranked by reach and engagement, checked to be live" },
                     { icon: Flame, t: "Streak tracking", d: "One thing a day, keep momentum" },
                   ].map((f) => (
                     <div key={f.t} className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]/60">

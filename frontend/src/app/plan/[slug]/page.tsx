@@ -66,7 +66,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
 
   const features = [
     { icon: CheckCircle2, t: "Sequenced steps", d: "The right order, not a random pile of links" },
-    { icon: PlayCircle, t: "Best free video each", d: "Hand-picked and checked to be live" },
+    { icon: PlayCircle, t: "A free course per tool", d: "Ranked by reach and engagement, checked to be live" },
     { icon: Flame, t: "Streak tracking", d: "One thing a day — build the habit" },
   ];
 
