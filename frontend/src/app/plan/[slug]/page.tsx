@@ -114,7 +114,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
               <ShareButton
                 path={`/plan/${goal.slug}`}
                 title={`My ${goal.label} plan on StackRadar`}
-                text={`${goal.outcome} — the right tools in the right order, each with the best free video. Free 👇`}
+                text={`${goal.outcome} — the right tools in the right order, with a verified free course where one exists. Free 👇`}
                 label="Share this plan"
               />
             </div>

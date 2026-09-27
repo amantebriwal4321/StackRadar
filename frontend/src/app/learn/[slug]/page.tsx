@@ -14,7 +14,7 @@ import { SITE_URL as SITE } from "@/lib/site";
  *
  * Students search "how to learn X", not "momentum percentiles". This is a
  * server-rendered, content-rich, indexable answer to that query: the full
- * step-by-step path with the best free video per tool, an FAQ, and structured
+ * step-by-step path with a verified free course per tool where one exists, an FAQ, and structured
  * data (Course + FAQ + Breadcrumb) for rich Google results. It funnels to the
  * interactive roadmap and the shareable plan.
  *
@@ -112,7 +112,7 @@ export default async function LearnPage({ params }: { params: Promise<{ slug: st
       {
         "@type": "Course",
         name: `How to Learn ${subj} — Free Roadmap`,
-        description: `A free, sequenced roadmap to learn ${subj}, with the best free video for each step.`,
+        description: `A free, sequenced roadmap to learn ${subj}, with a verified free course on the steps that have one.`,
         provider: { "@type": "Organization", name: "StackRadar", url: SITE },
       },
       {

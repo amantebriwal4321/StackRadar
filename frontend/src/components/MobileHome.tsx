@@ -416,7 +416,7 @@ export default function MobileHome({ tools, domains, movers, overview, isLoading
             Pick a roadmap.<br /><span className="text-shimmer">Learn one thing a day.</span>
           </h3>
           <p className="text-sm text-[var(--c-ink-2)] leading-relaxed mb-6 font-medium relative">
-            Sequenced steps, the best free video for each tool, and a streak to keep you going.
+            Sequenced steps, a verified free course where one exists, and a streak to keep you going.
           </p>
           <div className="flex flex-col gap-3 relative">
             <Link href="/roadmaps" className="btn-primary text-[15px] justify-center font-semibold">

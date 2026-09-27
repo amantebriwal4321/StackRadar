@@ -208,7 +208,7 @@ export default function FiveMinutePlan() {
                 <ShareButton
                   path={`/plan/${picked.slug}`}
                   title={`My ${picked.label} plan on StackRadar`}
-                  text={`${picked.outcome} — the right tools in the right order, each with the best free video. Free on StackRadar 👇`}
+                  text={`${picked.outcome} — the right tools in the right order, with a verified free course where one exists. Free on StackRadar 👇`}
                   label="Share my plan"
                 />
               </div>

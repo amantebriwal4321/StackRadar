@@ -21,8 +21,15 @@ FORBIDDEN = [
     (r"score is a percentile", "scores are absolute; _percentile_rank is unused and test_scoring pins it"),
     (r"against each other", "a tool's score does not depend on other tools"),
     (r"louder than the others", "same: the score is absolute, not relative"),
-    (r"single best free video", "only some roadmap steps have a tracked tool, so not every step has a video"),
-    (r"best free video for every", "20 of 35 steps have a video"),
+    # Generalised after five variants of the same claim turned up one at a time
+    # (og/route.tsx's default subtitle and two share texts were the last three):
+    # "single best", "for every step", "for each step", "per step", "each with
+    # the best". Only some roadmap steps have a tracked tool, so not every step
+    # has a video - it is "verified free course where one exists".
+    (r"(single\s+)?best\s+(free\s+)?(course|video)\s*(for\s+(every|each)|per|each)",
+     "only some roadmap steps have a tracked tool, so not every step has a video"),
+    (r"each\s+with\s+(the\s+)?(single\s+)?best\s+(free\s+)?(course|video)",
+     "the reversed phrasing of the same claim - 'each with the best video'"),
     # Only the keyless FALLBACK list is hand-picked (LearningResources says so
     # truthfully), so this targets the marketing form of the claim.
     (r"hand-picked(,| and) checked", "videos are ranked by the YouTube API, then verified"),

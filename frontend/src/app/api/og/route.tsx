@@ -18,7 +18,7 @@ const COBALT_LIGHT = "#FF705D";  // Iris light
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const title = (searchParams.get("title") || "Learn the right tech, in the right order").slice(0, 80);
-  const subtitle = (searchParams.get("subtitle") || "Sequenced roadmaps · best free video per step · ranked by live data").slice(0, 120);
+  const subtitle = (searchParams.get("subtitle") || "Sequenced roadmaps · verified free courses · ranked by live data").slice(0, 120);
   const emoji = (searchParams.get("emoji") || "🧭").slice(0, 4);
 
   return new ImageResponse(
