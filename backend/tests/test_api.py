@@ -131,3 +131,41 @@ def test_openapi_tells_a_reader_how_to_check_freshness_and_how_scoring_works():
     assert "/health/data" in text, "the freshness endpoint has to be discoverable"
     assert "absolute" in text.lower(), "scores are absolute, not percentile ranks"
     assert info["version"] == "1.0.0"
+
+
+# --- a database outage must degrade /health/data, not crash it -----------------
+
+def test_a_broken_db_query_gives_health_data_a_503_not_a_500(client, status, monkeypatch):
+    """The actual 2026-09-30 incident: Neon's quota was exceeded, the scraper
+    failed 14 cycles straight, and /health/data - the endpoint an uptime
+    monitor is pointed at specifically to catch this - crashed with a bare 500
+    instead of the 503 it exists to return. _freshness() queried ToolSnapshot
+    with no guard; /health already guarded its own SELECT 1 the same way.
+    """
+    from sqlalchemy.orm import Query
+
+    def boom(self, *a, **kw):
+        raise OperationalError("connection to server failed", None, Exception("quota exceeded"))
+
+    from sqlalchemy.exc import OperationalError
+
+    monkeypatch.setattr(Query, "first", boom)
+
+    r = client.get("/api/v1/health/data")
+    assert r.status_code == 503, f"got {r.status_code}, expected a clean 503"
+    body = r.json()["detail"]
+    assert body["db_reachable"] is False
+
+
+def test_health_stays_200_through_the_same_broken_query(client, status, monkeypatch):
+    from sqlalchemy.exc import OperationalError
+    from sqlalchemy.orm import Query
+
+    def boom(self, *a, **kw):
+        raise OperationalError("connection to server failed", None, Exception("quota exceeded"))
+
+    monkeypatch.setattr(Query, "first", boom)
+
+    r = client.get("/api/v1/health")
+    assert r.status_code == 200
+    assert r.json()["data"]["db_reachable"] is False

@@ -65,3 +65,36 @@ def test_naive_datetimes_are_treated_as_utc():
 def test_z_suffix_and_garbage_timestamps():
     assert assess_freshness("2026-09-13T11:50:00Z", now=NOW)["age_minutes"] == 10
     assert assess_freshness("not a time", now=NOW)["state"] == "never"
+
+
+# --- db_reachable: a query failure must not crash the health endpoint ------------
+
+def test_unreachable_db_is_reported_distinctly_from_stale():
+    # Both can be true at once - the real 2026-09-30 incident. The state names
+    # WHY it is unhealthy: "the database itself could not be reached", which is
+    # more actionable than "stale" alone when the two have not yet converged.
+    r = assess_freshness(ago(minutes=5), now=NOW, db_reachable=False)
+    assert r["state"] == "db_unreachable"
+    assert r["healthy"] is False
+    assert r["db_reachable"] is False
+
+
+def test_db_unreachable_overrides_what_would_otherwise_read_fresh():
+    # Recent in-process success alone cannot be trusted as "healthy" when this
+    # very request could not reach the database - most other endpoints on the
+    # site depend on that same database.
+    r = assess_freshness(ago(minutes=1), now=NOW, db_reachable=False)
+    assert r["state"] != "fresh"
+    assert r["healthy"] is False
+
+
+def test_db_reachable_defaults_true_so_every_existing_call_site_is_unaffected():
+    r = assess_freshness(ago(minutes=5), now=NOW)
+    assert r["db_reachable"] is True
+    assert r["state"] == "fresh"
+
+
+def test_db_reachable_is_present_even_on_the_never_scraped_branch():
+    r = assess_freshness(None, None, now=NOW, db_reachable=False)
+    assert r["state"] == "never"  # "never scraped" still outranks "db unreachable"
+    assert r["db_reachable"] is False

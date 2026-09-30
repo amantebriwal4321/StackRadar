@@ -1664,13 +1664,28 @@ def get_scraper_status():
 
 
 def _freshness(db: Session) -> dict:
-    last_snapshot = (
-        db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
-    )
+    """Never let the freshness CHECK be the thing that takes the health
+    endpoint down. /health already guards its own `SELECT 1`; this query was
+    unguarded, so on 2026-09-30 a Neon quota outage turned /health/data - the
+    endpoint an uptime monitor is pointed at specifically to catch outages -
+    into a bare 500 instead of the 503 it exists to return.
+    """
+    try:
+        last_snapshot = (
+            db.query(ToolSnapshot).order_by(ToolSnapshot.recorded_at.desc()).first()
+        )
+        snapshot_time = last_snapshot.recorded_at if last_snapshot else None
+        db_reachable = True
+    except Exception as e:  # noqa: BLE001 - any failure here IS the answer: db_reachable=False
+        logger.error(f"Freshness check could not query ToolSnapshot: {e}")
+        snapshot_time = None
+        db_reachable = False
+
     return health_svc.assess_freshness(
         scrape_status.get("last_scraped_time"),
-        last_snapshot.recorded_at if last_snapshot else None,
+        snapshot_time,
         scrape_status.get("consecutive_failures", 0),
+        db_reachable=db_reachable,
     )
 
 

@@ -39,12 +39,21 @@ def assess_freshness(
     consecutive_failures: int = 0,
     now: datetime | None = None,
     stale_after: timedelta = STALE_AFTER,
+    db_reachable: bool = True,
 ) -> dict[str, Any]:
     """Classify the data as fresh, stale, failing or never.
 
     `last_success` is the in-process scrape stamp; `last_snapshot` is the newest
     persisted ToolSnapshot. The snapshot is the fallback because the in-process
     stamp resets on every restart - and on a sleeping free tier that is often.
+
+    `db_reachable=False` means THIS request could not even query the snapshot
+    fallback - distinct from "stale", which means the data is simply old. Both
+    can be true at once (2026-09-30: Neon's free-tier quota was hit, the scraper
+    failed 14 cycles straight because it could not write, and the last
+    successful write was hours in the past by the time anyone checked) and the
+    caller should be told both, not just whichever one the classifier happened
+    to compute from the in-process stamp.
     """
     now = now or datetime.now(timezone.utc)
     last = _parse(last_success) or _parse(last_snapshot)
@@ -56,10 +65,13 @@ def assess_freshness(
             "last_success": None,
             "age_minutes": None,
             "consecutive_failures": consecutive_failures,
+            "db_reachable": db_reachable,
         }
 
     age = now - last
-    if age > stale_after:
+    if not db_reachable:
+        state = "db_unreachable"
+    elif age > stale_after:
         state = "stale"
     elif consecutive_failures >= FAILING_AFTER:
         state = "failing"
@@ -73,4 +85,5 @@ def assess_freshness(
         "age_minutes": max(0, int(age.total_seconds() // 60)),
         "consecutive_failures": consecutive_failures,
         "stale_after_minutes": int(stale_after.total_seconds() // 60),
+        "db_reachable": db_reachable,
     }
