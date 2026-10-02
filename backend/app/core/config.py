@@ -61,9 +61,9 @@ class Settings(BaseSettings):
     YOUTUBE_API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
 
     # CORS
+    # FRONTEND_URL unset used to put "" in this list; filtered out now.
     BACKEND_CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",
-        os.getenv("FRONTEND_URL", ""),
+        o for o in ("http://localhost:3000", os.getenv("FRONTEND_URL", "")) if o
     ]
 
 

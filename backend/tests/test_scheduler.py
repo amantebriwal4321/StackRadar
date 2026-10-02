@@ -55,7 +55,9 @@ def test_raising_pipeline_does_not_stamp(monkeypatch):
     asyncio.run(_one_cycle(monkeypatch, RuntimeError("boom")))
     assert scheduler.scrape_status["last_scraped_time"] == "2026-01-01T00:00:00+00:00"
     assert scheduler.scrape_status["consecutive_failures"] == 1
-    assert scheduler.scrape_status["errors"][-1]["error"] == "boom"
+    # /status is public: it names the exception class, never its message.
+    assert scheduler.scrape_status["errors"][-1]["error"].startswith("RuntimeError")
+    assert "boom" not in scheduler.scrape_status["errors"][-1]["error"]
 
 
 def test_failures_accumulate_across_cycles(monkeypatch):

@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import sys
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,12 +62,11 @@ for noisy in ("httpx", "httpcore", "uvicorn.access"):
 
 
 # ━━━ Rate Limiting (TASK-009) ━━━
-from slowapi import Limiter, _rate_limit_exceeded_handler
+# Limits are declared on the endpoints themselves; see app/core/rate_limit.py.
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
-limiter = Limiter(key_func=get_remote_address)
-
+from app.core.rate_limit import limiter
 
 # ━━━ App Initialization ━━━
 from app.services.scheduler import run_scraper_loop
@@ -92,20 +92,9 @@ Progress endpoints need a Clerk session token in production; `/admin/*` needs
 an `X-Admin-Key` header.
 """
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description=API_DESCRIPTION,
-    version="1.0.0",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-)
 
-# Attach rate limiter to app
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     # Log loaded env vars (names only, never values)
     logger.info("=" * 50)
     logger.info("StackRadar API starting up...")
@@ -166,6 +155,21 @@ async def startup_event():
         asyncio.create_task(
             warm_resource_cache(SessionLocal, list(CURATED_VIDEOS.keys()))
         )
+
+    yield
+
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    description=API_DESCRIPTION,
+    version="1.0.0",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan,
+)
+
+# Attach rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # ━━━ CORS ━━━

@@ -11,16 +11,16 @@ No secret is needed: verification is public-key crypto. We derive Clerk's
 issuer and JWKS URL from the *publishable* key (which is already public), fetch
 the JWKS once, and cache it.
 
-Degrades deliberately: with no CLERK_PUBLISHABLE_KEY configured the dependency
-returns None and the endpoints fall back to a client-supplied id. That keeps
-local development and a keyless clone working, exactly like GITHUB_TOKEN /
-GROQ_API_KEY elsewhere — but a real deployment sets the key and enforcement
-turns on automatically.
+Degrades deliberately, but only locally: with no CLERK_PUBLISHABLE_KEY on a
+SQLite database the dependency returns None and the endpoints fall back to a
+client-supplied id, so a keyless clone works like it does without GITHUB_TOKEN.
+Anywhere else a missing key is a 503, not an open door.
 """
 
 from __future__ import annotations
 
 import base64
+import os
 
 import jwt
 from fastapi import Header, HTTPException
@@ -55,6 +55,20 @@ def _frontend_api_host(publishable_key: str) -> str | None:
 
 def clerk_enabled() -> bool:
     return bool(settings.CLERK_PUBLISHABLE_KEY)
+
+
+def unverified_ids_allowed() -> bool:
+    """May a keyless server trust a client-supplied user id?
+
+    Only on a local SQLite database, or when ALLOW_UNVERIFIED_USER_ID=1 says so
+    explicitly. This used to be decided by the Clerk key alone, so a deployment
+    that forgot the key silently let anyone read any account's progress and
+    notification email by passing its user_id. A Postgres server (Render/Neon,
+    a docker-compose VPS) with no key now refuses instead of trusting.
+    """
+    if os.getenv("ALLOW_UNVERIFIED_USER_ID", "0") == "1":
+        return True
+    return settings.SQLALCHEMY_DATABASE_URI.startswith("sqlite")
 
 
 def _ensure_client() -> tuple[PyJWKClient, str]:
@@ -113,9 +127,19 @@ def verified_clerk_user(authorization: str | None = Header(None)) -> str | None:
       that receives a non-None value can trust it completely.
     - Clerk not configured (local/dev): returns None and lets the endpoint fall
       back to a client-supplied id.
+    - Clerk not configured on anything that is not local dev: 503, never a
+      fallback (see `unverified_ids_allowed`).
     """
     if not clerk_enabled():
-        return None
+        if unverified_ids_allowed():
+            return None
+        logger.error(
+            "CLERK_PUBLISHABLE_KEY is not set - refusing user-data requests. "
+            "Set it, or ALLOW_UNVERIFIED_USER_ID=1 for a trusted dev box."
+        )
+        raise HTTPException(
+            status_code=503, detail="Sign-in is not configured on this server"
+        )
     token = _bearer(authorization)
     if not token:
         raise HTTPException(status_code=401, detail="Authentication required")

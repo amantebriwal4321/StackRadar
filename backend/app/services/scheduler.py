@@ -111,6 +111,16 @@ def record_cycle_result(ok: bool, now: datetime | None = None) -> None:
         )
 
 
+def _public_error(e: Exception) -> str:
+    """What /status may say about a crash: its class, not its message.
+
+    /status is public, and a raw database or HTTP exception message can carry
+    hostnames, SQL and request URLs. The full traceback is in the server log
+    (logger.exception), which is where diagnosing it belongs.
+    """
+    return f"{type(e).__name__} (details in the server log)"
+
+
 async def run_one_cycle() -> bool:
     """Run the pipeline once and record the outcome. Never raises."""
     ok = False
@@ -119,7 +129,7 @@ async def run_one_cycle() -> bool:
     except Exception as e:
         logger.exception("Error in scraper loop")
         scrape_status["errors"].append(
-            {"time": datetime.now(timezone.utc).isoformat(), "error": str(e)}
+            {"time": datetime.now(timezone.utc).isoformat(), "error": _public_error(e)}
         )
     record_cycle_result(ok)
     return ok
@@ -604,7 +614,7 @@ async def perform_full_scrape() -> bool:
         db.rollback()
         logger.exception("Scraper pipeline error")
         scrape_status["errors"].append(
-            {"time": datetime.now(timezone.utc).isoformat(), "error": str(e)}
+            {"time": datetime.now(timezone.utc).isoformat(), "error": _public_error(e)}
         )
     finally:
         db.close()

@@ -37,6 +37,7 @@ Health and operations
 """
 
 import asyncio
+import hmac
 import json
 import os
 import re
@@ -52,6 +53,13 @@ from app.core.auth import verified_clerk_user
 from app.core.cache import get_cached, set_cached
 from app.core.clock import utc_midnight_naive, utc_today, utcnow_naive
 from app.core.config import settings
+from app.core.rate_limit import (
+    ADMIN_LIMIT,
+    NOTIFICATIONS_LIMIT,
+    PROGRESS_WRITE_LIMIT,
+    WAITLIST_LIMIT,
+    limiter,
+)
 from app.db.session import get_db
 from app.models.all_models import (
     Domain,
@@ -84,6 +92,24 @@ def validate_slug(slug: str) -> str:
             detail=f"Invalid slug '{slug}'. Slugs must be lowercase alphanumeric with hyphens/dots only.",
         )
     return slug
+
+
+def _require_admin(x_admin_key: str | None) -> None:
+    """Gate an /admin/* endpoint on the X-Admin-Key header.
+
+    One implementation for every admin endpoint (it was pasted three times),
+    compared in constant time so the key cannot be recovered byte by byte from
+    response timings.
+    """
+    expected = os.getenv("ADMIN_API_KEY", "")
+    if not expected:
+        raise HTTPException(
+            status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY."
+        )
+    if not x_admin_key or not hmac.compare_digest(
+        x_admin_key.encode(), expected.encode()
+    ):
+        raise HTTPException(status_code=403, detail="Invalid admin key.")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -596,6 +622,7 @@ async def get_tool_resources(
     slug: str,
     language: str = Query("en", pattern="^(en|hi)$"),
     refresh: bool = Query(False),
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     db: Session = Depends(get_db),
 ):
     """Best videos, playlists and platform resources for one technology.
@@ -607,8 +634,13 @@ async def get_tool_resources(
     Without YOUTUBE_API_KEY this still returns the curated platform set plus
     scoped YouTube searches, and `videos_live` reports false so the UI can say
     so honestly rather than pretending the list is a ranking.
+
+    `refresh=true` bypasses the 24h cache and is admin-only: public, it let
+    anyone spend 100 units of the 10,000/day YouTube quota per request.
     """
     validate_slug(slug)
+    if refresh:
+        _require_admin(x_admin_key)
     tool = db.query(Tool).filter(Tool.slug == slug).first()
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{slug}' not found")
@@ -1247,7 +1279,9 @@ def _progress_for(db: Session, roadmap_slug: str, user_id: str) -> dict:
 
 
 @router.post("/progress/toggle")
+@limiter.limit(PROGRESS_WRITE_LIMIT)
 def toggle_progress(
+    request: Request,
     payload: dict,
     verified: str | None = Depends(verified_clerk_user),
     db: Session = Depends(get_db),
@@ -1301,7 +1335,9 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 @router.post("/notifications/subscribe")
+@limiter.limit(NOTIFICATIONS_LIMIT)
 def subscribe_notifications(
+    request: Request,
     payload: dict,
     user_id: str | None = Query(None),
     verified: str | None = Depends(verified_clerk_user),
@@ -1338,7 +1374,9 @@ def notification_status(
 
 
 @router.post("/notifications/unsubscribe")
+@limiter.limit(NOTIFICATIONS_LIMIT)
 def unsubscribe_notifications(
+    request: Request,
     payload: dict | None = None,
     user_id: str | None = Query(None),
     verified: str | None = Depends(verified_clerk_user),
@@ -1355,8 +1393,10 @@ def unsubscribe_notifications(
 
 
 @router.post("/admin/send-daily-digests")
+@limiter.limit(ADMIN_LIMIT)
 async def send_daily_digests(
-    x_admin_key: str = Header(None, alias="X-Admin-Key"),
+    request: Request,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     db: Session = Depends(get_db),
 ):
     """Build and send the daily nudge to every opted-in user.
@@ -1365,13 +1405,7 @@ async def send_daily_digests(
     this with the X-Admin-Key header. Sends nothing unless RESEND_API_KEY is set
     — otherwise it just reports what it *would* have sent.
     """
-    expected = os.getenv("ADMIN_API_KEY", "")
-    if not expected:
-        raise HTTPException(
-            status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY."
-        )
-    if x_admin_key != expected:
-        raise HTTPException(status_code=403, detail="Invalid admin key.")
+    _require_admin(x_admin_key)
 
     from app.services.notifications import run_daily_digests
 
@@ -1393,7 +1427,10 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 @router.post("/waitlist")
-def join_waitlist(payload: dict | None = None, db: Session = Depends(get_db)):
+@limiter.limit(WAITLIST_LIMIT)
+def join_waitlist(
+    request: Request, payload: dict | None = None, db: Session = Depends(get_db)
+):
     """Add an email to the 'personalized version' waitlist.
 
     Public (no auth). Idempotent — re-submitting an existing email succeeds and
@@ -1421,18 +1458,14 @@ def join_waitlist(payload: dict | None = None, db: Session = Depends(get_db)):
 
 
 @router.get("/admin/waitlist")
+@limiter.limit(ADMIN_LIMIT)
 def list_waitlist(
-    x_admin_key: str = Header(None, alias="X-Admin-Key"),
+    request: Request,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     db: Session = Depends(get_db),
 ):
     """Export the waitlist (owner only). Gate with the X-Admin-Key header."""
-    expected = os.getenv("ADMIN_API_KEY", "")
-    if not expected:
-        raise HTTPException(
-            status_code=503, detail="Admin API key not configured. Set ADMIN_API_KEY."
-        )
-    if x_admin_key != expected:
-        raise HTTPException(status_code=403, detail="Invalid admin key.")
+    _require_admin(x_admin_key)
 
     rows = db.query(WaitlistSignup).order_by(WaitlistSignup.created_at.desc()).all()
     return {
@@ -1754,23 +1787,17 @@ def readiness_check(db: Session = Depends(get_db)):
 
 
 @router.post("/admin/scrape")
+@limiter.limit(ADMIN_LIMIT)
 async def trigger_manual_scrape(
-    x_admin_key: str = Header(None, alias="X-Admin-Key"),
+    request: Request,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     """
     Manually trigger a full scrape cycle.
     Requires X-Admin-Key header matching ADMIN_API_KEY env var.
     Returns 202 Accepted — scrape runs in background.
     """
-    # Auth check
-    expected_key = os.getenv("ADMIN_API_KEY", "")
-    if not expected_key:
-        raise HTTPException(
-            status_code=503,
-            detail="Admin API key not configured. Set ADMIN_API_KEY env var.",
-        )
-    if x_admin_key != expected_key:
-        raise HTTPException(status_code=403, detail="Invalid admin key.")
+    _require_admin(x_admin_key)
 
     # Check if already running
     if scrape_status.get("is_running"):
