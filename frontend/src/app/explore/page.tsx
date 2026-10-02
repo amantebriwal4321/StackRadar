@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  Search, Compass, Star, Loader2, ArrowRight, Sparkles,
-  GraduationCap, TrendingUp, Map, Route, Zap,
+  Search, Star, Loader2, ArrowRight, Sparkles,
+  GraduationCap, Map, Route, Zap,
 } from "lucide-react";
 import {
   type Tool, type DomainSummary, type LearningPath,
@@ -62,7 +62,6 @@ function ScoreRing({ score, size = 56, stroke = 4 }: { score: number; size?: num
 /* ─── Premium path node card ─── */
 function PathCard({ tool, isEntry = false, delay = 0 }: { tool: Tool; isEntry?: boolean; delay?: number }) {
   const prio = priorityStyle(tool.learning_priority);
-  const growthStr = tool.growth_pct >= 0 ? `+${tool.growth_pct.toFixed(1)}%` : `${tool.growth_pct.toFixed(1)}%`;
   /* settle rather than rise: the card's own whileHover translates it on the y
      axis, and two transforms on the same axis fight for the frames where they
      overlap. */
@@ -358,7 +357,7 @@ export default function ExplorePage() {
                               </span>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                              {tier.tools.map((t, i) => {
+                              {tier.tools.map((t) => {
                                 const full = toolBySlug[t.slug];
                                 if (!full) return null;
                                 return <PathCard key={t.slug} tool={full} isEntry={t.is_entry_point} />;

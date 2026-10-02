@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   GitCompare, Loader2, Star, GitFork, TrendingUp, TrendingDown,
-  Minus, X, Search, ArrowRight, Share2, Award, Check, MessageSquare, Terminal, Eye
+  Minus, X, Search, Share2, Award, Check
 } from "lucide-react";
 import {
   type Tool, type CompareTool,
@@ -12,7 +12,7 @@ import {
 import DashboardShell from "@/components/DashboardShell";
 import TechLogo from "@/components/ui/TechLogo";
 import Reveal from "@/components/ui/Reveal";
-import ChartContainer, { chartColors, chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
+import ChartContainer, { chartTooltipStyle, chartItemStyle, chartLabelStyle } from "@/components/ChartContainer";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";

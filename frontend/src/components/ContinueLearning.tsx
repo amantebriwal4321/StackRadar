@@ -20,6 +20,7 @@ export default function ContinueLearning() {
   const { getToken } = useAuth();
   const userId = user?.id || "";
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
+  // Only a signed-in user ever fetches; signed out there is nothing to wait for.
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
@@ -32,14 +33,13 @@ export default function ContinueLearning() {
   }, [userId, getToken]);
 
   useEffect(() => {
-    if (!isLoaded) return;
-    if (!userId) { setLoading(false); return; }
+    if (!isLoaded || !userId) return;
     load();
     window.addEventListener("progress:changed", load);
     return () => window.removeEventListener("progress:changed", load);
   }, [isLoaded, userId, load]);
 
-  if (!isLoaded || loading) return null;
+  if (!isLoaded || (userId && loading)) return null;
 
   // ── Signed out: sell the loop, don't hide it ──
   if (!isSignedIn) {

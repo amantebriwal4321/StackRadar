@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored byte-identical and never edited (see CLAUDE.md), so its
+    // warnings are not ours to fix.
+    "public/scrollcraft/**",
   ]),
 ]);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Share2, Check, Link2 } from "lucide-react";
+import { Share2, Check } from "lucide-react";
 
 /**
  * The growth primitive.
