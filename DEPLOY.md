@@ -44,6 +44,7 @@ talks to one origin.
 - **Clerk**: in the Clerk dashboard, switch to a **Production** instance and add your
   Vercel domain to the allowed origins. Put the *same* `pk_live_...` value in the
   backend's `CLERK_PUBLISHABLE_KEY` so it verifies `/progress` session tokens.
+  **Required:** without it the backend refuses user-data requests with a 503.
 - **Daily nudge email** (optional): set `RESEND_API_KEY`, `DIGEST_FROM` (a verified
   sender), and `SITE_URL` on the backend, then have a daily cron
   (Railway cron, GitHub Actions, cron-job.org) `POST /api/v1/admin/send-daily-digests`
@@ -88,9 +89,9 @@ waiting for the next scheduled one.
 | `GITHUB_TOKEN` | recommended | 60→5000 req/hr; without it GitHub stats are thin. Never commit it. |
 | `GROQ_API_KEY` | optional | Enables sentiment analysis; no-op if empty. |
 | `YOUTUBE_API_KEY` | optional | Ranked learning videos; falls back to curated links if empty. |
-| `CLERK_PUBLISHABLE_KEY` | recommended | Same `pk_live_...` as the frontend; turns on server-side `/progress` auth. |
+| `CLERK_PUBLISHABLE_KEY` | ✅ | Same `pk_live_...` as the frontend; verifies `/progress` + `/notifications` session tokens. **Without it, on Postgres, those endpoints return 503** (they used to trust any `user_id`). |
 | `RESEND_API_KEY`, `DIGEST_FROM`, `SITE_URL` | optional | Daily nudge email; no-op if `RESEND_API_KEY` empty. |
-| `ADMIN_API_KEY` | optional | Guards `/admin/*` endpoints. |
+| `ADMIN_API_KEY` | optional | Guards `/admin/*` and `/tools/{slug}/resources?refresh=true`. Use a long random value; admin endpoints are limited to 10 requests/min per IP. |
 
 ### Frontend (Vercel)
 | Var | Required | Notes |
