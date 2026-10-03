@@ -304,6 +304,19 @@ StackRadar/
 
 ---
 
+## ☁️ Deployment & known limits
+
+The live beta runs the frontend on Vercel and the backend on Render's free web tier, with a Neon Postgres database. Both free tiers have limits that have already shown up in production, and the app is built to report them rather than hide them:
+
+| Limit | What happened | How you can tell |
+|---|---|---|
+| Render free tier spins down after ~15 min idle | The first request after a quiet spell takes ~35 s (measured; see the header of [`keep-awake.yml`](.github/workflows/keep-awake.yml)) | A scheduled workflow pings the backend to keep it warm; it costs most of the free instance-hours, which its comments say plainly |
+| Neon free-tier quota | By 30 Sep 2026 the database was refusing connections ("exceeded the quota") and the scraper had failed 14 cycles in a row. It was succeeding again by 3 Oct | `GET /api/v1/status` lists the error and the failure count; `GET /api/v1/health/data` returns **503**, not a crash, when the database is unreachable (covered by a test) |
+
+If you run your own instance, point an uptime monitor at `/api/v1/health/data`: it is the one endpoint built to answer "is the data current?", and `/api/v1/health` deliberately stays 200 so a platform health check never restarts the process over stale data. Setup is in [DEPLOY.md](./DEPLOY.md#4-monitoring--know-when-the-data-stops).
+
+---
+
 ## 🧪 Development
 
 ```bash
