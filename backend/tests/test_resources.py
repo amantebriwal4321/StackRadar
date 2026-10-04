@@ -359,3 +359,98 @@ def test_trusted_and_hindi_channel_names_are_normalised_lowercase():
     # mixed-case entry in either set could never match anything.
     for name in R.TRUSTED_CHANNELS | R.HINDI_CHANNELS:
         assert name == name.lower().strip()
+
+
+# --- term_in_title: a short tool name must not match inside another word -------
+
+# Each of these passed the old `term in title` gate as an on-topic video for the
+# tool named in the first column.
+SUBSTRING_FALSE_POSITIVES = [
+    ("go", "Django Tutorial for Beginners"),
+    ("go", "Google Cloud Full Course"),
+    ("go", "MongoDB Crash Course"),
+    ("go", "Algorithms and Data Structures"),
+    ("bun", "Bundle size optimisation with Webpack"),
+    ("zap", "Zapier Automation Tutorial"),
+    ("rust", "Why you can't Trust AI code"),
+    ("pod", "The best podcast for developers"),
+]
+
+
+@pytest.mark.parametrize(("term", "title"), SUBSTRING_FALSE_POSITIVES)
+def test_a_term_inside_another_word_is_not_a_match(term, title):
+    assert R.term_in_title(term, title) is False
+
+
+@pytest.mark.parametrize(
+    ("term", "title"),
+    [
+        ("go", "Learn Go in 1 hour"),
+        ("go", "Go: a crash course"),
+        ("go", "Go-lang tutorial"),
+        ("bun", "Bun 1.0 is here"),
+        ("rust", "Rust for beginners"),
+        ("rust", "Rust, a first project"),
+        ("next", "Next.js Crash Course"),
+        ("next", "Nextjs 14 tutorial"),
+        ("fine-tun", "Fine-tuning BERT for text classification"),
+        ("pod", "Kubernetes pods explained"),
+        ("api", "Build REST APIs with FastAPI"),
+        ("short", "Full-Stack URL Shortener with Next.js"),
+        ("RAG", "Production rag with LangChain"),
+    ],
+)
+def test_real_uses_of_a_term_still_match(term, title):
+    assert R.term_in_title(term, title) is True
+
+
+def test_an_empty_term_matches_anything():
+    assert R.term_in_title("", "whatever") is True
+
+
+def test_a_regex_character_in_a_term_is_literal():
+    assert R.term_in_title("c++", "C++ for beginners") is True
+    assert R.term_in_title("c++", "Cxx for beginners") is False
+
+
+def test_verify_youtube_rejects_a_short_keyword_hiding_in_another_word():
+    assert verify(oembed(ok("Django Full Course")), keywords=("go",)) is None
+    assert verify(oembed(ok("Learn Go in One Hour")), keywords=("go",)) is not None
+
+
+# --- fetch_youtube: the API escapes its snippet text; we must not show it so ---
+
+
+def test_html_escaped_snippet_text_from_the_api_is_decoded(monkeypatch):
+    monkeypatch.setattr(R.settings, "YOUTUBE_API_KEY", "test-key")
+
+    async def fake_yt_get(client, path, params):
+        if path == "search":
+            return {
+                "items": [
+                    {
+                        "id": {"kind": "youtube#video", "videoId": "abcdefghijk"},
+                        "snippet": {
+                            "title": "Debouncing &amp; Abort Controller &quot;React&quot; &#39;25",
+                            "channelTitle": "Dev &amp; Ops",
+                            "description": "Q&amp;A",
+                            "publishedAt": "2026-01-01T00:00:00Z",
+                        },
+                    }
+                ]
+            }
+        return {
+            "items": [
+                {
+                    "id": "abcdefghijk",
+                    "statistics": {"viewCount": "100000", "likeCount": "5000"},
+                    "contentDetails": {"duration": "PT10M"},
+                }
+            ]
+        }
+
+    monkeypatch.setattr(R, "_yt_get", fake_yt_get)
+    [item] = asyncio.run(R.fetch_youtube("React", limit=1))
+    assert item["title"] == "Debouncing & Abort Controller \"React\" '25"
+    assert item["channel"] == "Dev & Ops"
+    assert item["blurb"] == "Q&A"

@@ -22,6 +22,7 @@ fresh clone with an empty .env.
 from __future__ import annotations
 
 import asyncio
+import html
 import math
 import re
 from datetime import datetime, timedelta, timezone
@@ -282,9 +283,13 @@ async def fetch_youtube(
 
             thumbs = sn.get("thumbnails", {})
             meta[key] = {
-                "title": sn.get("title", ""),
-                "channel": sn.get("channelTitle", ""),
-                "blurb": (sn.get("description") or "")[:280],
+                # search.list returns snippet text HTML-escaped ("&amp;",
+                # "&quot;", "&#39;"); oEmbed and our own copy do not. React
+                # escapes again on render, so a learner read "Debouncing
+                # &amp; Abort Controller" until this decoded it at the source.
+                "title": html.unescape(sn.get("title", "")),
+                "channel": html.unescape(sn.get("channelTitle", "")),
+                "blurb": html.unescape(sn.get("description") or "")[:280],
                 "thumbnail": (thumbs.get("medium") or thumbs.get("default") or {}).get(
                     "url"
                 ),
@@ -685,6 +690,28 @@ CURATED_VIDEOS: dict[str, list[tuple[str, str, list[str]]]] = {
 }
 
 
+def term_in_title(term: str, title: str) -> bool:
+    """Is `term` a word (or word-start) in `title`? Both compared lowercase.
+
+    Plain `term in title` was the relevance gate, and short tool names defeat
+    it: "go" is inside Django, Google, MongoDB and Algorithms; "bun" inside
+    Bundle; "zap" inside Zapier; "rust" inside Trust. Each of those titles
+    passed as an on-topic video for a different tool.
+
+    Two rules, both measured against the real titles that ship:
+    - The term must start at a word boundary (so "rust" misses "Trust" but
+      "next" still finds "Nextjs", and "fine-tun" still finds "Fine-tuning").
+    - A term of three letters or fewer must also END at one, allowing a plural
+      "s" ("APIs", "pods"): at that length a prefix is mostly another word
+      ("go" -> "google", "pod" -> "podcast").
+    """
+    t = term.lower()
+    if not t:
+        return True
+    tail = r"s?(?![a-z0-9])" if len(re.sub(r"[^a-z0-9]", "", t)) <= 3 else ""
+    return re.search(rf"(?<![a-z0-9]){re.escape(t)}{tail}", title.lower()) is not None
+
+
 async def verify_youtube(
     client: httpx.AsyncClient, video_id: str, kind: str, keywords: list[str]
 ) -> dict[str, Any] | None:
@@ -717,8 +744,7 @@ async def verify_youtube(
         return None
 
     title = data.get("title") or ""
-    low = title.lower()
-    if keywords and not any(k.lower() in low for k in keywords):
+    if keywords and not any(term_in_title(k, title) for k in keywords):
         logger.debug(f"Curated {video_id} title '{title}' failed relevance {keywords}")
         return None
 

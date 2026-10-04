@@ -29,6 +29,8 @@ def gate(slug):
         ("nextjs-url-shortener", "Build a Production-Ready MERN Stack Project | URL Shortener"),
         # Right subject, a later episode about payments rather than the build.
         ("nextjs-url-shortener", "Next.js URL Shortener: Adding Razorpay Pro Plans"),
+        # A required term hiding inside a longer word: "rust" is in "Trust".
+        ("rust-http-server", "Why You Can't Trust an HTTP Server You Didn't Build"),
     ],
 )
 def test_rejects_titles_that_reached_production(slug, title):

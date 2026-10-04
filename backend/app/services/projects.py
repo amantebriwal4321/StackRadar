@@ -45,6 +45,7 @@ import re
 from typing import Any
 
 from app.services.catalog import TOOLS
+from app.services.resources import term_in_title
 from app.services.seed import TOOL_ROADMAP_MAP
 
 TIERS = ("beginner", "intermediate", "advanced")
@@ -1171,7 +1172,7 @@ def list_projects(
 # product of the gate as much as of the query, so a logic fix that does
 # not touch the query must still invalidate what the old logic chose -
 # otherwise the fix looks like it did nothing for 24 hours.
-GATE_VERSION = 2
+GATE_VERSION = 3
 
 NEGATED = "(?:^|[^a-z])(?:no|not|without|instead of)[^a-z][^.,;:!?]{0,24}?%s"
 
@@ -1212,11 +1213,11 @@ def video_matches(title: str, walkthrough: dict[str, Any]) -> bool:
     t = (title or "").lower()
 
     for term in walkthrough.get("deny") or []:
-        if term in t:
+        if term_in_title(term, t):
             return False
 
     for term in walkthrough.get("must") or []:
-        if term not in t:
+        if not term_in_title(term, t):
             return False
         # A required term can appear as the thing the video says it does NOT
         # use. "Building a neural network FROM SCRATCH (no Tensorflow/PyTorch)"
@@ -1226,7 +1227,7 @@ def video_matches(title: str, walkthrough: dict[str, Any]) -> bool:
             return False
 
     anyof = walkthrough.get("any") or []
-    return not anyof or any(term in t for term in anyof)
+    return not anyof or any(term_in_title(term, t) for term in anyof)
 
 
 def normalise_steps(steps: list[Any] | None) -> list[dict[str, Any]]:
