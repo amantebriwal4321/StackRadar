@@ -1,43 +1,13 @@
-from functools import wraps
-
 from cachetools import TTLCache
 
-# In-memory TTL cache — no Redis required
-# Max 256 entries, 5-minute TTL
+# In-memory TTL cache, no Redis required. Max 256 entries, 5-minute TTL, shared
+# by every caller of get_cached/set_cached.
+#
+# A `cache_response` endpoint decorator used to live here. Nothing used it, it
+# ignored its own `expiration` argument, and it keyed on every kwarg - including
+# the request-scoped DB session - so it could never have produced a hit. Deleted
+# rather than left as something that looks like a working cache.
 _cache = TTLCache(maxsize=256, ttl=300)
-
-
-def cache_response(expiration: int = 300):
-    """
-    Decorator to cache FastAPI endpoint responses in-memory.
-    Works without any external service (Redis, etc.)
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            cache_key = f"{func.__name__}:{kwargs!s}"
-
-            # Check cache
-            cached = _cache.get(cache_key)
-            if cached is not None:
-                return cached
-
-            # Execute and cache
-            result = func(*args, **kwargs)
-            if isinstance(result, (dict, list)):
-                _cache[cache_key] = result
-
-            return result
-
-        return wrapper
-
-    return decorator
-
-
-def clear_cache():
-    """Clear all cached entries."""
-    _cache.clear()
 
 
 def get_cached(key: str):
