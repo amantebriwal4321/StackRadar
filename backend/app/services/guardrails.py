@@ -12,6 +12,9 @@ Scope today: the single Groq sentiment call in
    response rejects the whole batch.
 2. **Index check** — a verdict whose ``i`` is outside the batch range is a
    hallucinated index and is discarded.
+   A bool is not an index (JSON ``true`` would otherwise coerce to 1), and an
+   index given twice is ambiguous: a repeat of the same label is ignored, a
+   contradiction drops the item back to its ``neutral`` default.
 3. **Grounding check** — a non-neutral verdict is only kept if the source text
    actually mentions a tracked tool (``scoring.classify_text_to_tools``). A strong
    sentiment about a headline that names none of our tools cannot be grounded in
@@ -43,6 +46,17 @@ class SentimentVerdict(BaseModel):
 
     i: int = Field(ge=0)
     s: str
+
+    @field_validator("i", mode="before")
+    @classmethod
+    def _not_a_bool(cls, v: Any) -> Any:
+        # pydantic's lax int accepts True/False as 1/0, which would land a
+        # malformed row on a real item instead of dropping it.
+        if isinstance(v, bool):
+            # ValueError, not the TypeError ruff prefers: pydantic only turns
+            # ValueError into a ValidationError, which is what drops the row.
+            raise ValueError("a bool is not an index")  # noqa: TRY004
+        return v
 
     @field_validator("s")
     @classmethod
@@ -139,6 +153,7 @@ def validate_sentiment_batch(
     """
     report = GuardrailReport()
     sentiment_map: dict[int, str] = {}
+    conflicted: set[int] = set()
 
     try:
         parsed = json.loads(_strip_code_fence(raw))
@@ -176,6 +191,20 @@ def validate_sentiment_batch(
         if label != "neutral" and not _is_grounded(batch[verdict.i]):
             label = "neutral"
             report.quarantined += 1
+
+        if verdict.i in conflicted:
+            report.dropped += 1
+            continue
+        if verdict.i in sentiment_map:
+            # Seen already. Agreeing is redundant; disagreeing means the model
+            # cannot be trusted on this item, so neither answer is kept.
+            report.dropped += 1
+            if sentiment_map[verdict.i] != label:
+                del sentiment_map[verdict.i]
+                report.accepted -= 1
+                report.dropped += 1  # the first answer is withdrawn too
+                conflicted.add(verdict.i)
+            continue
 
         sentiment_map[verdict.i] = label
         report.accepted += 1
