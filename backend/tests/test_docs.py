@@ -43,8 +43,10 @@ def test_claude_md_documents_the_real_test_count():
         len(re.findall(r"^def test_|^    def test_", p.read_text(encoding="utf-8"), re.MULTILINE))
         for p in (REPO / "backend" / "tests").glob("test_*.py")
     )
-    # Parametrised cases make the real total higher; the doc must not overstate,
-    # and must not drift far below.
-    assert actual - 25 <= int(claimed[0]) <= actual + 60, (
+    # Parametrised cases make the real total higher (362 cases from 250
+    # functions when this was written), so the ceiling scales with the function
+    # count instead of being a fixed margin that every parametrised file eats.
+    # The doc must not overstate, and must not drift far below.
+    assert actual - 25 <= int(claimed[0]) <= int(actual * 1.6), (
         f"CLAUDE.md claims ~{claimed[0]} tests; {actual} test functions exist"
     )
