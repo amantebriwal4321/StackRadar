@@ -17,6 +17,7 @@ Safe by construction:
 
 from __future__ import annotations
 
+import html
 from datetime import datetime, timezone
 from typing import Any
 
@@ -24,6 +25,7 @@ import httpx
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from app.core.clock import utc_today
 from app.core.config import settings
 from app.models.all_models import NotificationPref
 
@@ -47,28 +49,50 @@ def _digest_for(db: Session, user_id: str) -> dict[str, Any] | None:
     }
 
 
+def _sent_today(pref: NotificationPref) -> bool:
+    """Was this user already emailed on today's UTC date?
+
+    The trigger is an external cron hitting an endpoint, and crons retry, get
+    re-run by hand and double-fire after an outage. `last_sent_at` was written
+    on every send and never read, so each of those sent every opted-in user a
+    second copy of the same email.
+    """
+    last = pref.last_sent_at
+    if last is None:
+        return False
+    # SQLite hands back a naive value, Postgres an aware one; both mean UTC.
+    if last.tzinfo is not None:
+        last = last.astimezone(timezone.utc)
+    return last.date() == utc_today()
+
+
 def _render_email(digest: dict[str, Any]) -> tuple[str, str]:
     """(subject, html) for a digest. Plain, single-CTA — a nudge, not a newsletter."""
     streak = digest["streak"]
+    # Titles are authored roadmap text today, but they are interpolated into
+    # HTML, so a "&" or "<" in one must not become markup.
+    title = html.escape(digest["title"])
+    description = html.escape(digest["description"])
+    url = html.escape(digest["url"])
     streak_line = (
         f"🔥 You're on a {streak}-day streak — keep it alive."
         if streak > 0
         else "A few minutes today keeps the momentum going."
     )
     subject = f"Today: {digest['title']}"
-    html = f"""\
+    body = f"""\
 <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#141726">
   <div style="font-weight:800;font-size:20px;letter-spacing:-0.3px">StackRadar</div>
   <p style="color:#5A6072;font-size:14px;margin:4px 0 24px">{streak_line}</p>
   <div style="border:1px solid #E6E2EC;border-radius:16px;padding:24px">
     <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#7C2D4A;font-weight:700">Today&#39;s focus</div>
-    <div style="font-weight:800;font-size:20px;margin:6px 0 8px">{digest["title"]}</div>
-    <p style="color:#5A6072;font-size:14px;line-height:1.5;margin:0 0 20px">{digest["description"]}</p>
-    <a href="{digest["url"]}" style="display:inline-block;background:linear-gradient(135deg,#7C2D4A,#C23E6E);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px">Study this now →</a>
+    <div style="font-weight:800;font-size:20px;margin:6px 0 8px">{title}</div>
+    <p style="color:#5A6072;font-size:14px;line-height:1.5;margin:0 0 20px">{description}</p>
+    <a href="{url}" style="display:inline-block;background:linear-gradient(135deg,#7C2D4A,#C23E6E);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px">Study this now →</a>
   </div>
   <p style="color:#8A8398;font-size:12px;margin-top:24px">You&#39;re getting this because you turned on daily nudges on StackRadar.</p>
 </div>"""
-    return subject, html
+    return subject, body
 
 
 async def send_email(to: str, subject: str, html: str) -> bool:
@@ -114,16 +138,19 @@ async def run_daily_digests(db: Session) -> dict[str, int]:
         )
         .all()
     )
-    built = sent = skipped = 0
+    built = sent = skipped = already = 0
     for pref in prefs:
         try:
+            if _sent_today(pref):
+                already += 1
+                continue
             digest = _digest_for(db, pref.user_id)
             if not digest:
                 skipped += 1
                 continue
             built += 1
-            subject, html = _render_email(digest)
-            if await send_email(pref.email, subject, html):
+            subject, body = _render_email(digest)
+            if await send_email(pref.email, subject, body):
                 sent += 1
                 pref.last_sent_at = datetime.now(timezone.utc)
         except Exception as e:  # noqa: BLE001
@@ -134,6 +161,7 @@ async def run_daily_digests(db: Session) -> dict[str, int]:
         "digests_built": built,
         "emails_sent": sent,
         "skipped_no_progress": skipped,
+        "already_sent_today": already,
     }
     logger.info(f"[digest] run complete: {result}")
     return result
