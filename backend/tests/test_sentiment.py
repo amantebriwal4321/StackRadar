@@ -21,8 +21,6 @@ from app.services import scraper as S
 class FakeGroq:
     """Just enough of the Groq SDK: models.list() and chat.completions.create()."""
 
-    instances: list["FakeGroq"] = []
-
     def __init__(self, api_key=None, *, models=("llama-3.3-70b-versatile",),
                  list_error=None, replies=None):
         self.api_key = api_key
