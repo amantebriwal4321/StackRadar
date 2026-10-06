@@ -510,10 +510,20 @@ async def fetch_devto() -> list[dict[str, Any]]:
         try:
             response = await client.get(url, params=params, timeout=10.0)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
         except Exception as e:
             logger.error(f"Dev.to API Error: {e}")
             return []
+        # The scheduler concatenates this with the other sources as lists, so a
+        # 200 carrying an error object ({"error": ..., "status": 429}) would
+        # raise TypeError there and abort the whole scrape cycle, not just this
+        # source. Anything but a list of articles is "no data from this source".
+        if not isinstance(data, list):
+            logger.error(
+                f"Dev.to returned {type(data).__name__}, not a list: {str(data)[:120]}"
+            )
+            return []
+        return [a for a in data if isinstance(a, dict)]
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
