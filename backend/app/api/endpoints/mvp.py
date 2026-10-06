@@ -101,7 +101,7 @@ def get_tools(
 ):
     """Get all tools sorted by score, optionally filtered by category. Supports pagination."""
     # Fetch ALL tools to compute global rank
-    all_tools = db.query(Tool).order_by(Tool.score.desc()).all()
+    all_tools = db.query(Tool).order_by(Tool.score.desc(), Tool.slug).all()
     total_tools = len(all_tools)
 
     # Build rank map (global)
@@ -219,13 +219,13 @@ def get_tools(
 @router.get("/tools/by-domain")
 def get_tools_by_domain(db: Session = Depends(get_db)):
     """Get all tools grouped by domain. Used by the Explore page."""
-    domains = db.query(Domain).order_by(Domain.score.desc()).all()
+    domains = db.query(Domain).order_by(Domain.score.desc(), Domain.slug).all()
     result = []
     for domain in domains:
         domain_tools = (
             db.query(Tool)
             .filter(Tool.domain_id == domain.id)
-            .order_by(Tool.score.desc())
+            .order_by(Tool.score.desc(), Tool.slug)
             .all()
         )
         result.append(
@@ -266,21 +266,28 @@ def compare_tools(
     db: Session = Depends(get_db),
 ):
     """Compare multiple tools side by side with their history data."""
-    slug_list = [s.strip() for s in slugs.split(",") if s.strip()]
+    # De-duplicated, in the order asked for: the compare page colours each
+    # series by its position, so "vuejs,react" must come back vuejs first, and
+    # "react,react" is one tool, not two.
+    slug_list = list(dict.fromkeys(s.strip() for s in slugs.split(",") if s.strip()))
     if len(slug_list) < 2:
         raise HTTPException(
-            status_code=400, detail="Provide at least 2 tool slugs to compare"
+            status_code=400, detail="Provide at least 2 different tool slugs to compare"
         )
     if len(slug_list) > 5:
         raise HTTPException(
             status_code=400, detail="Maximum 5 tools can be compared at once"
         )
 
-    tools = db.query(Tool).filter(Tool.slug.in_(slug_list)).all()
+    found = {t.slug: t for t in db.query(Tool).filter(Tool.slug.in_(slug_list)).all()}
+    tools = [found[s] for s in slug_list if s in found]
     if len(tools) < 2:
         raise HTTPException(
             status_code=404,
-            detail=f"Not enough tools found. Found: {[t.slug for t in tools]}",
+            detail=(
+                f"Not enough tools found. Found: {[t.slug for t in tools]}; "
+                f"unknown: {[s for s in slug_list if s not in found]}"
+            ),
         )
 
     # Fetch 30-day history for all tools
@@ -367,13 +374,13 @@ def get_tool_detail(slug: str, db: Session = Depends(get_db)):
     cat_tools = (
         db.query(Tool)
         .filter(Tool.category == tool.category)
-        .order_by(Tool.score.desc())
+        .order_by(Tool.score.desc(), Tool.slug)
         .all()
     )
     rank_in_cat = next((i + 1 for i, t in enumerate(cat_tools) if t.id == tool.id), 0)
 
     # Global rank
-    all_tools = db.query(Tool).order_by(Tool.score.desc()).all()
+    all_tools = db.query(Tool).order_by(Tool.score.desc(), Tool.slug).all()
     global_rank = next((i + 1 for i, t in enumerate(all_tools) if t.id == tool.id), 0)
     total_tools = len(all_tools)
 
@@ -466,7 +473,7 @@ def get_bulk_history(
         tools = (
             db.query(Tool)
             .filter(Tool.score.isnot(None))
-            .order_by(Tool.score.desc())
+            .order_by(Tool.score.desc(), Tool.slug)
             .limit(limit)
             .all()
         )
@@ -616,7 +623,7 @@ async def get_tool_resources(
     cached = (
         db.query(ToolResource)
         .filter(ToolResource.tool_slug == slug, ToolResource.language == language)
-        .order_by(ToolResource.rank_score.desc())
+        .order_by(ToolResource.rank_score.desc(), ToolResource.id)
         .all()
     )
     now = datetime.now(timezone.utc)
@@ -668,7 +675,7 @@ async def get_tool_resources(
                 .filter(
                     ToolResource.tool_slug == slug, ToolResource.language == language
                 )
-                .order_by(ToolResource.rank_score.desc())
+                .order_by(ToolResource.rank_score.desc(), ToolResource.id)
                 .all()
             )
 
@@ -762,7 +769,7 @@ async def _verified_walkthrough(project: dict, db: Session) -> dict:
         cached = (
             db.query(ToolResource)
             .filter(ToolResource.tool_slug == cache_slug)
-            .order_by(ToolResource.rank_score.desc())
+            .order_by(ToolResource.rank_score.desc(), ToolResource.id)
             .first()
         )
         now = datetime.now(timezone.utc)
@@ -1035,7 +1042,7 @@ def get_roadmap(slug: str, db: Session = Depends(get_db)):
                 ToolResource.kind.in_(["video", "playlist"]),
                 ToolResource.language == "en",
             )
-            .order_by(ToolResource.rank_score.desc())
+            .order_by(ToolResource.rank_score.desc(), ToolResource.id)
             .all()
         )
         for r in vid_rows:
@@ -1456,7 +1463,7 @@ def list_waitlist(
 @router.get("/domains")
 def get_domains(db: Session = Depends(get_db)):
     """Get all technology domains with aggregated scores."""
-    domains = db.query(Domain).order_by(Domain.score.desc()).all()
+    domains = db.query(Domain).order_by(Domain.score.desc(), Domain.slug).all()
 
     result = []
     for d in domains:
@@ -1492,7 +1499,7 @@ def get_learning_path(domain_slug: str, db: Session = Depends(get_db)):
     tools = (
         db.query(Tool)
         .filter(Tool.domain_id == domain.id)
-        .order_by(Tool.learning_sequence_score.asc())
+        .order_by(Tool.learning_sequence_score.asc(), Tool.slug)
         .all()
     )
 
