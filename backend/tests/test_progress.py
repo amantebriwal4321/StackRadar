@@ -11,7 +11,7 @@ fallback is allowed (see app/core/auth.py); each test uses its own user id and
 cleans up after itself.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -87,7 +87,8 @@ def test_the_day_is_the_utc_day_not_the_sessions_local_day():
 
 
 def test_utc_date_leaves_a_naive_timestamp_alone():
-    assert _utc_date(datetime(2026, 10, 6, 23, 59)) == datetime(2026, 10, 6).date()
+    naive = datetime(2026, 10, 6, 23, 59, tzinfo=UTC).replace(tzinfo=None)
+    assert _utc_date(naive) == date(2026, 10, 6)
 
 
 # --- the toggle endpoint --------------------------------------------------------------
