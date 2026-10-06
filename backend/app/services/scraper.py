@@ -769,9 +769,7 @@ def _resolve_groq_model(client) -> str | None:
     if _groq_model:
         return _groq_model
 
-    pinned = getattr(
-        __import__("app.core.config", fromlist=["settings"]).settings, "GROQ_MODEL", ""
-    )
+    pinned = settings.GROQ_MODEL
     candidates = [pinned] if pinned else _GROQ_MODEL_CANDIDATES
 
     try:
@@ -787,11 +785,14 @@ def _resolve_groq_model(client) -> str | None:
         )
         return None
     except Exception as e:
-        # Listing failed (network, auth). Fall back to trying the first
-        # candidate directly rather than giving up on sentiment entirely.
+        # Listing failed (network, auth). Try the first candidate directly
+        # rather than giving up on sentiment entirely - but do NOT remember it.
+        # Caching a guess made one network blip decide the model for the life of
+        # the process, and if that candidate is the one Groq retired, the
+        # silent all-neutral outage this resolver exists to prevent comes back
+        # with nothing to ever correct it. The next batch asks again.
         logger.warning(f"Could not list Groq models ({e}); trying {candidates[0]}")
-        _groq_model = candidates[0]
-        return _groq_model
+        return candidates[0]
 
 
 async def batch_sentiment_analysis(
