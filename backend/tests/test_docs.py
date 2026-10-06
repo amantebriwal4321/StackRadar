@@ -6,6 +6,8 @@ the edit was replacing. Nothing caught it: the file still rendered, and both
 copies looked plausible in isolation.
 """
 import re
+import subprocess
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -34,19 +36,36 @@ def test_no_duplicated_paragraph_blocks(path):
     assert not repeated, f"{path.name} repeats paragraphs: {repeated}"
 
 
+def _collected_test_count() -> int:
+    """How many tests pytest itself collects - parametrised cases included.
+
+    Counting `def test_` by regex was the first version and could not be made
+    right: one function can be 180 cases (test_catalog), so any ratio between
+    functions and cases breaks the next time a file is parametrised.
+    """
+    out = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider"],
+        cwd=REPO / "backend",
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=120,
+        check=False,
+    ).stdout
+    m = re.search(r"(\d+) tests? collected", out)
+    assert m, f"could not read a collected count from pytest: {out[-300:]!r}"
+    return int(m.group(1))
+
+
 def test_claude_md_documents_the_real_test_count():
-    """The stale copy advertised a count from two commits earlier."""
+    """The doc may round, but must not drift: within 10% (and never less than
+    25 tests) of what pytest collects."""
     text = (REPO / "CLAUDE.md").read_text(encoding="utf-8")
     claimed = re.findall(r"~(\d+) tests", text)
     assert len(claimed) == 1, f"expected one test-count claim, found {claimed}"
-    actual = sum(
-        len(re.findall(r"^def test_|^    def test_", p.read_text(encoding="utf-8"), re.MULTILINE))
-        for p in (REPO / "backend" / "tests").glob("test_*.py")
-    )
-    # Parametrised cases make the real total higher (362 cases from 250
-    # functions when this was written), so the ceiling scales with the function
-    # count instead of being a fixed margin that every parametrised file eats.
-    # The doc must not overstate, and must not drift far below.
-    assert actual - 25 <= int(claimed[0]) <= int(actual * 1.6), (
-        f"CLAUDE.md claims ~{claimed[0]} tests; {actual} test functions exist"
+    actual = _collected_test_count()
+    tolerance = max(25, actual // 10)
+    assert abs(int(claimed[0]) - actual) <= tolerance, (
+        f"CLAUDE.md claims ~{claimed[0]} tests; pytest collects {actual}"
     )
