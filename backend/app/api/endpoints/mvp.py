@@ -1120,6 +1120,19 @@ def _roadmap_steps(db: Session, slug: str) -> list:
     return json.loads(rm.steps_json) if rm.steps_json else []
 
 
+def _utc_date(moment: datetime) -> date:
+    """The UTC calendar date of a stored timestamp.
+
+    `completed_at` is timezone-aware: SQLite hands it back naive (already UTC),
+    Postgres hands it back in the SESSION's zone. Calling .date() on the latter
+    gives the local date, so a lesson finished at 21:30 UTC read as the next day
+    on any non-UTC session and split or doubled a streak.
+    """
+    if moment.tzinfo is not None:
+        moment = moment.astimezone(timezone.utc)
+    return moment.date()
+
+
 def _calculate_streak(dates: list) -> int:
     """Consecutive days ending today (or yesterday) with at least one completion.
 
@@ -1128,7 +1141,7 @@ def _calculate_streak(dates: list) -> int:
     """
     if not dates:
         return 0
-    days = sorted({d.date() for d in dates}, reverse=True)
+    days = sorted({_utc_date(d) for d in dates}, reverse=True)
     today = utc_today()
     if (today - days[0]).days > 1:
         return 0
@@ -1205,7 +1218,7 @@ def build_progress_summary(db: Session, user_id: str) -> dict:
     # Most recently touched first — that's the one to offer resuming.
     active.sort(key=lambda a: a["last_active"] or "", reverse=True)
     completed_today = sum(
-        1 for r in rows if r.completed_at and r.completed_at.date() == utc_today()
+        1 for r in rows if r.completed_at and _utc_date(r.completed_at) == utc_today()
     )
 
     return {
@@ -1271,6 +1284,23 @@ def toggle_progress(
     if roadmap_slug is None or step is None:
         raise HTTPException(
             status_code=422, detail="roadmap_slug and step are required"
+        )
+
+    # Only a real step of a real roadmap may be recorded. Anything else was
+    # stored as-is: a step number past the end counted toward the total, so a
+    # 4-step roadmap could read 125% complete, and arbitrary slugs filled
+    # user_progress with rows no page would ever show. (bool is an int in
+    # Python, so True would otherwise pass as step 1.)
+    valid_steps = (
+        {st.get("step") for st in _roadmap_steps(db, roadmap_slug)}
+        if isinstance(roadmap_slug, str)
+        else set()
+    )
+    if not valid_steps:
+        raise HTTPException(status_code=404, detail="Roadmap not found")
+    if isinstance(step, bool) or not isinstance(step, int) or step not in valid_steps:
+        raise HTTPException(
+            status_code=422, detail=f"step must be one of {sorted(valid_steps)}"
         )
 
     existing = (
