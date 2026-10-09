@@ -31,6 +31,7 @@ from typing import Any
 import httpx
 from loguru import logger
 
+from app.core.clock import as_utc
 from app.core.config import settings
 
 YOUTUBE_API = "https://www.googleapis.com/youtube/v3"
@@ -140,7 +141,11 @@ def rank_resource(item: dict[str, Any], release_at: datetime | None = None) -> f
     """
     views = item.get("views") or 0
     likes = item.get("likes") or 0
-    published = item.get("published_at")
+    # Both ends normalised to aware UTC: `published` is aware (parsed from the
+    # API) but `release_at` comes straight off a DateTime(timezone=True) column,
+    # which SQLite returns naive - comparing the two raised TypeError.
+    published = as_utc(item["published_at"]) if item.get("published_at") else None
+    release_at = as_utc(release_at) if release_at else None
     duration = item.get("duration_s") or 0
     items_n = item.get("item_count") or 0
     channel = (item.get("channel") or "").strip().lower()
@@ -186,7 +191,7 @@ def staleness(
     """
     if not published or not release_at:
         return None
-    gap = (release_at - published).days
+    gap = (as_utc(release_at) - as_utc(published)).days
     if gap < 365:
         return None
     years = gap / 365.0

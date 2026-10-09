@@ -33,12 +33,13 @@ import httpx
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.core.clock import utc_today, utcnow_naive
+from app.core.clock import as_utc, utc_midnight_naive, utc_today, utcnow_naive
 from app.db.session import SessionLocal
 from app.models.all_models import Domain, Tool, ToolSnapshot
 from app.services.jobs import fetch_job_demand
 from app.services.scoring import (
     TOOL_REGISTRY,
+    _item_text,
     calculate_all_tool_scores,
     classify_growth_stage,
     classify_learning_priority,
@@ -149,7 +150,8 @@ async def _refresh_job_demand(all_tools: list[Tool]) -> None:
     "nobody is hiring for this".
     """
     newest = max(
-        (t.jobs_updated_at for t in all_tools if t.jobs_updated_at), default=None
+        (as_utc(t.jobs_updated_at) for t in all_tools if t.jobs_updated_at),
+        default=None,
     )
     if newest and (datetime.now(timezone.utc) - newest) < timedelta(
         hours=JOB_DEMAND_TTL_HOURS
@@ -326,7 +328,7 @@ async def perform_full_scrape() -> bool:
                 # releases move far slower than stars and this is an extra call
                 # per repo against the same rate budget.
                 rel_age = (
-                    (datetime.now(timezone.utc) - tool.latest_release_at).days
+                    (datetime.now(timezone.utc) - as_utc(tool.latest_release_at)).days
                     if tool.latest_release_at
                     else 999
                 )
@@ -374,15 +376,11 @@ async def perform_full_scrape() -> bool:
 
         for item in all_content:
             sentiment = item.get("sentiment", "neutral")
-            title = item.get("title", "")
-            tags = (
-                " ".join(item.get("tag_list", []))
-                if isinstance(item.get("tag_list"), list)
-                else ""
-            )
-            subreddit = item.get("subreddit", "")
-            text = f"{title} {tags} {subreddit}".strip()
-            matched = classify_text_to_tools(text)
+            # The SAME text mention counting reads (title, tags, subreddit AND
+            # description). This tally used to read only the first three, so an
+            # item that counted as a mention because of its description was
+            # never counted for or against the tool in the sentiment totals.
+            matched = classify_text_to_tools(_item_text(item))
             for slug in matched:
                 if sentiment == "positive":
                     tool_sentiment_pos[slug] = tool_sentiment_pos.get(slug, 0) + 1
@@ -516,10 +514,7 @@ async def perform_full_scrape() -> bool:
                 db.query(ToolSnapshot)
                 .filter(
                     ToolSnapshot.tool_id == tool.id,
-                    ToolSnapshot.recorded_at
-                    >= datetime(
-                        today.year, today.month, today.day, tzinfo=timezone.utc
-                    ),
+                    ToolSnapshot.recorded_at >= utc_midnight_naive(today),
                 )
                 .first()
             )
@@ -538,7 +533,7 @@ async def perform_full_scrape() -> bool:
             else:
                 snapshot = ToolSnapshot(
                     tool_id=tool.id,
-                    recorded_at=datetime.now(timezone.utc),
+                    recorded_at=utcnow_naive(),
                     score=new_score,
                     stars=tool.stars,
                     github_stars_delta=stars_delta,

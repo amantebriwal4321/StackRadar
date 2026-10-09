@@ -454,3 +454,25 @@ def test_html_escaped_snippet_text_from_the_api_is_decoded(monkeypatch):
     assert item["title"] == "Debouncing & Abort Controller \"React\" '25"
     assert item["channel"] == "Dev & Ops"
     assert item["blurb"] == "Q&A"
+
+
+# --- naive timestamps from the database (SQLite) must not crash the ranking -----------
+
+
+def test_rank_resource_accepts_a_naive_release_date_from_the_database():
+    """`published_at` is aware (parsed from the API); `release_at` comes off a
+    DateTime(timezone=True) column, which SQLite returns naive. Comparing them
+    raised TypeError."""
+    naive_release = NOW.replace(tzinfo=None)
+    item = {"views": 100_000, "likes": 4000, "published_at": days_ago(900), "duration_s": 3000}
+    aware = R.rank_resource(item, release_at=NOW)
+    assert R.rank_resource(item, release_at=naive_release) == aware
+
+
+def test_staleness_accepts_naive_and_aware_dates_in_any_mix():
+    published = days_ago(800)
+    expected = R.staleness(published, NOW, "v2")
+    assert expected is not None
+    assert R.staleness(published.replace(tzinfo=None), NOW.replace(tzinfo=None), "v2") == expected
+    assert R.staleness(published, NOW.replace(tzinfo=None), "v2") == expected
+    assert R.staleness(published.replace(tzinfo=None), NOW, "v2") == expected

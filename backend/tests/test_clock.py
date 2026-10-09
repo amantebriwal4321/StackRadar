@@ -48,3 +48,36 @@ def test_a_snapshot_from_20_hours_ago_counts_as_last_24h():
                 db.commit()
         finally:
             db.close()
+
+
+# --- as_utc: SQLite returns timezone-aware columns naive, Postgres aware ---------------
+
+
+def test_as_utc_makes_a_naive_value_aware_without_shifting_it():
+    from app.core.clock import as_utc
+
+    naive = datetime(2026, 10, 9, 12, 0, tzinfo=timezone.utc).replace(tzinfo=None)
+    got = as_utc(naive)
+    assert got.tzinfo is not None and got.utcoffset() == timedelta(0)
+    assert got.replace(tzinfo=None) == naive
+
+
+def test_as_utc_converts_another_offset_to_the_same_instant():
+    from app.core.clock import as_utc
+
+    ist = timezone(timedelta(hours=5, minutes=30))
+    local = datetime(2026, 10, 9, 17, 30, tzinfo=ist)
+    got = as_utc(local)
+    assert got == local  # same instant
+    assert (got.hour, got.minute) == (12, 0)
+
+
+def test_a_database_value_can_be_subtracted_from_now_whichever_flavour_it_is():
+    """The scheduler's `now(utc) - tool.latest_release_at` raised TypeError for
+    the naive value SQLite returns."""
+    from app.core.clock import as_utc
+
+    stored_naive = utcnow_naive() - timedelta(days=3)
+    stored_aware = datetime.now(timezone.utc) - timedelta(days=3)
+    for stored in (stored_naive, stored_aware):
+        assert (datetime.now(timezone.utc) - as_utc(stored)).days == 3

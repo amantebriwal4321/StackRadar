@@ -21,6 +21,20 @@ def utcnow_naive() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+def as_utc(moment: datetime) -> datetime:
+    """An aware UTC datetime, whether the database returned it aware or naive.
+
+    Columns declared DateTime(timezone=True) come back aware from Postgres but
+    NAIVE from SQLite (the local-dev database), and subtracting one from
+    `datetime.now(timezone.utc)` raises TypeError. The scraper did exactly that
+    on `latest_release_at` and `jobs_updated_at`, so on SQLite every scrape
+    cycle after the first successful release lookup rolled back.
+    """
+    if moment.tzinfo is None:
+        return moment.replace(tzinfo=timezone.utc)
+    return moment.astimezone(timezone.utc)
+
+
 def utc_today() -> date:
     """Today's date in UTC, never the server's local date."""
     return datetime.now(timezone.utc).date()
