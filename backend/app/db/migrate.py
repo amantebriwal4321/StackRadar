@@ -20,6 +20,31 @@ from sqlalchemy.engine import Engine
 from app.db.base import Base
 
 
+def _backfill_default(engine: Engine, table: str, column) -> None:
+    """Give existing rows the column's Python-side default.
+
+    ALTER TABLE ADD COLUMN carries neither a NOT NULL nor the model's
+    `default=`, so every row that predates the column reads NULL even where the
+    model says the value is 0 / False / "neutral" - and code written against the
+    model (`t.hn_count + t.devto_count`, `sum(t.score ...)`) meets a None.
+    A scalar default is applied to those rows; callables (timestamps) and
+    columns with no default stay NULL, which is the honest "not measured yet".
+    """
+    default = column.default
+    if default is None or not getattr(default, "is_scalar", False):
+        return
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    f"UPDATE {table} SET {column.name} = :v WHERE {column.name} IS NULL"
+                ),
+                {"v": default.arg},
+            )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Could not backfill {table}.{column.name}: {e}")
+
+
 def ensure_columns(engine: Engine) -> list[str]:
     """Add any model columns missing from the live tables. Returns what it added."""
     inspector = inspect(engine)
@@ -55,6 +80,7 @@ def ensure_columns(engine: Engine) -> list[str]:
                         text(f"ALTER TABLE {table.name} ADD COLUMN {column.name} {ddl}")
                     )
                 added.append(f"{table.name}.{column.name}")
+                _backfill_default(engine, table.name, column)
             except Exception as e:  # noqa: BLE001
                 logger.warning(f"Could not add {table.name}.{column.name}: {e}")
 

@@ -755,32 +755,103 @@ def run_seed(db: Session) -> None:
     logger.info("Seed: Database seeded successfully!")
 
 
-def reconcile_catalog(db: Session) -> None:
+# Curated fields that the catalog owns. Everything else on a Tool row (score,
+# stars, forks, mention counts, sentiment, growth, recommendation, hiring demand,
+# release data...) is MEASURED, and reconcile_catalog must never touch it.
+_CATALOG_OWNED = ("name", "description", "icon", "category", "github_repo")
+
+
+def reconcile_catalog(db: Session) -> dict[str, list[str]]:
     """Make the live `tools` table match the curated catalog exactly.
 
-    Runs on every startup (after run_seed). Its job is to purge rows that are
-    NOT in catalog.TOOLS — i.e. the bare placeholder/duplicate tools the scraper
-    used to create for every TOOL_REGISTRY slug (e.g. a category-less "Python",
-    or "vue" alongside the curated "vuejs"). These are auto-generated artifacts,
-    never user data, so deleting them is safe; their snapshots/roadmaps cascade.
+    Runs on every startup (after run_seed). run_seed only acts on an EMPTY
+    database, so without this the catalog was add-and-edit-proof on every
+    deployment after the first, despite the documented rule that adding,
+    editing or removing a tool means editing catalog.py and nothing else:
+      - a tool added to the catalog never appeared (the scraper only warns);
+      - a changed description, icon, repo, level, sequence or parent never
+        landed, and a changed github_repo kept scraping the OLD repo.
+    It now does all three:
+      - REMOVES rows not in catalog.TOOLS - the bare placeholder/duplicate tools
+        the scraper used to create ("Python #1", "vue" beside "vuejs"). Those
+        are generated artifacts, never user data; snapshots cascade.
+      - ADDS catalog tools missing from the database, creating a missing domain
+        first.
+      - UPDATES the curated fields of existing tools, and only those: scores,
+        stars, mention counts and every other measured field are left alone.
 
-    This is the fix for the long-standing dual-catalog data-integrity bug:
-    without it, `run_seed` early-returns on a non-empty DB and the placeholder
-    rows linger forever, polluting the rankings.
+    Returns what it changed, for logging and tests.
     """
-    orphans = db.query(Tool).filter(~Tool.slug.in_(CATALOG_SLUGS)).all()
-    if not orphans:
-        logger.info("Reconcile: catalog is clean — no non-catalog tools to remove.")
-        return
+    result: dict[str, list[str]] = {"added": [], "updated": [], "removed": []}
 
-    orphan_slugs = [t.slug for t in orphans]
+    # -- remove rows the catalog does not know about --------------------------
+    orphans = db.query(Tool).filter(~Tool.slug.in_(CATALOG_SLUGS)).all()
     for tool in orphans:
         db.delete(tool)  # cascades to snapshots + roadmap via relationships
-    db.commit()
-    logger.info(
-        f"Reconcile: removed {len(orphans)} non-catalog tools "
-        f"(placeholder/duplicate rows): {', '.join(sorted(orphan_slugs))}"
-    )
+        result["removed"].append(tool.slug)
+
+    # -- domains the catalog's categories need ---------------------------------
+    domains = {d.name: d for d in db.query(Domain).all()}
+    for spec in SEED_DOMAINS:
+        if spec["name"] not in domains:
+            domain = Domain(name=spec["name"], slug=spec["slug"], icon=spec["icon"])
+            db.add(domain)
+            db.flush()
+            domains[spec["name"]] = domain
+
+    # -- add missing tools, update the curated fields of existing ones ----------
+    existing = {t.slug: t for t in db.query(Tool).all() if t.slug in CATALOG_SLUGS}
+    for spec in SEED_TOOLS:
+        domain = domains.get(spec["category"])
+        wanted = {
+            **{k: spec[k] for k in _CATALOG_OWNED},
+            "domain_id": domain.id if domain else None,
+            "level": spec.get("level", "intermediate"),
+            "is_entry_point": spec.get("is_entry_point", False),
+            "learning_sequence_score": spec.get("seq", 50),
+        }
+        tool = existing.get(spec["slug"])
+        if tool is None:
+            tool = Tool(slug=spec["slug"], **wanted)
+            db.add(tool)
+            existing[spec["slug"]] = tool
+            result["added"].append(spec["slug"])
+            continue
+        changed = [k for k, v in wanted.items() if getattr(tool, k) != v]
+        for k in changed:
+            setattr(tool, k, wanted[k])
+        if changed:
+            result["updated"].append(spec["slug"])
+    db.flush()
+
+    # -- parent links (second pass: parents may have just been added) -----------
+    for spec in SEED_TOOLS:
+        tool = existing[spec["slug"]]
+        parent = existing.get(spec["parent_slug"]) if spec.get("parent_slug") else None
+        parent_id = parent.id if parent else None
+        if tool.parent_tool_id != parent_id:
+            tool.parent_tool_id = parent_id
+            if (
+                spec["slug"] not in result["updated"]
+                and spec["slug"] not in result["added"]
+            ):
+                result["updated"].append(spec["slug"])
+
+    if any(result.values()):
+        db.commit()
+        logger.info(
+            "Reconcile: catalog applied - "
+            + ", ".join(f"{k} {len(v)}" for k, v in result.items() if v)
+            + (
+                f" (removed: {', '.join(sorted(result['removed']))})"
+                if result["removed"]
+                else ""
+            )
+            + (f" (added: {', '.join(result['added'])})" if result["added"] else "")
+        )
+    else:
+        logger.info("Reconcile: catalog is clean - nothing to add, update or remove.")
+    return result
 
 
 def reconcile_roadmaps(db: Session) -> None:
