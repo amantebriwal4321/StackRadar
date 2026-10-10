@@ -45,7 +45,7 @@ npm run lint       # eslint
 ```
 
 ### Migrations
-Alembic is configured (`backend/alembic.ini`, versions in `backend/alembic/versions/`), but the app **also auto-creates tables** on startup via `Base.metadata.create_all` and seeds them. Because `create_all` never adds a column to a table that already exists, `app/db/migrate.py:ensure_columns` runs on startup and additively `ALTER TABLE ADD COLUMN`s any missing model fields (nullable/defaulted only — it never drops/retypes). Adding a plain nullable column to a model needs no Alembic step; anything structural still does. For schema changes:
+Alembic is configured (`backend/alembic.ini`, versions in `backend/alembic/versions/`), but the app **also auto-creates tables** on startup via `Base.metadata.create_all` and seeds them. Because `create_all` never adds a column to a table that already exists, `app/db/migrate.py:ensure_columns` runs on startup and additively `ALTER TABLE ADD COLUMN`s any missing model fields (nullable/defaulted only — it never drops/retypes). Columns it adds are backfilled with the model's scalar `default=` (an `ALTER` carries neither `NOT NULL` nor the default, so old rows would otherwise read NULL where the model says 0/False); callable defaults and defaultless columns stay NULL, meaning "not measured". Adding a plain nullable column to a model needs no Alembic step; anything structural still does. For schema changes:
 ```bash
 cd backend
 alembic revision --autogenerate -m "message"
@@ -56,7 +56,7 @@ alembic upgrade head
 ```bash
 cd backend
 pip install -r requirements-dev.txt      # requirements.txt + pytest
-python -m pytest tests -q                # ~810 tests, ~15s
+python -m pytest tests -q                # ~840 tests, 15-90s depending on the machine
 ```
 `tests/conftest.py` points `DATABASE_URL` at a **throwaway SQLite file** (never `backend/test.db`), blanks every API key, and sets `RUN_SCRAPER_INLINE=0` + `WARM_RESOURCE_CACHE=0`, all before `app` is imported — so the suite needs no database, secrets or network and gives the same answer in CI as locally. Backend CI (`.github/workflows/backend.yml`) runs it on every push/PR. Coverage today: the project video gate + cache key (`test_projects.py`, with the real titles that reached production as regressions), data freshness (`test_health.py`), the scheduler's success stamping (`test_scheduler.py`), the score's contract (`test_scoring.py`), the booted app (`test_api.py`), and the **copy a visitor reads** (`test_copy_claims.py`, below). Pure logic belongs in a service module where it can be tested without a request — `projects.video_cache_slug` was moved out of the endpoint for exactly that reason.
 
@@ -92,7 +92,7 @@ Endpoints: `/projects` (`tool`, `domain`, `tier` filters), `/projects/{slug}` (v
 - `seed.py` imports it as `SEED_TOOLS` (seeds the DB from it).
 - `scoring.py` derives `TOOL_REGISTRY` (repo + keywords + category) and the mention-matching regex patterns from it.
 - `scheduler.py` Step 0 **never creates tool rows** — it only warns if a catalog tool is missing. Creating rows there was the old bug.
-- `seed.reconcile_catalog(db)` runs on every startup (after `run_seed`) and **deletes any `tools` row whose slug isn't in the catalog** — this purges legacy placeholder/duplicate rows so the live DB always matches the catalog.
+- `seed.reconcile_catalog(db)` runs on every startup (after `run_seed`) and makes the live `tools` table match the catalog in all three directions: it **removes** rows whose slug isn't in the catalog (the legacy placeholder/duplicate rows), **adds** catalog tools the database lacks (creating a missing domain first), and **updates the curated fields** of existing ones — name, description, icon, category, `github_repo`, level, entry-point flag, sequence, domain and parent. Until this, only the removal existed: `run_seed` returns early on a non-empty database, so a tool added to the catalog never appeared and an edited description or repo never landed (a changed `github_repo` kept scraping the old repo), despite the rule that editing `catalog.py` is all it takes. **It never writes a measured field** (score, stars, mention counts, sentiment, growth, hiring demand, release data) — `tests/test_catalog_reconcile.py` pins that.
 
 `category` **must** match a `Domain` name in `SEED_DOMAINS` (domain pages / learning paths resolve by it). This replaced a prior dual-catalog bug where `SEED_TOOLS` and a separate hardcoded `TOOL_REGISTRY` disagreed on slugs/repos and spawned ~23 null-category placeholder rows (e.g. "Python #1"). History: `memory/stackradar-data-integrity.md`.
 
