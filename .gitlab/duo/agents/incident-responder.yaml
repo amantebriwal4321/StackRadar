@@ -1,0 +1,26 @@
+# Checklist for AI > Agents > New agent. Not a flow file.
+# Copy the system blocks from .gitlab/duo/flows/incident-responder.yaml.
+# The rollback merge request is opened only after the flow's approval gate.
+display_name: Incident Responder
+description: On a failed smoke health check, opens an incident issue and, after approval, a draft rollback merge request.
+visibility: private
+flow: .gitlab/duo/flows/incident-responder.yaml
+prompt_id: incident_triage_prompt
+triggers:
+  - Mention
+  - Pipeline events
+trigger_actions:
+  - Failed
+ui_tools:
+  - Get Pipeline Failing Jobs
+  - Get Pipeline Errors
+  - Get Job Logs
+  - Create Issue
+  - Create Issue Note
+  - List Issues
+  - Create Branch
+  - Create Commit
+  - Create Merge Request
+  - GitLab API Get
+  - Get Project
+  - Run Command

@@ -1,0 +1,22 @@
+# Checklist for AI > Agents > New agent. This is not a flow file.
+# The flow that actually runs is .gitlab/duo/flows/mr-reviewer.yaml.
+# Copy that file's system block into System prompt.
+display_name: MR Reviewer
+description: Reviews a merge request and flags added dependencies whose StackRadar momentum is declining.
+visibility: private
+flow: .gitlab/duo/flows/mr-reviewer.yaml
+prompt_id: mr_reviewer_prompt
+triggers:
+  - Mention
+  - Assign reviewer
+ui_tools:
+  - Build Review Merge Request Context
+  - Get Merge Request
+  - List Merge Request Diffs
+  - Create Merge Request Note
+  - GitLab API Get
+  - Get Project
+  - Run Command
+mcp_tools:
+  - dependency_risk
+  - tool_score

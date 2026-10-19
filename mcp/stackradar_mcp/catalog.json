@@ -1,0 +1,272 @@
+[
+  {
+    "slug": "react",
+    "name": "React",
+    "category": "Web Development",
+    "keywords": [
+      "react",
+      "reactjs",
+      "react.js"
+    ]
+  },
+  {
+    "slug": "tailwindcss",
+    "name": "Tailwind CSS",
+    "category": "Web Development",
+    "keywords": [
+      "tailwind",
+      "tailwindcss",
+      "tailwind css"
+    ]
+  },
+  {
+    "slug": "vite",
+    "name": "Vite",
+    "category": "Web Development",
+    "keywords": [
+      "vite",
+      "vitejs"
+    ]
+  },
+  {
+    "slug": "vuejs",
+    "name": "Vue.js",
+    "category": "Web Development",
+    "keywords": [
+      "vue",
+      "vuejs",
+      "vue.js"
+    ]
+  },
+  {
+    "slug": "svelte",
+    "name": "Svelte",
+    "category": "Web Development",
+    "keywords": [
+      "svelte",
+      "sveltekit"
+    ]
+  },
+  {
+    "slug": "nextjs",
+    "name": "Next.js",
+    "category": "Web Development",
+    "keywords": [
+      "next.js",
+      "nextjs"
+    ]
+  },
+  {
+    "slug": "fastapi",
+    "name": "FastAPI",
+    "category": "Web Development",
+    "keywords": [
+      "fastapi",
+      "fast api"
+    ]
+  },
+  {
+    "slug": "astro",
+    "name": "Astro",
+    "category": "Web Development",
+    "keywords": [
+      "astro"
+    ]
+  },
+  {
+    "slug": "trpc",
+    "name": "tRPC",
+    "category": "Web Development",
+    "keywords": [
+      "trpc"
+    ]
+  },
+  {
+    "slug": "bun",
+    "name": "Bun",
+    "category": "Web Development",
+    "keywords": [
+      "bun",
+      "bunjs"
+    ]
+  },
+  {
+    "slug": "deno",
+    "name": "Deno",
+    "category": "Web Development",
+    "keywords": [
+      "deno"
+    ]
+  },
+  {
+    "slug": "prisma",
+    "name": "Prisma",
+    "category": "Data & Databases",
+    "keywords": [
+      "prisma"
+    ]
+  },
+  {
+    "slug": "pytorch",
+    "name": "PyTorch",
+    "category": "AI / ML",
+    "keywords": [
+      "pytorch",
+      "torch"
+    ]
+  },
+  {
+    "slug": "tensorflow",
+    "name": "TensorFlow",
+    "category": "AI / ML",
+    "keywords": [
+      "tensorflow"
+    ]
+  },
+  {
+    "slug": "transformers",
+    "name": "Hugging Face Transformers",
+    "category": "AI / ML",
+    "keywords": [
+      "huggingface",
+      "transformers",
+      "hugging face"
+    ]
+  },
+  {
+    "slug": "langchain",
+    "name": "LangChain",
+    "category": "AI / ML",
+    "keywords": [
+      "langchain"
+    ]
+  },
+  {
+    "slug": "ollama",
+    "name": "Ollama",
+    "category": "AI / ML",
+    "keywords": [
+      "ollama"
+    ]
+  },
+  {
+    "slug": "supabase",
+    "name": "Supabase",
+    "category": "Cloud Native",
+    "keywords": [
+      "supabase"
+    ]
+  },
+  {
+    "slug": "terraform",
+    "name": "Terraform",
+    "category": "Cloud Native",
+    "keywords": [
+      "terraform"
+    ]
+  },
+  {
+    "slug": "kubernetes",
+    "name": "Kubernetes",
+    "category": "Cloud Native",
+    "keywords": [
+      "kubernetes",
+      "k8s"
+    ]
+  },
+  {
+    "slug": "docker",
+    "name": "Docker",
+    "category": "DevOps",
+    "keywords": [
+      "docker",
+      "dockerfile"
+    ]
+  },
+  {
+    "slug": "grafana",
+    "name": "Grafana",
+    "category": "DevOps",
+    "keywords": [
+      "grafana"
+    ]
+  },
+  {
+    "slug": "prometheus",
+    "name": "Prometheus",
+    "category": "DevOps",
+    "keywords": [
+      "prometheus"
+    ]
+  },
+  {
+    "slug": "rust",
+    "name": "Rust",
+    "category": "Systems Programming",
+    "keywords": [
+      "rust",
+      "rustlang"
+    ]
+  },
+  {
+    "slug": "go",
+    "name": "Go",
+    "category": "Systems Programming",
+    "keywords": [
+      "golang",
+      "go lang"
+    ]
+  },
+  {
+    "slug": "wireshark",
+    "name": "Wireshark",
+    "category": "Cybersecurity",
+    "keywords": [
+      "wireshark"
+    ]
+  },
+  {
+    "slug": "metasploit",
+    "name": "Metasploit",
+    "category": "Cybersecurity",
+    "keywords": [
+      "metasploit"
+    ]
+  },
+  {
+    "slug": "owasp-zap",
+    "name": "OWASP ZAP",
+    "category": "Cybersecurity",
+    "keywords": [
+      "owasp zap",
+      "owasp-zap",
+      "zaproxy"
+    ]
+  },
+  {
+    "slug": "hardhat",
+    "name": "Hardhat",
+    "category": "Web3 / Blockchain",
+    "keywords": [
+      "hardhat"
+    ]
+  },
+  {
+    "slug": "foundry",
+    "name": "Foundry",
+    "category": "Web3 / Blockchain",
+    "keywords": [
+      "foundry"
+    ]
+  },
+  {
+    "slug": "ethersjs",
+    "name": "Ethers.js",
+    "category": "Web3 / Blockchain",
+    "keywords": [
+      "ethers.js",
+      "ethersjs",
+      "ethers"
+    ]
+  }
+]

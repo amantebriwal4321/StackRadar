@@ -1,0 +1,148 @@
+# Flow registry v1. Paste into AI > Flows > New flow.
+# Triggers on Enable: Mention, Assign.
+# The approval gate is the supervised deploy. The flow does not merge.
+version: "v1"
+environment: ambient
+coding_environment: none
+
+components:
+  - name: release_notes
+    type: AgentComponent
+    prompt_id: release_notes_prompt
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:inputs.agent_platform_standard_context.primary_branch"
+        as: "primary_branch"
+    toolset:
+      - get_project
+      - list_commits
+      - get_commit
+      - gitlab_api_get
+      - create_issue
+      - create_issue_note
+      - list_issues
+    ui_log_events:
+      - on_agent_final_answer
+      - on_tool_execution_success
+      - on_tool_execution_failed
+
+  - name: deploy_gate
+    type: HumanInputComponent
+    sends_response_to: release_notes
+    interaction_type: approval
+    message_template: |
+      Release notes are on the issue. Approve to start the Cloud Run pipeline. Modify to rewrite the notes. Reject to keep the notes and not deploy.
+    ui_log_events:
+      - on_user_input_prompt
+      - on_user_response
+
+  - name: trigger_deploy
+    type: AgentComponent
+    prompt_id: trigger_deploy_prompt
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:inputs.agent_platform_standard_context.primary_branch"
+        as: "primary_branch"
+      - from: "context:release_notes.final_answer"
+        as: "notes"
+    toolset:
+      - get_project
+      - gitlab_api_get
+      - create_issue_note
+      - run_command
+    ui_log_events:
+      - on_agent_final_answer
+      - on_tool_execution_success
+      - on_tool_execution_failed
+
+prompts:
+  - prompt_id: release_notes_prompt
+    name: Release notes
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the StackRadar Release Captain, writing notes before a deploy. You do not deploy in this step. You do not merge.
+
+        The user message has the project id, the default branch, and the goal. If the default branch is empty, read it with get_project.
+
+        If the goal is a pipeline webhook, this flow was started by mistake. Your final answer is the single word skip. No further steps are needed after that.
+
+        Read commits on the default branch since the last tag. If there is no tag, use the last 15 commits. Write an issue titled Release notes. The body is a short list of what changed, in plain sentences. Do not invent numbers. Do not claim a score moved unless a commit message says so.
+
+        If this session already has that issue, update it with a note. Do not open a second issue.
+
+        Your final answer is the issue IID and one sentence. Do not make the whole answer the word skip unless you are exiting. No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Default branch: {{ primary_branch }}
+        Goal:
+        {{ goal }}
+      placeholder: history
+    params:
+      timeout: 300
+
+  - prompt_id: trigger_deploy_prompt
+    name: Trigger deploy
+    unit_primitives: []
+    prompt_template:
+      system: |
+        The human approved the Cloud Run deploy. Start it. Do not merge. Do not print tokens.
+
+        Create a pipeline on the default branch. The variable name is DEPLOY_CLOUD_RUN and the value is 1.
+
+        Call the GitLab API with Authorization Bearer. Do not send a PRIVATE-TOKEN header. Read the token from GITLAB_TOKEN, or from GITLAB_OAUTH_TOKEN if the first is empty. Read the API root from GITLAB_BASE_URL. If that variable is empty, use https://gitlab.com.
+
+        POST /api/v4/projects/<project id>/pipeline with JSON. ref is the default branch. variables is a list of one object with key DEPLOY_CLOUD_RUN and value 1.
+
+        If the response status is 401 or 403, the workflow token cannot create a pipeline. Post a note on the release issue telling the human to open Build, then Pipelines, then Run pipeline, on the default branch, and set DEPLOY_CLOUD_RUN to 1.
+
+        When you have a pipeline id, or you have posted that note, your final answer is that result. No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Default branch: {{ primary_branch }}
+        Notes:
+        {{ notes }}
+        Goal:
+        {{ goal }}
+      placeholder: history
+    params:
+      timeout: 180
+
+routers:
+  - from: release_notes
+    condition:
+      input: "context:release_notes.final_answer"
+      routes:
+        skip: end
+        default_route: deploy_gate
+  - from: deploy_gate
+    condition:
+      input: "context:deploy_gate.approval"
+      routes:
+        approve: trigger_deploy
+        modify: release_notes
+        reject: end
+        default_route: end
+  - from: trigger_deploy
+    to: end
+
+flow:
+  entry_point: release_notes
+  inputs:
+    - category: agent_platform_standard_context
+      input_schema:
+        primary_branch:
+          type: string
+          description: Default branch of the repository
+        workload_branch:
+          type: string
+          description: Git ref used by the CI workload runner
+        session_owner_id:
+          type: string
+          description: Human user id that started the flow

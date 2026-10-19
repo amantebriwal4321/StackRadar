@@ -1,0 +1,20 @@
+# Checklist for AI > Agents > New agent. Not a flow file.
+# Copy both system blocks from .gitlab/duo/flows/release-captain.yaml into the chat agent if you want the same instructions there.
+# The deploy still waits on the flow's approval gate.
+display_name: Release Captain
+description: Writes release notes from commits on the default branch and, after approval, starts the Cloud Run pipeline.
+visibility: private
+flow: .gitlab/duo/flows/release-captain.yaml
+prompt_id: release_notes_prompt
+triggers:
+  - Mention
+  - Assign
+ui_tools:
+  - List Commits
+  - Get Commit
+  - Create Issue
+  - Create Issue Note
+  - List Issues
+  - GitLab API Get
+  - Get Project
+  - Run Command

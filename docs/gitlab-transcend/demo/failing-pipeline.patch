@@ -1,0 +1,62 @@
+diff --git a/backend/tests/test_transcend_demo_failure.py b/backend/tests/test_transcend_demo_failure.py
+new file mode 100644
+index 000000000000..8c32e3ad347b
+--- /dev/null
++++ b/backend/tests/test_transcend_demo_failure.py
+@@ -0,0 +1,6 @@
++def test_release_health_budget():
++    """Seeded failure for the Pipeline Doctor demo.
++
++    The assertion is inverted. The job log is the bug report.
++    """
++    assert 1 == 0, "demo failure: health budget check is inverted"
+diff --git a/demo/package.json b/demo/package.json
+new file mode 100644
+index 000000000000..9829aa8ef476
+--- /dev/null
++++ b/demo/package.json
+@@ -0,0 +1,9 @@
++{
++  "name": "stackradar-transcend-demo",
++  "private": true,
++  "description": "Demo only. Not installed by the app. lodash 4.17.20 is pinned so dependency scanning has a finding. react is pinned so the MR reviewer can score a tracked tool.",
++  "dependencies": {
++    "lodash": "4.17.20",
++    "react": "19.2.3"
++  }
++}
+diff --git a/demo/package-lock.json b/demo/package-lock.json
+new file mode 100644
+index 000000000000..be51e82c2736
+--- /dev/null
++++ b/demo/package-lock.json
+@@ -0,0 +1,29 @@
++{
++  "name": "stackradar-transcend-demo",
++  "lockfileVersion": 3,
++  "requires": true,
++  "packages": {
++    "": {
++      "name": "stackradar-transcend-demo",
++      "dependencies": {
++        "lodash": "4.17.20",
++        "react": "19.2.3"
++      }
++    },
++    "node_modules/lodash": {
++      "version": "4.17.20",
++      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.20.tgz",
++      "integrity": "sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==",
++      "license": "MIT"
++    },
++    "node_modules/react": {
++      "version": "19.2.3",
++      "resolved": "https://registry.npmjs.org/react/-/react-19.2.3.tgz",
++      "integrity": "sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    }
++  }
++}

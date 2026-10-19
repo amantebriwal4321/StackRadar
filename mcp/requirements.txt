@@ -1,0 +1,5 @@
+# Separate from backend/requirements.txt so the Render image does not change.
+# mcp 2.3.0 talks HTTP through httpx2, not the httpx line the API image pins.
+mcp==2.3.0
+httpx2==2.14.0
+uvicorn==0.41.0
