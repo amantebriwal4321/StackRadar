@@ -1,0 +1,152 @@
+# Flow registry v1. Paste into AI > Flows > New flow.
+# Triggers on Enable: Pipeline events, run when Failed. Also Mention.
+# The approval gate sits between the incident issue and the rollback MR.
+version: "v1"
+environment: ambient
+coding_environment: full
+
+components:
+  - name: incident_triage
+    type: AgentComponent
+    prompt_id: incident_triage_prompt
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:inputs.agent_platform_standard_context.primary_branch"
+        as: "primary_branch"
+    toolset:
+      - get_project
+      - get_pipeline_failing_jobs
+      - get_pipeline_errors
+      - get_job_logs
+      - gitlab_api_get
+      - create_issue
+      - create_issue_note
+      - list_issues
+    ui_log_events:
+      - on_agent_final_answer
+      - on_tool_execution_success
+      - on_tool_execution_failed
+
+  - name: incident_gate
+    type: HumanInputComponent
+    sends_response_to: incident_triage
+    interaction_type: approval
+    message_template: |
+      The incident issue is open. Approve to open the rollback merge request. Modify to send the cause back for a rewrite. Reject to leave the issue and skip the rollback.
+    ui_log_events:
+      - on_user_input_prompt
+      - on_user_response
+
+  - name: open_rollback
+    type: AgentComponent
+    prompt_id: open_rollback_prompt
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:inputs.agent_platform_standard_context.primary_branch"
+        as: "primary_branch"
+      - from: "context:incident_triage.final_answer"
+        as: "summary"
+    toolset:
+      - get_project
+      - gitlab_api_get
+      - create_issue_note
+      - run_command
+      - create_branch
+      - create_commit
+      - create_merge_request
+    ui_log_events:
+      - on_agent_final_answer
+      - on_tool_execution_success
+      - on_tool_execution_failed
+
+prompts:
+  - prompt_id: incident_triage_prompt
+    name: Incident triage
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the StackRadar Incident Responder. You explain a failed health check. You do not deploy, and you do not open the rollback merge request in this step.
+
+        The user message has the project id, the default branch, and the goal. If the default branch is empty, read it with get_project.
+
+        If the goal is a pipeline webhook, act only when a failed build is named smoke:health. If smoke:health did not fail, your final answer is the single word skip. No further steps are needed after that.
+
+        If the goal is a comment, continue only when it asks about the health check, a failed deploy, or a rollback. Otherwise your final answer is the single word skip. No further steps are needed after that.
+
+        Read the smoke:health log, and the deploy:cloud-run log if it exists. State the likely cause from the log: an HTTP status, an exception line, or a missing URL. If the log does not say, say the cause is not in the log. Do not invent a stack trace or a score.
+
+        Open one issue titled Incident: smoke health check failed. The body names the failed job, the commit SHA, the likely cause, and the revert you will open after a person approves. Do not add labels.
+
+        If this session already has that issue, add a note with the revised cause. Do not open a second issue.
+
+        Your final answer is the issue IID and one sentence on the cause. The whole answer is the word skip only when you are exiting with no issue. No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Default branch: {{ primary_branch }}
+        Goal:
+        {{ goal }}
+      placeholder: history
+    params:
+      timeout: 300
+
+  - prompt_id: open_rollback_prompt
+    name: Open rollback
+    unit_primitives: []
+    prompt_template:
+      system: |
+        The human approved the rollback. Open one merge request that reverts the commit named in the summary. Do not merge it.
+
+        Branch from the default branch. Revert that one commit without opening an editor. If the revert conflicts, do not force it. Post a note on the incident issue and stop.
+
+        Open a merge request whose title starts with Draft: rollback. The description links the incident issue and says a person must merge it. A merge to the default branch is what runs Cloud Run again, when the GCP variables are set.
+
+        Your final answer is the merge request IID. No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Default branch: {{ primary_branch }}
+        Incident summary:
+        {{ summary }}
+        Goal:
+        {{ goal }}
+      placeholder: history
+    params:
+      timeout: 300
+
+routers:
+  - from: incident_triage
+    condition:
+      input: "context:incident_triage.final_answer"
+      routes:
+        skip: end
+        default_route: incident_gate
+  - from: incident_gate
+    condition:
+      input: "context:incident_gate.approval"
+      routes:
+        approve: open_rollback
+        modify: incident_triage
+        reject: end
+        default_route: end
+  - from: open_rollback
+    to: end
+
+flow:
+  entry_point: incident_triage
+  inputs:
+    - category: agent_platform_standard_context
+      input_schema:
+        primary_branch:
+          type: string
+          description: Default branch of the repository
+        workload_branch:
+          type: string
+          description: Git ref used by the CI workload runner
+        session_owner_id:
+          type: string
+          description: Human user id that started the flow

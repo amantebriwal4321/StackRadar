@@ -349,6 +349,12 @@ See [CHANGELOG.md](./CHANGELOG.md) for the original development history, and [ch
 
 ---
 
+<!-- transcend-start -->
+## GitLab Transcend
+
+The work after code is written is in this repo for the GitLab Transcend hackathon, Path B. Five Duo flows review a merge request with StackRadar momentum, open a draft fix for a red test or a scanner finding, and wait for a person before Cloud Run or a rollback. Setup, the demo script, and the Devpost draft are in [docs/gitlab-transcend](docs/gitlab-transcend/README.md). The Vercel and Render deploy is unchanged.
+<!-- transcend-end -->
+
 ## 📜 License
 
 MIT — see [LICENSE](./LICENSE) for details.

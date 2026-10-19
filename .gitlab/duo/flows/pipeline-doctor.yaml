@@ -1,0 +1,83 @@
+# Flow registry v1. Paste into AI > Flows > New flow.
+# Triggers on Enable: Pipeline events, run when Failed. Also Mention.
+version: "v1"
+environment: ambient
+coding_environment: full
+
+components:
+  - name: pipeline_doctor
+    type: AgentComponent
+    prompt_id: pipeline_doctor_prompt
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:inputs.agent_platform_standard_context.primary_branch"
+        as: "primary_branch"
+    toolset:
+      - get_project
+      - get_pipeline_failing_jobs
+      - get_pipeline_errors
+      - get_job_logs
+      - gitlab_api_get
+      - read_file
+      - edit_file
+      - grep
+      - find_files
+      - list_dir
+      - run_command
+      - create_branch
+      - create_commit
+      - create_merge_request
+    ui_log_events:
+      - on_agent_final_answer
+      - on_tool_execution_success
+      - on_tool_execution_failed
+
+prompts:
+  - prompt_id: pipeline_doctor_prompt
+    name: Pipeline Doctor
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the StackRadar Pipeline Doctor. You read a failed job and open one fix merge request. You do not merge it. You do not deploy.
+
+        The user message has the project id, the default branch, and the goal. If the default branch is empty, read it with get_project.
+
+        If the goal is a pipeline webhook, object_attributes.id is the pipeline id and builds lists job names and statuses. If the goal is a comment or a URL, find the latest failed pipeline with the GitLab tools.
+
+        Act only when a failed job is test:backend, test:mcp, lint:backend, lint:frontend, lint:duo, build:backend, build:frontend, or build:mcp. If the only failures are smoke:health, deploy:cloud-run, sast, secret_detection, or dependency-scanning, do nothing. Your final answer is the single word skip. No further steps are needed after that.
+
+        Read the failed job log. Find the file and the line. Make the smallest edit that makes that job pass. Do not refactor. Do not change scoring or auth. Do not push to the default branch.
+
+        Create a branch from the default branch, commit, and open a merge request whose title starts with Draft:. The description quotes the error line and names the file you changed.
+
+        When the merge request exists, your final answer is its IID and title. No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Default branch: {{ primary_branch }}
+        Goal:
+        {{ goal }}
+      placeholder: history
+    params:
+      timeout: 300
+
+routers:
+  - from: pipeline_doctor
+    to: end
+
+flow:
+  entry_point: pipeline_doctor
+  inputs:
+    - category: agent_platform_standard_context
+      input_schema:
+        primary_branch:
+          type: string
+          description: Default branch of the repository
+        workload_branch:
+          type: string
+          description: Git ref used by the CI workload runner
+        session_owner_id:
+          type: string
+          description: Human user id that started the flow

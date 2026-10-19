@@ -1,0 +1,22 @@
+# Checklist for AI > Agents > New agent. Not a flow file.
+# Copy the system block from .gitlab/duo/flows/pipeline-doctor.yaml.
+display_name: Pipeline Doctor
+description: Reads a failed test, lint, or image build log and opens a draft fix merge request.
+visibility: private
+flow: .gitlab/duo/flows/pipeline-doctor.yaml
+prompt_id: pipeline_doctor_prompt
+triggers:
+  - Mention
+  - Pipeline events
+trigger_actions:
+  - Failed
+ui_tools:
+  - Get Pipeline Failing Jobs
+  - Get Pipeline Errors
+  - Get Job Logs
+  - GitLab API Get
+  - Get Project
+  - Create Branch
+  - Create Commit
+  - Create Merge Request
+  - Run Command

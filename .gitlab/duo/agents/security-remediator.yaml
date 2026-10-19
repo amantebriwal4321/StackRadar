@@ -1,0 +1,25 @@
+# Checklist for AI > Agents > New agent. Not a flow file.
+# Copy the system block from .gitlab/duo/flows/security-remediator.yaml.
+display_name: Security Remediator
+description: Turns SAST, dependency, and secret scan findings from one pipeline into a draft fix merge request.
+visibility: private
+flow: .gitlab/duo/flows/security-remediator.yaml
+prompt_id: security_remediator_prompt
+triggers:
+  - Mention
+  - Pipeline events
+trigger_actions:
+  - Failed
+  - Passed
+ui_tools:
+  - List Security Findings
+  - Get Security Finding Details
+  - List Vulnerabilities
+  - Get Vulnerability Details
+  - Create Issue
+  - Create Branch
+  - Create Commit
+  - Create Merge Request
+  - GitLab API Get
+  - Get Project
+  - Run Command

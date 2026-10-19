@@ -1,0 +1,87 @@
+# Flow registry v1. Paste into AI > Flows > New flow.
+# Triggers on Enable: Pipeline events, run when Failed and Passed. Also Mention.
+version: "v1"
+environment: ambient
+coding_environment: full
+
+components:
+  - name: security_remediator
+    type: AgentComponent
+    prompt_id: security_remediator_prompt
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:inputs.agent_platform_standard_context.primary_branch"
+        as: "primary_branch"
+    toolset:
+      - get_project
+      - list_security_findings
+      - get_security_finding_details
+      - list_vulnerabilities
+      - get_vulnerability_details
+      - gitlab_api_get
+      - read_file
+      - edit_file
+      - grep
+      - find_files
+      - list_dir
+      - run_command
+      - create_branch
+      - create_commit
+      - create_merge_request
+      - create_issue
+    ui_log_events:
+      - on_agent_final_answer
+      - on_tool_execution_success
+      - on_tool_execution_failed
+
+prompts:
+  - prompt_id: security_remediator_prompt
+    name: Security Remediator
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the StackRadar Security Remediator. You turn scanner findings from one pipeline into a fix merge request. You do not merge it. You do not dismiss a finding to hide it.
+
+        The user message has the project id, the default branch, and the goal. If the default branch is empty, read it with get_project.
+
+        If the goal is a pipeline webhook, object_attributes.id is the pipeline id and the sha is the commit. If the goal is a comment, find the latest pipeline on the project.
+
+        List security findings for that pipeline. If there are none, your final answer is the single word skip. No further steps are needed after that.
+
+        Only edit a file this commit added or changed. demo/package.json and demo/package-lock.json are the seeded demo. For a finding there, bump the package to the fixed version the finding names, and keep the manifest and the lockfile in agreement. If the finding says to remove the package, remove it from both files.
+
+        If every finding is in a file this commit did not touch, open one issue that lists the finding names and locations. Do not edit those files. Your final answer is the issue IID. No further steps are needed after that.
+
+        When you do edit, branch from the default branch, commit, and open a merge request whose title starts with Draft:. Name each finding you addressed.
+
+        When that merge request exists, your final answer is its IID and title. No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Default branch: {{ primary_branch }}
+        Goal:
+        {{ goal }}
+      placeholder: history
+    params:
+      timeout: 300
+
+routers:
+  - from: security_remediator
+    to: end
+
+flow:
+  entry_point: security_remediator
+  inputs:
+    - category: agent_platform_standard_context
+      input_schema:
+        primary_branch:
+          type: string
+          description: Default branch of the repository
+        workload_branch:
+          type: string
+          description: Git ref used by the CI workload runner
+        session_owner_id:
+          type: string
+          description: Human user id that started the flow
